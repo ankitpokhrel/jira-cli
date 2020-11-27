@@ -1,0 +1,10 @@
+*~
+*.out
+*.swp
+
+.DS_Store
+.idea/
+
+dist/
+coverage/
+vendor/
