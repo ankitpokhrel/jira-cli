@@ -133,13 +133,13 @@ func issues(cmd *cobra.Command, _ []string) {
 func init() {
 	rootCmd.AddCommand(issueCmd)
 
-	issueCmd.Flags().BoolP("latest", "l", false, "Latest issues based on user activity")
-	issueCmd.Flags().BoolP("watching", "w", false, "Issues that a user is watching")
+	issueCmd.Flags().BoolP("latest", "l", false, "Latest issues based on your activity")
+	issueCmd.Flags().BoolP("watching", "w", false, "Issues you are watching")
 	issueCmd.Flags().StringP("type", "t", "", "Filter issues by type")
 	issueCmd.Flags().StringP("resolution", "r", "", "Filter issues by resolution type")
 	issueCmd.Flags().StringP("status", "s", "", "Filter issues by status")
 	issueCmd.Flags().StringP("priority", "y", "", "Filter issues by priority")
-	issueCmd.Flags().String("reporter", "", "Filter issues by reporter (email or display name)")
+	issueCmd.Flags().StringP("reporter", "e", "", "Filter issues by reporter (email or display name)")
 	issueCmd.Flags().StringP("assignee", "a", "", "Filter issues by assignee (email or display name)")
-	issueCmd.Flags().BoolP("reverse", "v", false, "Reverse the display order (default is DESC)")
+	issueCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 }
