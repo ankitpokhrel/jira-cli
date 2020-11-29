@@ -1,5 +1,14 @@
 package jira
 
+// Project holds project info.
+type Project struct {
+	Key  string `json:"key"`
+	Name string `json:"name"`
+	Lead struct {
+		Name string `json:"displayName"`
+	} `json:"lead"`
+}
+
 // Issue holds issue info.
 type Issue struct {
 	ID     string      `json:"id"`
