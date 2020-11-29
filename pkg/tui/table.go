@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -12,15 +13,19 @@ const (
 	defaultColWidth = 50
 )
 
+var errNoData = fmt.Errorf("no data")
+
 // TableData is the data to be displayed in a table.
 type TableData [][]string
 
 // Table is a table layout.
 type Table struct {
 	screen      *Screen
-	painter     *tview.Table
+	painter     *tview.Grid
+	view        *tview.Table
 	colPad      uint
 	maxColWidth uint
+	footerText  string
 }
 
 // TableOption is a functional option to wrap table properties.
@@ -28,7 +33,39 @@ type TableOption func(*Table)
 
 // NewTable returns new table layout.
 func NewTable(s *Screen, opts ...TableOption) *Table {
-	view := tview.NewTable()
+	tbl := Table{
+		screen:      s,
+		colPad:      defaultColPad,
+		maxColWidth: defaultColWidth,
+	}
+
+	for _, opt := range opts {
+		opt(&tbl)
+	}
+
+	tableView := tview.NewTable()
+	footerView := tview.NewTextView().SetWordWrap(true)
+
+	initTableView(s, tableView)
+	initFooterView(footerView, tbl.footerText)
+
+	tbl.painter = tview.NewGrid().
+		SetRows(0, 1, 2).
+		AddItem(tableView, 0, 0, 1, 1, 3, 0, true).
+		AddItem(tview.NewTextView(), 1, 0, 1, 1, 1, 1, false). // Dummy view to fake row padding.
+		AddItem(footerView, 2, 0, 1, 1, 1, 1, false)
+
+	tbl.view = tableView
+
+	return &tbl
+}
+
+func initFooterView(view *tview.TextView, text string) {
+	view.SetText(pad(text, 1)).SetTextColor(tcell.ColorAntiqueWhite)
+}
+
+func initTableView(s *Screen, view *tview.Table) {
+	view.SetSelectable(true, false)
 
 	view.SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEsc {
@@ -44,18 +81,7 @@ func NewTable(s *Screen, opts ...TableOption) *Table {
 		return event
 	})
 
-	tbl := Table{
-		screen:      s,
-		painter:     view,
-		colPad:      defaultColPad,
-		maxColWidth: defaultColWidth,
-	}
-
-	for _, opt := range opts {
-		opt(&tbl)
-	}
-
-	return &tbl
+	view.SetFixed(1, 1)
 }
 
 // WithColPadding sets column padding property of the table.
@@ -72,47 +98,64 @@ func WithMaxColWidth(width uint) TableOption {
 	}
 }
 
-// Render renders the table layout. First row is treated as a header.
+// WithFooterText sets footer text that is displayed after the table.
+func WithFooterText(text string) TableOption {
+	return func(t *Table) {
+		t.footerText = text
+	}
+}
+
+func (t *Table) renderHeader(data []string) {
+	style := tcell.StyleDefault.Bold(true).Background(tcell.ColorDarkCyan)
+
+	for c := 0; c < len(data); c++ {
+		text := " " + data[c]
+
+		cell := tview.NewTableCell(text).
+			SetStyle(style).
+			SetSelectable(false).
+			SetMaxWidth(int(t.maxColWidth))
+
+		t.view.SetCell(0, c, cell)
+	}
+}
+
+// Render renders the table layout. First row is treated as a table header.
 func (t *Table) Render(data [][]string) error {
+	if len(data) == 0 {
+		return errNoData
+	}
+
 	rows, cols := len(data), len(data[0])
 
-	for r := 0; r < rows; r++ {
+	t.renderHeader(data[0])
+
+	for r := 1; r < rows; r++ {
 		for c := 0; c < cols; c++ {
-			style := tcell.StyleDefault
+			cell := tview.NewTableCell(pad(data[r][c], t.colPad)).
+				SetMaxWidth(int(t.maxColWidth)).
+				SetStyle(tcell.StyleDefault)
 
-			if r == 0 {
-				style = style.Bold(true).Background(tcell.ColorDarkCyan)
-			}
-
-			var text string
-
-			if c != 0 {
-				text = t.applyTextPadding(data[r][c])
-			} else {
-				text = " " + data[r][c]
-			}
-
-			cell := tview.NewTableCell(text).SetMaxWidth(int(t.maxColWidth)).SetStyle(style)
-			t.painter.SetCell(r, c, cell)
+			t.view.SetCell(r, c, cell)
 		}
 	}
 
 	return t.screen.SetRoot(t.painter, true).SetFocus(t.painter).Run()
 }
 
-func (t *Table) applyTextPadding(in string) string {
+func pad(in string, n uint) string {
 	var (
 		i   uint
 		out strings.Builder
 	)
 
-	for i = 0; i < t.colPad; i++ {
+	for i = 0; i < n; i++ {
 		out.WriteString(" ")
 	}
 
 	out.WriteString(in)
 
-	for i = 0; i < t.colPad; i++ {
+	for i = 0; i < n; i++ {
 		out.WriteString(" ")
 	}
 
