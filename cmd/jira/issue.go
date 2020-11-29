@@ -48,6 +48,11 @@ func issues(cmd *cobra.Command, _ []string) {
 		exitWithError(err)
 	}
 
+	reporter, err := cmd.Flags().GetString("reporter")
+	if err != nil {
+		exitWithError(err)
+	}
+
 	assignee, err := cmd.Flags().GetString("assignee")
 	if err != nil {
 		exitWithError(err)
@@ -90,6 +95,10 @@ func issues(cmd *cobra.Command, _ []string) {
 
 	if priority != "" {
 		jql += fmt.Sprintf(" AND priority=\"%s\"", priority)
+	}
+
+	if reporter != "" {
+		jql += fmt.Sprintf(" AND reporter=\"%s\"", reporter)
 	}
 
 	if assignee != "" {
@@ -137,6 +146,7 @@ func init() {
 	issueCmd.Flags().StringP("resolution", "r", "", "Filter issues by resolution type")
 	issueCmd.Flags().StringP("status", "s", "", "Filter issues by status")
 	issueCmd.Flags().StringP("priority", "y", "", "Filter issues by priority")
+	issueCmd.Flags().String("reporter", "", "Filter issues by reporter (email or display name)")
 	issueCmd.Flags().StringP("assignee", "a", "", "Filter issues by assignee (email or display name)")
 	issueCmd.Flags().BoolP("mine", "m", false, "Issues assigned to me")
 	issueCmd.Flags().BoolP("reverse", "v", false, "Reverse the display order (default is DESC)")
