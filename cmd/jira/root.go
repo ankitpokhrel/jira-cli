@@ -16,6 +16,7 @@ const clientTimeout = 15 * time.Second
 
 var (
 	config     string
+	project    string
 	jiraClient *jira.Client
 
 	rootCmd = &cobra.Command{
@@ -36,7 +37,10 @@ func Execute() error {
 func init() {
 	cobra.OnInitialize(initConfig, initJiraClient)
 
-	rootCmd.PersistentFlags().StringVar(&config, "config", "", "config file (default is $HOME/.jira.yml)")
+	rootCmd.PersistentFlags().StringVarP(&config, "config", "c", "", "Config file (default is $HOME/.jira.yml)")
+	rootCmd.PersistentFlags().StringVarP(&project, "project", "p", "", "Jira project to look into (defaults to value from $HOME/.jira.yml)")
+
+	_ = viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
 }
 
 func initConfig() {
@@ -71,6 +75,6 @@ func initJiraClient() {
 }
 
 func exitWithError(err error) {
-	_, _ = fmt.Fprintf(os.Stderr, "Error: %s", err.Error())
+	_, _ = fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
 	os.Exit(1)
 }

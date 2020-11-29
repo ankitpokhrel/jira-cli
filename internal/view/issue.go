@@ -1,6 +1,7 @@
 package view
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -12,27 +13,31 @@ const (
 	maxColWidth = 70
 )
 
-var header = []string{
-	"TYPE",
-	"KEY",
-	"SUMMARY",
-	"ASSIGNEE",
-	"REPORTER",
-	"PRIORITY",
-	"STATUS",
-	"CREATED",
-	"UPDATED",
-}
-
 // List is a list view.
 type List struct {
-	Data []jira.Issue
+	Total   int
+	Project string
+	Data    []jira.Issue
 }
 
-func (l *List) data() tui.TableData {
+func (l List) header() []string {
+	return []string{
+		"TYPE",
+		"KEY",
+		"SUMMARY",
+		"ASSIGNEE",
+		"REPORTER",
+		"PRIORITY",
+		"STATUS",
+		"CREATED",
+		"UPDATED",
+	}
+}
+
+func (l List) data() tui.TableData {
 	var data tui.TableData
 
-	data = append(data, header)
+	data = append(data, l.header())
 
 	for _, issue := range l.Data {
 		data = append(data, []string{
@@ -52,11 +57,12 @@ func (l *List) data() tui.TableData {
 }
 
 // Render renders the list view.
-func (l *List) Render() error {
+func (l List) Render() error {
 	table := tui.NewTable(
 		tui.NewScreen(),
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
+		tui.WithFooterText(fmt.Sprintf("Showing %d results from project \"%s\"", l.Total, l.Project)),
 	)
 
 	return table.Render(l.data())
