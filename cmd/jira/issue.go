@@ -33,6 +33,11 @@ func issues(cmd *cobra.Command, _ []string) {
 		exitWithError(err)
 	}
 
+	issueType, err := cmd.Flags().GetString("type")
+	if err != nil {
+		exitWithError(err)
+	}
+
 	status, err := cmd.Flags().GetString("status")
 	if err != nil {
 		exitWithError(err)
@@ -59,6 +64,10 @@ func issues(cmd *cobra.Command, _ []string) {
 
 	if watching {
 		jql += " AND issue in watchedIssues()"
+	}
+
+	if issueType != "" {
+		jql += fmt.Sprintf(" AND type=\"%s\"", issueType)
 	}
 
 	if resolution != "" {
@@ -108,6 +117,7 @@ func init() {
 
 	issueCmd.Flags().BoolP("latest", "l", false, "Latest issues based on user activity")
 	issueCmd.Flags().BoolP("watching", "w", false, "Issues that a user is watching")
+	issueCmd.Flags().StringP("type", "t", "", "Filter issues by type")
 	issueCmd.Flags().StringP("resolution", "r", "", "Filter issues by resolution type")
 	issueCmd.Flags().StringP("status", "s", "", "Filter issues by status")
 	issueCmd.Flags().StringP("priority", "y", "", "Filter issues by priority")

@@ -62,7 +62,7 @@ func (l List) Render() error {
 		tui.NewScreen(),
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
-		tui.WithFooterText(fmt.Sprintf("Showing %d results from project \"%s\"", l.Total, l.Project)),
+		tui.WithFooterText(fmt.Sprintf("Showing %d results for project \"%s\"", l.Total, l.Project)),
 	)
 
 	return table.Render(l.data())
