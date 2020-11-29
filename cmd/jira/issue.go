@@ -48,6 +48,16 @@ func issues(cmd *cobra.Command, _ []string) {
 		exitWithError(err)
 	}
 
+	assignee, err := cmd.Flags().GetString("assignee")
+	if err != nil {
+		exitWithError(err)
+	}
+
+	mine, err := cmd.Flags().GetBool("mine")
+	if err != nil {
+		exitWithError(err)
+	}
+
 	reverse, err := cmd.Flags().GetBool("reverse")
 	if err != nil {
 		exitWithError(err)
@@ -80,6 +90,12 @@ func issues(cmd *cobra.Command, _ []string) {
 
 	if priority != "" {
 		jql += fmt.Sprintf(" AND priority=\"%s\"", priority)
+	}
+
+	if assignee != "" {
+		jql += fmt.Sprintf(" AND assignee=\"%s\"", assignee)
+	} else if mine {
+		jql += fmt.Sprintf(" AND assignee=\"%s\"", viper.GetString("login"))
 	}
 
 	jql += fmt.Sprintf(" ORDER BY %s", obf)
@@ -121,5 +137,7 @@ func init() {
 	issueCmd.Flags().StringP("resolution", "r", "", "Filter issues by resolution type")
 	issueCmd.Flags().StringP("status", "s", "", "Filter issues by status")
 	issueCmd.Flags().StringP("priority", "y", "", "Filter issues by priority")
+	issueCmd.Flags().StringP("assignee", "a", "", "Filter issues by assignee (email or display name)")
+	issueCmd.Flags().BoolP("mine", "m", false, "Issues assigned to me")
 	issueCmd.Flags().BoolP("reverse", "v", false, "Reverse the display order (default is DESC)")
 }
