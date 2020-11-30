@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/internal/view"
+	"github.com/ankitpokhrel/jira-cli/pkg/jql"
 )
 
 var issueCmd = &cobra.Command{
@@ -19,99 +20,63 @@ var issueCmd = &cobra.Command{
 
 func issues(cmd *cobra.Command, _ []string) {
 	latest, err := cmd.Flags().GetBool("latest")
-	if err != nil {
-		exitWithError(err)
-	}
+	exitIfError(err)
 
 	watching, err := cmd.Flags().GetBool("watching")
-	if err != nil {
-		exitWithError(err)
-	}
+	exitIfError(err)
 
 	resolution, err := cmd.Flags().GetString("resolution")
-	if err != nil {
-		exitWithError(err)
-	}
+	exitIfError(err)
 
 	issueType, err := cmd.Flags().GetString("type")
-	if err != nil {
-		exitWithError(err)
-	}
+	exitIfError(err)
 
 	status, err := cmd.Flags().GetString("status")
-	if err != nil {
-		exitWithError(err)
-	}
+	exitIfError(err)
 
 	priority, err := cmd.Flags().GetString("priority")
-	if err != nil {
-		exitWithError(err)
-	}
+	exitIfError(err)
 
 	reporter, err := cmd.Flags().GetString("reporter")
-	if err != nil {
-		exitWithError(err)
-	}
+	exitIfError(err)
 
 	assignee, err := cmd.Flags().GetString("assignee")
-	if err != nil {
-		exitWithError(err)
-	}
+	exitIfError(err)
 
 	reverse, err := cmd.Flags().GetBool("reverse")
-	if err != nil {
-		exitWithError(err)
-	}
+	exitIfError(err)
 
 	obf := "created"
 	project := viper.GetString("project")
-	jql := fmt.Sprintf("project=\"%s\"", project)
 
-	if latest {
-		jql += " AND issue IN issueHistory()"
-		obf = "lastViewed"
-	}
+	q := jql.NewJQL(project)
 
-	if watching {
-		jql += " AND issue in watchedIssues()"
-	}
+	q.And(func() {
+		if latest {
+			q.History()
+			obf = "lastViewed"
+		}
 
-	if issueType != "" {
-		jql += fmt.Sprintf(" AND type=\"%s\"", issueType)
-	}
+		if watching {
+			q.Watching()
+		}
 
-	if resolution != "" {
-		jql += fmt.Sprintf(" AND resolution=\"%s\"", resolution)
-	}
-
-	if status != "" {
-		jql += fmt.Sprintf(" AND status=\"%s\"", status)
-	}
-
-	if priority != "" {
-		jql += fmt.Sprintf(" AND priority=\"%s\"", priority)
-	}
-
-	if reporter != "" {
-		jql += fmt.Sprintf(" AND reporter=\"%s\"", reporter)
-	}
-
-	if assignee != "" {
-		jql += fmt.Sprintf(" AND assignee=\"%s\"", assignee)
-	}
-
-	jql += fmt.Sprintf(" ORDER BY %s", obf)
+		q.FilterBy("type", issueType).
+			FilterBy("resolution", resolution).
+			FilterBy("status", status).
+			FilterBy("priority", priority).
+			FilterBy("reporter", reporter).
+			FilterBy("assignee", assignee)
+	})
 
 	if reverse {
-		jql += " ASC"
+		q.OrderBy(obf, jql.DirectionAscending)
 	} else {
-		jql += " DESC"
+		q.OrderBy(obf, jql.DirectionDescending)
 	}
 
-	resp, err := jiraClient.Search(jql)
-	if err != nil {
-		exitWithError(err)
-	}
+	resp, err := jiraClient.Search(q.String())
+	exitIfError(err)
 
 	if resp.Total == 0 {
 		fmt.Printf("No result found for given query in project \"%s\"\n", project)
@@ -125,9 +90,7 @@ func issues(cmd *cobra.Command, _ []string) {
 		Data:    resp.Issues,
 	}
 
-	if err := v.Render(); err != nil {
-		exitWithError(err)
-	}
+	exitIfError(v.Render())
 }
 
 func init() {

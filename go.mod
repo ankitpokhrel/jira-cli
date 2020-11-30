@@ -9,4 +9,5 @@ require (
 	github.com/rivo/tview v0.0.0-20201118063654-f007e9ad3893
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/viper v1.7.0
+	github.com/stretchr/testify v1.6.1
 )

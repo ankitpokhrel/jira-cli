@@ -48,9 +48,7 @@ func initConfig() {
 		viper.SetConfigFile(config)
 	} else {
 		home, err := homedir.Dir()
-		if err != nil {
-			exitWithError(err)
-		}
+		exitIfError(err)
 
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".jira")
@@ -75,7 +73,9 @@ func initJiraClient() {
 	jiraClient = jira.NewClient(config, jira.WithTimeout(clientTimeout))
 }
 
-func exitWithError(err error) {
-	_, _ = fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
-	os.Exit(1)
+func exitIfError(err error) {
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
+		os.Exit(1)
+	}
 }

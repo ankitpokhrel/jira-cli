@@ -15,15 +15,11 @@ var projectCmd = &cobra.Command{
 
 func projects(*cobra.Command, []string) {
 	resp, err := jiraClient.Project()
-	if err != nil {
-		exitWithError(err)
-	}
+	exitIfError(err)
 
 	v := view.Project{Data: resp}
 
-	if err := v.Render(); err != nil {
-		exitWithError(err)
-	}
+	exitIfError(v.Render())
 }
 
 func init() {

@@ -20,15 +20,11 @@ func epic(*cobra.Command, []string) {
 	jql := fmt.Sprintf("project=\"%s\" AND issuetype = \"Epic\" ORDER BY created DESC", viper.Get("project"))
 
 	resp, err := jiraClient.Search(jql)
-	if err != nil {
-		exitWithError(err)
-	}
+	exitIfError(err)
 
 	v := view.List{Data: resp.Issues}
 
-	if err := v.Render(); err != nil {
-		exitWithError(err)
-	}
+	exitIfError(v.Render())
 }
 
 func init() {

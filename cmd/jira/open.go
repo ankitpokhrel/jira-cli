@@ -20,9 +20,7 @@ var openCmd = &cobra.Command{
 func open(_ *cobra.Command, args []string) {
 	url := fmt.Sprintf("%s/browse/%s", viper.Get("server"), args[0])
 
-	if err := browser.OpenURL(url); err != nil {
-		exitWithError(err)
-	}
+	exitIfError(browser.OpenURL(url))
 }
 
 func init() {
