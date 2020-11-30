@@ -94,6 +94,21 @@ func TestJQL(t *testing.T) {
 			expected: "project=\"TEST\" AND type=\"Story\" AND resolution=\"Done\" AND assignee=\"test@user.com\"",
 		},
 		{
+			name: "it queries for unassigned issues",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+
+				jql.And(func() {
+					jql.FilterBy("type", "Story").
+						FilterBy("resolution", "Done").
+						FilterBy("assignee", "x")
+				})
+
+				return jql
+			},
+			expected: "project=\"TEST\" AND type=\"Story\" AND resolution=\"Done\" AND assignee IS EMPTY",
+		},
+		{
 			name: "it queries with function and field filters grouped in AND operator",
 			initialize: func() *JQL {
 				jql := NewJQL("TEST")

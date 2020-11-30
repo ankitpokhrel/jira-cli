@@ -55,7 +55,15 @@ func (j *JQL) Watching() *JQL {
 // FilterBy filters with a given field.
 func (j *JQL) FilterBy(field, value string) *JQL {
 	if field != "" && value != "" {
-		j.filters = append(j.filters, fmt.Sprintf("%s=\"%s\"", field, value))
+		var q string
+
+		if value == "x" {
+			q = fmt.Sprintf("%s IS EMPTY", field)
+		} else {
+			q = fmt.Sprintf("%s=\"%s\"", field, value)
+		}
+
+		j.filters = append(j.filters, q)
 	}
 
 	return j
