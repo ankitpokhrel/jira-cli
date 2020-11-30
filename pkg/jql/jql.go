@@ -1,6 +1,6 @@
 // Package jql is a very simple JQL query builder that cannot do a lot at the moment.
 //
-// There is no JQL syntax check and relies on the package user to  construct a valid query.
+// There is no JQL syntax check and relies on the package user to construct a valid query.
 //
 // It cannot combine AND and OR query at the moment. That means you cannot construct
 // a query like the following one below:

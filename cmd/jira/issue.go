@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/internal/view"
-	"github.com/ankitpokhrel/jira-cli/pkg/jql"
 )
 
 var issueCmd = &cobra.Command{
@@ -19,63 +19,12 @@ var issueCmd = &cobra.Command{
 }
 
 func issues(cmd *cobra.Command, _ []string) {
-	latest, err := cmd.Flags().GetBool("latest")
-	exitIfError(err)
-
-	watching, err := cmd.Flags().GetBool("watching")
-	exitIfError(err)
-
-	resolution, err := cmd.Flags().GetString("resolution")
-	exitIfError(err)
-
-	issueType, err := cmd.Flags().GetString("type")
-	exitIfError(err)
-
-	status, err := cmd.Flags().GetString("status")
-	exitIfError(err)
-
-	priority, err := cmd.Flags().GetString("priority")
-	exitIfError(err)
-
-	reporter, err := cmd.Flags().GetString("reporter")
-	exitIfError(err)
-
-	assignee, err := cmd.Flags().GetString("assignee")
-	exitIfError(err)
-
-	reverse, err := cmd.Flags().GetBool("reverse")
-	exitIfError(err)
-
-	obf := "created"
 	project := viper.GetString("project")
 
-	q := jql.NewJQL(project)
+	q, err := query.NewIssue(project, cmd.Flags())
+	exitIfError(err)
 
-	q.And(func() {
-		if latest {
-			q.History()
-			obf = "lastViewed"
-		}
-
-		if watching {
-			q.Watching()
-		}
-
-		q.FilterBy("type", issueType).
-			FilterBy("resolution", resolution).
-			FilterBy("status", status).
-			FilterBy("priority", priority).
-			FilterBy("reporter", reporter).
-			FilterBy("assignee", assignee)
-	})
-
-	if reverse {
-		q.OrderBy(obf, jql.DirectionAscending)
-	} else {
-		q.OrderBy(obf, jql.DirectionDescending)
-	}
-
-	resp, err := jiraClient.Search(q.String())
+	resp, err := jiraClient.Search(q.Get())
 	exitIfError(err)
 
 	if resp.Total == 0 {
