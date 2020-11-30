@@ -7,10 +7,11 @@ import (
 )
 
 var projectCmd = &cobra.Command{
-	Use:   "project",
-	Short: "All accessible jira projects",
-	Long:  `Project lists all jira projects that a user has access to.`,
-	Run:   projects,
+	Use:     "project",
+	Short:   "All accessible jira projects",
+	Long:    `Project lists all jira projects that a user has access to.`,
+	Aliases: []string{"projects"},
+	Run:     projects,
 }
 
 func projects(*cobra.Command, []string) {

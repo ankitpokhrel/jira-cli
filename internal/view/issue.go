@@ -2,7 +2,6 @@ package view
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
@@ -43,7 +42,7 @@ func (l List) data() tui.TableData {
 		data = append(data, []string{
 			issue.Fields.IssueType.Name,
 			issue.Key,
-			strings.TrimSpace(issue.Fields.Summary),
+			prepareTitle(issue.Fields.Summary),
 			issue.Fields.Assignee.Name,
 			issue.Fields.Reporter.Name,
 			issue.Fields.Priority.Name,
@@ -58,12 +57,14 @@ func (l List) data() tui.TableData {
 
 // Render renders the list view.
 func (l List) Render() error {
+	data := l.data()
+
 	table := tui.NewTable(
 		tui.NewScreen(),
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
-		tui.WithFooterText(fmt.Sprintf("Showing %d results for project \"%s\"", l.Total, l.Project)),
+		tui.WithFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(data)-1, l.Total, l.Project)),
 	)
 
-	return table.Render(l.data())
+	return table.Render(data)
 }
