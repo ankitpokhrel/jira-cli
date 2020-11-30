@@ -9,7 +9,7 @@ import (
 
 const (
 	colPadding  = 1
-	maxColWidth = 70
+	maxColWidth = 60
 )
 
 // List is a list view.
@@ -28,6 +28,7 @@ func (l List) header() []string {
 		"REPORTER",
 		"PRIORITY",
 		"STATUS",
+		"RESOLUTION",
 		"CREATED",
 		"UPDATED",
 	}
@@ -47,6 +48,7 @@ func (l List) data() tui.TableData {
 			issue.Fields.Reporter.Name,
 			issue.Fields.Priority.Name,
 			issue.Fields.Status.Name,
+			issue.Fields.Resolution.Name,
 			formatDateTime(issue.Fields.Created),
 			formatDateTime(issue.Fields.Updated),
 		})
