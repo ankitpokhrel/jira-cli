@@ -12,14 +12,14 @@ const (
 	maxColWidth = 60
 )
 
-// List is a list view.
-type List struct {
+// IssueList is a list view for issues.
+type IssueList struct {
 	Total   int
 	Project string
 	Data    []jira.Issue
 }
 
-func (l List) header() []string {
+func (l IssueList) header() []string {
 	return []string{
 		"TYPE",
 		"KEY",
@@ -34,7 +34,7 @@ func (l List) header() []string {
 	}
 }
 
-func (l List) data() tui.TableData {
+func (l IssueList) data() tui.TableData {
 	var data tui.TableData
 
 	data = append(data, l.header())
@@ -58,7 +58,7 @@ func (l List) data() tui.TableData {
 }
 
 // Render renders the list view.
-func (l List) Render() error {
+func (l IssueList) Render() error {
 	data := l.data()
 
 	table := tui.NewTable(

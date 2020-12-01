@@ -22,7 +22,7 @@ func epic(*cobra.Command, []string) {
 	resp, err := jiraClient.Search(jql)
 	exitIfError(err)
 
-	v := view.List{Data: resp.Issues}
+	v := view.IssueList{Data: resp.Issues}
 
 	exitIfError(v.Render())
 }

@@ -1,6 +1,7 @@
 *~
 *.out
 *.swp
+*.json
 
 .DS_Store
 .idea/

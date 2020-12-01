@@ -33,7 +33,7 @@ func issues(cmd *cobra.Command, _ []string) {
 		return
 	}
 
-	v := view.List{
+	v := view.IssueList{
 		Total:   resp.Total,
 		Project: project,
 		Data:    resp.Issues,
