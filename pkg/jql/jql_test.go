@@ -144,6 +144,35 @@ func TestJQL(t *testing.T) {
 			expected: "project=\"TEST\" OR issue IN issueHistory() OR issue IN watchedIssues() OR " +
 				"type=\"Story\" OR resolution=\"Done\" OR assignee=\"test@user.com\"",
 		},
+		{
+			name: "it queries with IN and a single label",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+
+				jql.FilterBy("type", "Story")
+
+				jql.And(func() {
+					jql.In("labels", "first")
+				})
+
+				return jql
+			},
+			expected: "project=\"TEST\" AND type=\"Story\" AND labels IN (\"first\")",
+		},
+		{
+			name: "it queries with IN and multiple labels",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+
+				jql.Or(func() {
+					jql.FilterBy("type", "Story").
+						In("labels", "first", "second", "third")
+				})
+
+				return jql
+			},
+			expected: "project=\"TEST\" OR type=\"Story\" OR labels IN (\"first\", \"second\", \"third\")",
+		},
 	}
 
 	for _, tc := range cases {

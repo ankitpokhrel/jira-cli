@@ -12,6 +12,7 @@ type paramsErr struct {
 	watching   bool
 	resolution bool
 	issueType  bool
+	labels     bool
 }
 
 type testFlagParser struct {
@@ -20,6 +21,7 @@ type testFlagParser struct {
 	noWatching bool
 	orderDesc  bool
 	emptyType  bool
+	labels     []string
 }
 
 func (tfp testFlagParser) GetBool(name string) (bool, error) {
@@ -60,6 +62,14 @@ func (tfp testFlagParser) GetString(name string) (string, error) {
 	}
 
 	return "test", nil
+}
+
+func (tfp testFlagParser) GetStringArray(name string) ([]string, error) {
+	if tfp.err.labels && name == "label" {
+		return []string{}, fmt.Errorf("oops! couldn't fetch label flag")
+	}
+
+	return tfp.labels, nil
 }
 
 func TestIssueGet(t *testing.T) {
@@ -141,6 +151,18 @@ func TestIssueGet(t *testing.T) {
 			expected: "",
 		},
 		{
+			name: "query with error when fetching labels flag",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &testFlagParser{err: paramsErr{
+					labels: true,
+				}})
+				assert.Error(t, err)
+
+				return i
+			},
+			expected: "",
+		},
+		{
 			name: "query with error when fetching type flag",
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &testFlagParser{err: paramsErr{
@@ -175,6 +197,18 @@ func TestIssueGet(t *testing.T) {
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`ORDER BY lastViewed DESC`,
+		},
+		{
+			name: "query with labels",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &testFlagParser{labels: []string{"first", "second", "third"}})
+				assert.NoError(t, err)
+
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND labels IN ("first", "second", "third") ORDER BY lastViewed ASC`,
 		},
 	}
 

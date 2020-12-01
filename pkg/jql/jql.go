@@ -69,6 +69,31 @@ func (j *JQL) FilterBy(field, value string) *JQL {
 	return j
 }
 
+// In constructs a query with IN clause.
+func (j *JQL) In(field string, value ...string) *JQL {
+	n := len(value)
+
+	if field != "" && n > 0 {
+		var q strings.Builder
+
+		q.WriteString(fmt.Sprintf("%s IN (", field))
+
+		for i, v := range value {
+			q.WriteString(fmt.Sprintf("\"%s\"", v))
+
+			if i != n-1 {
+				q.WriteString(", ")
+			}
+		}
+
+		q.WriteString(")")
+
+		j.filters = append(j.filters, q.String())
+	}
+
+	return j
+}
+
 // OrderBy orders the output in given direction.
 func (j *JQL) OrderBy(field, dir string) *JQL {
 	j.orderBy = fmt.Sprintf("ORDER BY %s %s", field, dir)

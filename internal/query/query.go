@@ -4,4 +4,5 @@ package query
 type FlagParser interface {
 	GetBool(string) (bool, error)
 	GetString(string) (string, error)
+	GetStringArray(string) ([]string, error)
 }

@@ -13,6 +13,7 @@ type issueParams struct {
 	priority   string
 	reporter   string
 	assignee   string
+	labels     []string
 	reverse    bool
 }
 
@@ -83,6 +84,11 @@ func initParams(params *issueParams, flags FlagParser) error {
 		return err
 	}
 
+	labels, err := flags.GetStringArray("label")
+	if err != nil {
+		return err
+	}
+
 	reverse, err := flags.GetBool("reverse")
 	if err != nil {
 		return err
@@ -96,6 +102,7 @@ func initParams(params *issueParams, flags FlagParser) error {
 	params.priority = priority
 	params.reporter = reporter
 	params.assignee = assignee
+	params.labels = labels
 	params.reverse = reverse
 
 	return nil
@@ -123,6 +130,10 @@ func (i *Issue) Get() string {
 			FilterBy("priority", i.params.priority).
 			FilterBy("reporter", i.params.reporter).
 			FilterBy("assignee", i.params.assignee)
+
+		if len(i.params.labels) > 0 {
+			q.In("labels", i.params.labels...)
+		}
 	})
 
 	if i.params.reverse {
