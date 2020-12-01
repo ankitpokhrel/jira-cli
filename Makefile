@@ -1,4 +1,4 @@
-.PHONY: deps build install lint
+.PHONY: deps build install lint test
 
 deps:
 	@echo "Installing dependencies..."
@@ -14,3 +14,7 @@ install: deps
 
 lint:
 	@bin/lint.sh
+
+test:
+	@go clean -testcache ./...
+	@go test -race $(shell go list ./...)

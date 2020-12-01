@@ -45,7 +45,7 @@ func issues(cmd *cobra.Command, _ []string) {
 func init() {
 	rootCmd.AddCommand(issueCmd)
 
-	issueCmd.Flags().BoolP("latest", "l", false, "Latest issues based on your activity")
+	issueCmd.Flags().Bool("history", false, "Issues you accessed recently")
 	issueCmd.Flags().BoolP("watching", "w", false, "Issues you are watching")
 	issueCmd.Flags().StringP("type", "t", "", "Filter issues by type")
 	issueCmd.Flags().StringP("resolution", "r", "", "Filter issues by resolution type")

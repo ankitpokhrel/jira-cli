@@ -8,7 +8,7 @@ import (
 )
 
 type paramsErr struct {
-	latest     bool
+	history    bool
 	watching   bool
 	resolution bool
 	issueType  bool
@@ -23,15 +23,15 @@ type testFlagParser struct {
 }
 
 func (tfp testFlagParser) GetBool(name string) (bool, error) {
-	if tfp.err.latest && name == "latest" {
-		return false, fmt.Errorf("oops! couldn't fetch latest flag")
+	if tfp.err.history && name == "history" {
+		return false, fmt.Errorf("oops! couldn't fetch history flag")
 	}
 
 	if tfp.err.watching && name == "watching" {
 		return false, fmt.Errorf("oops! couldn't fetch watching flag")
 	}
 
-	if tfp.noHistory && name == "latest" {
+	if tfp.noHistory && name == "history" {
 		return false, nil
 	}
 
@@ -105,10 +105,10 @@ func TestIssueGet(t *testing.T) {
 				`ORDER BY created ASC`,
 		},
 		{
-			name: "query with error when fetching latest flag",
+			name: "query with error when fetching history flag",
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &testFlagParser{err: paramsErr{
-					latest: true,
+					history: true,
 				}})
 				assert.Error(t, err)
 

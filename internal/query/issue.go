@@ -43,7 +43,7 @@ func NewIssue(project string, flags FlagParser) (*Issue, error) {
 }
 
 func initParams(params *issueParams, flags FlagParser) error {
-	latest, err := flags.GetBool("latest")
+	latest, err := flags.GetBool("history")
 	if err != nil {
 		return err
 	}
