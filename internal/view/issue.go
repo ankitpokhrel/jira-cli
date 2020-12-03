@@ -61,12 +61,12 @@ func (l IssueList) data() tui.TableData {
 func (l IssueList) Render() error {
 	data := l.data()
 
-	table := tui.NewTable(
+	view := tui.NewTable(
 		tui.NewScreen(),
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
 		tui.WithFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(data)-1, l.Total, l.Project)),
 	)
 
-	return table.Render(data)
+	return view.Render(data)
 }

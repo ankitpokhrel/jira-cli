@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/internal/view"
+	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
 var epicCmd = &cobra.Command{
@@ -22,7 +23,19 @@ func epic(*cobra.Command, []string) {
 	resp, err := jiraClient.Search(jql)
 	exitIfError(err)
 
-	v := view.IssueList{Data: resp.Issues}
+	v := view.EpicList{
+		Total:   resp.Total,
+		Project: viper.GetString("project"),
+		Data:    resp.Issues,
+		Issues: func(key string) []jira.Issue {
+			resp, err := jiraClient.EpicIssues(key)
+			if err != nil {
+				return []jira.Issue{}
+			}
+
+			return resp.Issues
+		},
+	}
 
 	exitIfError(v.Render())
 }

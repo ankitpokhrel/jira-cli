@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+const (
+	baseURLv2 = "/rest/api/2"
+	baseURLv1 = "/rest/agile/1.0"
+)
+
 var (
 	errEmptyResponse        = fmt.Errorf("jira: empty response from server")
 	errUnexpectedStatusCode = fmt.Errorf("jira: unexpected status code")
@@ -25,10 +30,10 @@ type Config struct {
 type Client struct {
 	transport http.RoundTripper
 	server    string
-	baseURL   string
 	login     string
 	token     string
 	timeout   time.Duration
+	v1        bool
 }
 
 // ClientFunc decorates option for client.
@@ -37,10 +42,10 @@ type ClientFunc func(*Client)
 // NewClient instantiates new jira client.
 func NewClient(c Config, opts ...ClientFunc) *Client {
 	client := Client{
-		server:  strings.TrimSuffix(c.Server, "/"),
-		baseURL: "/rest/api/2",
-		login:   c.Login,
-		token:   c.APIToken,
+		server: strings.TrimSuffix(c.Server, "/"),
+		login:  c.Login,
+		token:  c.APIToken,
+		v1:     false,
 	}
 
 	client.transport = &http.Transport{
@@ -65,12 +70,26 @@ func WithTimeout(to time.Duration) ClientFunc {
 }
 
 func (c *Client) endpoint(path string) string {
-	return c.server + c.baseURL + path
+	return c.server + baseURLv2 + path
 }
 
 // Get sends get request to the jira server.
 func (c *Client) Get(ctx context.Context, path string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodGet, c.endpoint(path), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.SetBasicAuth(c.login, c.token)
+
+	res, err := c.transport.RoundTrip(req.WithContext(ctx))
+
+	return res, err
+}
+
+// GetV1 sends get request to v1 version of the jira api.
+func (c *Client) GetV1(ctx context.Context, path string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodGet, c.server+baseURLv1+path, nil)
 	if err != nil {
 		return nil, err
 	}
