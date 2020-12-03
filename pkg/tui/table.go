@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -51,9 +50,9 @@ func NewTable(s *Screen, opts ...TableOption) *Table {
 
 	tbl.painter = tview.NewGrid().
 		SetRows(0, 1, 2).
-		AddItem(tableView, 0, 0, 1, 1, 3, 0, true).
-		AddItem(tview.NewTextView(), 1, 0, 1, 1, 1, 1, false). // Dummy view to fake row padding.
-		AddItem(footerView, 2, 0, 1, 1, 1, 1, false)
+		AddItem(tableView, 0, 0, 1, 1, 0, 0, true).
+		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
+		AddItem(footerView, 2, 0, 1, 1, 0, 0, false)
 
 	tbl.view = tableView
 
@@ -141,23 +140,4 @@ func (t *Table) Render(data [][]string) error {
 	}
 
 	return t.screen.SetRoot(t.painter, true).SetFocus(t.painter).Run()
-}
-
-func pad(in string, n uint) string {
-	var (
-		i   uint
-		out strings.Builder
-	)
-
-	for i = 0; i < n; i++ {
-		out.WriteString(" ")
-	}
-
-	out.WriteString(in)
-
-	for i = 0; i < n; i++ {
-		out.WriteString(" ")
-	}
-
-	return out.String()
 }
