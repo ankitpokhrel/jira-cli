@@ -31,9 +31,9 @@ type Table struct {
 type TableOption func(*Table)
 
 // NewTable returns new table layout.
-func NewTable(s *Screen, opts ...TableOption) *Table {
+func NewTable(opts ...TableOption) *Table {
 	tbl := Table{
-		screen:      s,
+		screen:      NewScreen(),
 		colPad:      defaultColPad,
 		maxColWidth: defaultColWidth,
 	}
@@ -45,7 +45,7 @@ func NewTable(s *Screen, opts ...TableOption) *Table {
 	tableView := tview.NewTable()
 	footerView := tview.NewTextView().SetWordWrap(true)
 
-	initTableView(s, tableView)
+	initTableView(tbl.screen, tableView)
 	initFooterView(footerView, tbl.footerText)
 
 	tbl.painter = tview.NewGrid().
@@ -104,40 +104,14 @@ func WithFooterText(text string) TableOption {
 	}
 }
 
-func (t *Table) renderHeader(data []string) {
-	style := tcell.StyleDefault.Bold(true).Background(tcell.ColorDarkCyan)
-
-	for c := 0; c < len(data); c++ {
-		text := " " + data[c]
-
-		cell := tview.NewTableCell(text).
-			SetStyle(style).
-			SetSelectable(false).
-			SetMaxWidth(int(t.maxColWidth))
-
-		t.view.SetCell(0, c, cell)
-	}
-}
-
 // Render renders the table layout. First row is treated as a table header.
 func (t *Table) Render(data [][]string) error {
 	if len(data) == 0 {
 		return errNoData
 	}
 
-	rows, cols := len(data), len(data[0])
+	renderTableHeader(t, data[0])
+	renderTableCell(t, data)
 
-	t.renderHeader(data[0])
-
-	for r := 1; r < rows; r++ {
-		for c := 0; c < cols; c++ {
-			cell := tview.NewTableCell(pad(data[r][c], t.colPad)).
-				SetMaxWidth(int(t.maxColWidth)).
-				SetStyle(tcell.StyleDefault)
-
-			t.view.SetCell(r, c, cell)
-		}
-	}
-
-	return t.screen.SetRoot(t.painter, true).SetFocus(t.painter).Run()
+	return t.screen.Paint(t.painter)
 }

@@ -13,3 +13,8 @@ func NewScreen() *Screen {
 
 	return &Screen{app}
 }
+
+// Paint paints UI to the screen.
+func (s *Screen) Paint(root tview.Primitive) error {
+	return s.SetRoot(root, true).SetFocus(root).Run()
+}

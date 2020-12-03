@@ -90,7 +90,6 @@ func (el EpicList) Render() error {
 	data := el.data()
 
 	view := tui.NewPreview(
-		tui.NewScreen(),
 		tui.WithPreviewFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(el.Data), el.Total, el.Project)),
 		tui.WithInitialText(helpText),
 	)

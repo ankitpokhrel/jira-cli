@@ -62,7 +62,6 @@ func (l IssueList) Render() error {
 	data := l.data()
 
 	view := tui.NewTable(
-		tui.NewScreen(),
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
 		tui.WithFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(data)-1, l.Total, l.Project)),
