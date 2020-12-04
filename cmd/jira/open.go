@@ -13,7 +13,7 @@ var openCmd = &cobra.Command{
 	Short:   "Open issue in a browser.",
 	Long:    `Open opens the issue in a browser.`,
 	Args:    cobra.MinimumNArgs(1),
-	Aliases: []string{"browse"},
+	Aliases: []string{"browse", "navigate"},
 	Run:     open,
 }
 

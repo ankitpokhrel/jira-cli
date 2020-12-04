@@ -21,6 +21,7 @@ type EpicIssueFunc func(string) []jira.Issue
 type EpicList struct {
 	Total   int
 	Project string
+	Server  string
 	Data    []jira.Issue
 	Issues  EpicIssueFunc
 }
@@ -92,6 +93,11 @@ func (el EpicList) Render() error {
 	view := tui.NewPreview(
 		tui.WithPreviewFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(el.Data), el.Total, el.Project)),
 		tui.WithInitialText(helpText),
+		tui.WithContentTableOpts(
+			tui.WithSelectedFunc(func(r, c int, data *tui.TableData) {
+				_ = open(el.Server, (*data)[r][1])
+			}),
+		),
 	)
 
 	return view.Render(data)

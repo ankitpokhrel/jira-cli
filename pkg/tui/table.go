@@ -14,17 +14,22 @@ const (
 
 var errNoData = fmt.Errorf("no data")
 
+// SelectedFunc is fired when a user press enter key in the table cell.
+type SelectedFunc func(row, column int, data *TableData)
+
 // TableData is the data to be displayed in a table.
 type TableData [][]string
 
 // Table is a table layout.
 type Table struct {
-	screen      *Screen
-	painter     *tview.Grid
-	view        *tview.Table
-	colPad      uint
-	maxColWidth uint
-	footerText  string
+	screen       *Screen
+	painter      *tview.Grid
+	view         *tview.Table
+	footer       *tview.TextView
+	colPad       uint
+	maxColWidth  uint
+	footerText   string
+	selectedFunc SelectedFunc
 }
 
 // TableOption is a functional option to wrap table properties.
@@ -42,45 +47,16 @@ func NewTable(opts ...TableOption) *Table {
 		opt(&tbl)
 	}
 
-	tableView := tview.NewTable()
-	footerView := tview.NewTextView().SetWordWrap(true)
-
-	initTableView(tbl.screen, tableView)
-	initFooterView(footerView, tbl.footerText)
+	tbl.initTableView()
+	tbl.initFooterView()
 
 	tbl.painter = tview.NewGrid().
 		SetRows(0, 1, 2).
-		AddItem(tableView, 0, 0, 1, 1, 0, 0, true).
+		AddItem(tbl.view, 0, 0, 1, 1, 0, 0, true).
 		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
-		AddItem(footerView, 2, 0, 1, 1, 0, 0, false)
-
-	tbl.view = tableView
+		AddItem(tbl.footer, 2, 0, 1, 1, 0, 0, false)
 
 	return &tbl
-}
-
-func initFooterView(view *tview.TextView, text string) {
-	view.SetText(pad(text, 1)).SetTextColor(tcell.ColorAntiqueWhite)
-}
-
-func initTableView(s *Screen, view *tview.Table) {
-	view.SetSelectable(true, false)
-
-	view.SetDoneFunc(func(key tcell.Key) {
-		if key == tcell.KeyEsc {
-			s.Stop()
-		}
-	})
-
-	view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyRune && event.Rune() == 'q' {
-			s.Stop()
-		}
-
-		return event
-	})
-
-	view.SetFixed(1, 1)
 }
 
 // WithColPadding sets column padding property of the table.
@@ -104,10 +80,55 @@ func WithFooterText(text string) TableOption {
 	}
 }
 
+// WithSelectedFunc sets a func that is triggered when table cell is selected.
+func WithSelectedFunc(fn SelectedFunc) TableOption {
+	return func(t *Table) {
+		t.selectedFunc = fn
+	}
+}
+
+func (t *Table) initFooterView() {
+	view := tview.NewTextView().SetWordWrap(true)
+
+	view.SetText(pad(t.footerText, 1)).SetTextColor(tcell.ColorAntiqueWhite)
+
+	t.footer = view
+}
+
+func (t *Table) initTableView() {
+	view := tview.NewTable()
+
+	view.SetSelectable(true, false)
+
+	view.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEsc {
+			t.screen.Stop()
+		}
+	})
+
+	view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyRune && event.Rune() == 'q' {
+			t.screen.Stop()
+		}
+
+		return event
+	})
+
+	view.SetFixed(1, 1)
+
+	t.view = view
+}
+
 // Render renders the table layout. First row is treated as a table header.
-func (t *Table) Render(data [][]string) error {
+func (t *Table) Render(data TableData) error {
 	if len(data) == 0 {
 		return errNoData
+	}
+
+	if t.selectedFunc != nil {
+		t.view.SetSelectedFunc(func(r, c int) {
+			t.selectedFunc(r, c, &data)
+		})
 	}
 
 	renderTableHeader(t, data[0])

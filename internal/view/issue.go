@@ -16,6 +16,7 @@ const (
 type IssueList struct {
 	Total   int
 	Project string
+	Server  string
 	Data    []jira.Issue
 }
 
@@ -65,6 +66,9 @@ func (l IssueList) Render() error {
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
 		tui.WithFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(data)-1, l.Total, l.Project)),
+		tui.WithSelectedFunc(func(r, c int, data *tui.TableData) {
+			_ = open(l.Server, (*data)[r][1])
+		}),
 	)
 
 	return view.Render(data)

@@ -20,6 +20,7 @@ type Preview struct {
 	painter     *tview.Grid
 	sidebar     *tview.Table
 	contents    *Table
+	footer      *tview.TextView
 	initialText string
 	footerText  string
 }
@@ -40,34 +41,51 @@ func NewPreview(opts ...PreviewOption) *Preview {
 		opt(&pv)
 	}
 
-	sidebar := tview.NewTable()
-	contents := tview.NewTable()
-	footerView := tview.NewTextView().SetWordWrap(true)
+	pv.init()
 
-	initFooterView(footerView, pv.footerText)
+	return &pv
+}
+
+func (pv *Preview) init() {
+	pv.initSidebarView()
+	pv.initContentsView()
+	pv.initFooterView()
+
+	pv.painter = tview.NewGrid().
+		SetRows(0, 1, 2).
+		SetColumns(sidebarMaxWidth, 1, 0).
+		AddItem(pv.sidebar, 0, 0, 2, 1, 0, 0, true).
+		AddItem(tview.NewTextView(), 0, 1, 1, 1, 0, 0, false). // Dummy view to fake col padding.
+		AddItem(pv.contents.view, 0, 2, 2, 1, 0, 0, false).
+		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
+		AddItem(pv.footer, 2, 0, 1, 3, 0, 0, false)
+
+	pv.painter.SetBackgroundColor(tcell.ColorBlack)
+
+	pv.initLayout(pv.sidebar, pv.contents.view)
+	pv.initLayout(pv.contents.view, pv.sidebar)
+}
+
+func (pv *Preview) initSidebarView() {
+	pv.sidebar = tview.NewTable()
+}
+
+func (pv *Preview) initContentsView() {
+	contents := tview.NewTable()
 
 	contents.SetBorder(true).
 		SetBorderColor(tcell.ColorDarkGray).
 		SetBackgroundColor(tcell.ColorBlack)
 
-	pv.painter = tview.NewGrid().
-		SetRows(0, 1, 2).
-		SetColumns(sidebarMaxWidth, 1, 0).
-		AddItem(sidebar, 0, 0, 2, 1, 0, 0, true).
-		AddItem(tview.NewTextView(), 0, 1, 1, 1, 0, 0, false). // Dummy view to fake col padding.
-		AddItem(contents, 0, 2, 2, 1, 0, 0, false).
-		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
-		AddItem(footerView, 2, 0, 1, 3, 0, 0, false)
-
-	pv.painter.SetBackgroundColor(tcell.ColorBlack)
-
-	pv.sidebar = sidebar
 	pv.contents.view = contents
+}
 
-	pv.initLayout(sidebar, contents)
-	pv.initLayout(contents, sidebar)
+func (pv *Preview) initFooterView() {
+	view := tview.NewTextView().SetWordWrap(true)
 
-	return &pv
+	view.SetText(pad(pv.footerText, 1)).SetTextColor(tcell.ColorAntiqueWhite)
+
+	pv.footer = view
 }
 
 func (pv *Preview) initLayout(view *tview.Table, nextView *tview.Table) {
@@ -111,6 +129,15 @@ func WithInitialText(text string) PreviewOption {
 func WithPreviewFooterText(text string) PreviewOption {
 	return func(p *Preview) {
 		p.footerText = text
+	}
+}
+
+// WithContentTableOpts sets contents table options.
+func WithContentTableOpts(opts ...TableOption) PreviewOption {
+	return func(p *Preview) {
+		for _, opt := range opts {
+			opt(p.contents)
+		}
 	}
 }
 
@@ -167,6 +194,10 @@ func (pv *Preview) renderContents(pd PreviewData) {
 
 				return
 			}
+
+			pv.contents.view.SetSelectedFunc(func(r, c int) {
+				pv.contents.selectedFunc(r, c, &data)
+			})
 
 			renderTableHeader(pv.contents, data[0])
 			renderTableCell(pv.contents, data)

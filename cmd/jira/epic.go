@@ -26,6 +26,7 @@ func epic(*cobra.Command, []string) {
 	v := view.EpicList{
 		Total:   resp.Total,
 		Project: viper.GetString("project"),
+		Server:  viper.GetString("server"),
 		Data:    resp.Issues,
 		Issues: func(key string) []jira.Issue {
 			resp, err := jiraClient.EpicIssues(key)

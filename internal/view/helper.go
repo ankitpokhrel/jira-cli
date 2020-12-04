@@ -1,8 +1,11 @@
 package view
 
 import (
+	"fmt"
 	"strings"
 	"time"
+
+	"github.com/pkg/browser"
 )
 
 func formatDateTime(dt string) string {
@@ -28,4 +31,14 @@ func prepareTitle(text string) string {
 	text = strings.ReplaceAll(text, "]", "⦘")
 
 	return text
+}
+
+func open(server, key string) error {
+	if key == "" {
+		return nil
+	}
+
+	url := fmt.Sprintf("%s/browse/%s", server, key)
+
+	return browser.OpenURL(url)
 }

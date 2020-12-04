@@ -19,6 +19,7 @@ var issueCmd = &cobra.Command{
 }
 
 func issues(cmd *cobra.Command, _ []string) {
+	server := viper.GetString("server")
 	project := viper.GetString("project")
 
 	q, err := query.NewIssue(project, cmd.Flags())
@@ -36,6 +37,7 @@ func issues(cmd *cobra.Command, _ []string) {
 	v := view.IssueList{
 		Total:   resp.Total,
 		Project: project,
+		Server:  server,
 		Data:    resp.Issues,
 	}
 
