@@ -25,8 +25,8 @@ type Preview struct {
 	footerText  string
 }
 
-// PreviewOption is a functional option to wrap preview properties.
-type PreviewOption func(preview *Preview)
+// PreviewOption is a functional option that wraps preview properties.
+type PreviewOption func(*Preview)
 
 // NewPreview returns new preview layout.
 func NewPreview(opts ...PreviewOption) *Preview {

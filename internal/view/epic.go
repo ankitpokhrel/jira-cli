@@ -24,6 +24,8 @@ type EpicList struct {
 	Server  string
 	Data    []jira.Issue
 	Issues  EpicIssueFunc
+
+	issueCache map[string]tui.TableData
 }
 
 func (el EpicList) data() []tui.PreviewData {
@@ -42,9 +44,17 @@ func (el EpicList) data() []tui.PreviewData {
 			Key:  issue.Key,
 			Menu: fmt.Sprintf("➤ %s: %s", issue.Key, prepareTitle(issue.Fields.Summary)),
 			Contents: func(key string) interface{} {
-				issues := el.Issues(key)
+				if el.issueCache == nil {
+					el.issueCache = make(map[string]tui.TableData)
+				}
 
-				return el.tabularize(issues)
+				if _, ok := el.issueCache[key]; !ok {
+					issues := el.Issues(key)
+
+					el.issueCache[key] = el.tabularize(issues)
+				}
+
+				return el.issueCache[key]
 			},
 		})
 	}
