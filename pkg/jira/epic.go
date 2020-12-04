@@ -8,14 +8,6 @@ import (
 	"net/url"
 )
 
-// Epic struct holds epic response from /search endpoint.
-type Epic struct {
-	StartAt    int     `json:"startAt"`
-	MaxResults int     `json:"maxResults"`
-	Total      int     `json:"total"`
-	Issues     []Issue `json:"issues"`
-}
-
 // Epic fetches epics using the /search endpoint.
 func (c *Client) Epic(jql string) (*Search, error) {
 	res, err := c.Get(context.Background(), "/search?jql="+url.QueryEscape(jql))

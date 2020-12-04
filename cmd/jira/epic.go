@@ -11,10 +11,11 @@ import (
 )
 
 var epicCmd = &cobra.Command{
-	Use:   "epic",
-	Short: "Epic lists all epics",
-	Long:  `Sprint lists current unresolved sprints.`,
-	Run:   epic,
+	Use:     "epic",
+	Short:   "Epic lists top 50 epics",
+	Long:    `Epic lists top 50 epics.`,
+	Aliases: []string{"epics"},
+	Run:     epic,
 }
 
 func epic(*cobra.Command, []string) {
