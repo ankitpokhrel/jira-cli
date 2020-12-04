@@ -16,13 +16,14 @@ type PreviewData struct {
 
 // Preview is the preview layout.
 type Preview struct {
-	screen      *Screen
-	painter     *tview.Grid
-	sidebar     *tview.Table
-	contents    *Table
-	footer      *tview.TextView
-	initialText string
-	footerText  string
+	screen       *Screen
+	painter      *tview.Grid
+	sidebar      *tview.Table
+	contents     *Table
+	footer       *tview.TextView
+	initialText  string
+	footerText   string
+	selectedFunc SelectedFunc
 }
 
 // PreviewOption is a functional option that wraps preview properties.
@@ -132,6 +133,13 @@ func WithPreviewFooterText(text string) PreviewOption {
 	}
 }
 
+// WithSidebarSelectedFunc sets contents table options.
+func WithSidebarSelectedFunc(fn SelectedFunc) PreviewOption {
+	return func(p *Preview) {
+		p.selectedFunc = fn
+	}
+}
+
 // WithContentTableOpts sets contents table options.
 func WithContentTableOpts(opts ...TableOption) PreviewOption {
 	return func(p *Preview) {
@@ -147,6 +155,21 @@ func (pv *Preview) Render(pd []PreviewData) error {
 		return errNoData
 	}
 
+	pv.sidebar.SetSelectionChangedFunc(func(r, c int) {
+		pv.contents.view.Clear()
+		pv.printText("Loading...")
+
+		go pv.renderContents(pd[r])
+	})
+
+	if pv.selectedFunc != nil {
+		pv.sidebar.SetSelectedFunc(func(r, c int) {
+			if r > 0 {
+				pv.selectedFunc(r, c, pd[r].Key)
+			}
+		})
+	}
+
 	for i, d := range pd {
 		style := tcell.StyleDefault
 		if i == 0 {
@@ -158,13 +181,6 @@ func (pv *Preview) Render(pd []PreviewData) error {
 			SetStyle(style)
 
 		pv.sidebar.SetCell(i, 0, cell)
-
-		pv.sidebar.SetSelectionChangedFunc(func(r, c int) {
-			pv.contents.view.Clear()
-			pv.printText("Loading...")
-
-			go pv.renderContents(pd[r])
-		})
 	}
 
 	pv.printText(pv.initialText)
@@ -195,9 +211,11 @@ func (pv *Preview) renderContents(pd PreviewData) {
 				return
 			}
 
-			pv.contents.view.SetSelectedFunc(func(r, c int) {
-				pv.contents.selectedFunc(r, c, &data)
-			})
+			if pv.contents.selectedFunc != nil {
+				pv.contents.view.SetSelectedFunc(func(r, c int) {
+					pv.contents.selectedFunc(r, c, data[r][1])
+				})
+			}
 
 			renderTableHeader(pv.contents, data[0])
 			renderTableCell(pv.contents, data)

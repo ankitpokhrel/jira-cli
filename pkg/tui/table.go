@@ -15,7 +15,7 @@ const (
 var errNoData = fmt.Errorf("no data")
 
 // SelectedFunc is fired when a user press enter key in the table cell.
-type SelectedFunc func(row, column int, data *TableData)
+type SelectedFunc func(row, column int, identifier string)
 
 // TableData is the data to be displayed in a table.
 type TableData [][]string
@@ -127,7 +127,7 @@ func (t *Table) Render(data TableData) error {
 
 	if t.selectedFunc != nil {
 		t.view.SetSelectedFunc(func(r, c int) {
-			t.selectedFunc(r, c, &data)
+			t.selectedFunc(r, c, data[r][1])
 		})
 	}
 

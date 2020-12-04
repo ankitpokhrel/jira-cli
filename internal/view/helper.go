@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/pkg/browser"
+
+	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
 func formatDateTime(dt string) string {
@@ -41,4 +43,10 @@ func open(server, key string) error {
 	url := fmt.Sprintf("%s/browse/%s", server, key)
 
 	return browser.OpenURL(url)
+}
+
+func navigate(server string) tui.SelectedFunc {
+	return func(r, c int, path string) {
+		_ = open(server, path)
+	}
 }

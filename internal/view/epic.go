@@ -12,6 +12,8 @@ const helpText = `Use up and down arrow keys or 'j' and 'k' letters to navigate 
 	Press 'w' to toggle focus between the sidebar and the contents screen. On contents screen,
 	you can use arrow keys or 'j', 'k', 'h', and 'l' letters to navigate through the epic issue list.
 
+	Press ENTER to open selected issue in the browser.
+
 	Press 'q' / ESC / CTRL+c to quit.`
 
 // EpicIssueFunc provides issues for the epic.
@@ -103,11 +105,8 @@ func (el EpicList) Render() error {
 	view := tui.NewPreview(
 		tui.WithPreviewFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(el.Data), el.Total, el.Project)),
 		tui.WithInitialText(helpText),
-		tui.WithContentTableOpts(
-			tui.WithSelectedFunc(func(r, c int, data *tui.TableData) {
-				_ = open(el.Server, (*data)[r][1])
-			}),
-		),
+		tui.WithSidebarSelectedFunc(navigate(el.Server)),
+		tui.WithContentTableOpts(tui.WithSelectedFunc(navigate(el.Server))),
 	)
 
 	return view.Render(data)
