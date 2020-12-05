@@ -15,10 +15,10 @@ var issueCmd = &cobra.Command{
 	Short:   "List issues in a project",
 	Long:    `List lists all issues in a given project.`,
 	Aliases: []string{"issues", "list"},
-	Run:     issues,
+	Run:     issue,
 }
 
-func issues(cmd *cobra.Command, _ []string) {
+func issue(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
 

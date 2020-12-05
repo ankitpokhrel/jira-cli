@@ -17,33 +17,7 @@ type issueParams struct {
 	reverse    bool
 }
 
-// Issue is a query type for issue command.
-type Issue struct {
-	Project string
-	Flags   FlagParser
-	params  *issueParams
-}
-
-// NewIssue creates and initialize new issue type.
-func NewIssue(project string, flags FlagParser) (*Issue, error) {
-	issue := Issue{
-		Project: project,
-		Flags:   flags,
-	}
-
-	ip := issueParams{}
-
-	err := initParams(&ip, flags)
-	if err != nil {
-		return nil, err
-	}
-
-	issue.params = &ip
-
-	return &issue, nil
-}
-
-func initParams(params *issueParams, flags FlagParser) error {
+func (ip *issueParams) init(flags FlagParser) error {
 	latest, err := flags.GetBool("history")
 	if err != nil {
 		return err
@@ -94,18 +68,44 @@ func initParams(params *issueParams, flags FlagParser) error {
 		return err
 	}
 
-	params.latest = latest
-	params.watching = watching
-	params.resolution = resolution
-	params.issueType = issueType
-	params.status = status
-	params.priority = priority
-	params.reporter = reporter
-	params.assignee = assignee
-	params.labels = labels
-	params.reverse = reverse
+	ip.latest = latest
+	ip.watching = watching
+	ip.resolution = resolution
+	ip.issueType = issueType
+	ip.status = status
+	ip.priority = priority
+	ip.reporter = reporter
+	ip.assignee = assignee
+	ip.labels = labels
+	ip.reverse = reverse
 
 	return nil
+}
+
+// Issue is a query type for issue command.
+type Issue struct {
+	Project string
+	Flags   FlagParser
+	params  *issueParams
+}
+
+// NewIssue creates and initialize new issue type.
+func NewIssue(project string, flags FlagParser) (*Issue, error) {
+	issue := Issue{
+		Project: project,
+		Flags:   flags,
+	}
+
+	ip := issueParams{}
+
+	err := ip.init(flags)
+	if err != nil {
+		return nil, err
+	}
+
+	issue.params = &ip
+
+	return &issue, nil
 }
 
 // Get returns constructed jql query.
