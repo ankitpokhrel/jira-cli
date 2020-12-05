@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	baseURLv2 = "/rest/api/2"
+	baseURLv3 = "/rest/api/3"
 	baseURLv1 = "/rest/agile/1.0"
 )
 
@@ -70,7 +70,7 @@ func WithTimeout(to time.Duration) ClientFunc {
 }
 
 func (c *Client) endpoint(path string) string {
-	return c.server + baseURLv2 + path
+	return c.server + baseURLv3 + path
 }
 
 // Get sends get request to the jira server.
