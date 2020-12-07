@@ -145,6 +145,24 @@ func TestJQL(t *testing.T) {
 				"type=\"Story\" OR resolution=\"Done\" OR assignee=\"test@user.com\"",
 		},
 		{
+			name: "it queries with greater than or equals filter",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+
+				jql.And(func() {
+					jql.
+						FilterBy("type", "Story").
+						FilterBy("resolution", "Done").
+						Gte("created", "startOfMonth()").
+						Gte("updated", "startOfWeek()")
+				})
+
+				return jql
+			},
+			expected: "project=\"TEST\" AND type=\"Story\" AND resolution=\"Done\" AND " +
+				"created>=startOfMonth() AND updated>=startOfWeek()",
+		},
+		{
 			name: "it queries with IN and a single label",
 			initialize: func() *JQL {
 				jql := NewJQL("TEST")

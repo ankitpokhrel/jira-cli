@@ -55,6 +55,10 @@ func init() {
 	issueCmd.Flags().StringP("priority", "y", "", "Filter issues by priority")
 	issueCmd.Flags().StringP("reporter", "e", "", "Filter issues by reporter (email or display name)")
 	issueCmd.Flags().StringP("assignee", "a", "", "Filter issues by assignee (email or display name)")
+	issueCmd.Flags().String("created", "", "Filter issues by created date\n"+
+		"Accepts: today, week, month, year")
+	issueCmd.Flags().String("updated", "", "Filter issues by updated date\n"+
+		"Accepts: today, week, month, year")
 	issueCmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
 	issueCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 }

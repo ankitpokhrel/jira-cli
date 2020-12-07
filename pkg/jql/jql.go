@@ -68,6 +68,17 @@ func (j *JQL) FilterBy(field, value string) *JQL {
 	return j
 }
 
+// Gte is a greater than and equal filter.
+func (j *JQL) Gte(field, value string) *JQL {
+	if field != "" && value != "" {
+		q := fmt.Sprintf("%s>=%s", field, value)
+
+		j.filters = append(j.filters, q)
+	}
+
+	return j
+}
+
 // In constructs a query with IN clause.
 func (j *JQL) In(field string, value ...string) *JQL {
 	n := len(value)

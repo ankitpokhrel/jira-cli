@@ -13,6 +13,8 @@ type issueParams struct {
 	priority   string
 	reporter   string
 	assignee   string
+	created    string
+	updated    string
 	labels     []string
 	reverse    bool
 }
@@ -58,6 +60,16 @@ func (ip *issueParams) init(flags FlagParser) error {
 		return err
 	}
 
+	created, err := flags.GetString("created")
+	if err != nil {
+		return err
+	}
+
+	updated, err := flags.GetString("updated")
+	if err != nil {
+		return err
+	}
+
 	labels, err := flags.GetStringArray("label")
 	if err != nil {
 		return err
@@ -76,6 +88,8 @@ func (ip *issueParams) init(flags FlagParser) error {
 	ip.priority = priority
 	ip.reporter = reporter
 	ip.assignee = assignee
+	ip.created = created
+	ip.updated = updated
 	ip.labels = labels
 	ip.reverse = reverse
 
@@ -130,6 +144,32 @@ func (i *Issue) Get() string {
 			FilterBy("priority", i.params.priority).
 			FilterBy("reporter", i.params.reporter).
 			FilterBy("assignee", i.params.assignee)
+
+		if i.params.created != "" {
+			switch i.params.created {
+			case "today":
+				q.Gte("createdDate", "startOfDay()")
+			case "week":
+				q.Gte("createdDate", "startOfWeek()")
+			case "month":
+				q.Gte("createdDate", "startOfMonth()")
+			case "year":
+				q.Gte("createdDate", "startOfYear()")
+			}
+		}
+
+		if i.params.updated != "" {
+			switch i.params.updated {
+			case "today":
+				q.Gte("updatedDate", "startOfDay()")
+			case "week":
+				q.Gte("updatedDate", "startOfWeek()")
+			case "month":
+				q.Gte("updatedDate", "startOfMonth()")
+			case "year":
+				q.Gte("updatedDate", "startOfYear()")
+			}
+		}
 
 		if len(i.params.labels) > 0 {
 			q.In("labels", i.params.labels...)
