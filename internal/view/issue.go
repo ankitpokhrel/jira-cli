@@ -50,15 +50,15 @@ func (l IssueList) data() tui.TableData {
 			issue.Fields.Priority.Name,
 			issue.Fields.Status.Name,
 			issue.Fields.Resolution.Name,
-			formatDateTime(issue.Fields.Created),
-			formatDateTime(issue.Fields.Updated),
+			formatDateTime(issue.Fields.Created, jira.RFC3339),
+			formatDateTime(issue.Fields.Updated, jira.RFC3339),
 		})
 	}
 
 	return data
 }
 
-// Render renders the list view.
+// Render renders the view.
 func (l IssueList) Render() error {
 	data := l.data()
 

@@ -7,15 +7,6 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
-const helpText = `Use up and down arrow keys or 'j' and 'k' letters to navigate through the list.
-
-	Press 'w' to toggle focus between the sidebar and the contents screen. On contents screen,
-	you can use arrow keys or 'j', 'k', 'h', and 'l' letters to navigate through the epic issue list.
-
-	Press ENTER to open selected issue in the browser.
-
-	Press 'q' / ESC / CTRL+c to quit.`
-
 // EpicIssueFunc provides issues for the epic.
 type EpicIssueFunc func(string) []jira.Issue
 
@@ -90,15 +81,15 @@ func (el EpicList) tabularize(issues []jira.Issue) tui.TableData {
 			issue.Fields.Priority.Name,
 			issue.Fields.Status.Name,
 			issue.Fields.Resolution.Name,
-			formatDateTime(issue.Fields.Created),
-			formatDateTime(issue.Fields.Updated),
+			formatDateTime(issue.Fields.Created, jira.RFC3339),
+			formatDateTime(issue.Fields.Updated, jira.RFC3339),
 		})
 	}
 
 	return data
 }
 
-// Render renders the list view.
+// Render renders the epic explorer view.
 func (el EpicList) Render() error {
 	data := el.data()
 

@@ -10,11 +10,15 @@ import (
 )
 
 const (
+	// RFC3339 is jira datetime format.
+	RFC3339 = "2006-01-02T15:04:05-0700"
+
 	baseURLv3 = "/rest/api/3"
 	baseURLv1 = "/rest/agile/1.0"
 )
 
 var (
+	errNoResult             = fmt.Errorf("jira: no result")
 	errEmptyResponse        = fmt.Errorf("jira: empty response from server")
 	errUnexpectedStatusCode = fmt.Errorf("jira: unexpected status code")
 )

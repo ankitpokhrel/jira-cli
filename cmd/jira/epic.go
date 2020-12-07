@@ -1,6 +1,8 @@
 package jira
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -38,6 +40,12 @@ func epic(cmd *cobra.Command, _ []string) {
 
 	resp, err := jiraClient.Search(q.Get())
 	exitIfError(err)
+
+	if resp.Total == 0 {
+		fmt.Printf("No result found for given query in project \"%s\"\n", project)
+
+		return
+	}
 
 	v := view.EpicList{
 		Total:   resp.Total,

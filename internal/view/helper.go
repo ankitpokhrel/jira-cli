@@ -10,15 +10,31 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
-func formatDateTime(dt string) string {
-	const rfc3339 = "2006-01-02T15:04:05-0700"
+const helpText = `Use up and down arrow keys or 'j' and 'k' letters to navigate through the list.
 
-	t, err := time.Parse(rfc3339, dt)
+	Press 'w' to toggle focus between the sidebar and the contents screen. On contents screen,
+	you can use arrow keys or 'j', 'k', 'h', and 'l' letters to navigate through the epic issue list.
+
+	Press ENTER to open selected issue in the browser.
+
+	Press 'q' / ESC / CTRL+c to quit.`
+
+func formatDateTime(dt string, format string) string {
+	t, err := time.Parse(format, dt)
 	if err != nil {
 		return dt
 	}
 
 	return t.Format("2006-01-02 15:04:05")
+}
+
+func formatDateTimeHuman(dt, format string) string {
+	t, err := time.Parse(format, dt)
+	if err != nil {
+		return dt
+	}
+
+	return t.Format("Mon, 02 Jan 06")
 }
 
 func prepareTitle(text string) string {

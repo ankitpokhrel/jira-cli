@@ -55,3 +55,14 @@ type IssueFields struct {
 	Created string `json:"created"`
 	Updated string `json:"updated"`
 }
+
+// Sprint holds sprint info.
+type Sprint struct {
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	Status       string `json:"state"`
+	StartDate    string `json:"startDate"`
+	EndDate      string `json:"endDate"`
+	CompleteDate string `json:"completeDate,omitempty"`
+	BoardID      int    `json:"originBoardId,omitempty"`
+}
