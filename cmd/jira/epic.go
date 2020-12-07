@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/internal/query"
@@ -44,7 +43,7 @@ func epic(cmd *cobra.Command, args []string) {
 	}
 }
 
-func singleEpicView(flags *pflag.FlagSet, key, project, server string) {
+func singleEpicView(flags query.FlagParser, key, project, server string) {
 	err := flags.Set("type", "") // Unset issue type.
 	exitIfError(err)
 
@@ -70,7 +69,7 @@ func singleEpicView(flags *pflag.FlagSet, key, project, server string) {
 	exitIfError(v.Render())
 }
 
-func epicExplorerView(flags *pflag.FlagSet, project, server string) {
+func epicExplorerView(flags query.FlagParser, project, server string) {
 	q, err := query.NewIssue(project, flags)
 	exitIfError(err)
 

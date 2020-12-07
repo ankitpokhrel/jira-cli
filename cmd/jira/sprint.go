@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/internal/query"
@@ -39,7 +38,7 @@ func sprint(cmd *cobra.Command, args []string) {
 	}
 }
 
-func singleSprintView(flags *pflag.FlagSet, boardID, sprintID int, project, server string) {
+func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, server string) {
 	q, err := query.NewIssue(project, flags)
 	exitIfError(err)
 
@@ -62,7 +61,7 @@ func singleSprintView(flags *pflag.FlagSet, boardID, sprintID int, project, serv
 	exitIfError(v.Render())
 }
 
-func sprintExplorerView(flags *pflag.FlagSet, boardID int, project, server string) {
+func sprintExplorerView(flags query.FlagParser, boardID int, project, server string) {
 	resp, err := jiraClient.Boards(project, jira.BoardTypeScrum)
 	exitIfError(err)
 

@@ -72,6 +72,10 @@ func (tfp testFlagParser) GetStringArray(name string) ([]string, error) {
 	return tfp.labels, nil
 }
 
+func (tfp testFlagParser) Set(string, string) error {
+	return nil
+}
+
 func TestIssueGet(t *testing.T) {
 	cases := []struct {
 		name       string
