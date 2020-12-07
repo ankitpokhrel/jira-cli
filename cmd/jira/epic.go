@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/internal/query"
@@ -16,6 +17,7 @@ var epicCmd = &cobra.Command{
 	Short:   "Epic lists top 50 epics",
 	Long:    `Epic lists top 50 epics.`,
 	Aliases: []string{"epics"},
+	Args:    cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		list, err := cmd.Flags().GetBool("list")
 		exitIfError(err)
@@ -31,11 +33,45 @@ var epicCmd = &cobra.Command{
 	},
 }
 
-func epic(cmd *cobra.Command, _ []string) {
+func epic(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
 
-	q, err := query.NewIssue(project, cmd.Flags())
+	if len(args) == 0 {
+		epicExplorerView(cmd.Flags(), project, server)
+	} else {
+		singleEpicView(cmd.Flags(), args[0], project, server)
+	}
+}
+
+func singleEpicView(flags *pflag.FlagSet, key, project, server string) {
+	err := flags.Set("type", "") // Unset issue type.
+	exitIfError(err)
+
+	q, err := query.NewIssue(project, flags)
+	exitIfError(err)
+
+	resp, err := jiraClient.EpicIssues(key, q.Get())
+	exitIfError(err)
+
+	if resp.Total == 0 {
+		fmt.Printf("No result found for given query in project \"%s\"\n", project)
+
+		return
+	}
+
+	v := view.IssueList{
+		Project: project,
+		Server:  server,
+		Total:   resp.Total,
+		Data:    resp.Issues,
+	}
+
+	exitIfError(v.Render())
+}
+
+func epicExplorerView(flags *pflag.FlagSet, project, server string) {
+	q, err := query.NewIssue(project, flags)
 	exitIfError(err)
 
 	resp, err := jiraClient.Search(q.Get())
@@ -53,7 +89,7 @@ func epic(cmd *cobra.Command, _ []string) {
 		Server:  server,
 		Data:    resp.Issues,
 		Issues: func(key string) []jira.Issue {
-			resp, err := jiraClient.EpicIssues(key)
+			resp, err := jiraClient.EpicIssues(key, "")
 			if err != nil {
 				return []jira.Issue{}
 			}

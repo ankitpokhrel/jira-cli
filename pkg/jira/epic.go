@@ -33,8 +33,13 @@ func (c *Client) Epic(jql string) (*Search, error) {
 }
 
 // EpicIssues fetches issues in the given epic.
-func (c *Client) EpicIssues(key string) (*Search, error) {
-	res, err := c.GetV1(context.Background(), fmt.Sprintf("/epic/%s/issue", key))
+func (c *Client) EpicIssues(key, jql string) (*Search, error) {
+	path := fmt.Sprintf("/epic/%s/issue", key)
+	if jql != "" {
+		path += fmt.Sprintf("?jql=%s", url.QueryEscape(jql))
+	}
+
+	res, err := c.GetV1(context.Background(), path)
 	if err != nil {
 		return nil, err
 	}
