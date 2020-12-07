@@ -9,6 +9,13 @@ type Project struct {
 	} `json:"lead"`
 }
 
+// Board holds board info.
+type Board struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
 // Issue holds issue info.
 type Issue struct {
 	ID     string      `json:"id"`
