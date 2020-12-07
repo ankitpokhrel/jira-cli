@@ -13,7 +13,7 @@ install: deps
 	CGO_ENABLED=0 go install ./...
 
 lint:
-	@bin/lint.sh
+	@scripts/lint.sh
 
 test:
 	@go clean -testcache ./...
