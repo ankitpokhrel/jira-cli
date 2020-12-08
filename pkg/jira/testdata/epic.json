@@ -1,0 +1,65 @@
+{
+  "expand": "schema,names",
+  "startAt": 0,
+  "maxResults": 50,
+  "total": 2,
+  "issues": [
+    {
+      "key": "EPIC-1",
+      "fields": {
+        "issuetype": {
+          "name": "Epic"
+        },
+        "resolution": null,
+        "created": "2020-12-03T14:05:20.974+0100",
+        "priority": {
+          "name": "Medium"
+        },
+        "labels": [],
+        "assignee": null,
+        "updated": "2020-12-03T14:05:20.974+0100",
+        "status": {
+          "name": "To Do"
+        },
+        "summary": "Epic 1 summary",
+        "reporter": {
+          "displayName": "Person A"
+        },
+        "watches": {
+          "watchCount": 1,
+          "isWatching": true
+        }
+      }
+    },
+    {
+      "key": "EPIC-2",
+      "fields": {
+        "issuetype": {
+          "name": "Epic"
+        },
+        "resolution": null,
+        "created": "2020-12-03T14:05:20.974+0100",
+        "priority": {
+          "name": "High"
+        },
+        "labels": [
+          "critical",
+          "feature"
+        ],
+        "assignee": null,
+        "updated": "2020-12-03T14:05:20.974+0100",
+        "status": {
+          "name": "In Progress"
+        },
+        "summary": "Epic 2 summary",
+        "reporter": {
+          "displayName": "Person B"
+        },
+        "watches": {
+          "watchCount": 12,
+          "isWatching": true
+        }
+      }
+    }
+  ]
+}

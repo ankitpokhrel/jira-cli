@@ -56,12 +56,12 @@ func TestSplitText(t *testing.T) {
 			expected: []string{"Hello, World!"},
 		},
 		{
-			name:     "it splits multiline text separated with \n",
+			name:     `it splits multiline text separated with \n`,
 			input:    "Hello, World!\nHow is it going?",
 			expected: []string{"Hello, World!", "How is it going?"},
 		},
 		{
-			name:     "it splits multiline text separated with \r\n",
+			name:     `it splits multiline text separated with \r\n`,
 			input:    "Hello, World!\r\nHow is it going?",
 			expected: []string{"Hello, World!", "How is it going?"},
 		},

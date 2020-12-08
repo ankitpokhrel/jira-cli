@@ -9,7 +9,7 @@ import (
 )
 
 // SprintIssueFunc provides issues in the sprint.
-type SprintIssueFunc func(int, int) []jira.Issue
+type SprintIssueFunc func(boardID, sprintID int) []jira.Issue
 
 // SprintList is a list view for issues.
 type SprintList struct {

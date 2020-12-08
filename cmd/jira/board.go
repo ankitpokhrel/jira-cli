@@ -22,7 +22,7 @@ func board(*cobra.Command, []string) {
 	resp, err := jiraClient.Boards(project, jira.BoardTypeAll)
 	exitIfError(err)
 
-	v := view.Board{Data: resp.Boards}
+	v := view.NewBoard(resp.Boards)
 
 	exitIfError(v.Render())
 }

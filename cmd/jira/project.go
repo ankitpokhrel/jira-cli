@@ -18,7 +18,7 @@ func projects(*cobra.Command, []string) {
 	resp, err := jiraClient.Project()
 	exitIfError(err)
 
-	v := view.Project{Data: resp}
+	v := view.NewProject(resp)
 
 	exitIfError(v.Render())
 }

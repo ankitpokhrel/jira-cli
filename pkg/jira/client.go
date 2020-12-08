@@ -73,13 +73,9 @@ func WithTimeout(to time.Duration) ClientFunc {
 	}
 }
 
-func (c *Client) endpoint(path string) string {
-	return c.server + baseURLv3 + path
-}
-
 // Get sends get request to the jira server.
 func (c *Client) Get(ctx context.Context, path string) (*http.Response, error) {
-	req, err := http.NewRequest(http.MethodGet, c.endpoint(path), nil)
+	req, err := http.NewRequest(http.MethodGet, c.server+baseURLv3+path, nil)
 	if err != nil {
 		return nil, err
 	}

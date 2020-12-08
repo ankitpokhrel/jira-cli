@@ -1,0 +1,23 @@
+[
+  {
+    "key": "PRJ1",
+    "lead": {
+      "displayName": "Person A"
+    },
+    "name": "Project 1"
+  },
+  {
+    "key": "PRJ2",
+    "lead": {
+      "displayName": "Person B"
+    },
+    "name": "Project 2"
+  },
+  {
+    "key": "PRJ3",
+    "lead": {
+      "displayName": "Person C"
+    },
+    "name": "Project 3"
+  }
+]

@@ -3,12 +3,12 @@ package jira
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
 // Me struct holds response from /myself endpoint.
 type Me struct {
+	Name  string `json:"displayName"`
 	Email string `json:"emailAddress"`
 }
 
@@ -24,7 +24,7 @@ func (c *Client) Me() (*Me, error) {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unauthorized")
+		return nil, errUnexpectedStatusCode
 	}
 
 	var me Me

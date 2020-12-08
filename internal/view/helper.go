@@ -19,7 +19,7 @@ const helpText = `Use up and down arrow keys or 'j' and 'k' letters to navigate 
 
 	Press 'q' / ESC / CTRL+c to quit.`
 
-func formatDateTime(dt string, format string) string {
+func formatDateTime(dt, format string) string {
 	t, err := time.Parse(format, dt)
 	if err != nil {
 		return dt
@@ -51,18 +51,14 @@ func prepareTitle(text string) string {
 	return text
 }
 
-func open(server, key string) error {
-	if key == "" {
-		return nil
-	}
-
-	url := fmt.Sprintf("%s/browse/%s", server, key)
-
-	return browser.OpenURL(url)
-}
-
 func navigate(server string) tui.SelectedFunc {
 	return func(r, c int, path string) {
-		_ = open(server, path)
+		if path == "" {
+			return
+		}
+
+		url := fmt.Sprintf("%s/browse/%s", server, path)
+
+		_ = browser.OpenURL(url)
 	}
 }

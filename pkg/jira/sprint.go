@@ -45,7 +45,7 @@ func (c *Client) Sprints(boardID int, qp string, startAt, max int) (*SprintResul
 // Jira api to get all sprints doesn't provide an option to sort results and
 // returns result in ascending order by default. So, we will have to send
 // multiple requests to get the results we are interested in.
-func (c *Client) LastNSprints(boardID int, qp string, limit int) (*SprintResult, error) {
+func (c *Client) lastNSprints(boardID int, qp string, limit int) (*SprintResult, error) {
 	var (
 		s        *SprintResult
 		err      error
@@ -86,7 +86,7 @@ func (c *Client) SprintsInBoards(boardIDs []int, qp string, limit int) []*Sprint
 
 	for _, boardID := range boardIDs {
 		go func(id int) {
-			s, err := c.LastNSprints(id, qp, limit)
+			s, err := c.lastNSprints(id, qp, limit)
 			if err != nil {
 				ch <- nil
 

@@ -1,0 +1,32 @@
+{
+  "maxResults": 3,
+  "startAt": 2,
+  "isLast": true,
+  "values": [
+    {
+      "id": 3,
+      "state": "closed",
+      "name": "Sprint 3",
+      "startDate": "2020-11-15T05:39:24.463Z",
+      "endDate": "2020-11-29T05:39:24.463Z",
+      "completeDate": "2020-11-29T04:19:24.463Z",
+      "originBoardId": 2
+    },
+    {
+      "id": 4,
+      "state": "closed",
+      "name": "Sprint 4",
+      "startDate": "2020-11-15T05:39:24.463Z",
+      "endDate": "2020-11-29T05:39:24.463Z",
+      "completeDate": "2020-11-29T04:19:24.463Z",
+      "originBoardId": 2
+    },
+    {
+      "id": 5,
+      "state": "active",
+      "name": "Sprint 5",
+      "startDate": "2020-11-29T06:49:24.463Z",
+      "endDate": "2020-12-13T07:09:24.463Z"
+    }
+  ]
+}

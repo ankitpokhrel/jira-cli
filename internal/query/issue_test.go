@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type paramsErr struct {
+type issueParamsErr struct {
 	history    bool
 	watching   bool
 	resolution bool
@@ -15,16 +15,18 @@ type paramsErr struct {
 	labels     bool
 }
 
-type testFlagParser struct {
-	err        paramsErr
+type issueFlagParser struct {
+	err        issueParamsErr
 	noHistory  bool
 	noWatching bool
 	orderDesc  bool
 	emptyType  bool
 	labels     []string
+	created    string
+	updated    string
 }
 
-func (tfp testFlagParser) GetBool(name string) (bool, error) {
+func (tfp issueFlagParser) GetBool(name string) (bool, error) {
 	if tfp.err.history && name == "history" {
 		return false, fmt.Errorf("oops! couldn't fetch history flag")
 	}
@@ -48,13 +50,21 @@ func (tfp testFlagParser) GetBool(name string) (bool, error) {
 	return true, nil
 }
 
-func (tfp testFlagParser) GetString(name string) (string, error) {
+func (tfp issueFlagParser) GetString(name string) (string, error) {
 	if tfp.err.resolution && name == "resolution" {
 		return "", fmt.Errorf("oops! couldn't fetch resolution flag")
 	}
 
 	if tfp.err.issueType && name == "type" {
 		return "", fmt.Errorf("oops! couldn't fetch type flag")
+	}
+
+	if tfp.created != "" && name == "created" {
+		return tfp.created, nil
+	}
+
+	if tfp.updated != "" && name == "updated" {
+		return tfp.updated, nil
 	}
 
 	if tfp.emptyType && name == "type" {
@@ -64,7 +74,7 @@ func (tfp testFlagParser) GetString(name string) (string, error) {
 	return "test", nil
 }
 
-func (tfp testFlagParser) GetStringArray(name string) ([]string, error) {
+func (tfp issueFlagParser) GetStringArray(name string) ([]string, error) {
 	if tfp.err.labels && name == "label" {
 		return []string{}, fmt.Errorf("oops! couldn't fetch label flag")
 	}
@@ -72,7 +82,7 @@ func (tfp testFlagParser) GetStringArray(name string) ([]string, error) {
 	return tfp.labels, nil
 }
 
-func (tfp testFlagParser) Set(string, string) error {
+func (tfp issueFlagParser) Set(string, string) error {
 	return nil
 }
 
@@ -85,7 +95,7 @@ func TestIssueGet(t *testing.T) {
 		{
 			name: "query with default parameters",
 			initialize: func() *Issue {
-				i, err := NewIssue("TEST", &testFlagParser{})
+				i, err := NewIssue("TEST", &issueFlagParser{})
 				assert.NoError(t, err)
 
 				return i
@@ -97,7 +107,7 @@ func TestIssueGet(t *testing.T) {
 		{
 			name: "query without issue history parameter",
 			initialize: func() *Issue {
-				i, err := NewIssue("TEST", &testFlagParser{noHistory: true})
+				i, err := NewIssue("TEST", &issueFlagParser{noHistory: true})
 				assert.NoError(t, err)
 
 				return i
@@ -109,7 +119,7 @@ func TestIssueGet(t *testing.T) {
 		{
 			name: "query only with fields filter",
 			initialize: func() *Issue {
-				i, err := NewIssue("TEST", &testFlagParser{noHistory: true, noWatching: true})
+				i, err := NewIssue("TEST", &issueFlagParser{noHistory: true, noWatching: true})
 				assert.NoError(t, err)
 
 				return i
@@ -121,7 +131,7 @@ func TestIssueGet(t *testing.T) {
 		{
 			name: "query with error when fetching history flag",
 			initialize: func() *Issue {
-				i, err := NewIssue("TEST", &testFlagParser{err: paramsErr{
+				i, err := NewIssue("TEST", &issueFlagParser{err: issueParamsErr{
 					history: true,
 				}})
 				assert.Error(t, err)
@@ -133,7 +143,7 @@ func TestIssueGet(t *testing.T) {
 		{
 			name: "query with error when fetching watching flag",
 			initialize: func() *Issue {
-				i, err := NewIssue("TEST", &testFlagParser{err: paramsErr{
+				i, err := NewIssue("TEST", &issueFlagParser{err: issueParamsErr{
 					watching: true,
 				}})
 				assert.Error(t, err)
@@ -145,7 +155,7 @@ func TestIssueGet(t *testing.T) {
 		{
 			name: "query with error when fetching resolution flag",
 			initialize: func() *Issue {
-				i, err := NewIssue("TEST", &testFlagParser{err: paramsErr{
+				i, err := NewIssue("TEST", &issueFlagParser{err: issueParamsErr{
 					resolution: true,
 				}})
 				assert.Error(t, err)
@@ -157,7 +167,7 @@ func TestIssueGet(t *testing.T) {
 		{
 			name: "query with error when fetching labels flag",
 			initialize: func() *Issue {
-				i, err := NewIssue("TEST", &testFlagParser{err: paramsErr{
+				i, err := NewIssue("TEST", &issueFlagParser{err: issueParamsErr{
 					labels: true,
 				}})
 				assert.Error(t, err)
@@ -169,7 +179,7 @@ func TestIssueGet(t *testing.T) {
 		{
 			name: "query with error when fetching type flag",
 			initialize: func() *Issue {
-				i, err := NewIssue("TEST", &testFlagParser{err: paramsErr{
+				i, err := NewIssue("TEST", &issueFlagParser{err: issueParamsErr{
 					issueType: true,
 				}})
 				assert.Error(t, err)
@@ -181,7 +191,7 @@ func TestIssueGet(t *testing.T) {
 		{
 			name: "query without issue type flag",
 			initialize: func() *Issue {
-				i, err := NewIssue("TEST", &testFlagParser{emptyType: true})
+				i, err := NewIssue("TEST", &issueFlagParser{emptyType: true})
 				assert.NoError(t, err)
 
 				return i
@@ -193,7 +203,7 @@ func TestIssueGet(t *testing.T) {
 		{
 			name: "query with reverse set to true",
 			initialize: func() *Issue {
-				i, err := NewIssue("TEST", &testFlagParser{orderDesc: true})
+				i, err := NewIssue("TEST", &issueFlagParser{orderDesc: true})
 				assert.NoError(t, err)
 
 				return i
@@ -205,7 +215,7 @@ func TestIssueGet(t *testing.T) {
 		{
 			name: "query with labels",
 			initialize: func() *Issue {
-				i, err := NewIssue("TEST", &testFlagParser{labels: []string{"first", "second", "third"}})
+				i, err := NewIssue("TEST", &issueFlagParser{labels: []string{"first", "second", "third"}})
 				assert.NoError(t, err)
 
 				return i
@@ -213,6 +223,54 @@ func TestIssueGet(t *testing.T) {
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`AND labels IN ("first", "second", "third") ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with created and updated today filter",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{created: "today", updated: "today"})
+				assert.NoError(t, err)
+
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND createdDate>=startOfDay() AND updatedDate>=startOfDay() ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with created and updated week filter",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{created: "week", updated: "week"})
+				assert.NoError(t, err)
+
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND createdDate>=startOfWeek() AND updatedDate>=startOfWeek() ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with created and updated month filter",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{created: "month", updated: "month"})
+				assert.NoError(t, err)
+
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND createdDate>=startOfMonth() AND updatedDate>=startOfMonth() ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with created and updated year filter",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{created: "year", updated: "year"})
+				assert.NoError(t, err)
+
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND createdDate>=startOfYear() AND updatedDate>=startOfYear() ORDER BY lastViewed ASC`,
 		},
 	}
 

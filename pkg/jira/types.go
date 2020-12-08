@@ -18,7 +18,6 @@ type Board struct {
 
 // Issue holds issue info.
 type Issue struct {
-	ID     string      `json:"id"`
 	Key    string      `json:"key"`
 	Fields IssueFields `json:"fields"`
 }
@@ -31,16 +30,13 @@ type IssueFields struct {
 		Name string `json:"name"`
 	} `json:"resolution"`
 	IssueType struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		IconURL     string `json:"iconUrl"`
+		Name string `json:"name"`
 	} `json:"issueType"`
 	Assignee struct {
 		Name string `json:"displayName"`
 	} `json:"assignee"`
 	Priority struct {
-		Name    string `json:"name"`
-		IconURL string `json:"iconUrl"`
+		Name string `json:"name"`
 	} `json:"priority"`
 	Reporter struct {
 		Name string `json:"displayName"`

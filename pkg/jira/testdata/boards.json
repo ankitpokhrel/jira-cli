@@ -1,0 +1,18 @@
+{
+  "maxResults": 50,
+  "startAt": 0,
+  "total": 2,
+  "isLast": true,
+  "values": [
+    {
+      "id": 1,
+      "name": "Board 1",
+      "type": "scrum"
+    },
+    {
+      "id": 2,
+      "name": "Board 2",
+      "type": "scrum"
+    }
+  ]
+}

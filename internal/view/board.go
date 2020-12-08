@@ -9,9 +9,36 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
+// BoardOption is a functional option to wrap board properties.
+type BoardOption func(*Board)
+
 // Board is a board view.
 type Board struct {
-	Data []*jira.Board
+	data   []*jira.Board
+	writer io.Writer
+}
+
+// NewBoard initializes a board.
+func NewBoard(data []*jira.Board, opts ...BoardOption) *Board {
+	w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
+
+	b := Board{
+		data:   data,
+		writer: w,
+	}
+
+	for _, opt := range opts {
+		opt(&b)
+	}
+
+	return &b
+}
+
+// WithBoardWriter sets a writer for board.
+func WithBoardWriter(w io.Writer) BoardOption {
+	return func(b *Board) {
+		b.writer = w
+	}
 }
 
 func (b Board) header() []string {
@@ -22,23 +49,25 @@ func (b Board) header() []string {
 	}
 }
 
-func (b Board) printHeader(w io.Writer) {
+func (b Board) printHeader() {
 	for _, h := range b.header() {
-		_, _ = fmt.Fprintf(w, "%s\t", h)
+		_, _ = fmt.Fprintf(b.writer, "%s\t", h)
 	}
 
-	_, _ = fmt.Fprintln(w, "")
+	_, _ = fmt.Fprintln(b.writer, "")
 }
 
 // Render renders the board view.
 func (b Board) Render() error {
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
+	b.printHeader()
 
-	b.printHeader(w)
-
-	for _, d := range b.Data {
-		_, _ = fmt.Fprintf(w, "%d\t%s\t%s\n", d.ID, d.Name, d.Type)
+	for _, d := range b.data {
+		_, _ = fmt.Fprintf(b.writer, "%d\t%s\t%s\n", d.ID, d.Name, d.Type)
 	}
 
-	return w.Flush()
+	if _, ok := b.writer.(*tabwriter.Writer); ok {
+		return b.writer.(*tabwriter.Writer).Flush()
+	}
+
+	return nil
 }
