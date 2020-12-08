@@ -122,6 +122,10 @@ func init() {
 	sprintCmd.Flags().StringP("priority", "y", "", "Filter epics by priority")
 	sprintCmd.Flags().StringP("reporter", "e", "", "Filter epics by reporter (email or display name)")
 	sprintCmd.Flags().StringP("assignee", "a", "", "Filter epics by assignee (email or display name)")
+	sprintCmd.Flags().String("created", "", "Filter issues by created date\n"+
+		"Accepts: today, week, month, year")
+	sprintCmd.Flags().String("updated", "", "Filter issues by updated date\n"+
+		"Accepts: today, week, month, year")
 	sprintCmd.Flags().StringArrayP("label", "l", []string{}, "Filter epics by label")
 	sprintCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 

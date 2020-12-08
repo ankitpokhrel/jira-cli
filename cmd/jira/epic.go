@@ -111,6 +111,10 @@ func init() {
 	epicCmd.Flags().StringP("priority", "y", "", "Filter epics by priority")
 	epicCmd.Flags().StringP("reporter", "e", "", "Filter epics by reporter (email or display name)")
 	epicCmd.Flags().StringP("assignee", "a", "", "Filter epics by assignee (email or display name)")
+	epicCmd.Flags().String("created", "", "Filter issues by created date\n"+
+		"Accepts: today, week, month, year")
+	epicCmd.Flags().String("updated", "", "Filter issues by updated date\n"+
+		"Accepts: today, week, month, year")
 	epicCmd.Flags().StringArrayP("label", "l", []string{}, "Filter epics by label")
 	epicCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 	epicCmd.Flags().Bool("list", false, "Display epics in list view")
