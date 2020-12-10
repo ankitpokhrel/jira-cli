@@ -23,7 +23,7 @@ func initialize(*cobra.Command, []string) {
 
 	c := jiraConfig.NewJiraCLIConfig()
 
-	if err := c.Generate(viper.ConfigFileUsed()); err != nil {
+	if err := c.Generate(); err != nil {
 		fmt.Println(err.Error())
 		fmt.Printf("\n\033[0;31m✗\033[0m Unable to generate configuration: %s\n", viper.ConfigFileUsed())
 

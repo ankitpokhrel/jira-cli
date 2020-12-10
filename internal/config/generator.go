@@ -43,19 +43,19 @@ func NewJiraCLIConfig() *JiraCLIConfig {
 }
 
 // Generate generates the config file.
-func (c *JiraCLIConfig) Generate(file string) error {
+func (c *JiraCLIConfig) Generate() error {
 	ce := func() bool {
 		s := info("Checking configuration...")
 		defer s.Stop()
 
-		return exists(file)
+		return exists(viper.ConfigFileUsed())
 	}()
 
 	if ce && !shallOverwrite() {
 		return nil
 	}
 
-	err := func() error {
+	if err := func() error {
 		s := info("Creating new configuration...")
 		defer s.Stop()
 
@@ -65,8 +65,7 @@ func (c *JiraCLIConfig) Generate(file string) error {
 		}
 
 		return create(home + "/" + configFile)
-	}()
-	if err != nil {
+	}(); err != nil {
 		return err
 	}
 
@@ -185,7 +184,7 @@ func (c *JiraCLIConfig) configureProjectAndBoardDetails() error {
 	}
 
 	projectPrompt := survey.Select{
-		Message: "Default project: ",
+		Message: "Default project:",
 		Help:    "This is your project key that you want to access by default when using the cli.",
 		Options: c.projectSuggestions,
 	}
@@ -200,7 +199,7 @@ func (c *JiraCLIConfig) configureProjectAndBoardDetails() error {
 	}
 
 	boardPrompt := survey.Select{
-		Message: "Default board: ",
+		Message: "Default board:",
 		Help:    "This is your default project board that you want to access by default when using the cli.",
 		Options: c.boardSuggestions,
 	}
