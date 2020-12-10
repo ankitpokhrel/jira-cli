@@ -8,14 +8,14 @@ import (
 )
 
 // EpicIssueFunc provides issues for the epic.
-type EpicIssueFunc func(string) []jira.Issue
+type EpicIssueFunc func(string) []*jira.Issue
 
 // EpicList is a list view for issues.
 type EpicList struct {
 	Total   int
 	Project string
 	Server  string
-	Data    []jira.Issue
+	Data    []*jira.Issue
 	Issues  EpicIssueFunc
 
 	issueCache map[string]tui.TableData
@@ -55,7 +55,7 @@ func (el EpicList) data() []tui.PreviewData {
 	return data
 }
 
-func (el EpicList) tabularize(issues []jira.Issue) tui.TableData {
+func (el EpicList) tabularize(issues []*jira.Issue) tui.TableData {
 	var data tui.TableData
 
 	data = append(data, []string{

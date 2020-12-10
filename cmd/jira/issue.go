@@ -8,12 +8,13 @@ import (
 
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/internal/view"
+	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
 var issueCmd = &cobra.Command{
 	Use:     "issue",
-	Short:   "List issues in a project",
-	Long:    `List lists all issues in a given project.`,
+	Short:   "Issue lists issues in a project",
+	Long:    `Issue lists all issues in a given project.`,
 	Aliases: []string{"issues", "list"},
 	Run:     issue,
 }
@@ -22,23 +23,30 @@ func issue(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
 
-	q, err := query.NewIssue(project, cmd.Flags())
-	exitIfError(err)
+	issues, total := func() ([]*jira.Issue, int) {
+		s := info("Fetching issues...")
+		defer s.Stop()
 
-	resp, err := jiraClient.Search(q.Get())
-	exitIfError(err)
+		q, err := query.NewIssue(project, cmd.Flags())
+		exitIfError(err)
 
-	if resp.Total == 0 {
+		resp, err := jiraClient.Search(q.Get())
+		exitIfError(err)
+
+		return resp.Issues, resp.Total
+	}()
+
+	if total == 0 {
 		fmt.Printf("No result found for given query in project \"%s\"\n", project)
 
 		return
 	}
 
 	v := view.IssueList{
-		Total:   resp.Total,
 		Project: project,
 		Server:  server,
-		Data:    resp.Issues,
+		Total:   total,
+		Data:    issues,
 	}
 
 	exitIfError(v.Render())

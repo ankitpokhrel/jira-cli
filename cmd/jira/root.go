@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -12,7 +13,10 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
-const clientTimeout = 15 * time.Second
+const (
+	clientTimeout = 15 * time.Second
+	refreshRate   = 100 * time.Millisecond
+)
 
 var (
 	config     string
@@ -78,4 +82,17 @@ func exitIfError(err error) {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
 		os.Exit(1)
 	}
+}
+
+func info(msg string) *spinner.Spinner {
+	s := spinner.New(
+		spinner.CharSets[14],
+		refreshRate,
+		spinner.WithSuffix(" "+msg),
+		spinner.WithHiddenCursor(true),
+	)
+
+	s.Start()
+
+	return s
 }

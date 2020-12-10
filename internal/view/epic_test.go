@@ -108,18 +108,13 @@ func TestEpicData(t *testing.T) {
 		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
-		Data:    []jira.Issue{epic1, epic2},
-		Issues: func(s string) []jira.Issue {
+		Data:    []*jira.Issue{&epic1, &epic2},
+		Issues: func(s string) []*jira.Issue {
 			if s == "TEST-1" {
-				return []jira.Issue{
-					issue1,
-				}
+				return []*jira.Issue{&issue1}
 			}
 
-			return []jira.Issue{
-				issue2,
-				issue1,
-			}
+			return []*jira.Issue{&issue2, &issue1}
 		},
 	}
 

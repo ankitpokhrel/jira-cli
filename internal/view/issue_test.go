@@ -14,7 +14,7 @@ func TestIssueData(t *testing.T) {
 		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
-		Data: []jira.Issue{
+		Data: []*jira.Issue{
 			{
 				Key: "TEST-1",
 				Fields: jira.IssueFields{

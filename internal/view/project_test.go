@@ -18,7 +18,7 @@ func TestProjectRender(t *testing.T) {
 
 	data := []*jira.Project{
 		{Key: "FRST", Name: "First", Lead: lead{Name: "Person A"}},
-		{Key: "SCND", Name: "Second", Lead: lead{Name: "Person B"}},
+		{Key: "SCND", Name: "[2] Second", Lead: lead{Name: "Person B"}},
 		{Key: "THIRD", Name: "Third", Lead: lead{Name: "Person C"}},
 	}
 
@@ -28,7 +28,7 @@ func TestProjectRender(t *testing.T) {
 
 	expected := `KEY	NAME	LEAD	
 FRST	First	Person A
-SCND	Second	Person B
+SCND	⦗2⦘ Second	Person B
 THIRD	Third	Person C
 `
 

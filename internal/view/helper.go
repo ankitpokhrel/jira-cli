@@ -15,9 +15,9 @@ const helpText = `Use up and down arrow keys or 'j' and 'k' letters to navigate 
 	Press 'w' to toggle focus between the sidebar and the contents screen. On contents screen,
 	you can use arrow keys or 'j', 'k', 'h', and 'l' letters to navigate through the epic issue list.
 
-	Press ENTER to open selected issue in the browser.
+	Press ENTER to open the selected issue in the browser.
 
-	Press 'q' / ESC / CTRL+c to quit.`
+	Press 'q' / ESC / CTRL+C to quit.`
 
 func formatDateTime(dt, format string) string {
 	t, err := time.Parse(format, dt)

@@ -9,10 +9,10 @@ import (
 
 // Search struct holds response from /search endpoint.
 type Search struct {
-	StartAt    int     `json:"startAt"`
-	MaxResults int     `json:"maxResults"`
-	Total      int     `json:"total"`
-	Issues     []Issue `json:"issues"`
+	StartAt    int      `json:"startAt"`
+	MaxResults int      `json:"maxResults"`
+	Total      int      `json:"total"`
+	Issues     []*Issue `json:"issues"`
 }
 
 // Search fetches response from /search endpoint.

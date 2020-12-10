@@ -9,7 +9,7 @@ import (
 )
 
 // SprintIssueFunc provides issues in the sprint.
-type SprintIssueFunc func(boardID, sprintID int) []jira.Issue
+type SprintIssueFunc func(boardID, sprintID int) []*jira.Issue
 
 // SprintList is a list view for issues.
 type SprintList struct {
@@ -39,7 +39,8 @@ func (sl SprintList) data() []tui.PreviewData {
 		data = append(data, tui.PreviewData{
 			Key: fmt.Sprintf("%d-%d-%s", bid, sid, s.StartDate),
 			Menu: fmt.Sprintf(
-				"➤ %s: ⦗%s - %s⦘",
+				"➤ #%d %s: ⦗%s - %s⦘",
+				s.ID,
 				prepareTitle(s.Name),
 				formatDateTimeHuman(s.StartDate, time.RFC3339),
 				formatDateTimeHuman(s.EndDate, time.RFC3339),
@@ -63,7 +64,7 @@ func (sl SprintList) data() []tui.PreviewData {
 	return data
 }
 
-func (sl SprintList) tabularize(issues []jira.Issue) tui.TableData {
+func (sl SprintList) tabularize(issues []*jira.Issue) tui.TableData {
 	var data tui.TableData
 
 	data = append(data, []string{
