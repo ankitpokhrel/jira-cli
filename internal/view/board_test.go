@@ -13,9 +13,9 @@ func TestBoardRender(t *testing.T) {
 	var b bytes.Buffer
 
 	data := []*jira.Board{
-		{ID: 1, Name: "first", Type: "scrum"},
-		{ID: 2, Name: "second", Type: "kanban"},
-		{ID: 3, Name: "third", Type: "nextgen"},
+		{ID: 1, Name: "First", Type: "scrum"},
+		{ID: 2, Name: "⦗2⦘ Second", Type: "kanban"},
+		{ID: 3, Name: "Third", Type: "nextgen"},
 	}
 
 	board := NewBoard(data, WithBoardWriter(&b))
@@ -23,9 +23,9 @@ func TestBoardRender(t *testing.T) {
 	assert.NoError(t, board.Render())
 
 	expected := `ID	NAME	TYPE	
-1	first	scrum
-2	second	kanban
-3	third	nextgen
+1	First	scrum
+2	⦗2⦘ Second	kanban
+3	Third	nextgen
 `
 
 	assert.Equal(t, expected, b.String())

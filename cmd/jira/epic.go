@@ -47,13 +47,20 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 	err := flags.Set("type", "") // Unset issue type.
 	exitIfError(err)
 
-	q, err := query.NewIssue(project, flags)
-	exitIfError(err)
+	issues, total := func() ([]*jira.Issue, int) {
+		s := info("Fetching epic issues...")
+		defer s.Stop()
 
-	resp, err := jiraClient.EpicIssues(key, q.Get())
-	exitIfError(err)
+		q, err := query.NewIssue(project, flags)
+		exitIfError(err)
 
-	if resp.Total == 0 {
+		resp, err := jiraClient.EpicIssues(key, q.Get())
+		exitIfError(err)
+
+		return resp.Issues, resp.Total
+	}()
+
+	if total == 0 {
 		fmt.Printf("No result found for given query in project \"%s\"\n", project)
 
 		return
@@ -62,35 +69,42 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
-		Total:   resp.Total,
-		Data:    resp.Issues,
+		Total:   total,
+		Data:    issues,
 	}
 
 	exitIfError(v.Render())
 }
 
 func epicExplorerView(flags query.FlagParser, project, server string) {
-	q, err := query.NewIssue(project, flags)
-	exitIfError(err)
+	epics, total := func() ([]*jira.Issue, int) {
+		s := info("Fetching epics...")
+		defer s.Stop()
 
-	resp, err := jiraClient.Search(q.Get())
-	exitIfError(err)
+		q, err := query.NewIssue(project, flags)
+		exitIfError(err)
 
-	if resp.Total == 0 {
+		resp, err := jiraClient.Search(q.Get())
+		exitIfError(err)
+
+		return resp.Issues, resp.Total
+	}()
+
+	if total == 0 {
 		fmt.Printf("No result found for given query in project \"%s\"\n", project)
 
 		return
 	}
 
 	v := view.EpicList{
-		Total:   resp.Total,
+		Total:   total,
 		Project: project,
 		Server:  server,
-		Data:    resp.Issues,
-		Issues: func(key string) []jira.Issue {
+		Data:    epics,
+		Issues: func(key string) []*jira.Issue {
 			resp, err := jiraClient.EpicIssues(key, "")
 			if err != nil {
-				return []jira.Issue{}
+				return []*jira.Issue{}
 			}
 
 			return resp.Issues

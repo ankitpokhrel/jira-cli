@@ -62,7 +62,7 @@ func (p Project) Render() error {
 	p.printHeader()
 
 	for _, d := range p.data {
-		_, _ = fmt.Fprintf(p.writer, "%s\t%s\t%s\n", d.Key, d.Name, d.Lead.Name)
+		_, _ = fmt.Fprintf(p.writer, "%s\t%s\t%s\n", d.Key, prepareTitle(d.Name), d.Lead.Name)
 	}
 
 	if _, ok := p.writer.(*tabwriter.Writer); ok {

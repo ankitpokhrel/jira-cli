@@ -62,7 +62,7 @@ func (b Board) Render() error {
 	b.printHeader()
 
 	for _, d := range b.data {
-		_, _ = fmt.Fprintf(b.writer, "%d\t%s\t%s\n", d.ID, d.Name, d.Type)
+		_, _ = fmt.Fprintf(b.writer, "%d\t%s\t%s\n", d.ID, prepareTitle(d.Name), d.Type)
 	}
 
 	if _, ok := b.writer.(*tabwriter.Writer); ok {

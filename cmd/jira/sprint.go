@@ -17,7 +17,7 @@ const numSprints = 25
 var sprintCmd = &cobra.Command{
 	Use:     "sprint",
 	Short:   fmt.Sprintf("Sprint lists top %d sprints in a board", numSprints),
-	Long:    fmt.Sprintf("Sprint lists to %d sprints for a board in a project", numSprints),
+	Long:    fmt.Sprintf("Sprint lists top %d sprints for a board in a project.", numSprints),
 	Args:    cobra.MaximumNArgs(1),
 	Aliases: []string{"sprints"},
 	Run:     sprint,
@@ -39,13 +39,20 @@ func sprint(cmd *cobra.Command, args []string) {
 }
 
 func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, server string) {
-	q, err := query.NewIssue(project, flags)
-	exitIfError(err)
+	issues, total := func() ([]*jira.Issue, int) {
+		s := info("Fetching sprint issues...")
+		defer s.Stop()
 
-	resp, err := jiraClient.SprintIssues(boardID, sprintID, q.Get())
-	exitIfError(err)
+		q, err := query.NewIssue(project, flags)
+		exitIfError(err)
 
-	if resp.Total == 0 {
+		resp, err := jiraClient.SprintIssues(boardID, sprintID, q.Get())
+		exitIfError(err)
+
+		return resp.Issues, resp.Total
+	}()
+
+	if total == 0 {
 		fmt.Printf("No result found for given query in project \"%s\"\n", project)
 
 		return
@@ -54,26 +61,31 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
-		Total:   resp.Total,
-		Data:    resp.Issues,
+		Total:   total,
+		Data:    issues,
 	}
 
 	exitIfError(v.Render())
 }
 
 func sprintExplorerView(flags query.FlagParser, boardID int, project, server string) {
-	resp, err := jiraClient.Boards(project, jira.BoardTypeScrum)
-	exitIfError(err)
+	sprints := func() []*jira.Sprint {
+		s := info("Fetching sprints...")
+		defer s.Stop()
 
-	boardIDs := make([]int, 0, resp.Total)
-	for _, board := range resp.Boards {
-		boardIDs = append(boardIDs, board.ID)
-	}
+		resp, err := jiraClient.Boards(project, jira.BoardTypeScrum)
+		exitIfError(err)
 
-	q, err := query.NewSprint(flags)
-	exitIfError(err)
+		boardIDs := make([]int, 0, resp.Total)
+		for _, board := range resp.Boards {
+			boardIDs = append(boardIDs, board.ID)
+		}
 
-	sprints := jiraClient.SprintsInBoards([]int{boardID}, q.Get(), numSprints)
+		q, err := query.NewSprint(flags)
+		exitIfError(err)
+
+		return jiraClient.SprintsInBoards([]int{boardID}, q.Get(), numSprints)
+	}()
 
 	if len(sprints) == 0 {
 		fmt.Printf("No result found for given query in project \"%s\"\n", project)
@@ -81,23 +93,23 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 		return
 	}
 
-	list, err := flags.GetBool("list")
-	exitIfError(err)
-
 	v := view.SprintList{
 		Project: project,
 		Board:   viper.GetString("board.name"),
 		Server:  server,
 		Data:    sprints,
-		Issues: func(boardID, sprintID int) []jira.Issue {
+		Issues: func(boardID, sprintID int) []*jira.Issue {
 			resp, err := jiraClient.SprintIssues(boardID, sprintID, "")
 			if err != nil {
-				return []jira.Issue{}
+				return []*jira.Issue{}
 			}
 
 			return resp.Issues
 		},
 	}
+
+	list, err := flags.GetBool("list")
+	exitIfError(err)
 
 	if list {
 		exitIfError(v.RenderInTable())
@@ -137,6 +149,8 @@ func init() {
 	exitIfError(sprintCmd.Flags().MarkHidden("priority"))
 	exitIfError(sprintCmd.Flags().MarkHidden("reporter"))
 	exitIfError(sprintCmd.Flags().MarkHidden("assignee"))
+	exitIfError(sprintCmd.Flags().MarkHidden("created"))
+	exitIfError(sprintCmd.Flags().MarkHidden("updated"))
 	exitIfError(sprintCmd.Flags().MarkHidden("label"))
 	exitIfError(sprintCmd.Flags().MarkHidden("reverse"))
 }

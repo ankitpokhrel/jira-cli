@@ -17,7 +17,7 @@ type IssueList struct {
 	Total   int
 	Project string
 	Server  string
-	Data    []jira.Issue
+	Data    []*jira.Issue
 }
 
 func (l IssueList) header() []string {

@@ -221,7 +221,7 @@ func TestSprintIssues(t *testing.T) {
 		StartAt:    0,
 		MaxResults: 50,
 		Total:      3,
-		Issues: []Issue{
+		Issues: []*Issue{
 			{
 				Key: "TEST-1",
 				Fields: IssueFields{

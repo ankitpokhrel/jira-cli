@@ -45,7 +45,7 @@ func TestEpic(t *testing.T) {
 		StartAt:    0,
 		MaxResults: 50,
 		Total:      2,
-		Issues: []Issue{
+		Issues: []*Issue{
 			{
 				Key: "EPIC-1",
 				Fields: IssueFields{
@@ -141,7 +141,7 @@ func TestEpicIssues(t *testing.T) {
 		StartAt:    0,
 		MaxResults: 50,
 		Total:      3,
-		Issues: []Issue{
+		Issues: []*Issue{
 			{
 				Key: "TEST-1",
 				Fields: IssueFields{
