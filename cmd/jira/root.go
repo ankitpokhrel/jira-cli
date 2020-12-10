@@ -65,9 +65,9 @@ func initConfig() {
 
 func initJiraClient() {
 	config := jira.Config{
-		Server:   viper.Get("server").(string),
-		Login:    viper.Get("login").(string),
-		APIToken: viper.Get("api_token").(string),
+		Server:   viper.GetString("server"),
+		Login:    viper.GetString("login"),
+		APIToken: viper.GetString("api_token"),
 	}
 
 	jiraClient = jira.NewClient(config, jira.WithTimeout(clientTimeout))
