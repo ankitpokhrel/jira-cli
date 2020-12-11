@@ -34,7 +34,7 @@ func NewBoard(data []*jira.Board, opts ...BoardOption) *Board {
 	return &b
 }
 
-// WithBoardWriter sets a writer for board.
+// WithBoardWriter sets a writer for the board.
 func WithBoardWriter(w io.Writer) BoardOption {
 	return func(b *Board) {
 		b.writer = w

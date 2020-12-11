@@ -35,7 +35,7 @@ type Table struct {
 // TableOption is a functional option to wrap table properties.
 type TableOption func(*Table)
 
-// NewTable returns new table layout.
+// NewTable constructs a new table layout.
 func NewTable(opts ...TableOption) *Table {
 	tbl := Table{
 		screen:      NewScreen(),
@@ -73,14 +73,14 @@ func WithMaxColWidth(width uint) TableOption {
 	}
 }
 
-// WithFooterText sets footer text that is displayed after the table.
-func WithFooterText(text string) TableOption {
+// WithTableFooterText sets footer text that is displayed after the table.
+func WithTableFooterText(text string) TableOption {
 	return func(t *Table) {
 		t.footerText = text
 	}
 }
 
-// WithSelectedFunc sets a func that is triggered when table cell is selected.
+// WithSelectedFunc sets a func that is triggered when table row is selected.
 func WithSelectedFunc(fn SelectedFunc) TableOption {
 	return func(t *Table) {
 		t.selectedFunc = fn
@@ -88,9 +88,10 @@ func WithSelectedFunc(fn SelectedFunc) TableOption {
 }
 
 func (t *Table) initFooterView() {
-	view := tview.NewTextView().SetWordWrap(true)
-
-	view.SetText(pad(t.footerText, 1)).SetTextColor(tcell.ColorAntiqueWhite)
+	view := tview.NewTextView().
+		SetWordWrap(true).
+		SetText(pad(t.footerText, 1)).
+		SetTextColor(tcell.ColorAntiqueWhite)
 
 	t.footer = view
 }
@@ -110,7 +111,6 @@ func (t *Table) initTableView() {
 		if event.Key() == tcell.KeyRune && event.Rune() == 'q' {
 			t.screen.Stop()
 		}
-
 		return event
 	})
 

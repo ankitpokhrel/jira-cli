@@ -118,7 +118,7 @@ type Issue struct {
 	params  *issueParams
 }
 
-// NewIssue creates and initialize new issue type.
+// NewIssue creates and initializes a new Issue type.
 func NewIssue(project string, flags FlagParser) (*Issue, error) {
 	issue := Issue{
 		Project: project,
@@ -204,7 +204,6 @@ func (i *Issue) setDateFilters(q *jql.JQL, field, value string) {
 func (i *Issue) setCreatedFilters(q *jql.JQL) {
 	if i.params.created != "" {
 		i.setDateFilters(q, "createdDate", i.params.created)
-
 		return
 	}
 
@@ -220,7 +219,6 @@ func (i *Issue) setCreatedFilters(q *jql.JQL) {
 func (i *Issue) setUpdatedFilters(q *jql.JQL) {
 	if i.params.updated != "" {
 		i.setDateFilters(q, "updatedDate", i.params.updated)
-
 		return
 	}
 

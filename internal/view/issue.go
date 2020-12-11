@@ -66,7 +66,6 @@ func (l IssueList) data() tui.TableData {
 func (l IssueList) Render() error {
 	if l.Plain {
 		w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
-
 		return l.renderPlain(w)
 	}
 
@@ -75,7 +74,7 @@ func (l IssueList) Render() error {
 	view := tui.NewTable(
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
-		tui.WithFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(data)-1, l.Total, l.Project)),
+		tui.WithTableFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(data)-1, l.Total, l.Project)),
 		tui.WithSelectedFunc(navigate(l.Server)),
 	)
 
