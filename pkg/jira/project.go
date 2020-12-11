@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// Project fetches response from /search endpoint.
+// Project fetches response from /project endpoint.
 func (c *Client) Project() ([]*Project, error) {
 	res, err := c.Get(context.Background(), "/project?expand=lead")
 	if err != nil {

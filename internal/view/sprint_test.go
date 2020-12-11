@@ -83,7 +83,6 @@ func TestSprintPreviewLayoutData(t *testing.T) {
 			if sprintID == 1 {
 				return []*jira.Issue{&issue1}
 			}
-
 			return []*jira.Issue{&issue2, &issue1}
 		},
 	}

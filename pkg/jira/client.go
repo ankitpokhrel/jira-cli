@@ -77,7 +77,7 @@ func WithTimeout(to time.Duration) ClientFunc {
 	}
 }
 
-// Get sends get request to the jira server.
+// Get sends get request to v3 version of the jira api.
 func (c *Client) Get(ctx context.Context, path string) (*http.Response, error) {
 	return c.request(ctx, c.server+baseURLv3+path)
 }

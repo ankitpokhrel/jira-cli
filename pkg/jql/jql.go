@@ -3,7 +3,7 @@
 // There is no JQL syntax check and relies on the package user to construct a valid query.
 //
 // It cannot combine AND and OR query currently. That means you cannot construct a query like the one below:
-// `project="JQL" AND issue in openSprints() AND (type="Story" OR resolution="Done")`
+// 	project="JQL" AND issue in openSprints() AND (type="Story" OR resolution="Done")
 package jql
 
 import (
@@ -11,9 +11,10 @@ import (
 	"strings"
 )
 
-// Sort orders.
 const (
-	DirectionAscending  = "ASC"
+	// DirectionAscending is an ascending sort order.
+	DirectionAscending = "ASC"
+	// DirectionDescending is a descending sort order.
 	DirectionDescending = "DESC"
 )
 
@@ -27,31 +28,29 @@ type JQL struct {
 	orderBy string
 }
 
-// NewJQL initializes jql.
+// NewJQL initializes jql query builder.
 func NewJQL(project string) *JQL {
-	jql := JQL{
+	return &JQL{
 		project: project,
 		filters: []string{fmt.Sprintf("project=\"%s\"", project)},
 	}
-
-	return &jql
 }
 
 // History search through user issue history.
 func (j *JQL) History() *JQL {
 	j.filters = append(j.filters, "issue IN issueHistory()")
-
 	return j
 }
 
 // Watching search through watched issues.
 func (j *JQL) Watching() *JQL {
 	j.filters = append(j.filters, "issue IN watchedIssues()")
-
 	return j
 }
 
 // FilterBy filters with a given field.
+//
+// If the value is `x`, it construct the query with IS EMPTY operator, uses equals otherwise.
 func (j *JQL) FilterBy(field, value string) *JQL {
 	if field != "" && value != "" {
 		var q string
@@ -85,7 +84,7 @@ func (j *JQL) Gt(field, value string, wrap bool) *JQL {
 	return j
 }
 
-// Gte is a greater than and equal filter.
+// Gte is a greater than and equals filter.
 func (j *JQL) Gte(field, value string, wrap bool) *JQL {
 	if field != "" && value != "" {
 		var q string
@@ -147,7 +146,6 @@ func (j *JQL) In(field string, value ...string) *JQL {
 // OrderBy orders the output in given direction.
 func (j *JQL) OrderBy(field, dir string) *JQL {
 	j.orderBy = fmt.Sprintf("ORDER BY %s %s", field, dir)
-
 	return j
 }
 
@@ -175,7 +173,6 @@ func (j *JQL) mergeFilters(separator string) {
 // And combines filter with AND operator.
 func (j *JQL) And(fn GroupFunc) *JQL {
 	fn()
-
 	j.mergeFilters("AND")
 
 	return j
@@ -184,7 +181,6 @@ func (j *JQL) And(fn GroupFunc) *JQL {
 // Or combine filters with OR operator.
 func (j *JQL) Or(fn GroupFunc) *JQL {
 	fn()
-
 	j.mergeFilters("OR")
 
 	return j

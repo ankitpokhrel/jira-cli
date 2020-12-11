@@ -9,7 +9,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
-// ProjectOption is a functional option to wrap board properties.
+// ProjectOption is a functional option to wrap project properties.
 type ProjectOption func(*Project)
 
 // Project is a project view.
@@ -34,7 +34,7 @@ func NewProject(data []*jira.Project, opts ...ProjectOption) *Project {
 	return &p
 }
 
-// WithProjectWriter sets a writer for board.
+// WithProjectWriter sets a writer for the project.
 func WithProjectWriter(w io.Writer) ProjectOption {
 	return func(p *Project) {
 		p.writer = w

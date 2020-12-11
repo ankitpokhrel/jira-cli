@@ -10,8 +10,8 @@ import (
 
 const maxResults = 100
 
-// Search struct holds response from /search endpoint.
-type Search struct {
+// SearchResult struct holds response from /search endpoint.
+type SearchResult struct {
 	StartAt    int      `json:"startAt"`
 	MaxResults int      `json:"maxResults"`
 	Total      int      `json:"total"`
@@ -19,7 +19,7 @@ type Search struct {
 }
 
 // Search fetches response from /search endpoint.
-func (c *Client) Search(jql string) (*Search, error) {
+func (c *Client) Search(jql string) (*SearchResult, error) {
 	path := fmt.Sprintf("/search?jql=%s&maxResults=%d", url.QueryEscape(jql), maxResults)
 
 	res, err := c.Get(context.Background(), path)
@@ -37,7 +37,7 @@ func (c *Client) Search(jql string) (*Search, error) {
 		return nil, ErrUnexpectedStatusCode
 	}
 
-	var out Search
+	var out SearchResult
 
 	err = json.NewDecoder(res.Body).Decode(&out)
 

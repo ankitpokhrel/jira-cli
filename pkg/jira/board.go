@@ -10,7 +10,6 @@ import (
 const (
 	// BoardTypeScrum represents a scrum board type.
 	BoardTypeScrum = "scrum"
-
 	// BoardTypeAll represents all board types.
 	BoardTypeAll = ""
 )

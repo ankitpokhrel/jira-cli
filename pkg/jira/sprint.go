@@ -16,7 +16,9 @@ type SprintResult struct {
 	Sprints    []*Sprint `json:"values"`
 }
 
-// Sprints fetches all sprints for given board.
+// Sprints fetches all sprints for a given board.
+//
+// qp is an additional query parameters in key, value pair format, eg: state=closed.
 func (c *Client) Sprints(boardID int, qp string, startAt, max int) (*SprintResult, error) {
 	res, err := c.GetV1(context.Background(), fmt.Sprintf("/board/%d/sprint?%s&startAt=%d&maxResults=%d", boardID, qp, startAt, max))
 	if err != nil {
@@ -60,7 +62,6 @@ func (c *Client) lastNSprints(boardID int, qp string, limit int) (*SprintResult,
 
 		if s.IsLast {
 			total = s.StartAt + len(s.Sprints)
-
 			break
 		}
 
@@ -80,6 +81,8 @@ func (c *Client) lastNSprints(boardID int, qp string, limit int) (*SprintResult,
 }
 
 // SprintsInBoards fetches sprints across given board IDs.
+//
+// qp is an additional query parameters in key, value pair format, eg: state=closed.
 func (c *Client) SprintsInBoards(boardIDs []int, qp string, limit int) []*Sprint {
 	n := len(boardIDs)
 	ch := make(chan []*Sprint, n)
@@ -89,7 +92,6 @@ func (c *Client) SprintsInBoards(boardIDs []int, qp string, limit int) []*Sprint
 			s, err := c.lastNSprints(id, qp, limit)
 			if err != nil {
 				ch <- nil
-
 				return
 			}
 
@@ -122,7 +124,7 @@ func (c *Client) SprintsInBoards(boardIDs []int, qp string, limit int) []*Sprint
 }
 
 // SprintIssues fetches issues in the given sprint.
-func (c *Client) SprintIssues(boardID, sprintID int, jql string) (*Search, error) {
+func (c *Client) SprintIssues(boardID, sprintID int, jql string) (*SearchResult, error) {
 	path := fmt.Sprintf("/board/%d/sprint/%d/issue", boardID, sprintID)
 	if jql != "" {
 		path += fmt.Sprintf("?jql=%s", url.QueryEscape(jql))
@@ -143,7 +145,7 @@ func (c *Client) SprintIssues(boardID, sprintID int, jql string) (*Search, error
 		return nil, ErrUnexpectedStatusCode
 	}
 
-	var out Search
+	var out SearchResult
 
 	err = json.NewDecoder(res.Body).Decode(&out)
 

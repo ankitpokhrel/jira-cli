@@ -15,6 +15,8 @@ type PreviewData struct {
 }
 
 // Preview is the preview layout.
+//
+// It contains 2 tables internally, viz: sidebar and contents.
 type Preview struct {
 	screen       *Screen
 	painter      *tview.Grid
@@ -29,7 +31,7 @@ type Preview struct {
 // PreviewOption is a functional option that wraps preview properties.
 type PreviewOption func(*Preview)
 
-// NewPreview returns new preview layout.
+// NewPreview constructs a new preview layout.
 func NewPreview(opts ...PreviewOption) *Preview {
 	tview.Styles.PrimitiveBackgroundColor = tcell.ColorBlack
 
@@ -82,9 +84,10 @@ func (pv *Preview) initContentsView() {
 }
 
 func (pv *Preview) initFooterView() {
-	view := tview.NewTextView().SetWordWrap(true)
-
-	view.SetText(pad(pv.footerText, 1)).SetTextColor(tcell.ColorAntiqueWhite)
+	view := tview.NewTextView().
+		SetWordWrap(true).
+		SetText(pad(pv.footerText, 1)).
+		SetTextColor(tcell.ColorAntiqueWhite)
 
 	pv.footer = view
 }
@@ -133,7 +136,7 @@ func WithPreviewFooterText(text string) PreviewOption {
 	}
 }
 
-// WithSidebarSelectedFunc sets contents table options.
+// WithSidebarSelectedFunc sets a function that is called when any option in sidebar is selected.
 func WithSidebarSelectedFunc(fn SelectedFunc) PreviewOption {
 	return func(p *Preview) {
 		p.selectedFunc = fn
@@ -149,7 +152,7 @@ func WithContentTableOpts(opts ...TableOption) PreviewOption {
 	}
 }
 
-// Render renders the table layout. First row is treated as a table header.
+// Render renders the preview layout.
 func (pv *Preview) Render(pd []PreviewData) error {
 	if len(pd) == 0 {
 		return errNoData
@@ -191,7 +194,6 @@ func (pv *Preview) Render(pd []PreviewData) error {
 func (pv *Preview) renderContents(pd PreviewData) {
 	if pd.Contents == nil {
 		pv.printText("No contents defined.")
-
 		return
 	}
 
@@ -207,7 +209,6 @@ func (pv *Preview) renderContents(pd PreviewData) {
 
 			if len(data) == 1 {
 				pv.printText("No results to show.")
-
 				return
 			}
 
