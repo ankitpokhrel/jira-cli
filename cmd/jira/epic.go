@@ -47,9 +47,14 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 	err := flags.Set("type", "") // Unset issue type.
 	exitIfError(err)
 
+	plain, err := flags.GetBool("plain")
+	exitIfError(err)
+
 	issues, total := func() ([]*jira.Issue, int) {
-		s := info("Fetching epic issues...")
-		defer s.Stop()
+		if !plain {
+			s := info("Fetching epic issues...")
+			defer s.Stop()
+		}
 
 		q, err := query.NewIssue(project, flags)
 		exitIfError(err)
@@ -65,8 +70,6 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 
 		return
 	}
-
-	plain, _ := flags.GetBool("plain")
 
 	v := view.IssueList{
 		Project: project,

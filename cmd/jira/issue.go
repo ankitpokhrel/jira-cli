@@ -23,9 +23,14 @@ func issue(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
 
+	plain, err := cmd.Flags().GetBool("plain")
+	exitIfError(err)
+
 	issues, total := func() ([]*jira.Issue, int) {
-		s := info("Fetching issues...")
-		defer s.Stop()
+		if !plain {
+			s := info("Fetching issues...")
+			defer s.Stop()
+		}
 
 		q, err := query.NewIssue(project, cmd.Flags())
 		exitIfError(err)
@@ -41,8 +46,6 @@ func issue(cmd *cobra.Command, _ []string) {
 
 		return
 	}
-
-	plain, _ := cmd.Flags().GetBool("plain")
 
 	v := view.IssueList{
 		Project: project,

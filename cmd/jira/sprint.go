@@ -39,9 +39,14 @@ func sprint(cmd *cobra.Command, args []string) {
 }
 
 func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, server string) {
+	plain, err := flags.GetBool("plain")
+	exitIfError(err)
+
 	issues, total := func() ([]*jira.Issue, int) {
-		s := info("Fetching sprint issues...")
-		defer s.Stop()
+		if !plain {
+			s := info("Fetching sprint issues...")
+			defer s.Stop()
+		}
 
 		q, err := query.NewIssue(project, flags)
 		exitIfError(err)
@@ -57,8 +62,6 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 
 		return
 	}
-
-	plain, _ := flags.GetBool("plain")
 
 	v := view.IssueList{
 		Project: project,
