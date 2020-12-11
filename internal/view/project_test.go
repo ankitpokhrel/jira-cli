@@ -26,7 +26,7 @@ func TestProjectRender(t *testing.T) {
 
 	assert.NoError(t, board.Render())
 
-	expected := `KEY	NAME	LEAD	
+	expected := `KEY	NAME	LEAD
 FRST	First	Person A
 SCND	⦗2⦘ Second	Person B
 THIRD	Third	Person C

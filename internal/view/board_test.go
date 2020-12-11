@@ -22,7 +22,7 @@ func TestBoardRender(t *testing.T) {
 
 	assert.NoError(t, board.Render())
 
-	expected := `ID	NAME	TYPE	
+	expected := `ID	NAME	TYPE
 1	First	scrum
 2	⦗2⦘ Second	kanban
 3	Third	nextgen

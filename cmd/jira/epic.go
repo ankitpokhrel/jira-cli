@@ -66,11 +66,14 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 		return
 	}
 
+	plain, _ := flags.GetBool("plain")
+
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
 		Total:   total,
 		Data:    issues,
+		Plain:   plain,
 	}
 
 	exitIfError(v.Render())
@@ -140,6 +143,7 @@ func init() {
 	epicCmd.Flags().StringArrayP("label", "l", []string{}, "Filter epics by label")
 	epicCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 	epicCmd.Flags().Bool("list", false, "Display epics in list view")
+	epicCmd.Flags().Bool("plain", false, "Display output in plain mode")
 
 	exitIfError(epicCmd.Flags().MarkHidden("type"))
 }

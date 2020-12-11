@@ -42,11 +42,14 @@ func issue(cmd *cobra.Command, _ []string) {
 		return
 	}
 
+	plain, _ := cmd.Flags().GetBool("plain")
+
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
 		Total:   total,
 		Data:    issues,
+		Plain:   plain,
 	}
 
 	exitIfError(v.Render())
@@ -77,4 +80,5 @@ func init() {
 	issueCmd.Flags().String("updated-before", "", "Filter by issues updated before certain date")
 	issueCmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
 	issueCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
+	issueCmd.Flags().Bool("plain", false, "Display output in plain mode")
 }
