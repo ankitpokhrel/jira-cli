@@ -1,73 +1,54 @@
 package query
 
 import (
+	"time"
+
 	"github.com/ankitpokhrel/jira-cli/pkg/jql"
 )
 
 type issueParams struct {
-	latest     bool
-	watching   bool
-	resolution string
-	issueType  string
-	status     string
-	priority   string
-	reporter   string
-	assignee   string
-	created    string
-	updated    string
-	labels     []string
-	reverse    bool
+	latest        bool
+	watching      bool
+	resolution    string
+	issueType     string
+	status        string
+	priority      string
+	reporter      string
+	assignee      string
+	created       string
+	updated       string
+	createdAfter  string
+	updatedAfter  string
+	createdBefore string
+	updatedBefore string
+	labels        []string
+	reverse       bool
 }
 
 func (ip *issueParams) init(flags FlagParser) error {
-	latest, err := flags.GetBool("history")
-	if err != nil {
-		return err
+	var err error
+
+	boolParams := []string{"history", "watching", "reverse"}
+	stringParams := []string{
+		"resolution", "type", "status", "priority", "reporter", "assignee",
+		"created", "created-after", "created-before",
+		"updated", "updated-after", "updated-before",
 	}
 
-	watching, err := flags.GetBool("watching")
-	if err != nil {
-		return err
+	boolParamsMap := make(map[string]bool)
+	for _, param := range boolParams {
+		boolParamsMap[param], err = flags.GetBool(param)
+		if err != nil {
+			return err
+		}
 	}
 
-	resolution, err := flags.GetString("resolution")
-	if err != nil {
-		return err
-	}
-
-	issueType, err := flags.GetString("type")
-	if err != nil {
-		return err
-	}
-
-	status, err := flags.GetString("status")
-	if err != nil {
-		return err
-	}
-
-	priority, err := flags.GetString("priority")
-	if err != nil {
-		return err
-	}
-
-	reporter, err := flags.GetString("reporter")
-	if err != nil {
-		return err
-	}
-
-	assignee, err := flags.GetString("assignee")
-	if err != nil {
-		return err
-	}
-
-	created, err := flags.GetString("created")
-	if err != nil {
-		return err
-	}
-
-	updated, err := flags.GetString("updated")
-	if err != nil {
-		return err
+	stringParamsMap := make(map[string]string)
+	for _, param := range stringParams {
+		stringParamsMap[param], err = flags.GetString(param)
+		if err != nil {
+			return err
+		}
 	}
 
 	labels, err := flags.GetStringArray("label")
@@ -75,25 +56,55 @@ func (ip *issueParams) init(flags FlagParser) error {
 		return err
 	}
 
-	reverse, err := flags.GetBool("reverse")
-	if err != nil {
-		return err
-	}
-
-	ip.latest = latest
-	ip.watching = watching
-	ip.resolution = resolution
-	ip.issueType = issueType
-	ip.status = status
-	ip.priority = priority
-	ip.reporter = reporter
-	ip.assignee = assignee
-	ip.created = created
-	ip.updated = updated
 	ip.labels = labels
-	ip.reverse = reverse
+	ip.setBoolParams(boolParamsMap)
+	ip.setStringParams(stringParamsMap)
 
 	return nil
+}
+
+func (ip *issueParams) setBoolParams(paramsMap map[string]bool) {
+	for k, v := range paramsMap {
+		switch k {
+		case "history":
+			ip.latest = v
+		case "watching":
+			ip.watching = v
+		case "reverse":
+			ip.reverse = v
+		}
+	}
+}
+
+func (ip *issueParams) setStringParams(paramsMap map[string]string) {
+	for k, v := range paramsMap {
+		switch k {
+		case "resolution":
+			ip.resolution = v
+		case "type":
+			ip.issueType = v
+		case "status":
+			ip.status = v
+		case "priority":
+			ip.priority = v
+		case "reporter":
+			ip.reporter = v
+		case "assignee":
+			ip.assignee = v
+		case "created":
+			ip.created = v
+		case "created-after":
+			ip.createdAfter = v
+		case "created-before":
+			ip.createdBefore = v
+		case "updated":
+			ip.updated = v
+		case "updated-after":
+			ip.updatedAfter = v
+		case "updated-before":
+			ip.updatedBefore = v
+		}
+	}
 }
 
 // Issue is a query type for issue command.
@@ -145,31 +156,8 @@ func (i *Issue) Get() string {
 			FilterBy("reporter", i.params.reporter).
 			FilterBy("assignee", i.params.assignee)
 
-		if i.params.created != "" {
-			switch i.params.created {
-			case "today":
-				q.Gte("createdDate", "startOfDay()")
-			case "week":
-				q.Gte("createdDate", "startOfWeek()")
-			case "month":
-				q.Gte("createdDate", "startOfMonth()")
-			case "year":
-				q.Gte("createdDate", "startOfYear()")
-			}
-		}
-
-		if i.params.updated != "" {
-			switch i.params.updated {
-			case "today":
-				q.Gte("updatedDate", "startOfDay()")
-			case "week":
-				q.Gte("updatedDate", "startOfWeek()")
-			case "month":
-				q.Gte("updatedDate", "startOfMonth()")
-			case "year":
-				q.Gte("updatedDate", "startOfYear()")
-			}
-		}
+		i.setCreatedFilters(q)
+		i.setUpdatedFilters(q)
 
 		if len(i.params.labels) > 0 {
 			q.In("labels", i.params.labels...)
@@ -183,4 +171,78 @@ func (i *Issue) Get() string {
 	}
 
 	return q.String()
+}
+
+func (i *Issue) setDateFilters(q *jql.JQL, field, value string) {
+	switch value {
+	case "today":
+		q.Gte(field, "startOfDay()", false)
+	case "week":
+		q.Gte(field, "startOfWeek()", false)
+	case "month":
+		q.Gte(field, "startOfMonth()", false)
+	case "year":
+		q.Gte(field, "startOfYear()", false)
+	default:
+		q.Gte(field, value, true)
+
+		dt, format, ok := isValidDate(value)
+		if ok {
+			q.Lt(field, addDay(dt, format), true)
+		}
+	}
+}
+
+func (i *Issue) setCreatedFilters(q *jql.JQL) {
+	if i.params.created != "" {
+		i.setDateFilters(q, "createdDate", i.params.created)
+
+		return
+	}
+
+	if i.params.createdAfter != "" {
+		q.Gt("createdDate", i.params.createdAfter, true)
+	}
+
+	if i.params.createdBefore != "" {
+		q.Lt("createdDate", i.params.createdBefore, true)
+	}
+}
+
+func (i *Issue) setUpdatedFilters(q *jql.JQL) {
+	if i.params.updated != "" {
+		i.setDateFilters(q, "updatedDate", i.params.updated)
+
+		return
+	}
+
+	if i.params.updatedAfter != "" {
+		q.Gt("updatedDate", i.params.updatedAfter, true)
+	}
+
+	if i.params.updatedBefore != "" {
+		q.Lt("updatedDate", i.params.updatedBefore, true)
+	}
+}
+
+func isValidDate(date string) (time.Time, string, bool) {
+	supportedFormats := []string{
+		"2006-01-02",
+		"2006/01/02",
+		"2006-01-02 03:04",
+		"2006/01/02 03:04",
+	}
+
+	for _, format := range supportedFormats {
+		dt, err := time.Parse(format, date)
+		if err == nil {
+			return dt, format, true
+		}
+	}
+
+	return time.Now(), "", false
+}
+
+func addDay(dt time.Time, format string) string {
+	return dt.AddDate(0, 0, 1).Format(format)
 }

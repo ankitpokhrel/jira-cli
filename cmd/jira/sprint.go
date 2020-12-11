@@ -15,7 +15,7 @@ import (
 const numSprints = 25
 
 var sprintCmd = &cobra.Command{
-	Use:     "sprint",
+	Use:     "sprint [SPRINT ID]",
 	Short:   fmt.Sprintf("Sprint lists top %d sprints in a board", numSprints),
 	Long:    fmt.Sprintf("Sprint lists top %d sprints for a board in a project.", numSprints),
 	Args:    cobra.MaximumNArgs(1),
@@ -126,19 +126,27 @@ func init() {
 		`Defaults to "active,closed"`)
 	sprintCmd.Flags().Bool("list", false, "Display sprints in list view")
 
-	sprintCmd.Flags().Bool("history", false, "Epics you accessed recently")
-	sprintCmd.Flags().BoolP("watching", "w", false, "Epics you are watching")
-	sprintCmd.Flags().StringP("type", "t", "", "Filter epics by type")
-	sprintCmd.Flags().StringP("resolution", "r", "", "Filter epics by resolution type")
-	sprintCmd.Flags().StringP("status", "s", "", "Filter epics by status")
-	sprintCmd.Flags().StringP("priority", "y", "", "Filter epics by priority")
-	sprintCmd.Flags().StringP("reporter", "e", "", "Filter epics by reporter (email or display name)")
-	sprintCmd.Flags().StringP("assignee", "a", "", "Filter epics by assignee (email or display name)")
+	sprintCmd.Flags().Bool("history", false, "Issues you accessed recently")
+	sprintCmd.Flags().BoolP("watching", "w", false, "Issues you are watching")
+	sprintCmd.Flags().StringP("type", "t", "", "Filter issues by type")
+	sprintCmd.Flags().StringP("resolution", "r", "", "Filter issues by resolution type")
+	sprintCmd.Flags().StringP("status", "s", "", "Filter issues by status")
+	sprintCmd.Flags().StringP("priority", "y", "", "Filter issues by priority")
+	sprintCmd.Flags().StringP("reporter", "e", "", "Filter issues by reporter (email or display name)")
+	sprintCmd.Flags().StringP("assignee", "a", "", "Filter issues by assignee (email or display name)")
 	sprintCmd.Flags().String("created", "", "Filter issues by created date\n"+
-		"Accepts: today, week, month, year")
+		"Accepts: today, week, month, year, or a date in yyyy-mm-dd and yyyy/mm/dd format,\n"+
+		"or a period format using w = weeks, d = days, h = hours, m = minutes. eg: -10d\n"+
+		"Created filter will have precedence over created-after and created-before filter")
 	sprintCmd.Flags().String("updated", "", "Filter issues by updated date\n"+
-		"Accepts: today, week, month, year")
-	sprintCmd.Flags().StringArrayP("label", "l", []string{}, "Filter epics by label")
+		"Accepts: today, week, month, year, or a date in yyyy-mm-dd and yyyy/mm/dd format,\n"+
+		"or a period format using w = weeks, d = days, h = hours, m = minutes. eg: -10d\n"+
+		"Updated filter will have precedence over updated-after and updated-before filter")
+	sprintCmd.Flags().String("created-after", "", "Filter by issues created after certain date")
+	sprintCmd.Flags().String("updated-after", "", "Filter by issues updated after certain date")
+	sprintCmd.Flags().String("created-before", "", "Filter by issues created before certain date")
+	sprintCmd.Flags().String("updated-before", "", "Filter by issues updated before certain date")
+	sprintCmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
 	sprintCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 
 	exitIfError(sprintCmd.Flags().MarkHidden("history"))
@@ -151,6 +159,10 @@ func init() {
 	exitIfError(sprintCmd.Flags().MarkHidden("assignee"))
 	exitIfError(sprintCmd.Flags().MarkHidden("created"))
 	exitIfError(sprintCmd.Flags().MarkHidden("updated"))
+	exitIfError(sprintCmd.Flags().MarkHidden("created-after"))
+	exitIfError(sprintCmd.Flags().MarkHidden("updated-after"))
+	exitIfError(sprintCmd.Flags().MarkHidden("created-before"))
+	exitIfError(sprintCmd.Flags().MarkHidden("updated-before"))
 	exitIfError(sprintCmd.Flags().MarkHidden("label"))
 	exitIfError(sprintCmd.Flags().MarkHidden("reverse"))
 }

@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,14 +17,20 @@ type issueParamsErr struct {
 }
 
 type issueFlagParser struct {
-	err        issueParamsErr
-	noHistory  bool
-	noWatching bool
-	orderDesc  bool
-	emptyType  bool
-	labels     []string
-	created    string
-	updated    string
+	err           issueParamsErr
+	noHistory     bool
+	noWatching    bool
+	orderDesc     bool
+	emptyType     bool
+	labels        []string
+	withCreated   bool
+	withUpdated   bool
+	created       string
+	updated       string
+	createdAfter  string
+	createdBefore string
+	updatedAfter  string
+	updatedBefore string
 }
 
 func (tfp issueFlagParser) GetBool(name string) (bool, error) {
@@ -50,6 +57,7 @@ func (tfp issueFlagParser) GetBool(name string) (bool, error) {
 	return true, nil
 }
 
+//nolint:gocyclo
 func (tfp issueFlagParser) GetString(name string) (string, error) {
 	if tfp.err.resolution && name == "resolution" {
 		return "", fmt.Errorf("oops! couldn't fetch resolution flag")
@@ -68,6 +76,32 @@ func (tfp issueFlagParser) GetString(name string) (string, error) {
 	}
 
 	if tfp.emptyType && name == "type" {
+		return "", nil
+	}
+
+	if strings.HasPrefix(name, "created") {
+		if tfp.withCreated {
+			switch name {
+			case "created-after":
+				return tfp.createdAfter, nil
+			case "created-before":
+				return tfp.createdBefore, nil
+			}
+		}
+
+		return "", nil
+	}
+
+	if strings.HasPrefix(name, "updated") {
+		if tfp.withUpdated {
+			switch name {
+			case "updated-after":
+				return tfp.updatedAfter, nil
+			case "updated-before":
+				return tfp.updatedBefore, nil
+			}
+		}
+
 		return "", nil
 	}
 
@@ -271,6 +305,75 @@ func TestIssueGet(t *testing.T) {
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`AND createdDate>=startOfYear() AND updatedDate>=startOfYear() ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with created and updated filter",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{created: "2020-12-31", updated: "2020-12-31"})
+				assert.NoError(t, err)
+
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND createdDate>="2020-12-31" AND createdDate<"2021-01-01" AND updatedDate>="2020-12-31" AND updatedDate<"2021-01-01" ` +
+				`ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "created and updated filter with incorrect date format",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{created: "2020-15-31", updated: "2020-12-31 10:30:30"})
+				assert.NoError(t, err)
+
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND createdDate>="2020-15-31" AND updatedDate>="2020-12-31 10:30:30" ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with created-after and created-before filter",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{createdAfter: "2020-12-01", createdBefore: "2020-12-31", withCreated: true})
+				assert.NoError(t, err)
+
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND createdDate>"2020-12-01" AND createdDate<"2020-12-31" ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with updated-after and updated-before filter",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{updatedAfter: "2020-12-01", updatedBefore: "2020-12-31", withUpdated: true})
+				assert.NoError(t, err)
+
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND updatedDate>"2020-12-01" AND updatedDate<"2020-12-31" ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "created and updated flags gets precedence",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{
+					created:       "2020-11-01",
+					updated:       "-10d",
+					createdAfter:  "2020-12-01",
+					updatedBefore: "2020-12-31",
+					withCreated:   true,
+					withUpdated:   true,
+				})
+				assert.NoError(t, err)
+
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND createdDate>="2020-11-01" AND createdDate<"2020-11-02" AND updatedDate>="-10d" ` +
+				`ORDER BY lastViewed ASC`,
 		},
 	}
 

@@ -68,10 +68,50 @@ func (j *JQL) FilterBy(field, value string) *JQL {
 	return j
 }
 
-// Gte is a greater than and equal filter.
-func (j *JQL) Gte(field, value string) *JQL {
+// Gt is a greater than filter.
+func (j *JQL) Gt(field, value string, wrap bool) *JQL {
 	if field != "" && value != "" {
-		q := fmt.Sprintf("%s>=%s", field, value)
+		var q string
+
+		if wrap {
+			q = fmt.Sprintf("%s>\"%s\"", field, value)
+		} else {
+			q = fmt.Sprintf("%s>%s", field, value)
+		}
+
+		j.filters = append(j.filters, q)
+	}
+
+	return j
+}
+
+// Gte is a greater than and equal filter.
+func (j *JQL) Gte(field, value string, wrap bool) *JQL {
+	if field != "" && value != "" {
+		var q string
+
+		if wrap {
+			q = fmt.Sprintf("%s>=\"%s\"", field, value)
+		} else {
+			q = fmt.Sprintf("%s>=%s", field, value)
+		}
+
+		j.filters = append(j.filters, q)
+	}
+
+	return j
+}
+
+// Lt is a less than filter.
+func (j *JQL) Lt(field, value string, wrap bool) *JQL {
+	if field != "" && value != "" {
+		var q string
+
+		if wrap {
+			q = fmt.Sprintf("%s<\"%s\"", field, value)
+		} else {
+			q = fmt.Sprintf("%s<%s", field, value)
+		}
 
 		j.filters = append(j.filters, q)
 	}
