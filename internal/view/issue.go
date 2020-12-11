@@ -2,6 +2,9 @@ package view
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"text/tabwriter"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
@@ -18,6 +21,7 @@ type IssueList struct {
 	Project string
 	Server  string
 	Data    []*jira.Issue
+	Plain   bool
 }
 
 func (l IssueList) header() []string {
@@ -60,6 +64,12 @@ func (l IssueList) data() tui.TableData {
 
 // Render renders the view.
 func (l IssueList) Render() error {
+	if l.Plain {
+		w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
+
+		return l.renderPlain(w)
+	}
+
 	data := l.data()
 
 	view := tui.NewTable(
@@ -70,4 +80,26 @@ func (l IssueList) Render() error {
 	)
 
 	return view.Render(data)
+}
+
+// renderPlain renders the issue in plain view.
+func (l IssueList) renderPlain(w io.Writer) error {
+	for _, items := range l.data() {
+		n := len(items)
+
+		for j, v := range items {
+			_, _ = fmt.Fprintf(w, "%s", v)
+			if j != n-1 {
+				_, _ = fmt.Fprintf(w, "\t")
+			}
+		}
+
+		_, _ = fmt.Fprintln(w)
+	}
+
+	if _, ok := w.(*tabwriter.Writer); ok {
+		return w.(*tabwriter.Writer).Flush()
+	}
+
+	return nil
 }

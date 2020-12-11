@@ -47,9 +47,14 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 	err := flags.Set("type", "") // Unset issue type.
 	exitIfError(err)
 
+	plain, err := flags.GetBool("plain")
+	exitIfError(err)
+
 	issues, total := func() ([]*jira.Issue, int) {
-		s := info("Fetching epic issues...")
-		defer s.Stop()
+		if !plain {
+			s := info("Fetching epic issues...")
+			defer s.Stop()
+		}
 
 		q, err := query.NewIssue(project, flags)
 		exitIfError(err)
@@ -71,6 +76,7 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 		Server:  server,
 		Total:   total,
 		Data:    issues,
+		Plain:   plain,
 	}
 
 	exitIfError(v.Render())
@@ -140,6 +146,7 @@ func init() {
 	epicCmd.Flags().StringArrayP("label", "l", []string{}, "Filter epics by label")
 	epicCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 	epicCmd.Flags().Bool("list", false, "Display epics in list view")
+	epicCmd.Flags().Bool("plain", false, "Display output in plain mode")
 
 	exitIfError(epicCmd.Flags().MarkHidden("type"))
 }

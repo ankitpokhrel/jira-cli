@@ -23,9 +23,14 @@ func issue(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
 
+	plain, err := cmd.Flags().GetBool("plain")
+	exitIfError(err)
+
 	issues, total := func() ([]*jira.Issue, int) {
-		s := info("Fetching issues...")
-		defer s.Stop()
+		if !plain {
+			s := info("Fetching issues...")
+			defer s.Stop()
+		}
 
 		q, err := query.NewIssue(project, cmd.Flags())
 		exitIfError(err)
@@ -47,6 +52,7 @@ func issue(cmd *cobra.Command, _ []string) {
 		Server:  server,
 		Total:   total,
 		Data:    issues,
+		Plain:   plain,
 	}
 
 	exitIfError(v.Render())
@@ -77,4 +83,5 @@ func init() {
 	issueCmd.Flags().String("updated-before", "", "Filter by issues updated before certain date")
 	issueCmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
 	issueCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
+	issueCmd.Flags().Bool("plain", false, "Display output in plain mode")
 }

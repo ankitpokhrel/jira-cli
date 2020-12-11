@@ -39,9 +39,14 @@ func sprint(cmd *cobra.Command, args []string) {
 }
 
 func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, server string) {
+	plain, err := flags.GetBool("plain")
+	exitIfError(err)
+
 	issues, total := func() ([]*jira.Issue, int) {
-		s := info("Fetching sprint issues...")
-		defer s.Stop()
+		if !plain {
+			s := info("Fetching sprint issues...")
+			defer s.Stop()
+		}
 
 		q, err := query.NewIssue(project, flags)
 		exitIfError(err)
@@ -63,6 +68,7 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 		Server:  server,
 		Total:   total,
 		Data:    issues,
+		Plain:   plain,
 	}
 
 	exitIfError(v.Render())
@@ -148,6 +154,7 @@ func init() {
 	sprintCmd.Flags().String("updated-before", "", "Filter by issues updated before certain date")
 	sprintCmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
 	sprintCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
+	sprintCmd.Flags().Bool("plain", false, "Display output in plain mode")
 
 	exitIfError(sprintCmd.Flags().MarkHidden("history"))
 	exitIfError(sprintCmd.Flags().MarkHidden("watching"))
@@ -165,4 +172,5 @@ func init() {
 	exitIfError(sprintCmd.Flags().MarkHidden("updated-before"))
 	exitIfError(sprintCmd.Flags().MarkHidden("label"))
 	exitIfError(sprintCmd.Flags().MarkHidden("reverse"))
+	exitIfError(sprintCmd.Flags().MarkHidden("plain"))
 }

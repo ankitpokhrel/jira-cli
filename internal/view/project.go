@@ -50,11 +50,16 @@ func (p Project) header() []string {
 }
 
 func (p Project) printHeader() {
-	for _, h := range p.header() {
-		_, _ = fmt.Fprintf(p.writer, "%s\t", h)
+	n := len(p.header())
+
+	for i, h := range p.header() {
+		_, _ = fmt.Fprintf(p.writer, "%s", h)
+		if i != n-1 {
+			_, _ = fmt.Fprintf(p.writer, "\t")
+		}
 	}
 
-	_, _ = fmt.Fprintln(p.writer, "")
+	_, _ = fmt.Fprintln(p.writer)
 }
 
 // Render renders the project view.

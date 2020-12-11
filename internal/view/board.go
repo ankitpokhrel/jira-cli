@@ -50,8 +50,13 @@ func (b Board) header() []string {
 }
 
 func (b Board) printHeader() {
-	for _, h := range b.header() {
-		_, _ = fmt.Fprintf(b.writer, "%s\t", h)
+	n := len(b.header())
+
+	for i, h := range b.header() {
+		_, _ = fmt.Fprintf(b.writer, "%s", h)
+		if i != n-1 {
+			_, _ = fmt.Fprintf(b.writer, "\t")
+		}
 	}
 
 	_, _ = fmt.Fprintln(b.writer, "")
