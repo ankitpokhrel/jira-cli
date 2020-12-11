@@ -24,13 +24,13 @@ func (c *Client) Sprints(boardID int, qp string, startAt, max int) (*SprintResul
 	}
 
 	if res == nil {
-		return nil, errEmptyResponse
+		return nil, ErrEmptyResponse
 	}
 
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, errUnexpectedStatusCode
+		return nil, ErrUnexpectedStatusCode
 	}
 
 	var out SprintResult
@@ -68,7 +68,7 @@ func (c *Client) lastNSprints(boardID int, qp string, limit int) (*SprintResult,
 	}
 
 	if total == 0 {
-		return nil, errNoResult
+		return nil, ErrNoResult
 	}
 
 	n = total - limit
@@ -134,13 +134,13 @@ func (c *Client) SprintIssues(boardID, sprintID int, jql string) (*Search, error
 	}
 
 	if res == nil {
-		return nil, errEmptyResponse
+		return nil, ErrEmptyResponse
 	}
 
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, errUnexpectedStatusCode
+		return nil, ErrUnexpectedStatusCode
 	}
 
 	var out Search

@@ -38,7 +38,7 @@ func TestBoards(t *testing.T) {
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
 
 	_, err := client.Boards("BAD", "scrum")
-	assert.Error(t, errUnexpectedStatusCode, err)
+	assert.Error(t, ErrUnexpectedStatusCode, err)
 
 	actual, err := client.Boards("TEST", "scrum")
 	assert.NoError(t, err)
