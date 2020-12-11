@@ -12,7 +12,7 @@ import (
 )
 
 var epicCmd = &cobra.Command{
-	Use:     "epic",
+	Use:     "epic [ISSUE KEY]",
 	Short:   "Epic lists top 50 epics",
 	Long:    `Epic lists top 50 epics.`,
 	Aliases: []string{"epics"},
@@ -125,10 +125,18 @@ func init() {
 	epicCmd.Flags().StringP("priority", "y", "", "Filter epics by priority")
 	epicCmd.Flags().StringP("reporter", "e", "", "Filter epics by reporter (email or display name)")
 	epicCmd.Flags().StringP("assignee", "a", "", "Filter epics by assignee (email or display name)")
-	epicCmd.Flags().String("created", "", "Filter issues by created date\n"+
-		"Accepts: today, week, month, year")
-	epicCmd.Flags().String("updated", "", "Filter issues by updated date\n"+
-		"Accepts: today, week, month, year")
+	epicCmd.Flags().String("created", "", "Filter epics by created date\n"+
+		"Accepts: today, week, month, year, or a date in yyyy-mm-dd and yyyy/mm/dd format,\n"+
+		"or a period format using w = weeks, d = days, h = hours, m = minutes. eg: -10d\n"+
+		"Created filter will have precedence over created-after and created-before filter")
+	epicCmd.Flags().String("updated", "", "Filter epics by updated date\n"+
+		"Accepts: today, week, month, year, or a date in yyyy-mm-dd and yyyy/mm/dd format,\n"+
+		"or a period format using w = weeks, d = days, h = hours, m = minutes. eg: -10d\n"+
+		"Updated filter will have precedence over updated-after and updated-before filter")
+	epicCmd.Flags().String("created-after", "", "Filter by epics created after certain date")
+	epicCmd.Flags().String("updated-after", "", "Filter by epics updated after certain date")
+	epicCmd.Flags().String("created-before", "", "Filter by epics created before certain date")
+	epicCmd.Flags().String("updated-before", "", "Filter by epics updated before certain date")
 	epicCmd.Flags().StringArrayP("label", "l", []string{}, "Filter epics by label")
 	epicCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 	epicCmd.Flags().Bool("list", false, "Display epics in list view")

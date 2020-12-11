@@ -8,7 +8,6 @@ linters:
     - bodyclose
     - dupl
     - errcheck
-    - goconst
     - gocritic
     - gocyclo
     - gofmt

@@ -64,9 +64,17 @@ func init() {
 	issueCmd.Flags().StringP("reporter", "e", "", "Filter issues by reporter (email or display name)")
 	issueCmd.Flags().StringP("assignee", "a", "", "Filter issues by assignee (email or display name)")
 	issueCmd.Flags().String("created", "", "Filter issues by created date\n"+
-		"Accepts: today, week, month, year")
+		"Accepts: today, week, month, year, or a date in yyyy-mm-dd and yyyy/mm/dd format,\n"+
+		"or a period format using w = weeks, d = days, h = hours, m = minutes. eg: -10d\n"+
+		"Created filter will have precedence over created-after and created-before filter")
 	issueCmd.Flags().String("updated", "", "Filter issues by updated date\n"+
-		"Accepts: today, week, month, year")
+		"Accepts: today, week, month, year, or a date in yyyy-mm-dd and yyyy/mm/dd format,\n"+
+		"or a period format using w = weeks, d = days, h = hours, m = minutes. eg: -10d\n"+
+		"Updated filter will have precedence over updated-after and updated-before filter")
+	issueCmd.Flags().String("created-after", "", "Filter by issues created after certain date")
+	issueCmd.Flags().String("updated-after", "", "Filter by issues updated after certain date")
+	issueCmd.Flags().String("created-before", "", "Filter by issues created before certain date")
+	issueCmd.Flags().String("updated-before", "", "Filter by issues updated before certain date")
 	issueCmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
 	issueCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 }
