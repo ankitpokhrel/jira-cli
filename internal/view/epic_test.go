@@ -113,7 +113,6 @@ func TestEpicData(t *testing.T) {
 			if s == "TEST-1" {
 				return []*jira.Issue{&issue1}
 			}
-
 			return []*jira.Issue{&issue2, &issue1}
 		},
 	}

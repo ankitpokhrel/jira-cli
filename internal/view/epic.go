@@ -10,7 +10,7 @@ import (
 // EpicIssueFunc provides issues for the epic.
 type EpicIssueFunc func(string) []*jira.Issue
 
-// EpicList is a list view for issues.
+// EpicList is a list view for epics.
 type EpicList struct {
 	Total   int
 	Project string

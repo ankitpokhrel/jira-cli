@@ -41,7 +41,7 @@ func TestEpic(t *testing.T) {
 	actual, err := client.Epic("project=TEST AND status=Done ORDER BY created DESC")
 	assert.NoError(t, err)
 
-	expected := &Search{
+	expected := &SearchResult{
 		StartAt:    0,
 		MaxResults: 50,
 		Total:      2,
@@ -137,7 +137,7 @@ func TestEpicIssues(t *testing.T) {
 	actual, err := client.EpicIssues("TEST-0", "project=TEST AND status=Done ORDER BY created DESC")
 	assert.NoError(t, err)
 
-	expected := &Search{
+	expected := &SearchResult{
 		StartAt:    0,
 		MaxResults: 50,
 		Total:      3,

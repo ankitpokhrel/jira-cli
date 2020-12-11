@@ -217,7 +217,7 @@ func TestSprintIssues(t *testing.T) {
 	actual, err := client.SprintIssues(1, 2, "project=TEST AND status=Done ORDER BY created DESC")
 	assert.NoError(t, err)
 
-	expected := &Search{
+	expected := &SearchResult{
 		StartAt:    0,
 		MaxResults: 50,
 		Total:      3,

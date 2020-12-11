@@ -67,7 +67,6 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 
 	if total == 0 {
 		fmt.Printf("No result found for given query in project \"%s\"\n", project)
-
 		return
 	}
 
@@ -98,7 +97,6 @@ func epicExplorerView(flags query.FlagParser, project, server string) {
 
 	if total == 0 {
 		fmt.Printf("No result found for given query in project \"%s\"\n", project)
-
 		return
 	}
 
@@ -112,7 +110,6 @@ func epicExplorerView(flags query.FlagParser, project, server string) {
 			if err != nil {
 				return []*jira.Issue{}
 			}
-
 			return resp.Issues
 		},
 	}

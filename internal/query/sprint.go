@@ -26,13 +26,13 @@ func (sp *sprintParams) init(flags FlagParser) error {
 	return nil
 }
 
-// Sprint is a query type for issue command.
+// Sprint is a query type for sprint command.
 type Sprint struct {
 	Flags  FlagParser
 	params *sprintParams
 }
 
-// NewSprint creates and initialize new issue type.
+// NewSprint creates and initializes a new Sprint type.
 func NewSprint(flags FlagParser) (*Sprint, error) {
 	sprint := Sprint{
 		Flags: flags,

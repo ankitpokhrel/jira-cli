@@ -11,7 +11,7 @@ import (
 // SprintIssueFunc provides issues in the sprint.
 type SprintIssueFunc func(boardID, sprintID int) []*jira.Issue
 
-// SprintList is a list view for issues.
+// SprintList is a list view for sprints.
 type SprintList struct {
 	Project string
 	Board   string
@@ -153,7 +153,7 @@ func (sl SprintList) RenderInTable() error {
 	view := tui.NewTable(
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
-		tui.WithFooterText(
+		tui.WithTableFooterText(
 			fmt.Sprintf(
 				"Showing %d results from board \"%s\" of project \"%s\"",
 				len(sl.Data), sl.Board, sl.Project,

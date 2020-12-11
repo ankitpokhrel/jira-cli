@@ -21,7 +21,7 @@ const (
 	refreshRate   = 100 * time.Millisecond
 )
 
-// JiraCLIConfig is a jira cli config.
+// JiraCLIConfig is a Jira CLI config.
 type JiraCLIConfig struct {
 	value struct {
 		server  string
@@ -35,7 +35,7 @@ type JiraCLIConfig struct {
 	boardsMap          map[string]*jira.Board
 }
 
-// NewJiraCLIConfig creates new jira cli config.
+// NewJiraCLIConfig creates a new Jira CLI config.
 func NewJiraCLIConfig() *JiraCLIConfig {
 	return &JiraCLIConfig{
 		boardsMap: make(map[string]*jira.Board),
@@ -166,7 +166,6 @@ func (c *JiraCLIConfig) verifyLoginDetails(server, login string) error {
 
 	if _, err := c.jiraClient.Me(); err != nil {
 		fmt.Printf("\nUnable to reach jira server with the given details. Please try again.\n")
-
 		return err
 	}
 
