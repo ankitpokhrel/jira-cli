@@ -6,6 +6,7 @@ import (
 
 type sprintParams struct {
 	status string
+	debug  bool
 }
 
 func (sp *sprintParams) init(flags FlagParser) error {
@@ -14,7 +15,13 @@ func (sp *sprintParams) init(flags FlagParser) error {
 		return err
 	}
 
+	debug, err := flags.GetBool("debug")
+	if err != nil {
+		return err
+	}
+
 	sp.status = status
+	sp.debug = debug
 
 	return nil
 }
@@ -45,9 +52,15 @@ func NewSprint(flags FlagParser) (*Sprint, error) {
 
 // Get returns constructed query params.
 func (s *Sprint) Get() string {
+	state := "state=active,closed"
+
 	if s.params.status != "" {
-		return fmt.Sprintf("state=%s", s.params.status)
+		state = fmt.Sprintf("state=%s", s.params.status)
 	}
 
-	return "state=active,closed"
+	if s.params.debug {
+		fmt.Printf("JQL: %s\n", state)
+	}
+
+	return state
 }

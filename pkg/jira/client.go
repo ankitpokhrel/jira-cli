@@ -31,6 +31,7 @@ type Config struct {
 	Server   string
 	Login    string
 	APIToken string
+	Debug    bool
 }
 
 // Client is a jira client.
@@ -40,7 +41,7 @@ type Client struct {
 	login     string
 	token     string
 	timeout   time.Duration
-	v1        bool
+	debug     bool
 }
 
 // ClientFunc decorates option for client.
@@ -52,7 +53,7 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 		server: strings.TrimSuffix(c.Server, "/"),
 		login:  c.Login,
 		token:  c.APIToken,
-		v1:     false,
+		debug:  c.Debug,
 	}
 
 	client.transport = &http.Transport{
@@ -78,21 +79,20 @@ func WithTimeout(to time.Duration) ClientFunc {
 
 // Get sends get request to the jira server.
 func (c *Client) Get(ctx context.Context, path string) (*http.Response, error) {
-	req, err := http.NewRequest(http.MethodGet, c.server+baseURLv3+path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.SetBasicAuth(c.login, c.token)
-
-	res, err := c.transport.RoundTrip(req.WithContext(ctx))
-
-	return res, err
+	return c.request(ctx, c.server+baseURLv3+path)
 }
 
 // GetV1 sends get request to v1 version of the jira api.
 func (c *Client) GetV1(ctx context.Context, path string) (*http.Response, error) {
-	req, err := http.NewRequest(http.MethodGet, c.server+baseURLv1+path, nil)
+	return c.request(ctx, c.server+baseURLv1+path)
+}
+
+func (c *Client) request(ctx context.Context, endpoint string) (*http.Response, error) {
+	if c.debug {
+		fmt.Printf("Requesting: %s\n", endpoint)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}

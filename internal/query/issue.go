@@ -1,6 +1,7 @@
 package query
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jql"
@@ -23,12 +24,13 @@ type issueParams struct {
 	updatedBefore string
 	labels        []string
 	reverse       bool
+	debug         bool
 }
 
 func (ip *issueParams) init(flags FlagParser) error {
 	var err error
 
-	boolParams := []string{"history", "watching", "reverse"}
+	boolParams := []string{"history", "watching", "reverse", "debug"}
 	stringParams := []string{
 		"resolution", "type", "status", "priority", "reporter", "assignee",
 		"created", "created-after", "created-before",
@@ -72,6 +74,8 @@ func (ip *issueParams) setBoolParams(paramsMap map[string]bool) {
 			ip.watching = v
 		case "reverse":
 			ip.reverse = v
+		case "debug":
+			ip.debug = v
 		}
 	}
 }
@@ -168,6 +172,10 @@ func (i *Issue) Get() string {
 		q.OrderBy(obf, jql.DirectionAscending)
 	} else {
 		q.OrderBy(obf, jql.DirectionDescending)
+	}
+
+	if i.params.debug {
+		fmt.Printf("JQL: %s\n", q.String())
 	}
 
 	return q.String()

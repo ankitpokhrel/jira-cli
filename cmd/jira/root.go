@@ -21,6 +21,7 @@ const (
 var (
 	config     string
 	project    string
+	debug      bool
 	jiraClient *jira.Client
 
 	rootCmd = &cobra.Command{
@@ -43,6 +44,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVarP(&config, "config", "c", "", "Config file (default is $HOME/.jira.yml)")
 	rootCmd.PersistentFlags().StringVarP(&project, "project", "p", "", "Jira project to look into (defaults to value from $HOME/.jira.yml)")
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Turn on debug output")
 
 	_ = viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
 }
@@ -61,9 +63,8 @@ func initConfig() {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("jira")
 
-	if err := viper.ReadInConfig(); err == nil {
-		// TODO: Only display this debug mode
-		// fmt.Println("Using config file:", viper.ConfigFileUsed())
+	if err := viper.ReadInConfig(); err == nil && debug {
+		fmt.Printf("Using config file: %s\n", viper.ConfigFileUsed())
 	}
 }
 
@@ -72,6 +73,7 @@ func initJiraClient() {
 		Server:   viper.GetString("server"),
 		Login:    viper.GetString("login"),
 		APIToken: viper.GetString("api_token"),
+		Debug:    debug,
 	}
 
 	jiraClient = jira.NewClient(config, jira.WithTimeout(clientTimeout))
@@ -79,7 +81,18 @@ func initJiraClient() {
 
 func exitIfError(err error) {
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
+		var msg string
+
+		switch err {
+		case jira.ErrUnexpectedStatusCode:
+			msg = "Received unexpected response code from jira. Please check the parameters you supplied and try again."
+		case jira.ErrEmptyResponse:
+			msg = "Received empty response from jira. Please try again."
+		default:
+			msg = err.Error()
+		}
+
+		_, _ = fmt.Fprintf(os.Stderr, "\nError: %s\n", msg)
 		os.Exit(1)
 	}
 }
@@ -92,7 +105,9 @@ func info(msg string) *spinner.Spinner {
 		spinner.WithHiddenCursor(true),
 	)
 
-	s.Start()
+	if !debug {
+		s.Start()
+	}
 
 	return s
 }
