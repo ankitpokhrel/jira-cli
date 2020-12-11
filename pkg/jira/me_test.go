@@ -43,5 +43,5 @@ func TestMe(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.Me()
-	assert.Error(t, errUnexpectedStatusCode, err)
+	assert.Error(t, ErrUnexpectedStatusCode, err)
 }

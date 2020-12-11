@@ -28,13 +28,13 @@ func (c *Client) Search(jql string) (*Search, error) {
 	}
 
 	if res == nil {
-		return nil, errEmptyResponse
+		return nil, ErrEmptyResponse
 	}
 
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, errUnexpectedStatusCode
+		return nil, ErrUnexpectedStatusCode
 	}
 
 	var out Search

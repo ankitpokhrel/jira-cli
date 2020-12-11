@@ -18,9 +18,12 @@ const (
 )
 
 var (
-	errNoResult             = fmt.Errorf("jira: no result")
-	errEmptyResponse        = fmt.Errorf("jira: empty response from server")
-	errUnexpectedStatusCode = fmt.Errorf("jira: unexpected status code")
+	// ErrNoResult denotes no results.
+	ErrNoResult = fmt.Errorf("jira: no result")
+	// ErrEmptyResponse denotes empty response from the server.
+	ErrEmptyResponse = fmt.Errorf("jira: empty response from server")
+	// ErrUnexpectedStatusCode denotes response code other than 200.
+	ErrUnexpectedStatusCode = fmt.Errorf("jira: unexpected status code")
 )
 
 // Config is a jira config.

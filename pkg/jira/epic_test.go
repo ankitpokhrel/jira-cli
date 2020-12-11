@@ -104,7 +104,7 @@ func TestEpic(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.Epic("project=TEST")
-	assert.Error(t, errUnexpectedStatusCode, err)
+	assert.Error(t, ErrUnexpectedStatusCode, err)
 }
 
 func TestEpicIssues(t *testing.T) {
@@ -231,5 +231,5 @@ func TestEpicIssues(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.EpicIssues("TEST-0", "project=TEST")
-	assert.Error(t, errUnexpectedStatusCode, err)
+	assert.Error(t, ErrUnexpectedStatusCode, err)
 }

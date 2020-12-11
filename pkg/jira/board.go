@@ -35,13 +35,13 @@ func (c *Client) Boards(project, boardType string) (*BoardResult, error) {
 	}
 
 	if res == nil {
-		return nil, errEmptyResponse
+		return nil, ErrEmptyResponse
 	}
 
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, errUnexpectedStatusCode
+		return nil, ErrUnexpectedStatusCode
 	}
 
 	var out BoardResult

@@ -24,7 +24,7 @@ func (c *Client) Me() (*Me, error) {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, errUnexpectedStatusCode
+		return nil, ErrUnexpectedStatusCode
 	}
 
 	var me Me
