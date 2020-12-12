@@ -2,7 +2,9 @@ package view
 
 import (
 	"fmt"
+	"io"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/pkg/browser"
@@ -61,4 +63,25 @@ func navigate(server string) tui.SelectedFunc {
 
 		_ = browser.OpenURL(url)
 	}
+}
+
+func renderPlain(w io.Writer, data tui.TableData) error {
+	for _, items := range data {
+		n := len(items)
+
+		for j, v := range items {
+			_, _ = fmt.Fprintf(w, "%s", v)
+			if j != n-1 {
+				_, _ = fmt.Fprintf(w, "\t")
+			}
+		}
+
+		_, _ = fmt.Fprintln(w)
+	}
+
+	if _, ok := w.(*tabwriter.Writer); ok {
+		return w.(*tabwriter.Writer).Flush()
+	}
+
+	return nil
 }

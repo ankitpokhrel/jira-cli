@@ -83,22 +83,5 @@ func (l IssueList) Render() error {
 
 // renderPlain renders the issue in plain view.
 func (l IssueList) renderPlain(w io.Writer) error {
-	for _, items := range l.data() {
-		n := len(items)
-
-		for j, v := range items {
-			_, _ = fmt.Fprintf(w, "%s", v)
-			if j != n-1 {
-				_, _ = fmt.Fprintf(w, "\t")
-			}
-		}
-
-		_, _ = fmt.Fprintln(w)
-	}
-
-	if _, ok := w.(*tabwriter.Writer); ok {
-		return w.(*tabwriter.Writer).Flush()
-	}
-
-	return nil
+	return renderPlain(w, l.data())
 }
