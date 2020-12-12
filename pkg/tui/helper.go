@@ -51,7 +51,8 @@ func renderTableHeader(t *Table, data []string) {
 		cell := tview.NewTableCell(text).
 			SetStyle(style).
 			SetSelectable(false).
-			SetMaxWidth(int(t.maxColWidth))
+			SetMaxWidth(int(t.maxColWidth)).
+			SetTextColor(tcell.ColorSnow)
 
 		t.view.SetCell(0, c, cell)
 	}
@@ -64,7 +65,7 @@ func renderTableCell(t *Table, data [][]string) {
 		for c := 0; c < cols; c++ {
 			cell := tview.NewTableCell(pad(data[r][c], t.colPad)).
 				SetMaxWidth(int(t.maxColWidth)).
-				SetStyle(tcell.StyleDefault)
+				SetTextColor(tcell.ColorDefault)
 
 			t.view.SetCell(r, c, cell)
 		}
