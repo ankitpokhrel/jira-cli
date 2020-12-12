@@ -1,6 +1,7 @@
 package view
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -178,4 +179,42 @@ func TestSprintTableLayoutData(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, sprint.tableData())
+}
+
+func TestSprintRenderInPlainView(t *testing.T) {
+	var b bytes.Buffer
+
+	sprint := SprintList{
+		Project: "TEST",
+		Board:   "Test Board",
+		Server:  "https://test.local",
+		Data: []*jira.Sprint{
+			{
+				ID:           1,
+				Name:         "Sprint 1",
+				Status:       "closed",
+				StartDate:    "2020-12-07T16:12:00.000Z",
+				EndDate:      "2020-12-13T16:12:00.000Z",
+				CompleteDate: "2020-12-13T16:12:00.000Z",
+				BoardID:      1,
+			},
+			{
+				ID:        2,
+				Name:      "Sprint 2",
+				Status:    "active",
+				StartDate: "2020-12-13T16:12:00.000Z",
+				EndDate:   "2020-12-19T16:12:00.000Z",
+				BoardID:   1,
+			},
+		},
+	}
+
+	assert.NoError(t, sprint.renderPlain(&b))
+
+	expected := `ID	NAME	START DATE	END DATE	COMPLETION DATE	STATUS
+1	Sprint 1	2020-12-07 16:12:00	2020-12-13 16:12:00	2020-12-13 16:12:00	closed
+2	Sprint 2	2020-12-13 16:12:00	2020-12-19 16:12:00		active
+`
+
+	assert.Equal(t, expected, b.String())
 }

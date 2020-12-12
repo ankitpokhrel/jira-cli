@@ -2,6 +2,9 @@ package view
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"text/tabwriter"
 	"time"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -18,6 +21,7 @@ type SprintList struct {
 	Server  string
 	Data    []*jira.Sprint
 	Issues  SprintIssueFunc
+	Plain   bool
 
 	issueCache map[string]tui.TableData
 }
@@ -148,6 +152,11 @@ func (sl SprintList) Render() error {
 
 // RenderInTable renders the list in table view.
 func (sl SprintList) RenderInTable() error {
+	if sl.Plain {
+		w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
+		return sl.renderPlain(w)
+	}
+
 	data := sl.tableData()
 
 	view := tui.NewTable(
@@ -162,4 +171,26 @@ func (sl SprintList) RenderInTable() error {
 	)
 
 	return view.Render(data)
+}
+
+// renderPlain renders the issue in plain view.
+func (sl SprintList) renderPlain(w io.Writer) error {
+	for _, items := range sl.tableData() {
+		n := len(items)
+
+		for j, v := range items {
+			_, _ = fmt.Fprintf(w, "%s", v)
+			if j != n-1 {
+				_, _ = fmt.Fprintf(w, "\t")
+			}
+		}
+
+		_, _ = fmt.Fprintln(w)
+	}
+
+	if _, ok := w.(*tabwriter.Writer); ok {
+		return w.(*tabwriter.Writer).Flush()
+	}
+
+	return nil
 }
