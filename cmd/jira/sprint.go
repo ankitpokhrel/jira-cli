@@ -74,9 +74,14 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 }
 
 func sprintExplorerView(flags query.FlagParser, boardID int, project, server string) {
+	plain, err := flags.GetBool("plain")
+	exitIfError(err)
+
 	sprints := func() []*jira.Sprint {
-		s := info("Fetching sprints...")
-		defer s.Stop()
+		if !plain {
+			s := info("Fetching sprints...")
+			defer s.Stop()
+		}
 
 		resp, err := jiraClient.Boards(project, jira.BoardTypeScrum)
 		exitIfError(err)
@@ -109,6 +114,7 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 			}
 			return resp.Issues
 		},
+		Plain: plain,
 	}
 
 	list, err := flags.GetBool("list")
