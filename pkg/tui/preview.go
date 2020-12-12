@@ -33,7 +33,7 @@ type PreviewOption func(*Preview)
 
 // NewPreview constructs a new preview layout.
 func NewPreview(opts ...PreviewOption) *Preview {
-	tview.Styles.PrimitiveBackgroundColor = tcell.ColorBlack
+	tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault
 
 	pv := Preview{
 		screen:   NewScreen(),
@@ -63,8 +63,6 @@ func (pv *Preview) init() {
 		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
 		AddItem(pv.footer, 2, 0, 1, 3, 0, 0, false)
 
-	pv.painter.SetBackgroundColor(tcell.ColorBlack)
-
 	pv.initLayout(pv.sidebar, pv.contents.view)
 	pv.initLayout(pv.contents.view, pv.sidebar)
 }
@@ -77,8 +75,7 @@ func (pv *Preview) initContentsView() {
 	contents := tview.NewTable()
 
 	contents.SetBorder(true).
-		SetBorderColor(tcell.ColorDarkGray).
-		SetBackgroundColor(tcell.ColorBlack)
+		SetBorderColor(tcell.ColorDarkGray)
 
 	pv.contents.view = contents
 }
@@ -87,13 +84,14 @@ func (pv *Preview) initFooterView() {
 	view := tview.NewTextView().
 		SetWordWrap(true).
 		SetText(pad(pv.footerText, 1)).
-		SetTextColor(tcell.ColorAntiqueWhite)
+		SetTextColor(tcell.ColorDefault)
 
 	pv.footer = view
 }
 
 func (pv *Preview) initLayout(view *tview.Table, nextView *tview.Table) {
-	view.SetSelectable(true, false)
+	view.SetSelectable(true, false).
+		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true))
 
 	view.SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEsc {

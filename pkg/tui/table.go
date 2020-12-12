@@ -37,6 +37,8 @@ type TableOption func(*Table)
 
 // NewTable constructs a new table layout.
 func NewTable(opts ...TableOption) *Table {
+	tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault
+
 	tbl := Table{
 		screen:      NewScreen(),
 		colPad:      defaultColPad,
@@ -91,7 +93,7 @@ func (t *Table) initFooterView() {
 	view := tview.NewTextView().
 		SetWordWrap(true).
 		SetText(pad(t.footerText, 1)).
-		SetTextColor(tcell.ColorAntiqueWhite)
+		SetTextColor(tcell.ColorDefault)
 
 	t.footer = view
 }
@@ -99,7 +101,8 @@ func (t *Table) initFooterView() {
 func (t *Table) initTableView() {
 	view := tview.NewTable()
 
-	view.SetSelectable(true, false)
+	view.SetSelectable(true, false).
+		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true))
 
 	view.SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEsc {
