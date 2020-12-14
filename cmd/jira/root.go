@@ -36,6 +36,8 @@ var (
 
 // Execute runs the root command.
 func Execute() error {
+	checkForJiraToken()
+
 	return rootCmd.Execute()
 }
 
@@ -111,4 +113,21 @@ func info(msg string) *spinner.Spinner {
 	}
 
 	return s
+}
+
+func checkForJiraToken() {
+	const jiraAPITokenLink = "https://id.atlassian.com/manage-profile/security/api-tokens"
+
+	if os.Getenv("JIRA_API_TOKEN") != "" {
+		return
+	}
+
+	msg := fmt.Sprintf(`You need to define JIRA_API_TOKEN env for the tool to work. 
+
+You can generate a token using this link: %s
+
+After generating the token, export it to your shell and run 'jira init' if you haven't already.`, jiraAPITokenLink)
+
+	fmt.Println(msg)
+	os.Exit(1)
 }

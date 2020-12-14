@@ -21,6 +21,9 @@ const (
 	refreshRate   = 100 * time.Millisecond
 )
 
+// ErrSkip is returned when a user skips the config generation.
+var ErrSkip = fmt.Errorf("skipping config generation")
+
 // JiraCLIConfig is a Jira CLI config.
 type JiraCLIConfig struct {
 	value struct {
@@ -52,7 +55,7 @@ func (c *JiraCLIConfig) Generate() error {
 	}()
 
 	if ce && !shallOverwrite() {
-		return nil
+		return ErrSkip
 	}
 
 	if err := func() error {
