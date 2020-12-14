@@ -19,13 +19,14 @@ var initCmd = &cobra.Command{
 }
 
 func initialize(*cobra.Command, []string) {
-	checkForJiraToken()
-
 	c := jiraConfig.NewJiraCLIConfig()
 
 	if err := c.Generate(); err != nil {
-		fmt.Println(err.Error())
-		fmt.Printf("\n\033[0;31m✗\033[0m Unable to generate configuration: %s\n", viper.ConfigFileUsed())
+		if err == jiraConfig.ErrSkip {
+			fmt.Printf("\n\033[0;32m✓\033[0m Skipping config generation. Current config: %s\n", viper.ConfigFileUsed())
+		} else {
+			fmt.Printf("\n\033[0;31m✗\033[0m Unable to generate configuration: %s\n", viper.ConfigFileUsed())
+		}
 
 		os.Exit(1)
 	}
@@ -35,23 +36,4 @@ func initialize(*cobra.Command, []string) {
 
 func init() {
 	rootCmd.AddCommand(initCmd)
-}
-
-func checkForJiraToken() {
-	const jiraAPITokenLink = "https://id.atlassian.com/manage-profile/security/api-tokens"
-
-	if os.Getenv("JIRA_API_TOKEN") != "" {
-		return
-	}
-
-	msg := fmt.Sprintf(`
-You first need to define JIRA_API_TOKEN env to continue with the initializion process. 
-
-You can generate token from this link: %s
-
-After generating the token, export it to your terminal and run 'jira init' again.
-`, jiraAPITokenLink)
-
-	fmt.Println(msg)
-	os.Exit(1)
 }
