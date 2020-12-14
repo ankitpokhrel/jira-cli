@@ -46,6 +46,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&project, "project", "p", "", "Jira project to look into (defaults to value from $HOME/.jira.yml)")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Turn on debug output")
 
+	_ = viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	_ = viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
 }
 
