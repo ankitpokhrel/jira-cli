@@ -44,7 +44,7 @@ func TestExists(t *testing.T) {
 				path = cwd + tc.input
 			}
 
-			assert.Equal(t, tc.expected, exists(path))
+			assert.Equal(t, tc.expected, Exists(path))
 		})
 	}
 }
