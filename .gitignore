@@ -1,7 +1,7 @@
 *~
 *.out
 *.swp
-tmp/*.json
+tmp/*
 
 .DS_Store
 .idea/
