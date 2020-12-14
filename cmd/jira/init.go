@@ -25,7 +25,6 @@ func initialize(*cobra.Command, []string) {
 		if err == jiraConfig.ErrSkip {
 			fmt.Printf("\n\033[0;32m✓\033[0m Skipping config generation. Current config: %s\n", viper.ConfigFileUsed())
 		} else {
-			fmt.Println(err.Error())
 			fmt.Printf("\n\033[0;31m✗\033[0m Unable to generate configuration: %s\n", viper.ConfigFileUsed())
 		}
 
