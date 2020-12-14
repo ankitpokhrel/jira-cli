@@ -51,7 +51,7 @@ func (c *JiraCLIConfig) Generate() error {
 		s := info("Checking configuration...")
 		defer s.Stop()
 
-		return exists(viper.ConfigFileUsed())
+		return Exists(viper.ConfigFileUsed())
 	}()
 
 	if ce && !shallOverwrite() {
@@ -261,7 +261,8 @@ func (c *JiraCLIConfig) getBoardSuggestions(project string) error {
 	return nil
 }
 
-func exists(file string) bool {
+// Exists checks if the file exist.
+func Exists(file string) bool {
 	if file == "" {
 		return false
 	}
@@ -288,7 +289,7 @@ func shallOverwrite() bool {
 }
 
 func create(path string) error {
-	if exists(path) {
+	if Exists(path) {
 		if err := os.Rename(path, path+".bkp"); err != nil {
 			return err
 		}

@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	jiraConfig "github.com/ankitpokhrel/jira-cli/internal/config"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
@@ -30,6 +31,17 @@ var (
 		Long:  `A jira command line designed for developers to help with frequent jira chores.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
+		},
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			subCmd := cmd.Name()
+			if subCmd == "init" || subCmd == "help" || subCmd == "jira" {
+				return
+			}
+
+			configFile := viper.ConfigFileUsed()
+			if !jiraConfig.Exists(configFile) {
+				exitWithMessage("Missing configuration file.\nRun 'jira init' to configure the tool.")
+			}
 		},
 	}
 )
@@ -100,6 +112,11 @@ func exitIfError(err error) {
 	}
 }
 
+func exitWithMessage(msg string) {
+	fmt.Println(msg)
+	os.Exit(1)
+}
+
 func info(msg string) *spinner.Spinner {
 	s := spinner.New(
 		spinner.CharSets[14],
@@ -128,6 +145,5 @@ You can generate a token using this link: %s
 
 After generating the token, export it to your shell and run 'jira init' if you haven't already.`, jiraAPITokenLink)
 
-	fmt.Println(msg)
-	os.Exit(1)
+	exitWithMessage(msg)
 }
