@@ -4,28 +4,6 @@ import (
 	"fmt"
 )
 
-type sprintParams struct {
-	status string
-	debug  bool
-}
-
-func (sp *sprintParams) init(flags FlagParser) error {
-	status, err := flags.GetString("state")
-	if err != nil {
-		return err
-	}
-
-	debug, err := flags.GetBool("debug")
-	if err != nil {
-		return err
-	}
-
-	sp.status = status
-	sp.debug = debug
-
-	return nil
-}
-
 // Sprint is a query type for sprint command.
 type Sprint struct {
 	Flags  FlagParser
@@ -63,4 +41,26 @@ func (s *Sprint) Get() string {
 	}
 
 	return state
+}
+
+type sprintParams struct {
+	status string
+	debug  bool
+}
+
+func (sp *sprintParams) init(flags FlagParser) error {
+	status, err := flags.GetString("state")
+	if err != nil {
+		return err
+	}
+
+	debug, err := flags.GetBool("debug")
+	if err != nil {
+		return err
+	}
+
+	sp.status = status
+	sp.debug = debug
+
+	return nil
 }

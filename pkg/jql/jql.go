@@ -143,27 +143,6 @@ func (j *JQL) OrderBy(field, dir string) *JQL {
 	return j
 }
 
-func (j *JQL) mergeFilters(separator string) {
-	fLen := len(j.filters)
-
-	var qs strings.Builder
-
-	for i, filter := range j.filters {
-		qs.WriteString(filter)
-
-		if i != fLen-1 {
-			qs.WriteString(fmt.Sprintf(" %s ", separator))
-		}
-	}
-
-	s := qs.String()
-
-	if s != "" {
-		j.filters = nil
-		j.filters = append(j.filters, qs.String())
-	}
-}
-
 // And combines filter with AND operator.
 func (j *JQL) And(fn GroupFunc) *JQL {
 	fn()
@@ -183,6 +162,27 @@ func (j *JQL) Or(fn GroupFunc) *JQL {
 // String returns the constructed query.
 func (j *JQL) String() string {
 	return j.compile()
+}
+
+func (j *JQL) mergeFilters(separator string) {
+	fLen := len(j.filters)
+
+	var qs strings.Builder
+
+	for i, filter := range j.filters {
+		qs.WriteString(filter)
+
+		if i != fLen-1 {
+			qs.WriteString(fmt.Sprintf(" %s ", separator))
+		}
+	}
+
+	s := qs.String()
+
+	if s != "" {
+		j.filters = nil
+		j.filters = append(j.filters, qs.String())
+	}
 }
 
 func (j *JQL) compile() string {

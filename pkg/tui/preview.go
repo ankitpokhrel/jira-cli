@@ -49,77 +49,6 @@ func NewPreview(opts ...PreviewOption) *Preview {
 	return &pv
 }
 
-func (pv *Preview) init() {
-	pv.initSidebarView()
-	pv.initContentsView()
-	pv.initFooterView()
-
-	pv.painter = tview.NewGrid().
-		SetRows(0, 1, 2).
-		SetColumns(sidebarMaxWidth, 1, 0).
-		AddItem(pv.sidebar, 0, 0, 2, 1, 0, 0, true).
-		AddItem(tview.NewTextView(), 0, 1, 1, 1, 0, 0, false). // Dummy view to fake col padding.
-		AddItem(pv.contents.view, 0, 2, 2, 1, 0, 0, false).
-		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
-		AddItem(pv.footer, 2, 0, 1, 3, 0, 0, false)
-
-	pv.initLayout(pv.sidebar, pv.contents.view)
-	pv.initLayout(pv.contents.view, pv.sidebar)
-}
-
-func (pv *Preview) initSidebarView() {
-	pv.sidebar = tview.NewTable()
-}
-
-func (pv *Preview) initContentsView() {
-	contents := tview.NewTable()
-
-	contents.SetBorder(true).
-		SetBorderColor(tcell.ColorDarkGray)
-
-	pv.contents.view = contents
-}
-
-func (pv *Preview) initFooterView() {
-	view := tview.NewTextView().
-		SetWordWrap(true).
-		SetText(pad(pv.footerText, 1)).
-		SetTextColor(tcell.ColorDefault)
-
-	pv.footer = view
-}
-
-func (pv *Preview) initLayout(view *tview.Table, nextView *tview.Table) {
-	view.SetSelectable(true, false).
-		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true))
-
-	view.SetDoneFunc(func(key tcell.Key) {
-		if key == tcell.KeyEsc {
-			pv.screen.Stop()
-		}
-	})
-
-	view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyRune {
-			switch event.Rune() {
-			case 'q':
-				pv.screen.Stop()
-
-			case 'w':
-				if view.HasFocus() {
-					pv.screen.SetFocus(nextView)
-				} else {
-					pv.screen.SetFocus(view)
-				}
-			}
-		}
-
-		return event
-	})
-
-	view.SetFixed(1, 1)
-}
-
 // WithInitialText sets initial text that is displayed in the contents screen.
 func WithInitialText(text string) PreviewOption {
 	return func(p *Preview) {
@@ -220,6 +149,77 @@ func (pv *Preview) renderContents(pd PreviewData) {
 			renderTableCell(pv.contents, data)
 		})
 	}
+}
+
+func (pv *Preview) init() {
+	pv.initSidebarView()
+	pv.initContentsView()
+	pv.initFooterView()
+
+	pv.painter = tview.NewGrid().
+		SetRows(0, 1, 2).
+		SetColumns(sidebarMaxWidth, 1, 0).
+		AddItem(pv.sidebar, 0, 0, 2, 1, 0, 0, true).
+		AddItem(tview.NewTextView(), 0, 1, 1, 1, 0, 0, false). // Dummy view to fake col padding.
+		AddItem(pv.contents.view, 0, 2, 2, 1, 0, 0, false).
+		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
+		AddItem(pv.footer, 2, 0, 1, 3, 0, 0, false)
+
+	pv.initLayout(pv.sidebar, pv.contents.view)
+	pv.initLayout(pv.contents.view, pv.sidebar)
+}
+
+func (pv *Preview) initSidebarView() {
+	pv.sidebar = tview.NewTable()
+}
+
+func (pv *Preview) initContentsView() {
+	contents := tview.NewTable()
+
+	contents.SetBorder(true).
+		SetBorderColor(tcell.ColorDarkGray)
+
+	pv.contents.view = contents
+}
+
+func (pv *Preview) initFooterView() {
+	view := tview.NewTextView().
+		SetWordWrap(true).
+		SetText(pad(pv.footerText, 1)).
+		SetTextColor(tcell.ColorDefault)
+
+	pv.footer = view
+}
+
+func (pv *Preview) initLayout(view *tview.Table, nextView *tview.Table) {
+	view.SetSelectable(true, false).
+		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true))
+
+	view.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEsc {
+			pv.screen.Stop()
+		}
+	})
+
+	view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyRune {
+			switch event.Rune() {
+			case 'q':
+				pv.screen.Stop()
+
+			case 'w':
+				if view.HasFocus() {
+					pv.screen.SetFocus(nextView)
+				} else {
+					pv.screen.SetFocus(view)
+				}
+			}
+		}
+
+		return event
+	})
+
+	view.SetFixed(1, 1)
 }
 
 func (pv *Preview) printText(s string) {

@@ -41,6 +41,21 @@ func WithProjectWriter(w io.Writer) ProjectOption {
 	}
 }
 
+// Render renders the project view.
+func (p Project) Render() error {
+	p.printHeader()
+
+	for _, d := range p.data {
+		_, _ = fmt.Fprintf(p.writer, "%s\t%s\t%s\n", d.Key, prepareTitle(d.Name), d.Lead.Name)
+	}
+
+	if _, ok := p.writer.(*tabwriter.Writer); ok {
+		return p.writer.(*tabwriter.Writer).Flush()
+	}
+
+	return nil
+}
+
 func (p Project) header() []string {
 	return []string{
 		"KEY",
@@ -60,19 +75,4 @@ func (p Project) printHeader() {
 	}
 
 	_, _ = fmt.Fprintln(p.writer)
-}
-
-// Render renders the project view.
-func (p Project) Render() error {
-	p.printHeader()
-
-	for _, d := range p.data {
-		_, _ = fmt.Fprintf(p.writer, "%s\t%s\t%s\n", d.Key, prepareTitle(d.Name), d.Lead.Name)
-	}
-
-	if _, ok := p.writer.(*tabwriter.Writer); ok {
-		return p.writer.(*tabwriter.Writer).Flush()
-	}
-
-	return nil
 }

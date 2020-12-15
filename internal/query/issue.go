@@ -7,110 +7,6 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jql"
 )
 
-type issueParams struct {
-	latest        bool
-	watching      bool
-	resolution    string
-	issueType     string
-	status        string
-	priority      string
-	reporter      string
-	assignee      string
-	created       string
-	updated       string
-	createdAfter  string
-	updatedAfter  string
-	createdBefore string
-	updatedBefore string
-	labels        []string
-	reverse       bool
-	debug         bool
-}
-
-func (ip *issueParams) init(flags FlagParser) error {
-	var err error
-
-	boolParams := []string{"history", "watching", "reverse", "debug"}
-	stringParams := []string{
-		"resolution", "type", "status", "priority", "reporter", "assignee",
-		"created", "created-after", "created-before",
-		"updated", "updated-after", "updated-before",
-	}
-
-	boolParamsMap := make(map[string]bool)
-	for _, param := range boolParams {
-		boolParamsMap[param], err = flags.GetBool(param)
-		if err != nil {
-			return err
-		}
-	}
-
-	stringParamsMap := make(map[string]string)
-	for _, param := range stringParams {
-		stringParamsMap[param], err = flags.GetString(param)
-		if err != nil {
-			return err
-		}
-	}
-
-	labels, err := flags.GetStringArray("label")
-	if err != nil {
-		return err
-	}
-
-	ip.labels = labels
-	ip.setBoolParams(boolParamsMap)
-	ip.setStringParams(stringParamsMap)
-
-	return nil
-}
-
-func (ip *issueParams) setBoolParams(paramsMap map[string]bool) {
-	for k, v := range paramsMap {
-		switch k {
-		case "history":
-			ip.latest = v
-		case "watching":
-			ip.watching = v
-		case "reverse":
-			ip.reverse = v
-		case "debug":
-			ip.debug = v
-		}
-	}
-}
-
-func (ip *issueParams) setStringParams(paramsMap map[string]string) {
-	for k, v := range paramsMap {
-		switch k {
-		case "resolution":
-			ip.resolution = v
-		case "type":
-			ip.issueType = v
-		case "status":
-			ip.status = v
-		case "priority":
-			ip.priority = v
-		case "reporter":
-			ip.reporter = v
-		case "assignee":
-			ip.assignee = v
-		case "created":
-			ip.created = v
-		case "created-after":
-			ip.createdAfter = v
-		case "created-before":
-			ip.createdBefore = v
-		case "updated":
-			ip.updated = v
-		case "updated-after":
-			ip.updatedAfter = v
-		case "updated-before":
-			ip.updatedBefore = v
-		}
-	}
-}
-
 // Issue is a query type for issue command.
 type Issue struct {
 	Project string
@@ -251,4 +147,108 @@ func isValidDate(date string) (time.Time, string, bool) {
 
 func addDay(dt time.Time, format string) string {
 	return dt.AddDate(0, 0, 1).Format(format)
+}
+
+type issueParams struct {
+	latest        bool
+	watching      bool
+	resolution    string
+	issueType     string
+	status        string
+	priority      string
+	reporter      string
+	assignee      string
+	created       string
+	updated       string
+	createdAfter  string
+	updatedAfter  string
+	createdBefore string
+	updatedBefore string
+	labels        []string
+	reverse       bool
+	debug         bool
+}
+
+func (ip *issueParams) init(flags FlagParser) error {
+	var err error
+
+	boolParams := []string{"history", "watching", "reverse", "debug"}
+	stringParams := []string{
+		"resolution", "type", "status", "priority", "reporter", "assignee",
+		"created", "created-after", "created-before",
+		"updated", "updated-after", "updated-before",
+	}
+
+	boolParamsMap := make(map[string]bool)
+	for _, param := range boolParams {
+		boolParamsMap[param], err = flags.GetBool(param)
+		if err != nil {
+			return err
+		}
+	}
+
+	stringParamsMap := make(map[string]string)
+	for _, param := range stringParams {
+		stringParamsMap[param], err = flags.GetString(param)
+		if err != nil {
+			return err
+		}
+	}
+
+	labels, err := flags.GetStringArray("label")
+	if err != nil {
+		return err
+	}
+
+	ip.labels = labels
+	ip.setBoolParams(boolParamsMap)
+	ip.setStringParams(stringParamsMap)
+
+	return nil
+}
+
+func (ip *issueParams) setBoolParams(paramsMap map[string]bool) {
+	for k, v := range paramsMap {
+		switch k {
+		case "history":
+			ip.latest = v
+		case "watching":
+			ip.watching = v
+		case "reverse":
+			ip.reverse = v
+		case "debug":
+			ip.debug = v
+		}
+	}
+}
+
+func (ip *issueParams) setStringParams(paramsMap map[string]string) {
+	for k, v := range paramsMap {
+		switch k {
+		case "resolution":
+			ip.resolution = v
+		case "type":
+			ip.issueType = v
+		case "status":
+			ip.status = v
+		case "priority":
+			ip.priority = v
+		case "reporter":
+			ip.reporter = v
+		case "assignee":
+			ip.assignee = v
+		case "created":
+			ip.created = v
+		case "created-after":
+			ip.createdAfter = v
+		case "created-before":
+			ip.createdBefore = v
+		case "updated":
+			ip.updated = v
+		case "updated-after":
+			ip.updatedAfter = v
+		case "updated-before":
+			ip.updatedBefore = v
+		}
+	}
 }

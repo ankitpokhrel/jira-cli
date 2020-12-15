@@ -2,13 +2,13 @@
 
 <div>
     <p align="center">
-        <i>Jira command line designed to help me with my frequent Jira chores</i>
+        <i>Jira command line to help me with my frequent Jira chores</i>
     </p>
     <img align="center" alt="TusPHP Demo" src=".github/assets/demo.gif" /><br/><br/>
     <p align="center">:construction: This project is still a work in progress :construction:</p><br/>
 </div>
 
-Jira UI sucks! It is slow, buggy, and doesn't even load on occasions. Fortunately, Jira API seems to have a decent response time.
+Jira UI is terrible! It is slow, buggy, and doesn't even load on occasions. Fortunately, Jira API seems to have a decent response time.
 Even though not everything is available in the public API, things can be hacked around to port routine tasks to the CLI and avoid
 the UI as much as possible.
 
