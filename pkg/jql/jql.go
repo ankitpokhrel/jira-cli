@@ -30,6 +30,15 @@ func NewJQL(project string) *JQL {
 	}
 }
 
+func (j *JQL) Raw(q string) *JQL {
+	if q == "" {
+		return j
+	}
+	j.filters = []string{j.filters[0]}
+	j.filters = append(j.filters, q)
+	return j
+}
+
 // History search through user issue history.
 func (j *JQL) History() *JQL {
 	j.filters = append(j.filters, "issue IN issueHistory()")

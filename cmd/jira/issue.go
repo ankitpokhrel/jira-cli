@@ -83,4 +83,5 @@ func init() {
 	issueCmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
 	issueCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 	issueCmd.Flags().Bool("plain", false, "Display output in plain mode")
+	issueCmd.Flags().StringP("jql", "j", "", "raw pql")
 }
