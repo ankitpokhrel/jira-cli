@@ -41,6 +41,21 @@ func WithBoardWriter(w io.Writer) BoardOption {
 	}
 }
 
+// Render renders the board view.
+func (b Board) Render() error {
+	b.printHeader()
+
+	for _, d := range b.data {
+		_, _ = fmt.Fprintf(b.writer, "%d\t%s\t%s\n", d.ID, prepareTitle(d.Name), d.Type)
+	}
+
+	if _, ok := b.writer.(*tabwriter.Writer); ok {
+		return b.writer.(*tabwriter.Writer).Flush()
+	}
+
+	return nil
+}
+
 func (b Board) header() []string {
 	return []string{
 		"ID",
@@ -60,19 +75,4 @@ func (b Board) printHeader() {
 	}
 
 	_, _ = fmt.Fprintln(b.writer, "")
-}
-
-// Render renders the board view.
-func (b Board) Render() error {
-	b.printHeader()
-
-	for _, d := range b.data {
-		_, _ = fmt.Fprintf(b.writer, "%d\t%s\t%s\n", d.ID, prepareTitle(d.Name), d.Type)
-	}
-
-	if _, ok := b.writer.(*tabwriter.Writer); ok {
-		return b.writer.(*tabwriter.Writer).Flush()
-	}
-
-	return nil
 }

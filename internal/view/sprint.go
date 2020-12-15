@@ -26,6 +26,52 @@ type SprintList struct {
 	issueCache map[string]tui.TableData
 }
 
+// Render renders the sprint explorer view.
+func (sl SprintList) Render() error {
+	data := sl.data()
+
+	view := tui.NewPreview(
+		tui.WithPreviewFooterText(
+			fmt.Sprintf(
+				"Showing %d results from board \"%s\" of project \"%s\"",
+				len(sl.Data), sl.Board, sl.Project,
+			),
+		),
+		tui.WithInitialText(helpText),
+		tui.WithContentTableOpts(tui.WithSelectedFunc(navigate(sl.Server))),
+	)
+
+	return view.Render(data)
+}
+
+// RenderInTable renders the list in table view.
+func (sl SprintList) RenderInTable() error {
+	if sl.Plain {
+		w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
+		return sl.renderPlain(w)
+	}
+
+	data := sl.tableData()
+
+	view := tui.NewTable(
+		tui.WithColPadding(colPadding),
+		tui.WithMaxColWidth(maxColWidth),
+		tui.WithTableFooterText(
+			fmt.Sprintf(
+				"Showing %d results from board \"%s\" of project \"%s\"",
+				len(sl.Data), sl.Board, sl.Project,
+			),
+		),
+	)
+
+	return view.Render(data)
+}
+
+// renderPlain renders the issue in plain view.
+func (sl SprintList) renderPlain(w io.Writer) error {
+	return renderPlain(w, sl.tableData())
+}
+
 func (sl SprintList) data() []tui.PreviewData {
 	data := make([]tui.PreviewData, 0, len(sl.Data))
 
@@ -130,50 +176,4 @@ func (sl SprintList) tableData() tui.TableData {
 	}
 
 	return data
-}
-
-// Render renders the sprint explorer view.
-func (sl SprintList) Render() error {
-	data := sl.data()
-
-	view := tui.NewPreview(
-		tui.WithPreviewFooterText(
-			fmt.Sprintf(
-				"Showing %d results from board \"%s\" of project \"%s\"",
-				len(sl.Data), sl.Board, sl.Project,
-			),
-		),
-		tui.WithInitialText(helpText),
-		tui.WithContentTableOpts(tui.WithSelectedFunc(navigate(sl.Server))),
-	)
-
-	return view.Render(data)
-}
-
-// RenderInTable renders the list in table view.
-func (sl SprintList) RenderInTable() error {
-	if sl.Plain {
-		w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
-		return sl.renderPlain(w)
-	}
-
-	data := sl.tableData()
-
-	view := tui.NewTable(
-		tui.WithColPadding(colPadding),
-		tui.WithMaxColWidth(maxColWidth),
-		tui.WithTableFooterText(
-			fmt.Sprintf(
-				"Showing %d results from board \"%s\" of project \"%s\"",
-				len(sl.Data), sl.Board, sl.Project,
-			),
-		),
-	)
-
-	return view.Render(data)
-}
-
-// renderPlain renders the issue in plain view.
-func (sl SprintList) renderPlain(w io.Writer) error {
-	return renderPlain(w, sl.tableData())
 }

@@ -89,6 +89,24 @@ func WithSelectedFunc(fn SelectedFunc) TableOption {
 	}
 }
 
+// Render renders the table layout. First row is treated as a table header.
+func (t *Table) Render(data TableData) error {
+	if len(data) == 0 {
+		return errNoData
+	}
+
+	if t.selectedFunc != nil {
+		t.view.SetSelectedFunc(func(r, c int) {
+			t.selectedFunc(r, c, data[r][1])
+		})
+	}
+
+	renderTableHeader(t, data[0])
+	renderTableCell(t, data)
+
+	return t.screen.Paint(t.painter)
+}
+
 func (t *Table) initFooterView() {
 	view := tview.NewTextView().
 		SetWordWrap(true).
@@ -120,22 +138,4 @@ func (t *Table) initTableView() {
 	view.SetFixed(1, 1)
 
 	t.view = view
-}
-
-// Render renders the table layout. First row is treated as a table header.
-func (t *Table) Render(data TableData) error {
-	if len(data) == 0 {
-		return errNoData
-	}
-
-	if t.selectedFunc != nil {
-		t.view.SetSelectedFunc(func(r, c int) {
-			t.selectedFunc(r, c, data[r][1])
-		})
-	}
-
-	renderTableHeader(t, data[0])
-	renderTableCell(t, data)
-
-	return t.screen.Paint(t.painter)
 }

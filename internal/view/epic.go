@@ -21,6 +21,20 @@ type EpicList struct {
 	issueCache map[string]tui.TableData
 }
 
+// Render renders the epic explorer view.
+func (el EpicList) Render() error {
+	data := el.data()
+
+	view := tui.NewPreview(
+		tui.WithPreviewFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(el.Data), el.Total, el.Project)),
+		tui.WithInitialText(helpText),
+		tui.WithSidebarSelectedFunc(navigate(el.Server)),
+		tui.WithContentTableOpts(tui.WithSelectedFunc(navigate(el.Server))),
+	)
+
+	return view.Render(data)
+}
+
 func (el EpicList) data() []tui.PreviewData {
 	data := make([]tui.PreviewData, 0, len(el.Data))
 
@@ -87,18 +101,4 @@ func (el EpicList) tabularize(issues []*jira.Issue) tui.TableData {
 	}
 
 	return data
-}
-
-// Render renders the epic explorer view.
-func (el EpicList) Render() error {
-	data := el.data()
-
-	view := tui.NewPreview(
-		tui.WithPreviewFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(el.Data), el.Total, el.Project)),
-		tui.WithInitialText(helpText),
-		tui.WithSidebarSelectedFunc(navigate(el.Server)),
-		tui.WithContentTableOpts(tui.WithSelectedFunc(navigate(el.Server))),
-	)
-
-	return view.Render(data)
 }
