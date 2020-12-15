@@ -1,0 +1,31 @@
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+  release:
+    types: [ published ]
+  push:
+    branches: [ master ]
+
+name: CI
+
+jobs:
+  coding-guidelines:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ‘^1.15.2’
+
+      - name: Install dependencies
+        run: make deps
+
+      - name: Run linter
+        run: make lint
+
+      - name: Run tests
+        run: make test
