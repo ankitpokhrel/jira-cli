@@ -2,6 +2,10 @@
 
 <div>
     <p align="center">
+        <img alt="Build" src="https://img.shields.io/github/workflow/status/ankitpokhrel/jira-cli/build?style=flat-square" />
+        <img alt="GO Report-card" src="https://goreportcard.com/badge/github.com/ankitpokhrel/jira-cli?style=flat-square" />
+    </p>
+    <p align="center">
         <i>Jira command line to help me with my frequent Jira chores</i>
     </p>
     <img align="center" alt="TusPHP Demo" src=".github/assets/demo.gif" /><br/><br/>
