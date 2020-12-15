@@ -6,11 +6,10 @@ on:
   push:
     branches: [ master ]
 
-name: CI
+name: build
 
 jobs:
-  coding-guidelines:
-    name: CI
+  tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
