@@ -12,9 +12,25 @@ import (
 )
 
 var epicCmd = &cobra.Command{
-	Use:     "epic [ISSUE KEY]",
-	Short:   "Epic lists top 50 epics",
-	Long:    `Epic lists top 50 epics.`,
+	Use:   "epic [ISSUE KEY]",
+	Short: "Epic lists top 100 epics",
+	Long: `Epic lists top 100 epics.
+
+By default epics are displayed in an explorer view. You can use --list
+and --plain flags to display output in different modes.
+
+	# Display epics or epic issues in an interactive list
+	jira epic --list
+	jira epic <KEY> --list
+
+	# Display epics or epic issues in a plain table view
+	jira epic --list --plain
+	jira epic <KEY> --list --plain
+
+	# Display epics or epic issues in a plain table view without headers
+	jira epic --list --plain --no-headers
+	jira epic <KEY> --list --plain --no-headers
+`,
 	Aliases: []string{"epics"},
 	Args:    cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -70,12 +86,18 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 		return
 	}
 
+	noHeaders, err := flags.GetBool("no-headers")
+	exitIfError(err)
+
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
 		Total:   total,
 		Data:    issues,
-		Plain:   plain,
+		Display: view.DisplayFormat{
+			Plain:     plain,
+			NoHeaders: noHeaders,
+		},
 	}
 
 	exitIfError(v.Render())

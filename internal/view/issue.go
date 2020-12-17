@@ -15,18 +15,24 @@ const (
 	maxColWidth = 60
 )
 
+// DisplayFormat is a issue display type.
+type DisplayFormat struct {
+	Plain     bool
+	NoHeaders bool
+}
+
 // IssueList is a list view for issues.
 type IssueList struct {
 	Total   int
 	Project string
 	Server  string
 	Data    []*jira.Issue
-	Plain   bool
+	Display DisplayFormat
 }
 
 // Render renders the view.
 func (l IssueList) Render() error {
-	if l.Plain {
+	if l.Display.Plain {
 		w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
 		return l.renderPlain(w)
 	}
@@ -66,7 +72,9 @@ func (l IssueList) header() []string {
 func (l IssueList) data() tui.TableData {
 	var data tui.TableData
 
-	data = append(data, l.header())
+	if !(l.Display.Plain && l.Display.NoHeaders) {
+		data = append(data, l.header())
+	}
 
 	for _, issue := range l.Data {
 		data = append(data, []string{
