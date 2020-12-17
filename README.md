@@ -9,7 +9,7 @@
         <i>Jira command line to help me with my frequent Jira chores</i>
     </p>
     <img align="center" alt="TusPHP Demo" src=".github/assets/demo.gif" /><br/><br/>
-    <p align="center">:construction: This project is still a work in progress :construction:</p><br/>
+    <p align="center">:construction: This project is still a work in progress and, things can change without notice :construction:</p><br/>
 </div>
 
 Jira UI is terrible! It is slow, buggy, and doesn't even load on occasions. Fortunately, Jira API seems to have a decent response time.
@@ -87,7 +87,7 @@ $ jira issue -a$(jira me)
 <details><summary>List issues assigned to a user and are reported by another user</summary>
 
 ```sh
-$ jira issue -a"User A" -e"User B"
+$ jira issue -a"User A" -r"User B"
 ```
 </details>
 
@@ -102,6 +102,13 @@ $ jira issue -a$(jira me) -yHigh -sopen
 
 ```sh
 $ jira issue -ax --created week
+```
+</details>
+
+<details><summary>List issues with resolution won't do</summary>
+
+```sh
+$ jira issue -R"Won't do"
 ```
 </details>
 
@@ -129,7 +136,7 @@ $ jira issue -yHigh -s"In Progress" --created month -lbackend -l"high prio"
 <details><summary>What was the first issue I ever reported on the current board? :thinking:</summary>
 
 ```sh
-$ jira issue -e$(jira me) --reverse
+$ jira issue -r$(jira me) --reverse
 ```
 </details>
 
@@ -143,7 +150,7 @@ $ jira issue -a$(jira me) -tBug sDone -rFixed --reverse
 <details><summary>What issues did I report this week? :man_shrugging:</summary>
 
 ```sh
-$ jira issue -e$(jira me) --created week
+$ jira issue -r$(jira me) --created week
 ```
 </details>
 
@@ -172,7 +179,7 @@ $ jira epic --list
 <details><summary>List epics reported by me and are open</summary>
 
 ```sh
-$ jira epic -e$(jira me) -sOpen
+$ jira epic -r$(jira me) -sOpen
 ```
 </details>
 

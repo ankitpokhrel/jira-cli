@@ -120,30 +120,9 @@ func epicExplorerView(flags query.FlagParser, project, server string) {
 func init() {
 	rootCmd.AddCommand(epicCmd)
 
-	epicCmd.Flags().Bool("history", false, "Epics you accessed recently")
-	epicCmd.Flags().BoolP("watching", "w", false, "Epics you are watching")
-	epicCmd.Flags().StringP("type", "t", "", "Filter epics by type")
-	epicCmd.Flags().StringP("resolution", "r", "", "Filter epics by resolution type")
-	epicCmd.Flags().StringP("status", "s", "", "Filter epics by status")
-	epicCmd.Flags().StringP("priority", "y", "", "Filter epics by priority")
-	epicCmd.Flags().StringP("reporter", "e", "", "Filter epics by reporter (email or display name)")
-	epicCmd.Flags().StringP("assignee", "a", "", "Filter epics by assignee (email or display name)")
-	epicCmd.Flags().String("created", "", "Filter epics by created date\n"+
-		"Accepts: today, week, month, year, or a date in yyyy-mm-dd and yyyy/mm/dd format,\n"+
-		"or a period format using w = weeks, d = days, h = hours, m = minutes. eg: -10d\n"+
-		"Created filter will have precedence over created-after and created-before filter")
-	epicCmd.Flags().String("updated", "", "Filter epics by updated date\n"+
-		"Accepts: today, week, month, year, or a date in yyyy-mm-dd and yyyy/mm/dd format,\n"+
-		"or a period format using w = weeks, d = days, h = hours, m = minutes. eg: -10d\n"+
-		"Updated filter will have precedence over updated-after and updated-before filter")
-	epicCmd.Flags().String("created-after", "", "Filter by epics created after certain date")
-	epicCmd.Flags().String("updated-after", "", "Filter by epics updated after certain date")
-	epicCmd.Flags().String("created-before", "", "Filter by epics created before certain date")
-	epicCmd.Flags().String("updated-before", "", "Filter by epics updated before certain date")
-	epicCmd.Flags().StringArrayP("label", "l", []string{}, "Filter epics by label")
-	epicCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 	epicCmd.Flags().Bool("list", false, "Display epics in list view")
-	epicCmd.Flags().Bool("plain", false, "Display output in plain mode")
+
+	injectIssueFlags(epicCmd)
 
 	exitIfError(epicCmd.Flags().MarkHidden("type"))
 }

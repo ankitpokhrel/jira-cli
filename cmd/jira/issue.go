@@ -60,27 +60,31 @@ func issue(cmd *cobra.Command, _ []string) {
 func init() {
 	rootCmd.AddCommand(issueCmd)
 
-	issueCmd.Flags().Bool("history", false, "Issues you accessed recently")
-	issueCmd.Flags().BoolP("watching", "w", false, "Issues you are watching")
-	issueCmd.Flags().StringP("type", "t", "", "Filter issues by type")
-	issueCmd.Flags().StringP("resolution", "r", "", "Filter issues by resolution type")
-	issueCmd.Flags().StringP("status", "s", "", "Filter issues by status")
-	issueCmd.Flags().StringP("priority", "y", "", "Filter issues by priority")
-	issueCmd.Flags().StringP("reporter", "e", "", "Filter issues by reporter (email or display name)")
-	issueCmd.Flags().StringP("assignee", "a", "", "Filter issues by assignee (email or display name)")
-	issueCmd.Flags().String("created", "", "Filter issues by created date\n"+
+	injectIssueFlags(issueCmd)
+}
+
+func injectIssueFlags(cmd *cobra.Command) {
+	cmd.Flags().Bool("history", false, "Issues you accessed recently")
+	cmd.Flags().BoolP("watching", "w", false, "Issues you are watching")
+	cmd.Flags().StringP("type", "t", "", "Filter issues by type")
+	cmd.Flags().StringP("resolution", "R", "", "Filter issues by resolution type")
+	cmd.Flags().StringP("status", "s", "", "Filter issues by status")
+	cmd.Flags().StringP("priority", "y", "", "Filter issues by priority")
+	cmd.Flags().StringP("reporter", "r", "", "Filter issues by reporter (email or display name)")
+	cmd.Flags().StringP("assignee", "a", "", "Filter issues by assignee (email or display name)")
+	cmd.Flags().String("created", "", "Filter issues by created date\n"+
 		"Accepts: today, week, month, year, or a date in yyyy-mm-dd and yyyy/mm/dd format,\n"+
 		"or a period format using w = weeks, d = days, h = hours, m = minutes. eg: -10d\n"+
 		"Created filter will have precedence over created-after and created-before filter")
-	issueCmd.Flags().String("updated", "", "Filter issues by updated date\n"+
+	cmd.Flags().String("updated", "", "Filter issues by updated date\n"+
 		"Accepts: today, week, month, year, or a date in yyyy-mm-dd and yyyy/mm/dd format,\n"+
 		"or a period format using w = weeks, d = days, h = hours, m = minutes. eg: -10d\n"+
 		"Updated filter will have precedence over updated-after and updated-before filter")
-	issueCmd.Flags().String("created-after", "", "Filter by issues created after certain date")
-	issueCmd.Flags().String("updated-after", "", "Filter by issues updated after certain date")
-	issueCmd.Flags().String("created-before", "", "Filter by issues created before certain date")
-	issueCmd.Flags().String("updated-before", "", "Filter by issues updated before certain date")
-	issueCmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
-	issueCmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
-	issueCmd.Flags().Bool("plain", false, "Display output in plain mode")
+	cmd.Flags().String("created-after", "", "Filter by issues created after certain date")
+	cmd.Flags().String("updated-after", "", "Filter by issues updated after certain date")
+	cmd.Flags().String("created-before", "", "Filter by issues created before certain date")
+	cmd.Flags().String("updated-before", "", "Filter by issues updated before certain date")
+	cmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
+	cmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
+	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 }
