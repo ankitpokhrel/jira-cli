@@ -3,6 +3,7 @@ package jira
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -17,8 +18,9 @@ const numSprints = 25
 var sprintCmd = &cobra.Command{
 	Use:   "sprint [SPRINT ID]",
 	Short: fmt.Sprintf("Sprint lists top %d sprints in a board", numSprints),
-	Long: fmt.Sprintf("Sprint lists top %d sprints in a board", numSprints) +
-		`By default sprints are displayed in an explorer view. You can use --list
+	Long: fmt.Sprintf("Sprint lists top %d sprints in a board.\n", numSprints) +
+		`
+By default sprints are displayed in an explorer view. You can use --list
 and --plain flags to display output in different modes.
 
 	# Display sprints or sprint issues in an interactive list
@@ -32,6 +34,10 @@ and --plain flags to display output in different modes.
 	# Display sprints or sprint issues in a plain table view without headers
 	jira sprint --list --plain --no-headers
 	jira sprint <SPRINT_ID> --plain --no-headers
+
+	# Display some columns of sprint or sprint issues in a plain table view
+	jira sprint --list --plain --columns name,start,end
+	jira sprint <SPRINT_ID> --plain --columns type,key,summary
 `,
 	Args:    cobra.MaximumNArgs(1),
 	Aliases: []string{"sprints"},
@@ -80,6 +86,9 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 	noHeaders, err := flags.GetBool("no-headers")
 	exitIfError(err)
 
+	columns, err := flags.GetString("columns")
+	exitIfError(err)
+
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
@@ -88,6 +97,12 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 		Display: view.DisplayFormat{
 			Plain:     plain,
 			NoHeaders: noHeaders,
+			Columns: func() []string {
+				if columns != "" {
+					return strings.Split(columns, ",")
+				}
+				return []string{}
+			}(),
 		},
 	}
 
@@ -126,6 +141,9 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 	noHeaders, err := flags.GetBool("no-headers")
 	exitIfError(err)
 
+	columns, err := flags.GetString("columns")
+	exitIfError(err)
+
 	v := view.SprintList{
 		Project: project,
 		Board:   viper.GetString("board.name"),
@@ -141,6 +159,12 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 		Display: view.DisplayFormat{
 			Plain:     plain,
 			NoHeaders: noHeaders,
+			Columns: func() []string {
+				if columns != "" {
+					return strings.Split(columns, ",")
+				}
+				return []string{}
+			}(),
 		},
 	}
 
@@ -164,6 +188,9 @@ func init() {
 
 	injectIssueFlags(sprintCmd)
 
+	sprintCmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
+		fmt.Sprintf("Accepts: %s", strings.Join(view.ValidSprintColumns(), ", ")))
+
 	exitIfError(sprintCmd.Flags().MarkHidden("history"))
 	exitIfError(sprintCmd.Flags().MarkHidden("watching"))
 	exitIfError(sprintCmd.Flags().MarkHidden("type"))
@@ -180,6 +207,4 @@ func init() {
 	exitIfError(sprintCmd.Flags().MarkHidden("updated-before"))
 	exitIfError(sprintCmd.Flags().MarkHidden("label"))
 	exitIfError(sprintCmd.Flags().MarkHidden("reverse"))
-	exitIfError(sprintCmd.Flags().MarkHidden("plain"))
-	exitIfError(sprintCmd.Flags().MarkHidden("no-headers"))
 }

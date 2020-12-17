@@ -24,15 +24,15 @@ func TestIssueData(t *testing.T) {
 
 	expected := tui.TableData{
 		[]string{
-			"TYPE", "KEY", "SUMMARY", "ASSIGNEE", "REPORTER", "PRIORITY", "STATUS", "RESOLUTION",
+			"TYPE", "KEY", "SUMMARY", "STATUS", "ASSIGNEE", "REPORTER", "PRIORITY", "RESOLUTION",
 			"CREATED", "UPDATED",
 		},
 		[]string{
-			"Bug", "TEST-1", "This is a test", "Person A", "Person Z", "High", "Done", "Fixed",
+			"Bug", "TEST-1", "This is a test", "Done", "Person A", "Person Z", "High", "Fixed",
 			"2020-12-13 14:05:20", "2020-12-13 14:07:20",
 		},
 		[]string{
-			"Story", "TEST-2", "This is another test", "", "Person A", "Normal", "Open", "",
+			"Story", "TEST-2", "This is another test", "Open", "", "Person A", "Normal", "",
 			"2020-12-13 14:05:20", "2020-12-13 14:07:20",
 		},
 	}
@@ -58,9 +58,9 @@ func TestIssueRenderInPlainView(t *testing.T) {
 
 	assert.NoError(t, issue.renderPlain(&b))
 
-	expected := `TYPE	KEY	SUMMARY	ASSIGNEE	REPORTER	PRIORITY	STATUS	RESOLUTION	CREATED	UPDATED
-Bug	TEST-1	This is a test	Person A	Person Z	High	Done	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20
-Story	TEST-2	This is another test		Person A	Normal	Open		2020-12-13 14:05:20	2020-12-13 14:07:20
+	expected := `TYPE	KEY	SUMMARY	STATUS	ASSIGNEE	REPORTER	PRIORITY	RESOLUTION	CREATED	UPDATED
+Bug	TEST-1	This is a test	Done	Person A	Person Z	High	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20
+Story	TEST-2	This is another test	Open		Person A	Normal		2020-12-13 14:05:20	2020-12-13 14:07:20
 `
 
 	assert.Equal(t, expected, b.String())
@@ -84,8 +84,35 @@ func TestIssueRenderInPlainViewWithoutHeaders(t *testing.T) {
 
 	assert.NoError(t, issue.renderPlain(&b))
 
-	expected := `Bug	TEST-1	This is a test	Person A	Person Z	High	Done	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20
-Story	TEST-2	This is another test		Person A	Normal	Open		2020-12-13 14:05:20	2020-12-13 14:07:20
+	expected := `Bug	TEST-1	This is a test	Done	Person A	Person Z	High	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20
+Story	TEST-2	This is another test	Open		Person A	Normal		2020-12-13 14:05:20	2020-12-13 14:07:20
+`
+
+	assert.Equal(t, expected, b.String())
+}
+
+func TestIssueRenderInPlainViewWithFewColumns(t *testing.T) {
+	var b bytes.Buffer
+
+	data := getIssues()
+
+	issue := IssueList{
+		Total:   2,
+		Project: "TEST",
+		Server:  "https://test.local",
+		Data:    data,
+		Display: DisplayFormat{
+			Plain:     true,
+			NoHeaders: false,
+			Columns:   []string{"key", "type", "status", "created"},
+		},
+	}
+
+	assert.NoError(t, issue.renderPlain(&b))
+
+	expected := `KEY	TYPE	STATUS	CREATED
+TEST-1	Bug	Done	2020-12-13 14:05:20
+TEST-2	Story	Open	2020-12-13 14:05:20
 `
 
 	assert.Equal(t, expected, b.String())

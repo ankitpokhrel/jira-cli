@@ -103,11 +103,11 @@ func TestSprintPreviewLayoutData(t *testing.T) {
 			Menu: "➤ #1 Sprint 1: ⦗Mon, 07 Dec 20 - Sun, 13 Dec 20⦘",
 			Contents: tui.TableData{
 				[]string{
-					"TYPE", "KEY", "SUMMARY", "ASSIGNEE", "REPORTER", "PRIORITY", "STATUS", "RESOLUTION",
+					"TYPE", "KEY", "SUMMARY", "STATUS", "ASSIGNEE", "REPORTER", "PRIORITY", "RESOLUTION",
 					"CREATED", "UPDATED",
 				},
 				[]string{
-					"Bug", "ISSUE-1", "This is an issue", "Person A", "Person Z", "High", "Done", "Fixed",
+					"Bug", "ISSUE-1", "This is an issue", "Done", "Person A", "Person Z", "High", "Fixed",
 					"2020-12-13 14:05:20", "2020-12-13 14:07:20",
 				},
 			},
@@ -117,15 +117,15 @@ func TestSprintPreviewLayoutData(t *testing.T) {
 			Menu: "➤ #2 Sprint 2: ⦗Sun, 13 Dec 20 - Sat, 19 Dec 20⦘",
 			Contents: tui.TableData{
 				[]string{
-					"TYPE", "KEY", "SUMMARY", "ASSIGNEE", "REPORTER", "PRIORITY", "STATUS", "RESOLUTION",
+					"TYPE", "KEY", "SUMMARY", "STATUS", "ASSIGNEE", "REPORTER", "PRIORITY", "RESOLUTION",
 					"CREATED", "UPDATED",
 				},
 				[]string{
-					"Story", "ISSUE-2", "This is another issue", "", "Person A", "Normal", "Open", "",
+					"Story", "ISSUE-2", "This is another issue", "Open", "", "Person A", "Normal", "",
 					"2020-12-13 14:05:20", "2020-12-13 14:07:20",
 				},
 				[]string{
-					"Bug", "ISSUE-1", "This is an issue", "Person A", "Person Z", "High", "Done", "Fixed",
+					"Bug", "ISSUE-1", "This is an issue", "Done", "Person A", "Person Z", "High", "Fixed",
 					"2020-12-13 14:05:20", "2020-12-13 14:07:20",
 				},
 			},
@@ -173,7 +173,7 @@ func TestSprintTableLayoutData(t *testing.T) {
 	}
 
 	expected := tui.TableData{
-		[]string{"ID", "NAME", "START DATE", "END DATE", "COMPLETION DATE", "STATUS"},
+		[]string{"ID", "NAME", "START", "END", "COMPLETE", "STATE"},
 		[]string{"1", "Sprint 1", "2020-12-07 16:12:00", "2020-12-13 16:12:00", "2020-12-13 16:12:00", "closed"},
 		[]string{"2", "Sprint 2", "2020-12-13 16:12:00", "2020-12-19 16:12:00", "", "active"},
 	}
@@ -215,7 +215,7 @@ func TestSprintRenderInPlainView(t *testing.T) {
 
 	assert.NoError(t, sprint.renderPlain(&b))
 
-	expected := `ID	NAME	START DATE	END DATE	COMPLETION DATE	STATUS
+	expected := `ID	NAME	START	END	COMPLETE	STATE
 1	Sprint 1	2020-12-07 16:12:00	2020-12-13 16:12:00	2020-12-13 16:12:00	closed
 2	Sprint 2	2020-12-13 16:12:00	2020-12-19 16:12:00		active
 `
@@ -259,6 +259,49 @@ func TestSprintRenderInPlainViewWithoutHeaders(t *testing.T) {
 
 	expected := `1	Sprint 1	2020-12-07 16:12:00	2020-12-13 16:12:00	2020-12-13 16:12:00	closed
 2	Sprint 2	2020-12-13 16:12:00	2020-12-19 16:12:00		active
+`
+
+	assert.Equal(t, expected, b.String())
+}
+
+func TestSprintRenderInPlainViewWithFewColumns(t *testing.T) {
+	var b bytes.Buffer
+
+	sprint := SprintList{
+		Project: "TEST",
+		Board:   "Test Board",
+		Server:  "https://test.local",
+		Data: []*jira.Sprint{
+			{
+				ID:           1,
+				Name:         "Sprint 1",
+				Status:       "closed",
+				StartDate:    "2020-12-07T16:12:00.000Z",
+				EndDate:      "2020-12-13T16:12:00.000Z",
+				CompleteDate: "2020-12-13T16:12:00.000Z",
+				BoardID:      1,
+			},
+			{
+				ID:        2,
+				Name:      "Sprint 2",
+				Status:    "active",
+				StartDate: "2020-12-13T16:12:00.000Z",
+				EndDate:   "2020-12-19T16:12:00.000Z",
+				BoardID:   1,
+			},
+		},
+		Display: DisplayFormat{
+			Plain:     true,
+			NoHeaders: false,
+			Columns:   []string{"name", "start", "end"},
+		},
+	}
+
+	assert.NoError(t, sprint.renderPlain(&b))
+
+	expected := `NAME	START	END
+Sprint 1	2020-12-07 16:12:00	2020-12-13 16:12:00
+Sprint 2	2020-12-13 16:12:00	2020-12-19 16:12:00
 `
 
 	assert.Equal(t, expected, b.String())

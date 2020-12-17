@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -117,28 +118,17 @@ func (sl SprintList) data() []tui.PreviewData {
 func (sl SprintList) tabularize(issues []*jira.Issue) tui.TableData {
 	var data tui.TableData
 
-	data = append(data, []string{
-		"TYPE",
-		"KEY",
-		"SUMMARY",
-		"ASSIGNEE",
-		"REPORTER",
-		"PRIORITY",
-		"STATUS",
-		"RESOLUTION",
-		"CREATED",
-		"UPDATED",
-	})
+	data = append(data, ValidIssueColumns())
 
 	for _, issue := range issues {
 		data = append(data, []string{
 			issue.Fields.IssueType.Name,
 			issue.Key,
 			prepareTitle(issue.Fields.Summary),
+			issue.Fields.Status.Name,
 			issue.Fields.Assignee.Name,
 			issue.Fields.Reporter.Name,
 			issue.Fields.Priority.Name,
-			issue.Fields.Status.Name,
 			issue.Fields.Resolution.Name,
 			formatDateTime(issue.Fields.Created, jira.RFC3339),
 			formatDateTime(issue.Fields.Updated, jira.RFC3339),
@@ -148,34 +138,76 @@ func (sl SprintList) tabularize(issues []*jira.Issue) tui.TableData {
 	return data
 }
 
-func (sl SprintList) tableHeader() []string {
-	return []string{
-		"ID",
-		"NAME",
-		"START DATE",
-		"END DATE",
-		"COMPLETION DATE",
-		"STATUS",
+func (sl SprintList) validColumnsMap() map[string]struct{} {
+	columns := ValidSprintColumns()
+	out := make(map[string]struct{}, len(columns))
+
+	for _, c := range columns {
+		out[c] = struct{}{}
 	}
+
+	return out
+}
+
+func (sl SprintList) tableHeader() []string {
+	validColumns, columnsMap := ValidSprintColumns(), sl.validColumnsMap()
+
+	if len(sl.Display.Columns) == 0 {
+		return validColumns
+	}
+
+	var headers []string
+
+	for _, c := range sl.Display.Columns {
+		c = strings.ToUpper(c)
+
+		if _, ok := columnsMap[c]; ok {
+			headers = append(headers, strings.ToUpper(c))
+		}
+	}
+
+	return headers
 }
 
 func (sl SprintList) tableData() tui.TableData {
 	var data tui.TableData
 
+	headers := sl.tableHeader()
+
 	if !(sl.Display.Plain && sl.Display.NoHeaders) {
-		data = append(data, sl.tableHeader())
+		data = append(data, headers)
+	}
+
+	if len(headers) == 0 {
+		headers = ValidSprintColumns()
 	}
 
 	for _, s := range sl.Data {
-		data = append(data, []string{
-			fmt.Sprintf("%d", s.ID),
-			s.Name,
-			formatDateTime(s.StartDate, time.RFC3339),
-			formatDateTime(s.EndDate, time.RFC3339),
-			formatDateTime(s.CompleteDate, time.RFC3339),
-			s.Status,
-		})
+		data = append(data, sl.assignColumns(headers, s))
 	}
 
 	return data
+}
+
+func (sl SprintList) assignColumns(columns []string, sprint *jira.Sprint) []string {
+	var bucket []string
+
+	for _, column := range columns {
+		switch column {
+		case fieldID:
+			bucket = append(bucket, fmt.Sprintf("%d", sprint.ID))
+		case fieldName:
+			bucket = append(bucket, sprint.Name)
+		case fieldStartDate:
+			bucket = append(bucket, formatDateTime(sprint.StartDate, time.RFC3339))
+		case fieldEndDate:
+			bucket = append(bucket, formatDateTime(sprint.EndDate, time.RFC3339))
+		case fieldCompleteDate:
+			bucket = append(bucket, formatDateTime(sprint.CompleteDate, time.RFC3339))
+		case fieldState:
+			bucket = append(bucket, sprint.Status)
+		}
+	}
+
+	return bucket
 }

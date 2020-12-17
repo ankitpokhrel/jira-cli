@@ -2,6 +2,7 @@ package jira
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -30,6 +31,10 @@ and --plain flags to display output in different modes.
 	# Display epics or epic issues in a plain table view without headers
 	jira epic --list --plain --no-headers
 	jira epic <KEY> --list --plain --no-headers
+
+	# Display some columns of epic or epic issues in a plain table view
+	jira epic --list --plain --columns key,summary,status
+	jira epic <KEY> --plain --columns type,key,summary
 `,
 	Aliases: []string{"epics"},
 	Args:    cobra.MaximumNArgs(1),
@@ -89,6 +94,9 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 	noHeaders, err := flags.GetBool("no-headers")
 	exitIfError(err)
 
+	columns, err := flags.GetString("columns")
+	exitIfError(err)
+
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
@@ -97,6 +105,12 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 		Display: view.DisplayFormat{
 			Plain:     plain,
 			NoHeaders: noHeaders,
+			Columns: func() []string {
+				if columns != "" {
+					return strings.Split(columns, ",")
+				}
+				return []string{}
+			}(),
 		},
 	}
 
