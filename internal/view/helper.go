@@ -85,3 +85,31 @@ func renderPlain(w io.Writer, data tui.TableData) error {
 
 	return nil
 }
+
+// ValidIssueColumns returns valid columns for issue list.
+func ValidIssueColumns() []string {
+	return []string{
+		fieldType,
+		fieldKey,
+		fieldSummary,
+		fieldStatus,
+		fieldAssignee,
+		fieldReporter,
+		fieldPriority,
+		fieldResolution,
+		fieldCreated,
+		fieldUpdated,
+	}
+}
+
+// ValidSprintColumns returns valid columns for sprint list.
+func ValidSprintColumns() []string {
+	return []string{
+		fieldID,
+		fieldName,
+		fieldStartDate,
+		fieldEndDate,
+		fieldCompleteDate,
+		fieldState,
+	}
+}

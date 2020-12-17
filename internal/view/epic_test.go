@@ -132,11 +132,11 @@ func TestEpicData(t *testing.T) {
 			Menu: "➤ TEST-1: This is a test",
 			Contents: tui.TableData{
 				[]string{
-					"TYPE", "KEY", "SUMMARY", "ASSIGNEE", "REPORTER", "PRIORITY", "STATUS", "RESOLUTION",
+					"TYPE", "KEY", "SUMMARY", "STATUS", "ASSIGNEE", "REPORTER", "PRIORITY", "RESOLUTION",
 					"CREATED", "UPDATED",
 				},
 				[]string{
-					"Bug", "ISSUE-1", "This is an issue", "Person A", "Person Z", "High", "Done", "Fixed",
+					"Bug", "ISSUE-1", "This is an issue", "Done", "Person A", "Person Z", "High", "Fixed",
 					"2020-12-13 14:05:20", "2020-12-13 14:07:20",
 				},
 			},
@@ -146,15 +146,15 @@ func TestEpicData(t *testing.T) {
 			Menu: "➤ TEST-2: ⦗EPIC⦘ This is another test",
 			Contents: tui.TableData{
 				[]string{
-					"TYPE", "KEY", "SUMMARY", "ASSIGNEE", "REPORTER", "PRIORITY", "STATUS", "RESOLUTION",
+					"TYPE", "KEY", "SUMMARY", "STATUS", "ASSIGNEE", "REPORTER", "PRIORITY", "RESOLUTION",
 					"CREATED", "UPDATED",
 				},
 				[]string{
-					"Story", "ISSUE-2", "This is another issue", "", "Person A", "Normal", "Open", "",
+					"Story", "ISSUE-2", "This is another issue", "Open", "", "Person A", "Normal", "",
 					"2020-12-13 14:05:20", "2020-12-13 14:07:20",
 				},
 				[]string{
-					"Bug", "ISSUE-1", "This is an issue", "Person A", "Person Z", "High", "Done", "Fixed",
+					"Bug", "ISSUE-1", "This is an issue", "Done", "Person A", "Person Z", "High", "Fixed",
 					"2020-12-13 14:05:20", "2020-12-13 14:07:20",
 				},
 			},

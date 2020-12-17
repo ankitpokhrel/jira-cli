@@ -2,6 +2,7 @@ package jira
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -28,6 +29,9 @@ in plain view.
 
 	# Display issues in a plain table view without headers
 	jira issue --plain --no-headers
+
+	# Display some columns of issue in a plain table view
+	jira issue --plain --columns key,assignee,status
 `,
 	Aliases: []string{"issues", "list"},
 	Run:     issue,
@@ -63,6 +67,9 @@ func issue(cmd *cobra.Command, _ []string) {
 	noHeaders, err := cmd.Flags().GetBool("no-headers")
 	exitIfError(err)
 
+	columns, err := cmd.Flags().GetString("columns")
+	exitIfError(err)
+
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
@@ -71,6 +78,12 @@ func issue(cmd *cobra.Command, _ []string) {
 		Display: view.DisplayFormat{
 			Plain:     plain,
 			NoHeaders: noHeaders,
+			Columns: func() []string {
+				if columns != "" {
+					return strings.Split(columns, ",")
+				}
+				return []string{}
+			}(),
 		},
 	}
 
@@ -108,4 +121,9 @@ func injectIssueFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
+
+	if cmd.Name() != "sprint" {
+		cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
+			fmt.Sprintf("Accepts: %s", strings.Join(view.ValidIssueColumns(), ", ")))
+	}
 }
