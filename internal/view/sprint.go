@@ -21,7 +21,7 @@ type SprintList struct {
 	Server  string
 	Data    []*jira.Sprint
 	Issues  SprintIssueFunc
-	Plain   bool
+	Display DisplayFormat
 
 	issueCache map[string]tui.TableData
 }
@@ -46,7 +46,7 @@ func (sl SprintList) Render() error {
 
 // RenderInTable renders the list in table view.
 func (sl SprintList) RenderInTable() error {
-	if sl.Plain {
+	if sl.Display.Plain {
 		w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
 		return sl.renderPlain(w)
 	}
@@ -162,7 +162,9 @@ func (sl SprintList) tableHeader() []string {
 func (sl SprintList) tableData() tui.TableData {
 	var data tui.TableData
 
-	data = append(data, sl.tableHeader())
+	if !(sl.Display.Plain && sl.Display.NoHeaders) {
+		data = append(data, sl.tableHeader())
+	}
 
 	for _, s := range sl.Data {
 		data = append(data, []string{

@@ -16,7 +16,10 @@ func TestIssueData(t *testing.T) {
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    getIssues(),
-		Plain:   false,
+		Display: DisplayFormat{
+			Plain:     false,
+			NoHeaders: false,
+		},
 	}
 
 	expected := tui.TableData{
@@ -47,13 +50,41 @@ func TestIssueRenderInPlainView(t *testing.T) {
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    data,
-		Plain:   true,
+		Display: DisplayFormat{
+			Plain:     true,
+			NoHeaders: false,
+		},
 	}
 
 	assert.NoError(t, issue.renderPlain(&b))
 
 	expected := `TYPE	KEY	SUMMARY	ASSIGNEE	REPORTER	PRIORITY	STATUS	RESOLUTION	CREATED	UPDATED
 Bug	TEST-1	This is a test	Person A	Person Z	High	Done	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20
+Story	TEST-2	This is another test		Person A	Normal	Open		2020-12-13 14:05:20	2020-12-13 14:07:20
+`
+
+	assert.Equal(t, expected, b.String())
+}
+
+func TestIssueRenderInPlainViewWithoutHeaders(t *testing.T) {
+	var b bytes.Buffer
+
+	data := getIssues()
+
+	issue := IssueList{
+		Total:   2,
+		Project: "TEST",
+		Server:  "https://test.local",
+		Data:    data,
+		Display: DisplayFormat{
+			Plain:     true,
+			NoHeaders: true,
+		},
+	}
+
+	assert.NoError(t, issue.renderPlain(&b))
+
+	expected := `Bug	TEST-1	This is a test	Person A	Person Z	High	Done	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20
 Story	TEST-2	This is another test		Person A	Normal	Open		2020-12-13 14:05:20	2020-12-13 14:07:20
 `
 

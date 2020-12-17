@@ -12,9 +12,23 @@ import (
 )
 
 var issueCmd = &cobra.Command{
-	Use:     "issue",
-	Short:   "Issue lists issues in a project",
-	Long:    `Issue lists all issues in a given project.`,
+	Use:   "issue",
+	Short: "Issue lists issues in a project",
+	Long: `Issue lists issues in a given project.
+
+You can combine different flags together to create a unique query. For instance,
+	
+	# Issues that are of high priority, is in progress, was created this month,
+	# and has given labels
+	jira issue -yHigh -s"In Progress" --created month -lbackend -l"high prio"
+
+By default issues are displayed in a interactive list view. You can use --plain flag
+to display output in a plain text mode. --no-headers flag will hide the table headers
+in plain view.
+
+	# Display issues in a plain table view without headers
+	jira issue --plain --no-headers
+`,
 	Aliases: []string{"issues", "list"},
 	Run:     issue,
 }
@@ -46,12 +60,18 @@ func issue(cmd *cobra.Command, _ []string) {
 		return
 	}
 
+	noHeaders, err := cmd.Flags().GetBool("no-headers")
+	exitIfError(err)
+
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
 		Total:   total,
 		Data:    issues,
-		Plain:   plain,
+		Display: view.DisplayFormat{
+			Plain:     plain,
+			NoHeaders: noHeaders,
+		},
 	}
 
 	exitIfError(v.Render())
@@ -87,4 +107,5 @@ func injectIssueFlags(cmd *cobra.Command) {
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
 	cmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
+	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 }

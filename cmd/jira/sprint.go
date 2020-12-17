@@ -15,9 +15,24 @@ import (
 const numSprints = 25
 
 var sprintCmd = &cobra.Command{
-	Use:     "sprint [SPRINT ID]",
-	Short:   fmt.Sprintf("Sprint lists top %d sprints in a board", numSprints),
-	Long:    fmt.Sprintf("Sprint lists top %d sprints for a board in a project.", numSprints),
+	Use:   "sprint [SPRINT ID]",
+	Short: fmt.Sprintf("Sprint lists top %d sprints in a board", numSprints),
+	Long: fmt.Sprintf("Sprint lists top %d sprints in a board", numSprints) +
+		`By default sprints are displayed in an explorer view. You can use --list
+and --plain flags to display output in different modes.
+
+	# Display sprints or sprint issues in an interactive list
+	jira sprint --list
+	jira sprint <SPRINT_ID> --list
+
+	# Display sprints or sprint issues in a plain table view
+	jira sprint --list --plain
+	jira sprint <SPRINT_ID> --list --plain
+
+	# Display sprints or sprint issues in a plain table view without headers
+	jira sprint --list --plain --no-headers
+	jira sprint <SPRINT_ID> --plain --no-headers
+`,
 	Args:    cobra.MaximumNArgs(1),
 	Aliases: []string{"sprints"},
 	Run:     sprint,
@@ -62,12 +77,18 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 		return
 	}
 
+	noHeaders, err := flags.GetBool("no-headers")
+	exitIfError(err)
+
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
 		Total:   total,
 		Data:    issues,
-		Plain:   plain,
+		Display: view.DisplayFormat{
+			Plain:     plain,
+			NoHeaders: noHeaders,
+		},
 	}
 
 	exitIfError(v.Render())
@@ -102,6 +123,9 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 		return
 	}
 
+	noHeaders, err := flags.GetBool("no-headers")
+	exitIfError(err)
+
 	v := view.SprintList{
 		Project: project,
 		Board:   viper.GetString("board.name"),
@@ -114,7 +138,10 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 			}
 			return resp.Issues
 		},
-		Plain: plain,
+		Display: view.DisplayFormat{
+			Plain:     plain,
+			NoHeaders: noHeaders,
+		},
 	}
 
 	list, err := flags.GetBool("list")
@@ -154,4 +181,5 @@ func init() {
 	exitIfError(sprintCmd.Flags().MarkHidden("label"))
 	exitIfError(sprintCmd.Flags().MarkHidden("reverse"))
 	exitIfError(sprintCmd.Flags().MarkHidden("plain"))
+	exitIfError(sprintCmd.Flags().MarkHidden("no-headers"))
 }
