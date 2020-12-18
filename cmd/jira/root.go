@@ -15,6 +15,8 @@ import (
 )
 
 const (
+	configDir     = ".config/jira"
+	configName    = ".jira"
 	clientTimeout = 15 * time.Second
 	refreshRate   = 100 * time.Millisecond
 )
@@ -56,8 +58,14 @@ func Execute() error {
 func init() {
 	cobra.OnInitialize(initConfig, initJiraClient)
 
-	rootCmd.PersistentFlags().StringVarP(&config, "config", "c", "", "Config file (default is $HOME/.jira.yml)")
-	rootCmd.PersistentFlags().StringVarP(&project, "project", "p", "", "Jira project to look into (defaults to value from $HOME/.jira.yml)")
+	rootCmd.PersistentFlags().StringVarP(
+		&config, "config", "c", "",
+		fmt.Sprintf("Config file (default is $HOME/%s/%s.yml)", configDir, configName),
+	)
+	rootCmd.PersistentFlags().StringVarP(
+		&project, "project", "p", "",
+		fmt.Sprintf("Jira project to look into (defaults to value from $HOME/%s/%s.yml)", configDir, configName),
+	)
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Turn on debug output")
 
 	_ = viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
@@ -71,8 +79,8 @@ func initConfig() {
 		home, err := homedir.Dir()
 		exitIfError(err)
 
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".jira")
+		viper.AddConfigPath(fmt.Sprintf("%s/%s", home, configDir))
+		viper.SetConfigName(configName)
 	}
 
 	viper.AutomaticEnv()
