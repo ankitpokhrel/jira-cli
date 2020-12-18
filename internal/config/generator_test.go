@@ -53,15 +53,17 @@ func TestCreate(t *testing.T) {
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
 
-	file := cwd + "/testdata/.jira.yml"
+	path := cwd + "/testdata/.tmp/"
+	file := ".jira.yml"
 
 	// case: file doesn't exist
-	assert.NoError(t, create(file))
+	assert.NoError(t, create(path, file))
 
 	// case: file exists, will create .bkp file
-	assert.NoError(t, create(file))
+	assert.NoError(t, create(path, file))
 
 	// Remove created file. Fails if those files were not created.
-	assert.NoError(t, os.Remove(file))
-	assert.NoError(t, os.Remove(file+".bkp"))
+	assert.NoError(t, os.Remove(path+file))
+	assert.NoError(t, os.Remove(path+file+".bkp"))
+	assert.NoError(t, os.Remove(path))
 }

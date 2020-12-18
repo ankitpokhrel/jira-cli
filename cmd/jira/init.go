@@ -25,11 +25,11 @@ func initialize(*cobra.Command, []string) {
 	if err := c.Generate(); err != nil {
 		switch err {
 		case jiraConfig.ErrSkip:
-			fmt.Printf("\n\033[0;32m✓\033[0m Skipping config generation. Current config: %s\n", viper.ConfigFileUsed())
+			fmt.Printf("\033[0;32m✓\033[0m Skipping config generation. Current config: %s\n", viper.ConfigFileUsed())
 		case jira.ErrUnexpectedStatusCode:
-			printErrF("\n\033[0;31m✗\033[0m Received unexpected status code from jira. Please try again.")
+			printErrF("\033[0;31m✗\033[0m Received unexpected status code from jira. Please try again.")
 		default:
-			printErrF("\n\033[0;31m✗\033[0m Unable to generate configuration: %s", viper.ConfigFileUsed())
+			printErrF("\033[0;31m✗\033[0m Unable to generate configuration: %s", err.Error())
 		}
 
 		os.Exit(1)

@@ -16,6 +16,7 @@ import (
 )
 
 const (
+	configDir     = ".config/jira"
 	configFile    = ".jira.yml"
 	clientTimeout = 15 * time.Second
 	refreshRate   = 100 * time.Millisecond
@@ -67,7 +68,7 @@ func (c *JiraCLIConfig) Generate() error {
 			return err
 		}
 
-		return create(home + "/" + configFile)
+		return create(fmt.Sprintf("%s/%s/", home, configDir), configFile)
 	}(); err != nil {
 		return err
 	}
@@ -287,14 +288,22 @@ func shallOverwrite() bool {
 	return ans
 }
 
-func create(path string) error {
-	if Exists(path) {
-		if err := os.Rename(path, path+".bkp"); err != nil {
+func create(path, name string) error {
+	if !Exists(path) {
+		if err := os.MkdirAll(path, 0700); err != nil {
 			return err
 		}
 	}
 
-	_, err := os.Create(path)
+	file := path + name
+
+	if Exists(file) {
+		if err := os.Rename(file, file+".bkp"); err != nil {
+			return err
+		}
+	}
+
+	_, err := os.Create(file)
 
 	return err
 }
