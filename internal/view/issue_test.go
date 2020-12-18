@@ -51,8 +51,36 @@ func TestIssueRenderInPlainView(t *testing.T) {
 		Server:  "https://test.local",
 		Data:    data,
 		Display: DisplayFormat{
-			Plain:     true,
-			NoHeaders: false,
+			Plain:      true,
+			NoHeaders:  false,
+			NoTruncate: false,
+		},
+	}
+
+	assert.NoError(t, issue.renderPlain(&b))
+
+	expected := `TYPE	KEY	SUMMARY	STATUS
+Bug	TEST-1	This is a test	Done
+Story	TEST-2	This is another test	Open
+`
+
+	assert.Equal(t, expected, b.String())
+}
+
+func TestIssueRenderInPlainViewAndNoTruncate(t *testing.T) {
+	var b bytes.Buffer
+
+	data := getIssues()
+
+	issue := IssueList{
+		Total:   2,
+		Project: "TEST",
+		Server:  "https://test.local",
+		Data:    data,
+		Display: DisplayFormat{
+			Plain:      true,
+			NoHeaders:  false,
+			NoTruncate: true,
 		},
 	}
 
@@ -77,8 +105,9 @@ func TestIssueRenderInPlainViewWithoutHeaders(t *testing.T) {
 		Server:  "https://test.local",
 		Data:    data,
 		Display: DisplayFormat{
-			Plain:     true,
-			NoHeaders: true,
+			Plain:      true,
+			NoHeaders:  true,
+			NoTruncate: true,
 		},
 	}
 
