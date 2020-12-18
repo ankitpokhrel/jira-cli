@@ -40,7 +40,7 @@ var (
 
 			configFile := viper.ConfigFileUsed()
 			if !jiraConfig.Exists(configFile) {
-				exitWithMessage("Missing configuration file.\nRun 'jira init' to configure the tool.")
+				exitWithErrMessage("Missing configuration file.\nRun 'jira init' to configure the tool.")
 			}
 		},
 	}
@@ -107,14 +107,17 @@ func exitIfError(err error) {
 			msg = err.Error()
 		}
 
-		_, _ = fmt.Fprintf(os.Stderr, "\nError: %s\n", msg)
-		os.Exit(1)
+		exitWithErrMessage(fmt.Sprintf("Error: %s", msg))
 	}
 }
 
-func exitWithMessage(msg string) {
-	fmt.Println(msg)
+func exitWithErrMessage(msg string) {
+	printErrF(msg)
 	os.Exit(1)
+}
+
+func printErrF(msg string, a ...interface{}) {
+	fmt.Fprintf(os.Stderr, fmt.Sprintf("%s\n", msg), a...)
 }
 
 func info(msg string) *spinner.Spinner {
@@ -145,5 +148,5 @@ You can generate a token using this link: %s
 
 After generating the token, export it to your shell and run 'jira init' if you haven't already.`, jiraAPITokenLink)
 
-	exitWithMessage(msg)
+	exitWithErrMessage(msg)
 }

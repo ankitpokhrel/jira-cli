@@ -168,7 +168,6 @@ func (c *JiraCLIConfig) verifyLoginDetails(server, login string) error {
 	c.jiraClient = jira.NewClient(config, jira.WithTimeout(clientTimeout))
 
 	if _, err := c.jiraClient.Me(); err != nil {
-		fmt.Printf("\nUnable to reach jira server with the given details. Please try again.\n")
 		return err
 	}
 

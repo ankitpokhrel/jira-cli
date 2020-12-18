@@ -83,7 +83,7 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 	}()
 
 	if total == 0 {
-		fmt.Printf("No result found for given query in project \"%s\"\n", project)
+		printErrF("No result found for given query in project \"%s\"", project)
 		return
 	}
 
@@ -142,7 +142,7 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 	}()
 
 	if len(sprints) == 0 {
-		fmt.Printf("No result found for given query in project \"%s\"\n", project)
+		printErrF("No result found for given query in project \"%s\"", project)
 		return
 	}
 

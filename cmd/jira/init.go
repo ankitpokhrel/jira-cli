@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	jiraConfig "github.com/ankitpokhrel/jira-cli/internal/config"
+	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
 var initCmd = &cobra.Command{
@@ -22,10 +23,13 @@ func initialize(*cobra.Command, []string) {
 	c := jiraConfig.NewJiraCLIConfig()
 
 	if err := c.Generate(); err != nil {
-		if err == jiraConfig.ErrSkip {
+		switch err {
+		case jiraConfig.ErrSkip:
 			fmt.Printf("\n\033[0;32m✓\033[0m Skipping config generation. Current config: %s\n", viper.ConfigFileUsed())
-		} else {
-			fmt.Printf("\n\033[0;31m✗\033[0m Unable to generate configuration: %s\n", viper.ConfigFileUsed())
+		case jira.ErrUnexpectedStatusCode:
+			printErrF("\n\033[0;31m✗\033[0m Received unexpected status code from jira. Please try again.")
+		default:
+			printErrF("\n\033[0;31m✗\033[0m Unable to generate configuration: %s", viper.ConfigFileUsed())
 		}
 
 		os.Exit(1)
