@@ -17,21 +17,25 @@ var issueCmd = &cobra.Command{
 	Short: "Issue lists issues in a project",
 	Long: `Issue lists issues in a given project.
 
-You can combine different flags together to create a unique query. For instance,
+You can combine different flags to create a unique query. For instance,
 	
 	# Issues that are of high priority, is in progress, was created this month,
 	# and has given labels
 	jira issue -yHigh -s"In Progress" --created month -lbackend -l"high prio"
 
-By default issues are displayed in a interactive list view. You can use --plain flag
-to display output in a plain text mode. --no-headers flag will hide the table headers
-in plain view.
+Issues are displayed in an interactive list view by default. You can use a --plain flag
+to display output in a plain text mode. A --no-headers flag will hide the table headers
+in plain view. A --no-truncate flag will display all available fields in plain mode.
 
+EG:
 	# Display issues in a plain table view without headers
 	jira issue --plain --no-headers
 
-	# Display some columns of issue in a plain table view
+	# Display some columns of the issue in a plain table view
 	jira issue --plain --columns key,assignee,status
+
+	# Display issues in a plain table view and show all fields
+	jira issue --plain --no-truncate
 `,
 	Aliases: []string{"issues", "list"},
 	Run:     issue,
@@ -67,6 +71,9 @@ func issue(cmd *cobra.Command, _ []string) {
 	noHeaders, err := cmd.Flags().GetBool("no-headers")
 	exitIfError(err)
 
+	noTruncate, err := cmd.Flags().GetBool("no-truncate")
+	exitIfError(err)
+
 	columns, err := cmd.Flags().GetString("columns")
 	exitIfError(err)
 
@@ -76,8 +83,9 @@ func issue(cmd *cobra.Command, _ []string) {
 		Total:   total,
 		Data:    issues,
 		Display: view.DisplayFormat{
-			Plain:     plain,
-			NoHeaders: noHeaders,
+			Plain:      plain,
+			NoHeaders:  noHeaders,
+			NoTruncate: noTruncate,
 			Columns: func() []string {
 				if columns != "" {
 					return strings.Split(columns, ",")
@@ -121,6 +129,7 @@ func injectIssueFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
+	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
 
 	if cmd.Name() != "sprint" {
 		cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+

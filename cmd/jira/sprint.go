@@ -20,9 +20,10 @@ var sprintCmd = &cobra.Command{
 	Short: fmt.Sprintf("Sprint lists top %d sprints in a board", numSprints),
 	Long: fmt.Sprintf("Sprint lists top %d sprints in a board.\n", numSprints) +
 		`
-By default sprints are displayed in an explorer view. You can use --list
+Sprints are displayed in an explorer view by default. You can use --list
 and --plain flags to display output in different modes.
 
+EG:
 	# Display sprints or sprint issues in an interactive list
 	jira sprint --list
 	jira sprint <SPRINT_ID> --list
@@ -38,6 +39,9 @@ and --plain flags to display output in different modes.
 	# Display some columns of sprint or sprint issues in a plain table view
 	jira sprint --list --plain --columns name,start,end
 	jira sprint <SPRINT_ID> --plain --columns type,key,summary
+
+	# Display sprint issues in a plain table view and show all fields
+	jira sprint <SPRINT_ID> --list --plain --no-truncate
 `,
 	Args:    cobra.MaximumNArgs(1),
 	Aliases: []string{"sprints"},
@@ -86,6 +90,9 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 	noHeaders, err := flags.GetBool("no-headers")
 	exitIfError(err)
 
+	noTruncate, err := flags.GetBool("no-truncate")
+	exitIfError(err)
+
 	columns, err := flags.GetString("columns")
 	exitIfError(err)
 
@@ -95,8 +102,9 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 		Total:   total,
 		Data:    issues,
 		Display: view.DisplayFormat{
-			Plain:     plain,
-			NoHeaders: noHeaders,
+			Plain:      plain,
+			NoHeaders:  noHeaders,
+			NoTruncate: noTruncate,
 			Columns: func() []string {
 				if columns != "" {
 					return strings.Split(columns, ",")

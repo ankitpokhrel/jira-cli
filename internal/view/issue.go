@@ -18,9 +18,10 @@ const (
 
 // DisplayFormat is a issue display type.
 type DisplayFormat struct {
-	Plain     bool
-	NoHeaders bool
-	Columns   []string
+	Plain      bool
+	NoHeaders  bool
+	NoTruncate bool
+	Columns    []string
 }
 
 // IssueList is a list view for issues.
@@ -71,7 +72,11 @@ func (l IssueList) header() []string {
 	validColumns, columnsMap := ValidIssueColumns(), l.validColumnsMap()
 
 	if len(l.Display.Columns) == 0 {
-		return validColumns
+		if l.Display.NoTruncate || !l.Display.Plain {
+			return validColumns
+		}
+
+		return validColumns[0:4]
 	}
 
 	var headers []string
