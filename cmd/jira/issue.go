@@ -64,7 +64,7 @@ func issue(cmd *cobra.Command, _ []string) {
 	}()
 
 	if total == 0 {
-		fmt.Printf("No result found for given query in project \"%s\"\n", project)
+		printErrF("No result found for given query in project \"%s\"", project)
 		return
 	}
 

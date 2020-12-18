@@ -1,7 +1,6 @@
 package jira
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -87,7 +86,7 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 	}()
 
 	if total == 0 {
-		fmt.Printf("No result found for given query in project \"%s\"\n", project)
+		printErrF("No result found for given query in project \"%s\"", project)
 		return
 	}
 
@@ -132,7 +131,7 @@ func epicExplorerView(flags query.FlagParser, project, server string) {
 	}()
 
 	if total == 0 {
-		fmt.Printf("No result found for given query in project \"%s\"\n", project)
+		printErrF("No result found for given query in project \"%s\"", project)
 		return
 	}
 
