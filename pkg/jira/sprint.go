@@ -20,7 +20,11 @@ type SprintResult struct {
 //
 // qp is an additional query parameters in key, value pair format, eg: state=closed.
 func (c *Client) Sprints(boardID int, qp string, startAt, max int) (*SprintResult, error) {
-	res, err := c.GetV1(context.Background(), fmt.Sprintf("/board/%d/sprint?%s&startAt=%d&maxResults=%d", boardID, qp, startAt, max))
+	res, err := c.GetV1(
+		context.Background(),
+		fmt.Sprintf("/board/%d/sprint?%s&startAt=%d&maxResults=%d", boardID, qp, startAt, max),
+		nil,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +96,7 @@ func (c *Client) SprintIssues(boardID, sprintID int, jql string) (*SearchResult,
 		path += fmt.Sprintf("?jql=%s", url.QueryEscape(jql))
 	}
 
-	res, err := c.GetV1(context.Background(), path)
+	res, err := c.GetV1(context.Background(), path, nil)
 	if err != nil {
 		return nil, err
 	}

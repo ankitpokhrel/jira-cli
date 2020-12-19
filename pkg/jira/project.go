@@ -8,7 +8,7 @@ import (
 
 // Project fetches response from /project endpoint.
 func (c *Client) Project() ([]*Project, error) {
-	res, err := c.Get(context.Background(), "/project?expand=lead")
+	res, err := c.Get(context.Background(), "/project?expand=lead", nil)
 	if err != nil {
 		return nil, err
 	}

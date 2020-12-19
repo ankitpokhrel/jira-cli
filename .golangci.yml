@@ -23,7 +23,6 @@ linters:
     - prealloc
     - unparam
     - varcheck
-    - wsl
   fast: false
 linters-settings:
   gofmt:
