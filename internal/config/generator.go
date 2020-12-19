@@ -5,21 +5,19 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"time"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/briandowns/spinner"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 
+	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
 const (
-	configDir     = ".config/jira"
-	configFile    = ".jira.yml"
-	clientTimeout = 15 * time.Second
-	refreshRate   = 100 * time.Millisecond
+	configDir  = ".config/jira"
+	configFile = ".jira.yml"
 )
 
 // ErrSkip is returned when a user skips the config generation.
@@ -49,7 +47,7 @@ func NewJiraCLIConfig() *JiraCLIConfig {
 // Generate generates the config file.
 func (c *JiraCLIConfig) Generate() error {
 	ce := func() bool {
-		s := info("Checking configuration...")
+		s := cmdutil.Info("Checking configuration...")
 		defer s.Stop()
 
 		return Exists(viper.ConfigFileUsed())
@@ -59,8 +57,16 @@ func (c *JiraCLIConfig) Generate() error {
 		return ErrSkip
 	}
 
+	if err := c.configureServerAndLoginDetails(); err != nil {
+		return err
+	}
+
+	if err := c.configureProjectAndBoardDetails(); err != nil {
+		return err
+	}
+
 	if err := func() error {
-		s := info("Creating new configuration...")
+		s := cmdutil.Info("Creating new configuration...")
 		defer s.Stop()
 
 		home, err := homedir.Dir()
@@ -70,14 +76,6 @@ func (c *JiraCLIConfig) Generate() error {
 
 		return create(fmt.Sprintf("%s/%s/", home, configDir), configFile)
 	}(); err != nil {
-		return err
-	}
-
-	if err := c.configureServerAndLoginDetails(); err != nil {
-		return err
-	}
-
-	if err := c.configureProjectAndBoardDetails(); err != nil {
 		return err
 	}
 
@@ -157,17 +155,13 @@ func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
 }
 
 func (c *JiraCLIConfig) verifyLoginDetails(server, login string) error {
-	s := info("Verifying login details...")
+	s := cmdutil.Info("Verifying login details...")
 	defer s.Stop()
 
-	config := jira.Config{
-		Server:   server,
-		Login:    login,
-		APIToken: viper.GetString("api_token"),
-	}
-
-	c.jiraClient = jira.NewClient(config, jira.WithTimeout(clientTimeout))
-
+	c.jiraClient = api.Client(jira.Config{
+		Server: server,
+		Login:  login,
+	})
 	if _, err := c.jiraClient.Me(); err != nil {
 		return err
 	}
@@ -229,7 +223,7 @@ func (c *JiraCLIConfig) write() error {
 }
 
 func (c *JiraCLIConfig) getProjectSuggestions() error {
-	s := info("Fetching projects...")
+	s := cmdutil.Info("Fetching projects...")
 	defer s.Stop()
 
 	projects, err := c.jiraClient.Project()
@@ -245,7 +239,7 @@ func (c *JiraCLIConfig) getProjectSuggestions() error {
 }
 
 func (c *JiraCLIConfig) getBoardSuggestions(project string) error {
-	s := info(fmt.Sprintf("Fetching boards for project '%s'...", project))
+	s := cmdutil.Info(fmt.Sprintf("Fetching boards for project '%s'...", project))
 	defer s.Stop()
 
 	resp, err := c.jiraClient.Boards(project, "")
@@ -266,11 +260,9 @@ func Exists(file string) bool {
 	if file == "" {
 		return false
 	}
-
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		return false
 	}
-
 	return true
 }
 
@@ -306,17 +298,4 @@ func create(path, name string) error {
 	_, err := os.Create(file)
 
 	return err
-}
-
-func info(msg string) *spinner.Spinner {
-	s := spinner.New(
-		spinner.CharSets[14],
-		refreshRate,
-		spinner.WithSuffix(" "+msg),
-		spinner.WithHiddenCursor(true),
-	)
-
-	s.Start()
-
-	return s
 }
