@@ -12,14 +12,14 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 
+	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
 const (
-	configDir     = ".config/jira"
-	configFile    = ".jira.yml"
-	clientTimeout = 15 * time.Second
-	refreshRate   = 100 * time.Millisecond
+	configDir   = ".config/jira"
+	configFile  = ".jira.yml"
+	refreshRate = 100 * time.Millisecond
 )
 
 // ErrSkip is returned when a user skips the config generation.
@@ -59,6 +59,14 @@ func (c *JiraCLIConfig) Generate() error {
 		return ErrSkip
 	}
 
+	if err := c.configureServerAndLoginDetails(); err != nil {
+		return err
+	}
+
+	if err := c.configureProjectAndBoardDetails(); err != nil {
+		return err
+	}
+
 	if err := func() error {
 		s := info("Creating new configuration...")
 		defer s.Stop()
@@ -70,14 +78,6 @@ func (c *JiraCLIConfig) Generate() error {
 
 		return create(fmt.Sprintf("%s/%s/", home, configDir), configFile)
 	}(); err != nil {
-		return err
-	}
-
-	if err := c.configureServerAndLoginDetails(); err != nil {
-		return err
-	}
-
-	if err := c.configureProjectAndBoardDetails(); err != nil {
 		return err
 	}
 
@@ -160,14 +160,10 @@ func (c *JiraCLIConfig) verifyLoginDetails(server, login string) error {
 	s := info("Verifying login details...")
 	defer s.Stop()
 
-	config := jira.Config{
-		Server:   server,
-		Login:    login,
-		APIToken: viper.GetString("api_token"),
-	}
-
-	c.jiraClient = jira.NewClient(config, jira.WithTimeout(clientTimeout))
-
+	c.jiraClient = api.Client(jira.Config{
+		Server: server,
+		Login:  login,
+	})
 	if _, err := c.jiraClient.Me(); err != nil {
 		return err
 	}
@@ -266,11 +262,9 @@ func Exists(file string) bool {
 	if file == "" {
 		return false
 	}
-
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		return false
 	}
-
 	return true
 }
 

@@ -27,7 +27,7 @@ func board(cmd *cobra.Command, _ []string) {
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
-	resp, err := api.Client(debug).Boards(project, jira.BoardTypeAll)
+	resp, err := api.Client(jira.Config{Debug: debug}).Boards(project, jira.BoardTypeAll)
 	cmdutil.ExitIfError(err)
 
 	v := view.NewBoard(resp.Boards)

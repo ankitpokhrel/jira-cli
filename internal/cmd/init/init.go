@@ -31,9 +31,9 @@ func initialize(*cobra.Command, []string) {
 		case jiraConfig.ErrSkip:
 			fmt.Printf("\033[0;32m✓\033[0m Skipping config generation. Current config: %s\n", viper.ConfigFileUsed())
 		case jira.ErrUnexpectedStatusCode:
-			cmdutil.PrintErrF("\033[0;31m✗\033[0m Received unexpected status code from jira. Please try again.")
+			cmdutil.PrintErrF("\n\033[0;31m✗\033[0m Received unexpected status code from jira. Please try again.")
 		default:
-			cmdutil.PrintErrF("\033[0;31m✗\033[0m Unable to generate configuration: %s", err.Error())
+			cmdutil.PrintErrF("\n\033[0;31m✗\033[0m Unable to generate configuration: %s", err.Error())
 		}
 
 		os.Exit(1)

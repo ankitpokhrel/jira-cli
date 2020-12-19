@@ -6,6 +6,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/view"
+	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
 // NewCmdProject is a project command.
@@ -23,7 +24,7 @@ func projects(cmd *cobra.Command, _ []string) {
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
-	resp, err := api.Client(debug).Project()
+	resp, err := api.Client(jira.Config{Debug: debug}).Project()
 	cmdutil.ExitIfError(err)
 
 	v := view.NewProject(resp)

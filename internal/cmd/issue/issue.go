@@ -106,7 +106,7 @@ func Issue(cmd *cobra.Command, _ []string) {
 		q, err := query.NewIssue(project, cmd.Flags())
 		cmdutil.ExitIfError(err)
 
-		resp, err := api.Client(debug).Search(q.Get())
+		resp, err := api.Client(jira.Config{Debug: debug}).Search(q.Get())
 		cmdutil.ExitIfError(err)
 
 		return resp.Issues, resp.Total

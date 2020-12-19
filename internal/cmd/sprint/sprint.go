@@ -70,7 +70,7 @@ func sprint(cmd *cobra.Command, args []string) {
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
-	client := api.Client(debug)
+	client := api.Client(jira.Config{Debug: debug})
 
 	if len(args) == 0 {
 		sprintExplorerView(cmd.Flags(), boardID, project, server, client)
