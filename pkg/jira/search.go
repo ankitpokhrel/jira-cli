@@ -22,7 +22,7 @@ type SearchResult struct {
 func (c *Client) Search(jql string) (*SearchResult, error) {
 	path := fmt.Sprintf("/search?jql=%s&maxResults=%d", url.QueryEscape(jql), maxResults)
 
-	res, err := c.Get(context.Background(), path)
+	res, err := c.Get(context.Background(), path, nil)
 	if err != nil {
 		return nil, err
 	}

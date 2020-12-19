@@ -3,6 +3,7 @@ package jira
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -25,6 +26,9 @@ var (
 	// ErrUnexpectedStatusCode denotes response code other than 200.
 	ErrUnexpectedStatusCode = fmt.Errorf("jira: unexpected status code")
 )
+
+// Header is a key, value pair for request headers.
+type Header map[string]string
 
 // Config is a jira config.
 type Config struct {
@@ -77,24 +81,37 @@ func WithTimeout(to time.Duration) ClientFunc {
 	}
 }
 
-// Get sends get request to v3 version of the jira api.
-func (c *Client) Get(ctx context.Context, path string) (*http.Response, error) {
-	return c.request(ctx, c.server+baseURLv3+path)
+// Get sends GET request to v3 version of the jira api.
+func (c *Client) Get(ctx context.Context, path string, headers Header) (*http.Response, error) {
+	return c.request(ctx, http.MethodGet, c.server+baseURLv3+path, nil, headers)
 }
 
 // GetV1 sends get request to v1 version of the jira api.
-func (c *Client) GetV1(ctx context.Context, path string) (*http.Response, error) {
-	return c.request(ctx, c.server+baseURLv1+path)
+func (c *Client) GetV1(ctx context.Context, path string, headers Header) (*http.Response, error) {
+	return c.request(ctx, http.MethodGet, c.server+baseURLv1+path, nil, headers)
 }
 
-func (c *Client) request(ctx context.Context, endpoint string) (*http.Response, error) {
+// Post sends POST request to v3 version of the jira api.
+func (c *Client) Post(ctx context.Context, path string, body io.Reader, headers Header) (*http.Response, error) {
+	res, err := c.request(ctx, http.MethodPost, c.server+baseURLv3+path, body, headers)
+	if err != nil {
+		return res, err
+	}
+	return res, err
+}
+
+func (c *Client) request(ctx context.Context, method, endpoint string, body io.Reader, headers Header) (*http.Response, error) {
 	if c.debug {
-		fmt.Printf("Requesting: %s\n", endpoint)
+		fmt.Printf("Requesting %s: %s\n", method, endpoint)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
+	req, err := http.NewRequest(method, endpoint, body)
 	if err != nil {
 		return nil, err
+	}
+
+	for k, v := range headers {
+		req.Header.Set(k, v)
 	}
 
 	req.SetBasicAuth(c.login, c.token)

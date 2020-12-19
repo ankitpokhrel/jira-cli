@@ -28,7 +28,7 @@ func (c *Client) Boards(project, boardType string) (*BoardResult, error) {
 		path += fmt.Sprintf("&type=%s", boardType)
 	}
 
-	res, err := c.GetV1(context.Background(), path)
+	res, err := c.GetV1(context.Background(), path, nil)
 	if err != nil {
 		return nil, err
 	}

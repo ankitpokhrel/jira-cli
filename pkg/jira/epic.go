@@ -10,7 +10,7 @@ import (
 
 // Epic fetches epics using the /search endpoint.
 func (c *Client) Epic(jql string) (*SearchResult, error) {
-	res, err := c.Get(context.Background(), "/search?jql="+url.QueryEscape(jql))
+	res, err := c.Get(context.Background(), "/search?jql="+url.QueryEscape(jql), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (c *Client) EpicIssues(key, jql string) (*SearchResult, error) {
 		path += fmt.Sprintf("?jql=%s", url.QueryEscape(jql))
 	}
 
-	res, err := c.GetV1(context.Background(), path)
+	res, err := c.GetV1(context.Background(), path, nil)
 	if err != nil {
 		return nil, err
 	}
