@@ -20,7 +20,6 @@ build: deps
 install: deps
 	@echo "Installing application..."
 	CGO_ENABLED=0 go install -ldflags $(LDFLAGS) ./...
-	@mv ${GOPATH}/bin/jira-cli ${GOPATH}/bin/jira
 
 lint:
 	@scripts/lint.sh

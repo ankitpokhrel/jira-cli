@@ -1,4 +1,4 @@
-package jira
+package epic
 
 import (
 	"strings"
@@ -6,15 +6,15 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/internal/view"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
-var epicCmd = &cobra.Command{
-	Use:   "epic [ISSUE KEY]",
-	Short: "Epic lists top 100 epics",
-	Long: `Epic lists top 100 epics.
+const helpText = `Epic lists top 100 epics.
 
 By default epics are displayed in an explorer view. You can use --list
 and --plain flags to display output in different modes.
@@ -34,67 +34,86 @@ and --plain flags to display output in different modes.
 	# Display some columns of epic or epic issues in a plain table view
 	jira epic --list --plain --columns key,summary,status
 	jira epic <KEY> --plain --columns type,key,summary
-`,
-	Aliases: []string{"epics"},
-	Args:    cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		list, err := cmd.Flags().GetBool("list")
-		exitIfError(err)
+`
 
-		err = cmd.Flags().Set("type", "Epic")
-		exitIfError(err)
+// NewCmdEpic is an epic command.
+func NewCmdEpic() *cobra.Command {
+	cmd := cobra.Command{
+		Use:     "epic [ISSUE KEY]",
+		Short:   "Epic lists top 100 epics",
+		Long:    helpText,
+		Aliases: []string{"epics"},
+		Args:    cobra.MaximumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			list, err := cmd.Flags().GetBool("list")
+			cmdutil.ExitIfError(err)
 
-		if list {
-			issue(cmd, args)
-		} else {
-			epic(cmd, args)
-		}
-	},
+			err = cmd.Flags().Set("type", "Epic")
+			cmdutil.ExitIfError(err)
+
+			if list {
+				issue.Issue(cmd, args)
+			} else {
+				epic(cmd, args)
+			}
+		},
+	}
+
+	issue.SetFlags(&cmd)
+	setFlags(&cmd)
+	hideFlags(&cmd)
+
+	return &cmd
 }
 
 func epic(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
 
+	debug, err := cmd.Flags().GetBool("debug")
+	cmdutil.ExitIfError(err)
+
+	client := api.Client(debug)
+
 	if len(args) == 0 {
-		epicExplorerView(cmd.Flags(), project, server)
+		epicExplorerView(cmd.Flags(), project, server, client)
 	} else {
-		singleEpicView(cmd.Flags(), args[0], project, server)
+		singleEpicView(cmd.Flags(), args[0], project, server, client)
 	}
 }
 
-func singleEpicView(flags query.FlagParser, key, project, server string) {
+func singleEpicView(flags query.FlagParser, key, project, server string, client *jira.Client) {
 	err := flags.Set("type", "") // Unset issue type.
-	exitIfError(err)
+	cmdutil.ExitIfError(err)
 
 	plain, err := flags.GetBool("plain")
-	exitIfError(err)
+	cmdutil.ExitIfError(err)
 
 	issues, total := func() ([]*jira.Issue, int) {
 		if !plain {
-			s := info("Fetching epic issues...")
+			s := cmdutil.Info("Fetching epic issues...")
 			defer s.Stop()
 		}
 
 		q, err := query.NewIssue(project, flags)
-		exitIfError(err)
+		cmdutil.ExitIfError(err)
 
-		resp, err := jiraClient.EpicIssues(key, q.Get())
-		exitIfError(err)
+		resp, err := client.EpicIssues(key, q.Get())
+		cmdutil.ExitIfError(err)
 
 		return resp.Issues, resp.Total
 	}()
 
 	if total == 0 {
-		printErrF("No result found for given query in project \"%s\"", project)
+		cmdutil.PrintErrF("No result found for given query in project \"%s\"", project)
 		return
 	}
 
 	noHeaders, err := flags.GetBool("no-headers")
-	exitIfError(err)
+	cmdutil.ExitIfError(err)
 
 	columns, err := flags.GetString("columns")
-	exitIfError(err)
+	cmdutil.ExitIfError(err)
 
 	v := view.IssueList{
 		Project: project,
@@ -113,25 +132,25 @@ func singleEpicView(flags query.FlagParser, key, project, server string) {
 		},
 	}
 
-	exitIfError(v.Render())
+	cmdutil.ExitIfError(v.Render())
 }
 
-func epicExplorerView(flags query.FlagParser, project, server string) {
+func epicExplorerView(flags query.FlagParser, project, server string, client *jira.Client) {
 	epics, total := func() ([]*jira.Issue, int) {
-		s := info("Fetching epics...")
+		s := cmdutil.Info("Fetching epics...")
 		defer s.Stop()
 
 		q, err := query.NewIssue(project, flags)
-		exitIfError(err)
+		cmdutil.ExitIfError(err)
 
-		resp, err := jiraClient.Search(q.Get())
-		exitIfError(err)
+		resp, err := client.Search(q.Get())
+		cmdutil.ExitIfError(err)
 
 		return resp.Issues, resp.Total
 	}()
 
 	if total == 0 {
-		printErrF("No result found for given query in project \"%s\"", project)
+		cmdutil.PrintErrF("No result found for given query in project \"%s\"", project)
 		return
 	}
 
@@ -141,7 +160,7 @@ func epicExplorerView(flags query.FlagParser, project, server string) {
 		Server:  server,
 		Data:    epics,
 		Issues: func(key string) []*jira.Issue {
-			resp, err := jiraClient.EpicIssues(key, "")
+			resp, err := client.EpicIssues(key, "")
 			if err != nil {
 				return []*jira.Issue{}
 			}
@@ -149,15 +168,13 @@ func epicExplorerView(flags query.FlagParser, project, server string) {
 		},
 	}
 
-	exitIfError(v.Render())
+	cmdutil.ExitIfError(v.Render())
 }
 
-func init() {
-	rootCmd.AddCommand(epicCmd)
+func setFlags(cmd *cobra.Command) {
+	cmd.Flags().Bool("list", false, "Display epics in list view")
+}
 
-	epicCmd.Flags().Bool("list", false, "Display epics in list view")
-
-	injectIssueFlags(epicCmd)
-
-	exitIfError(epicCmd.Flags().MarkHidden("type"))
+func hideFlags(cmd *cobra.Command) {
+	cmdutil.ExitIfError(cmd.Flags().MarkHidden("type"))
 }
