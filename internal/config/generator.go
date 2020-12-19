@@ -5,21 +5,19 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"time"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/briandowns/spinner"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
 const (
-	configDir   = ".config/jira"
-	configFile  = ".jira.yml"
-	refreshRate = 100 * time.Millisecond
+	configDir  = ".config/jira"
+	configFile = ".jira.yml"
 )
 
 // ErrSkip is returned when a user skips the config generation.
@@ -49,7 +47,7 @@ func NewJiraCLIConfig() *JiraCLIConfig {
 // Generate generates the config file.
 func (c *JiraCLIConfig) Generate() error {
 	ce := func() bool {
-		s := info("Checking configuration...")
+		s := cmdutil.Info("Checking configuration...")
 		defer s.Stop()
 
 		return Exists(viper.ConfigFileUsed())
@@ -68,7 +66,7 @@ func (c *JiraCLIConfig) Generate() error {
 	}
 
 	if err := func() error {
-		s := info("Creating new configuration...")
+		s := cmdutil.Info("Creating new configuration...")
 		defer s.Stop()
 
 		home, err := homedir.Dir()
@@ -157,7 +155,7 @@ func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
 }
 
 func (c *JiraCLIConfig) verifyLoginDetails(server, login string) error {
-	s := info("Verifying login details...")
+	s := cmdutil.Info("Verifying login details...")
 	defer s.Stop()
 
 	c.jiraClient = api.Client(jira.Config{
@@ -225,7 +223,7 @@ func (c *JiraCLIConfig) write() error {
 }
 
 func (c *JiraCLIConfig) getProjectSuggestions() error {
-	s := info("Fetching projects...")
+	s := cmdutil.Info("Fetching projects...")
 	defer s.Stop()
 
 	projects, err := c.jiraClient.Project()
@@ -241,7 +239,7 @@ func (c *JiraCLIConfig) getProjectSuggestions() error {
 }
 
 func (c *JiraCLIConfig) getBoardSuggestions(project string) error {
-	s := info(fmt.Sprintf("Fetching boards for project '%s'...", project))
+	s := cmdutil.Info(fmt.Sprintf("Fetching boards for project '%s'...", project))
 	defer s.Stop()
 
 	resp, err := c.jiraClient.Boards(project, "")
@@ -300,17 +298,4 @@ func create(path, name string) error {
 	_, err := os.Create(file)
 
 	return err
-}
-
-func info(msg string) *spinner.Spinner {
-	s := spinner.New(
-		spinner.CharSets[14],
-		refreshRate,
-		spinner.WithSuffix(" "+msg),
-		spinner.WithHiddenCursor(true),
-	)
-
-	s.Start()
-
-	return s
 }
