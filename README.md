@@ -44,7 +44,7 @@ The tool currently comes with an issue, epic, and sprint explorer. The flags are
 You can combine available flags in any order to create a unique query. For example, the command below will give you high priority issues created this month
 with status `To Do` that are assigned to you and has a label `backend` :exploding_head:.
 ```sh
-$ jira issue -yHigh -s"To Do" --created month -lbackend -a$(jira me)
+$ jira issue list -yHigh -s"To Do" --created month -lbackend -a$(jira me)
 ```
 
 The lists are displayed in an interactive UI by default. 
@@ -66,174 +66,174 @@ Check some examples/use-cases below.
 <details><summary>List recent issues</summary>
 
 ```
-$ jira issue
+$ jira issue list
 ```
 </details>
 
 <details><summary>List issues that I am watching</summary>
 
 ```sh
-$ jira issue -w
+$ jira issue list -w
 ```
 </details>
 
 <details><summary>List issues assigned to me</summary>
 
 ```sh
-$ jira issue -a$(jira me)
+$ jira issue list -a$(jira me)
 ```
 </details>
 
 <details><summary>List issues assigned to a user and are reported by another user</summary>
 
 ```sh
-$ jira issue -a"User A" -r"User B"
+$ jira issue list -a"User A" -r"User B"
 ```
 </details>
 
 <details><summary>List issues assigned to me is of high priority and is open</summary>
 
 ```sh
-$ jira issue -a$(jira me) -yHigh -sopen
+$ jira issue list -a$(jira me) -yHigh -sopen
 ```
 </details>
 
 <details><summary>List issues assigned to no one and are created this week</summary>
 
 ```sh
-$ jira issue -ax --created week
+$ jira issue list -ax --created week
 ```
 </details>
 
 <details><summary>List issues with resolution won't do</summary>
 
 ```sh
-$ jira issue -R"Won't do"
+$ jira issue list -R"Won't do"
 ```
 </details>
 
 <details><summary>List issues created within an hour and updated in the last 30 minutes :stopwatch:</summary>
 
 ```sh
-$ jira issue --created -1h --updated -30m
+$ jira issue list --created -1h --updated -30m
 ```
 </details>
 
 <details><summary>Give me issues that are of high priority, is in progress, was created this month, and has given labels :fire:</summary>
 
 ```sh
-$ jira issue -yHigh -s"In Progress" --created month -lbackend -l"high prio"
+$ jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high prio"
 ```
 </details>
 
 <details><summary>Wait, what was that ticket I opened earlier today? :tired_face:</summary>
 
  ```sh
- $ jira issue --history
+ $ jira issue list --history
  ```
 </details>
 
 <details><summary>What was the first issue I ever reported on the current board? :thinking:</summary>
 
 ```sh
-$ jira issue -r$(jira me) --reverse
+$ jira issue list -r$(jira me) --reverse
 ```
 </details>
 
 <details><summary>What was the first bug I ever fixed in the current board? :beetle:</summary>
 
 ```sh
-$ jira issue -a$(jira me) -tBug sDone -rFixed --reverse
+$ jira issue list -a$(jira me) -tBug sDone -rFixed --reverse
 ```
 </details>
 
 <details><summary>What issues did I report this week? :man_shrugging:</summary>
 
 ```sh
-$ jira issue -r$(jira me) --created week
+$ jira issue list -r$(jira me) --created week
 ```
 </details>
 
 <details><summary>Am I watching any tickets in project XYZ? :monocle_face:</summary>
 
 ```sh
-$ jira issue -w -pXYZ
+$ jira issue list -w -pXYZ
 ```
 </details>
 
 #### Epic
 
-Epics are displayed in an explorer view by default. You can output the results in a table view using the `--list` flag.
+Epics are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing epic issues, you can use all filters available for the issue command.
 
 <details><summary>List epics</summary>
 
 ```sh
-$ jira epic
+$ jira epic list
 
-// or, in a list view
-$ jira epic --list
+// or, in a table view
+$ jira epic list --table
 ```
 </details>
 
 <details><summary>List epics reported by me and are open</summary>
 
 ```sh
-$ jira epic -r$(jira me) -sOpen
+$ jira epic list -r$(jira me) -sOpen
 ```
 </details>
 
 <details><summary>List issues in an epic</summary>
 
 ```sh
-$ jira epic KEY-1
+$ jira epic list KEY-1
 
 // list all issue in an epic KEY-1 that is unassigned and has a high priority
-$ jira epic KEY-1 -ax -yHigh
+$ jira epic list KEY-1 -ax -yHigh
 ```
 </details>
 
 <details><summary>List issues in an epic that is unassigned and has a high priority</summary>
 
 ```sh
-$ jira epic KEY-1 -ax -yHigh
+$ jira epic list KEY-1 -ax -yHigh
 ```
 </details>
 
 #### Sprint
 
-Sprints are displayed in an explorer view by default. You can output the results in a table view using the `--list` flag.
+Sprints are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing sprint issues, you can use all filters available for the issue command. The tool only shows 25 recent sprints.
 
 <details><summary>List sprints</summary>
 
 ```sh
-$ jira sprint
+$ jira sprint list
 
-// or, in a list view
-$ jira sprint --list
+// or, in a table view
+$ jira sprint list --table
 ```
 </details>
 
 <details><summary>List future and active sprints</summary>
 
 ```sh
-$ jira sprint --state future,active
+$ jira sprint list --state future,active
 ```
 </details>
 
 <details><summary>List issues in a sprint</summary>
 
 ```sh
-// you can get sprint id with `jira sprint` or `jira sprint --list`
-$ jira sprint SPRINT_ID
+// you can get sprint id with `jira sprint list` or `jira sprint list --table`
+$ jira sprint list SPRINT_ID
 ```
 </details>
 
 <details><summary>List high priority issues in a sprint are assigned to me</summary>
 
 ```sh
-$ jira sprint SPRINT_ID -yHigh -a$(jira me)
+$ jira sprint list SPRINT_ID -yHigh -a$(jira me)
 ```
 </details>
 
@@ -281,7 +281,7 @@ Using a similar trick like the one below, you can get the number of tickets crea
 ```bash
 #!/usr/bin/env bash
 
-tickets=$(jira issues --created month --plain | rev | awk '{print $2}' | rev | sed "1 d" | awk -F'-' '{print $3}' | sort -n | uniq -c)
+tickets=$(jira issue list --created month --plain --no-truncate | rev | awk '{print $2}' | rev | sed "1 d" | awk -F'-' '{print $3}' | sort -n | uniq -c)
 
 echo "${tickets}" | while IFS=$'\t' read -r line; do
   day=$(echo "${line}" | awk '{print $2}')
@@ -304,10 +304,10 @@ Day #05: 17
 ```bash
 #!/usr/bin/env bash
 
-sprints=$(jira sprint --list --plain | cut -f1 -f2 | sed "1 d")
+sprints=$(jira sprint list --table --plain | cut -f1 -f2 | sed "1 d")
 
 echo "${sprints}" | while IFS=$'\t' read -r id name; do
-  count=$(jira sprint "${id}" --list --plain | wc -l)
+  count=$(jira sprint list "${id}" --table --plain | wc -l)
 
   printf "%10s: %3d\n" "${name}" $((count - 1))
 done
@@ -326,10 +326,10 @@ Sprint 1:   30
 ```bash
 #!/usr/bin/env bash
 
-sprints=$(jira sprint --list --plain | cut -f1 -f2 | sed "1 d")
+sprints=$(jira sprint list --table --plain | cut -f1 -f2 | sed "1 d")
 
 echo "${sprints}" | while IFS=$'\t' read -r id name; do
-  count=$(jira sprint "${id}" --list --plain | tr '\t' ',' | sed 's/,\{2,\}/,/g' | cut -d',' -f4 | sed "1 d" | sort -n | uniq | wc -l)
+  count=$(jira sprint list "${id}" --table --plain | tr '\t' ',' | sed 's/,\{2,\}/,/g' | cut -d',' -f4 | sed "1 d" | sort -n | uniq | wc -l)
 
   printf "%10s: %3d\n" "${name}" $((count - 1))
 done
