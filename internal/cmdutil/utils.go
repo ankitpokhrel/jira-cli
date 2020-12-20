@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
+	"github.com/fatih/color"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
@@ -43,6 +44,7 @@ func Info(msg string) *spinner.Spinner {
 		refreshRate,
 		spinner.WithSuffix(" "+msg),
 		spinner.WithHiddenCursor(true),
+		spinner.WithWriter(color.Error),
 	)
 
 	s.Start()

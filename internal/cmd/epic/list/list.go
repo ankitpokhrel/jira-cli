@@ -91,14 +91,9 @@ func singleEpicView(flags query.FlagParser, key, project, server string, client 
 	err := flags.Set("type", "") // Unset issue type.
 	cmdutil.ExitIfError(err)
 
-	plain, err := flags.GetBool("plain")
-	cmdutil.ExitIfError(err)
-
 	issues, total := func() ([]*jira.Issue, int) {
-		if !plain {
-			s := cmdutil.Info("Fetching epic issues...")
-			defer s.Stop()
-		}
+		s := cmdutil.Info("Fetching epic issues...")
+		defer s.Stop()
 
 		q, err := query.NewIssue(project, flags)
 		cmdutil.ExitIfError(err)
@@ -113,6 +108,9 @@ func singleEpicView(flags query.FlagParser, key, project, server string, client 
 		cmdutil.PrintErrF("No result found for given query in project \"%s\"", project)
 		return
 	}
+
+	plain, err := flags.GetBool("plain")
+	cmdutil.ExitIfError(err)
 
 	noHeaders, err := flags.GetBool("no-headers")
 	cmdutil.ExitIfError(err)

@@ -87,14 +87,9 @@ func sprintList(cmd *cobra.Command, args []string) {
 }
 
 func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, server string, client *jira.Client) {
-	plain, err := flags.GetBool("plain")
-	cmdutil.ExitIfError(err)
-
 	issues, total := func() ([]*jira.Issue, int) {
-		if !plain {
-			s := cmdutil.Info("Fetching sprint issues...")
-			defer s.Stop()
-		}
+		s := cmdutil.Info("Fetching sprint issues...")
+		defer s.Stop()
 
 		q, err := query.NewIssue(project, flags)
 		cmdutil.ExitIfError(err)
@@ -109,6 +104,9 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 		cmdutil.PrintErrF("No result found for given query in project \"%s\"", project)
 		return
 	}
+
+	plain, err := flags.GetBool("plain")
+	cmdutil.ExitIfError(err)
 
 	noHeaders, err := flags.GetBool("no-headers")
 	cmdutil.ExitIfError(err)
@@ -141,14 +139,9 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 }
 
 func sprintExplorerView(flags query.FlagParser, boardID int, project, server string, client *jira.Client) {
-	plain, err := flags.GetBool("plain")
-	cmdutil.ExitIfError(err)
-
 	sprints := func() []*jira.Sprint {
-		if !plain {
-			s := cmdutil.Info("Fetching sprints...")
-			defer s.Stop()
-		}
+		s := cmdutil.Info("Fetching sprints...")
+		defer s.Stop()
 
 		resp, err := client.Boards(project, jira.BoardTypeScrum)
 		cmdutil.ExitIfError(err)
@@ -168,6 +161,9 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 		cmdutil.PrintErrF("No result found for given query in project \"%s\"", project)
 		return
 	}
+
+	plain, err := flags.GetBool("plain")
+	cmdutil.ExitIfError(err)
 
 	noHeaders, err := flags.GetBool("no-headers")
 	cmdutil.ExitIfError(err)
