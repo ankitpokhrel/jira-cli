@@ -53,17 +53,12 @@ func List(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
 
-	plain, err := cmd.Flags().GetBool("plain")
-	cmdutil.ExitIfError(err)
-
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
 	issues, total := func() ([]*jira.Issue, int) {
-		if !plain {
-			s := cmdutil.Info("Fetching issues...")
-			defer s.Stop()
-		}
+		s := cmdutil.Info("Fetching issues...")
+		defer s.Stop()
 
 		q, err := query.NewIssue(project, cmd.Flags())
 		cmdutil.ExitIfError(err)
@@ -78,6 +73,9 @@ func List(cmd *cobra.Command, _ []string) {
 		cmdutil.PrintErrF("No result found for given query in project \"%s\"", project)
 		return
 	}
+
+	plain, err := cmd.Flags().GetBool("plain")
+	cmdutil.ExitIfError(err)
 
 	noHeaders, err := cmd.Flags().GetBool("no-headers")
 	cmdutil.ExitIfError(err)
