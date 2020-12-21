@@ -46,12 +46,12 @@ type createRequest struct {
 func (c *Client) Create(req *CreateRequest) (*CreateResponse, error) {
 	data := c.getRequestData(req)
 
-	b, err := json.Marshal(&data)
+	body, err := json.Marshal(&data)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := c.Post(context.Background(), "/issue", b, Header{
+	res, err := c.Post(context.Background(), "/issue", body, Header{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	})
