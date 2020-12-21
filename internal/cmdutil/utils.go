@@ -7,6 +7,7 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
+	"github.com/pkg/browser"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
@@ -55,4 +56,10 @@ func Info(msg string) *spinner.Spinner {
 // PrintErrF prints formatted error in stderr.
 func PrintErrF(msg string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, fmt.Sprintf("%s\n", msg), a...)
+}
+
+// Navigate navigates to jira issue.
+func Navigate(server, path string) error {
+	url := fmt.Sprintf("%s/browse/%s", server, path)
+	return browser.OpenURL(url)
 }

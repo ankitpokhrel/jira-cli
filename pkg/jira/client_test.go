@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -65,7 +64,7 @@ func TestPost(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
-	resp, err := client.Post(context.Background(), "/issue", strings.NewReader("hello"), Header{
+	resp, err := client.Post(context.Background(), "/issue", []byte("hello"), Header{
 		"Content-Type":   "application/json",
 		"X-Requested-By": "jira-cli",
 	})
