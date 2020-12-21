@@ -23,10 +23,7 @@ updating a ticket status, and so on.
 Install the runnable binary to your `$GOPATH/bin`.
 
 ```sh
-$ go install github.com/ankitpokhrel/jira-cli
-
-# optionally, rename the binary
-$ mv $GOPATH/bin/jira-cli $GOPATH/bin/jira
+$ go get github.com/ankitpokhrel/jira-cli/cmd/jira
 ```
 
 Releases and other installation options will be available later.
