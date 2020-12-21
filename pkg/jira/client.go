@@ -1,9 +1,9 @@
 package jira
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -92,7 +92,7 @@ func (c *Client) GetV1(ctx context.Context, path string, headers Header) (*http.
 }
 
 // Post sends POST request to v3 version of the jira api.
-func (c *Client) Post(ctx context.Context, path string, body io.Reader, headers Header) (*http.Response, error) {
+func (c *Client) Post(ctx context.Context, path string, body []byte, headers Header) (*http.Response, error) {
 	res, err := c.request(ctx, http.MethodPost, c.server+baseURLv3+path, body, headers)
 	if err != nil {
 		return res, err
@@ -100,12 +100,14 @@ func (c *Client) Post(ctx context.Context, path string, body io.Reader, headers 
 	return res, err
 }
 
-func (c *Client) request(ctx context.Context, method, endpoint string, body io.Reader, headers Header) (*http.Response, error) {
+func (c *Client) request(ctx context.Context, method, endpoint string, body []byte, headers Header) (*http.Response, error) {
 	if c.debug {
-		fmt.Printf("Requesting %s: %s\n", method, endpoint)
+		fmt.Printf("\nRequesting %s: %s\n", method, endpoint)
+		fmt.Printf("With request body: %s\n", string(body))
+		fmt.Printf("With request headers: %v\n", headers)
 	}
 
-	req, err := http.NewRequest(method, endpoint, body)
+	req, err := http.NewRequest(method, endpoint, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}

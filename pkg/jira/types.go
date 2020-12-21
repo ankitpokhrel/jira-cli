@@ -62,3 +62,23 @@ type Sprint struct {
 	CompleteDate string `json:"completeDate,omitempty"`
 	BoardID      int    `json:"originBoardId,omitempty"`
 }
+
+// ADF is an Atlassian document format.
+// See https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
+type ADF struct {
+	Version int       `json:"version"`
+	DocType string    `json:"type"`
+	Content []ADFNode `json:"content"`
+}
+
+// ADFNode is an ADF node.
+type ADFNode struct {
+	NodeType string         `json:"type"`
+	Content  []ADFNodeValue `json:"content"`
+}
+
+// ADFNodeValue is an ADF node value.
+type ADFNodeValue struct {
+	ValueType string `json:"type"`
+	Text      string `json:"text"`
+}
