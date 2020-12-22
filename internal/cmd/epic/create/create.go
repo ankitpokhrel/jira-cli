@@ -20,8 +20,8 @@ EG:
 	# Create epic in configured project
 	jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Bug description"
 
-	# Create issue in another project
-	jira issue create -pPRJ -n"Amazing epic" -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'
+	# Create epic in another project
+	jira epic create -pPRJ -n"Amazing epic" -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'
 `
 
 type createParams struct {
@@ -150,7 +150,6 @@ func getQuestions(params *createParams) []*survey.Question {
 			Validate: survey.Required,
 		})
 	}
-
 	if params.summary == "" {
 		qs = append(qs, &survey.Question{
 			Name:     "summary",
@@ -158,7 +157,6 @@ func getQuestions(params *createParams) []*survey.Question {
 			Validate: survey.Required,
 		})
 	}
-
 	if !params.noInput && params.body == "" {
 		qs = append(qs, &survey.Question{
 			Name: "body",

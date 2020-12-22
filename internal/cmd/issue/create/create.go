@@ -153,7 +153,6 @@ func getQuestions(params *createParams) []*survey.Question {
 			Validate: survey.Required,
 		})
 	}
-
 	if params.summary == "" {
 		qs = append(qs, &survey.Question{
 			Name:     "summary",
@@ -161,7 +160,6 @@ func getQuestions(params *createParams) []*survey.Question {
 			Validate: survey.Required,
 		})
 	}
-
 	if !params.noInput && params.body == "" {
 		qs = append(qs, &survey.Question{
 			Name: "body",

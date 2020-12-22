@@ -82,7 +82,7 @@ type createFieldsMarshaler struct {
 	fields createFields
 }
 
-// MarshalJSON is a custom unmarshaler to handle dynamic field.
+// MarshalJSON is a custom marshaler to handle dynamic field.
 func (cfm createFieldsMarshaler) MarshalJSON() ([]byte, error) {
 	m, err := json.Marshal(cfm.fields)
 	if err != nil || cfm.fields.Name == "" || cfm.fields.epicFieldName == "" {
@@ -132,7 +132,6 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 			Name string `json:"name,omitempty"`
 		}{Name: req.Priority}
 	}
-
 	if req.Body != "" {
 		data.Fields.fields.Description = &ADF{
 			Version: 1,
