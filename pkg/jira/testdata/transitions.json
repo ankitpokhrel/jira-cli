@@ -1,0 +1,20 @@
+{
+  "expand": "transitions",
+  "transitions": [
+    {
+      "id": "11",
+      "name": "To Do",
+      "isAvailable": true
+    },
+    {
+      "id": "21",
+      "name": "In Progress",
+      "isAvailable": true
+    },
+    {
+      "id": "31",
+      "name": "Done",
+      "isAvailable": false
+    }
+  ]
+}
