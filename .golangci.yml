@@ -31,5 +31,9 @@ linters-settings:
     skip-regexp: ".*"
   gocyclo:
     min-complexity: 15
+  gomnd:
+    settings:
+      mnd:
+        ignored-numbers: 0,1,2
 issues:
   exclude-use-default: false
