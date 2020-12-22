@@ -1,5 +1,7 @@
 package jira
 
+import "encoding/json"
+
 // Project holds project info.
 type Project struct {
 	Key  string `json:"key"`
@@ -61,6 +63,13 @@ type Sprint struct {
 	EndDate      string `json:"endDate"`
 	CompleteDate string `json:"completeDate,omitempty"`
 	BoardID      int    `json:"originBoardId,omitempty"`
+}
+
+// Transition holds issue transition info.
+type Transition struct {
+	ID          json.Number `json:"id"`
+	Name        string      `json:"name"`
+	IsAvailable bool        `json:"isAvailable"`
 }
 
 // ADF is an Atlassian document format.
