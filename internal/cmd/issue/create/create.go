@@ -3,12 +3,15 @@ package create
 import (
 	"fmt"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
+	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/surveyext"
 )
 
 const helpText = `Create an issue in a given project with minimal information.
@@ -20,6 +23,16 @@ EG:
 	# Create issue in another project
 	jira issue create -pPRJ -tBug -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'
 `
+
+type createParams struct {
+	issueType string
+	summary   string
+	body      string
+	priority  string
+	labels    []string
+	noInput   bool
+	debug     bool
+}
 
 // NewCmdCreate is a create command.
 func NewCmdCreate() *cobra.Command {
@@ -35,35 +48,41 @@ func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
 
-	debug, err := cmd.Flags().GetBool("debug")
-	cmdutil.ExitIfError(err)
+	flags := parseFlags(cmd.Flags())
+	qs := getQuestions(flags)
 
-	issueType, err := cmd.Flags().GetString("type")
-	cmdutil.ExitIfError(err)
+	if len(qs) > 0 {
+		ans := struct {
+			IssueType string
+			Summary   string
+			Body      string
+		}{}
 
-	summary, err := cmd.Flags().GetString("summary")
-	cmdutil.ExitIfError(err)
+		err := survey.Ask(qs, &ans)
+		cmdutil.ExitIfError(err)
 
-	body, err := cmd.Flags().GetString("body")
-	cmdutil.ExitIfError(err)
-
-	priority, err := cmd.Flags().GetString("priority")
-	cmdutil.ExitIfError(err)
-
-	labels, err := cmd.Flags().GetStringArray("label")
-	cmdutil.ExitIfError(err)
+		if flags.issueType == "" {
+			flags.issueType = ans.IssueType
+		}
+		if flags.summary == "" {
+			flags.summary = ans.Summary
+		}
+		if flags.body == "" {
+			flags.body = ans.Body
+		}
+	}
 
 	key := func() string {
 		s := cmdutil.Info("Creating an issue...")
 		defer s.Stop()
 
-		resp, err := api.Client(jira.Config{Debug: debug}).Create(&jira.CreateRequest{
+		resp, err := api.Client(jira.Config{Debug: flags.debug}).Create(&jira.CreateRequest{
 			Project:   project,
-			IssueType: issueType,
-			Summary:   summary,
-			Body:      body,
-			Priority:  priority,
-			Labels:    labels,
+			IssueType: flags.issueType,
+			Summary:   flags.summary,
+			Body:      flags.body,
+			Priority:  flags.priority,
+			Labels:    flags.labels,
 		})
 		cmdutil.ExitIfError(err)
 
@@ -88,7 +107,70 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("priority", "y", "", "Issue priority")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Issue labels")
 	cmd.Flags().Bool("web", false, "Open issue in web browser after successful creation")
+	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
+}
 
-	cmdutil.ExitIfError(cmd.MarkFlagRequired("type"))
-	cmdutil.ExitIfError(cmd.MarkFlagRequired("summary"))
+func parseFlags(flags query.FlagParser) *createParams {
+	issueType, err := flags.GetString("type")
+	cmdutil.ExitIfError(err)
+
+	summary, err := flags.GetString("summary")
+	cmdutil.ExitIfError(err)
+
+	body, err := flags.GetString("body")
+	cmdutil.ExitIfError(err)
+
+	priority, err := flags.GetString("priority")
+	cmdutil.ExitIfError(err)
+
+	labels, err := flags.GetStringArray("label")
+	cmdutil.ExitIfError(err)
+
+	noInput, err := flags.GetBool("no-input")
+	cmdutil.ExitIfError(err)
+
+	debug, err := flags.GetBool("debug")
+	cmdutil.ExitIfError(err)
+
+	return &createParams{
+		issueType: issueType,
+		summary:   summary,
+		body:      body,
+		priority:  priority,
+		labels:    labels,
+		noInput:   noInput,
+		debug:     debug,
+	}
+}
+
+func getQuestions(params *createParams) []*survey.Question {
+	var qs []*survey.Question
+
+	if params.issueType == "" {
+		qs = append(qs, &survey.Question{
+			Name:     "issueType",
+			Prompt:   &survey.Input{Message: "Issue type"},
+			Validate: survey.Required,
+		})
+	}
+
+	if params.summary == "" {
+		qs = append(qs, &survey.Question{
+			Name:     "summary",
+			Prompt:   &survey.Input{Message: "Summary"},
+			Validate: survey.Required,
+		})
+	}
+
+	if !params.noInput && params.body == "" {
+		qs = append(qs, &survey.Question{
+			Name: "body",
+			Prompt: &surveyext.JiraEditor{
+				Editor:       &survey.Editor{Message: "Description", HideDefault: true},
+				BlankAllowed: true,
+			},
+		})
+	}
+
+	return qs
 }
