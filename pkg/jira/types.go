@@ -2,6 +2,9 @@ package jira
 
 import "encoding/json"
 
+// IssueTypeEpic is an epic issue type.
+const IssueTypeEpic = "Epic"
+
 // Project holds project info.
 type Project struct {
 	Key  string `json:"key"`

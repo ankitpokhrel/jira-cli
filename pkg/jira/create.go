@@ -15,31 +15,15 @@ type CreateResponse struct {
 // CreateRequest struct holds request data for create request.
 type CreateRequest struct {
 	Project   string
+	Name      string
 	IssueType string
 	Summary   string
 	Body      string
 	Priority  string
 	Labels    []string
-}
-
-type createFields struct {
-	Project struct {
-		Key string `json:"key"`
-	} `json:"project"`
-	IssueType struct {
-		Name string `json:"name"`
-	} `json:"issuetype"`
-	Summary     string `json:"summary"`
-	Description *ADF   `json:"description,omitempty"`
-	Priority    *struct {
-		Name string `json:"name,omitempty"`
-	} `json:"priority,omitempty"`
-	Labels []string `json:"labels,omitempty"`
-}
-
-type createRequest struct {
-	Update struct{}     `json:"update"`
-	Fields createFields `json:"fields"`
+	// EpicFieldName is the dynamic epic field name
+	// that changes per jira installation.
+	EpicFieldName string
 }
 
 // Create creates an issue using POST /issue endpoint.
@@ -76,6 +60,52 @@ func (c *Client) Create(req *CreateRequest) (*CreateResponse, error) {
 	return &out, err
 }
 
+type createFields struct {
+	Project struct {
+		Key string `json:"key"`
+	} `json:"project"`
+	IssueType struct {
+		Name string `json:"name"`
+	} `json:"issuetype"`
+	Name        string `json:"name,omitempty"`
+	Summary     string `json:"summary"`
+	Description *ADF   `json:"description,omitempty"`
+	Priority    *struct {
+		Name string `json:"name,omitempty"`
+	} `json:"priority,omitempty"`
+	Labels []string `json:"labels,omitempty"`
+
+	epicFieldName string
+}
+
+type createFieldsMarshaler struct {
+	M createFields
+}
+
+// MarshalJSON is a custom marshaler to handle dynamic field.
+func (cfm createFieldsMarshaler) MarshalJSON() ([]byte, error) {
+	m, err := json.Marshal(cfm.M)
+	if err != nil || cfm.M.Name == "" || cfm.M.epicFieldName == "" {
+		return m, err
+	}
+
+	var temp interface{}
+	if err := json.Unmarshal(m, &temp); err != nil {
+		return nil, err
+	}
+	dm := temp.(map[string]interface{})
+
+	dm[cfm.M.epicFieldName] = dm["name"]
+	delete(dm, "name")
+
+	return json.Marshal(dm)
+}
+
+type createRequest struct {
+	Update struct{}              `json:"update"`
+	Fields createFieldsMarshaler `json:"fields"`
+}
+
 func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 	if req.Labels == nil {
 		req.Labels = []string{}
@@ -83,26 +113,27 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 
 	data := createRequest{
 		Update: struct{}{},
-		Fields: createFields{
+		Fields: createFieldsMarshaler{createFields{
 			Project: struct {
 				Key string `json:"key"`
 			}{Key: req.Project},
 			IssueType: struct {
 				Name string `json:"name"`
 			}{Name: req.IssueType},
-			Summary: req.Summary,
-			Labels:  req.Labels,
-		},
+			Name:          req.Name,
+			Summary:       req.Summary,
+			Labels:        req.Labels,
+			epicFieldName: req.EpicFieldName,
+		}},
 	}
 
 	if req.Priority != "" {
-		data.Fields.Priority = &struct {
+		data.Fields.M.Priority = &struct {
 			Name string `json:"name,omitempty"`
 		}{Name: req.Priority}
 	}
-
 	if req.Body != "" {
-		data.Fields.Description = &ADF{
+		data.Fields.M.Description = &ADF{
 			Version: 1,
 			DocType: "doc",
 			Content: []ADFNode{

@@ -14,24 +14,24 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/surveyext"
 )
 
-const helpText = `Create an issue in a given project with minimal information.
+const helpText = `Create an epic in a given project with minimal information.
 
 EG:
-	# Create issue in configured project
-	jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
+	# Create epic in configured project
+	jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Bug description"
 
-	# Create issue in another project
-	jira issue create -pPRJ -tBug -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'
+	# Create epic in another project
+	jira epic create -pPRJ -n"Amazing epic" -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'
 `
 
 type createParams struct {
-	issueType string
-	summary   string
-	body      string
-	priority  string
-	labels    []string
-	noInput   bool
-	debug     bool
+	name     string
+	summary  string
+	body     string
+	priority string
+	labels   []string
+	noInput  bool
+	debug    bool
 }
 
 // NewCmdCreate is a create command.
@@ -52,17 +52,12 @@ func create(cmd *cobra.Command, _ []string) {
 	qs := getQuestions(flags)
 
 	if len(qs) > 0 {
-		ans := struct {
-			IssueType string
-			Summary   string
-			Body      string
-		}{}
-
+		ans := struct{ Name, Summary, Body string }{}
 		err := survey.Ask(qs, &ans)
 		cmdutil.ExitIfError(err)
 
-		if flags.issueType == "" {
-			flags.issueType = ans.IssueType
+		if flags.name == "" {
+			flags.name = ans.Name
 		}
 		if flags.summary == "" {
 			flags.summary = ans.Summary
@@ -73,23 +68,25 @@ func create(cmd *cobra.Command, _ []string) {
 	}
 
 	key := func() string {
-		s := cmdutil.Info("Creating an issue...")
+		s := cmdutil.Info("Creating an epic...")
 		defer s.Stop()
 
 		resp, err := api.Client(jira.Config{Debug: flags.debug}).Create(&jira.CreateRequest{
-			Project:   project,
-			IssueType: flags.issueType,
-			Summary:   flags.summary,
-			Body:      flags.body,
-			Priority:  flags.priority,
-			Labels:    flags.labels,
+			Project:       project,
+			IssueType:     jira.IssueTypeEpic,
+			Name:          flags.name,
+			Summary:       flags.summary,
+			Body:          flags.body,
+			Priority:      flags.priority,
+			Labels:        flags.labels,
+			EpicFieldName: viper.GetString("epic.field"),
 		})
 		cmdutil.ExitIfError(err)
 
 		return resp.Key
 	}()
 
-	fmt.Printf("\u001B[0;32m✓\u001B[0m Issue created: %s/browse/%s\n", server, key)
+	fmt.Printf("\u001B[0;32m✓\u001B[0m Epic created: %s/browse/%s\n", server, key)
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, key)
@@ -101,17 +98,17 @@ func create(cmd *cobra.Command, _ []string) {
 func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().SortFlags = false
 
-	cmd.Flags().StringP("type", "t", "", "Issue type")
-	cmd.Flags().StringP("summary", "s", "", "Issue summary or title")
-	cmd.Flags().StringP("body", "b", "", "Issue description")
-	cmd.Flags().StringP("priority", "y", "", "Issue priority")
-	cmd.Flags().StringArrayP("label", "l", []string{}, "Issue labels")
-	cmd.Flags().Bool("web", false, "Open issue in web browser after successful creation")
+	cmd.Flags().StringP("name", "n", "", "Epic name")
+	cmd.Flags().StringP("summary", "s", "", "Epic summary or title")
+	cmd.Flags().StringP("body", "b", "", "Epic description")
+	cmd.Flags().StringP("priority", "y", "", "Epic priority")
+	cmd.Flags().StringArrayP("label", "l", []string{}, "Epic labels")
+	cmd.Flags().Bool("web", false, "Open epic in web browser after successful creation")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
 
 func parseFlags(flags query.FlagParser) *createParams {
-	issueType, err := flags.GetString("type")
+	name, err := flags.GetString("name")
 	cmdutil.ExitIfError(err)
 
 	summary, err := flags.GetString("summary")
@@ -133,23 +130,23 @@ func parseFlags(flags query.FlagParser) *createParams {
 	cmdutil.ExitIfError(err)
 
 	return &createParams{
-		issueType: issueType,
-		summary:   summary,
-		body:      body,
-		priority:  priority,
-		labels:    labels,
-		noInput:   noInput,
-		debug:     debug,
+		name:     name,
+		summary:  summary,
+		body:     body,
+		priority: priority,
+		labels:   labels,
+		noInput:  noInput,
+		debug:    debug,
 	}
 }
 
 func getQuestions(params *createParams) []*survey.Question {
 	var qs []*survey.Question
 
-	if params.issueType == "" {
+	if params.name == "" {
 		qs = append(qs, &survey.Question{
-			Name:     "issueType",
-			Prompt:   &survey.Input{Message: "Issue type"},
+			Name:     "name",
+			Prompt:   &survey.Input{Message: "Epic name"},
 			Validate: survey.Required,
 		})
 	}
