@@ -25,7 +25,7 @@ var (
 	// ErrSkip is returned when a user skips the config generation.
 	ErrSkip = fmt.Errorf("skipping config generation")
 	// ErrUnexpectedResponseFormat is returned if the response data is in unexpected format.
-	ErrUnexpectedResponseFormat = fmt.Errorf("invalid response format")
+	ErrUnexpectedResponseFormat = fmt.Errorf("unexpected response format")
 )
 
 // JiraCLIConfig is a Jira CLI config.
