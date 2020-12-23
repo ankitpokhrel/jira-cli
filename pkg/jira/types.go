@@ -21,6 +21,11 @@ type Board struct {
 	Type string `json:"type"`
 }
 
+// Epic holds epic info.
+type Epic struct {
+	Field string `json:"field"`
+}
+
 // Issue holds issue info.
 type Issue struct {
 	Key    string      `json:"key"`

@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/mitchellh/go-homedir"
@@ -20,8 +21,12 @@ const (
 	configFile = ".jira.yml"
 )
 
-// ErrSkip is returned when a user skips the config generation.
-var ErrSkip = fmt.Errorf("skipping config generation")
+var (
+	// ErrSkip is returned when a user skips the config generation.
+	ErrSkip = fmt.Errorf("skipping config generation")
+	// ErrUnexpectedResponseFormat is returned if the response data is in unexpected format.
+	ErrUnexpectedResponseFormat = fmt.Errorf("invalid response format")
+)
 
 // JiraCLIConfig is a Jira CLI config.
 type JiraCLIConfig struct {
@@ -30,6 +35,7 @@ type JiraCLIConfig struct {
 		login   string
 		project string
 		board   *jira.Board
+		epic    *jira.Epic
 	}
 	jiraClient         *jira.Client
 	projectSuggestions []string
@@ -56,12 +62,13 @@ func (c *JiraCLIConfig) Generate() error {
 	if ce && !shallOverwrite() {
 		return ErrSkip
 	}
-
 	if err := c.configureServerAndLoginDetails(); err != nil {
 		return err
 	}
-
 	if err := c.configureProjectAndBoardDetails(); err != nil {
+		return err
+	}
+	if err := c.configureMetadata(); err != nil {
 		return err
 	}
 
@@ -97,12 +104,10 @@ func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
 				if !ok {
 					return errInvalidURL
 				}
-
 				u, err := url.Parse(str)
 				if err != nil || u.Scheme == "" || u.Host == "" {
 					return errInvalidURL
 				}
-
 				if u.Scheme != "http" && u.Scheme != "https" {
 					return errInvalidURL
 				}
@@ -128,11 +133,9 @@ func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
 				if !ok {
 					return errInvalidEmail
 				}
-
 				if len(str) < 3 || len(str) > 254 {
 					return errInvalidEmail
 				}
-
 				if !emailRegex.MatchString(str) {
 					return errInvalidEmail
 				}
@@ -184,7 +187,6 @@ func (c *JiraCLIConfig) configureProjectAndBoardDetails() error {
 		Help:    "This is your project key that you want to access by default when using the cli.",
 		Options: c.projectSuggestions,
 	}
-
 	err := survey.AskOne(&projectPrompt, &project, survey.WithValidator(survey.Required))
 	if err != nil {
 		return err
@@ -211,6 +213,42 @@ func (c *JiraCLIConfig) configureProjectAndBoardDetails() error {
 	return nil
 }
 
+func (c *JiraCLIConfig) configureMetadata() error {
+	s := cmdutil.Info("Fetching metadata...")
+	defer s.Stop()
+
+	meta, err := c.jiraClient.GetCreateMeta(&jira.CreateMetaRequest{
+		Projects:       c.value.project,
+		IssueTypeNames: jira.IssueTypeEpic,
+		Expand:         "projects.issuetypes.fields",
+	})
+	if err != nil {
+		return err
+	}
+	if len(meta.Projects) == 0 || len(meta.Projects[0].IssueTypes) == 0 {
+		return ErrUnexpectedResponseFormat
+	}
+
+	fields := meta.Projects[0].IssueTypes[0].Fields
+
+	var key string
+
+	for field, value := range fields {
+		if !strings.Contains(field, "customfield") {
+			continue
+		}
+		v := value.(map[string]interface{})
+		if v["name"].(string) == "Epic Name" {
+			key = v["key"].(string)
+			break
+		}
+	}
+
+	c.value.epic = &jira.Epic{Field: key}
+
+	return nil
+}
+
 func (c *JiraCLIConfig) write() error {
 	viper.Set("server", c.value.server)
 	viper.Set("login", c.value.login)
@@ -218,6 +256,7 @@ func (c *JiraCLIConfig) write() error {
 	viper.Set("board.id", c.value.board.ID)
 	viper.Set("board.name", c.value.board.Name)
 	viper.Set("board.type", c.value.board.Type)
+	viper.Set("epic.field", c.value.epic.Field)
 
 	return viper.WriteConfig()
 }
@@ -230,7 +269,6 @@ func (c *JiraCLIConfig) getProjectSuggestions() error {
 	if err != nil {
 		return err
 	}
-
 	for _, project := range projects {
 		c.projectSuggestions = append(c.projectSuggestions, project.Key)
 	}
@@ -246,7 +284,6 @@ func (c *JiraCLIConfig) getBoardSuggestions(project string) error {
 	if err != nil {
 		return err
 	}
-
 	for _, board := range resp.Boards {
 		c.boardsMap[board.Name] = board
 		c.boardSuggestions = append(c.boardSuggestions, board.Name)
@@ -272,7 +309,6 @@ func shallOverwrite() bool {
 	prompt := &survey.Confirm{
 		Message: "Config already exist. Do you want to overwrite?",
 	}
-
 	if err := survey.AskOne(prompt, &ans); err != nil {
 		return false
 	}
