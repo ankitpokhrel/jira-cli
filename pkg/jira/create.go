@@ -79,13 +79,13 @@ type createFields struct {
 }
 
 type createFieldsMarshaler struct {
-	fields createFields
+	M createFields
 }
 
 // MarshalJSON is a custom marshaler to handle dynamic field.
 func (cfm createFieldsMarshaler) MarshalJSON() ([]byte, error) {
-	m, err := json.Marshal(cfm.fields)
-	if err != nil || cfm.fields.Name == "" || cfm.fields.epicFieldName == "" {
+	m, err := json.Marshal(cfm.M)
+	if err != nil || cfm.M.Name == "" || cfm.M.epicFieldName == "" {
 		return m, err
 	}
 
@@ -95,7 +95,7 @@ func (cfm createFieldsMarshaler) MarshalJSON() ([]byte, error) {
 	}
 	dm := temp.(map[string]interface{})
 
-	dm[cfm.fields.epicFieldName] = dm["name"]
+	dm[cfm.M.epicFieldName] = dm["name"]
 	delete(dm, "name")
 
 	return json.Marshal(dm)
@@ -128,12 +128,12 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 	}
 
 	if req.Priority != "" {
-		data.Fields.fields.Priority = &struct {
+		data.Fields.M.Priority = &struct {
 			Name string `json:"name,omitempty"`
 		}{Name: req.Priority}
 	}
 	if req.Body != "" {
-		data.Fields.fields.Description = &ADF{
+		data.Fields.M.Description = &ADF{
 			Version: 1,
 			DocType: "doc",
 			Content: []ADFNode{
