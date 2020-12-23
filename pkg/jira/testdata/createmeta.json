@@ -1,0 +1,29 @@
+{
+  "expand": "projects",
+  "projects": [
+    {
+      "expand": "issuetypes",
+      "key": "TEST",
+      "name": "Test Project",
+      "issuetypes": [
+        {
+          "name": "Epic",
+          "fields": {
+            "customfield_10011": {
+              "name": "Epic Name",
+              "key": "customfield_10011"
+            },
+            "priority": {
+              "name": "Priority",
+              "key": "priority"
+            },
+            "customfield_10014": {
+              "name": "Epic Link",
+              "key": "customfield_10014"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
