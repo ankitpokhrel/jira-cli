@@ -165,6 +165,7 @@ func (tr *MarkdownTranslator) setOpenTagAttributes(a interface{}) string {
 				for i := 0; i < int(v.(float64)); i++ {
 					tag.WriteString("#")
 				}
+				tag.WriteString(" ")
 			}
 		}
 	}
