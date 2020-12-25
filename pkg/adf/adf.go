@@ -171,7 +171,7 @@ func (a *Translator) Translate() string {
 }
 
 func (a *Translator) walk() {
-	if len(a.doc.Content) == 0 {
+	if a.doc == nil || len(a.doc.Content) == 0 {
 		return
 	}
 	for _, parent := range a.doc.Content {
