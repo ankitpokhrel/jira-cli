@@ -60,6 +60,20 @@ func (c *Client) Create(req *CreateRequest) (*CreateResponse, error) {
 	return &out, err
 }
 
+// adf is a a trimmed version of Atlassian document format.
+// See https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
+type adf struct {
+	Version int    `json:"version"`
+	DocType string `json:"type"`
+	Content []struct {
+		NodeType string `json:"type"`
+		Content  []struct {
+			ValueType string `json:"type"`
+			Text      string `json:"text"`
+		} `json:"content"`
+	} `json:"content"`
+}
+
 type createFields struct {
 	Project struct {
 		Key string `json:"key"`
@@ -69,7 +83,7 @@ type createFields struct {
 	} `json:"issuetype"`
 	Name        string `json:"name,omitempty"`
 	Summary     string `json:"summary"`
-	Description *ADF   `json:"description,omitempty"`
+	Description *adf   `json:"description,omitempty"`
 	Priority    *struct {
 		Name string `json:"name,omitempty"`
 	} `json:"priority,omitempty"`
@@ -132,16 +146,24 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 			Name string `json:"name,omitempty"`
 		}{Name: req.Priority}
 	}
+
 	if req.Body != "" {
-		data.Fields.M.Description = &ADF{
+		data.Fields.M.Description = &adf{
 			Version: 1,
 			DocType: "doc",
-			Content: []ADFNode{
-				{
-					NodeType: "paragraph",
-					Content:  []ADFNodeValue{{ValueType: "text", Text: req.Body}},
-				},
-			},
+			Content: []struct {
+				NodeType string `json:"type"`
+				Content  []struct {
+					ValueType string `json:"type"`
+					Text      string `json:"text"`
+				} `json:"content"`
+			}{{
+				NodeType: "paragraph",
+				Content: []struct {
+					ValueType string `json:"type"`
+					Text      string `json:"text"`
+				}{{ValueType: "text", Text: req.Body}},
+			}},
 		}
 	}
 
