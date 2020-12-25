@@ -150,10 +150,12 @@ func (tr *MarkdownTranslator) setOpenTagAttributes(a interface{}) string {
 	if a == nil {
 		return ""
 	}
+
 	var (
 		tag strings.Builder
 		nl  bool
 	)
+
 	attrs := a.(map[string]interface{})
 	for k, v := range attrs {
 		if tr.isValidAttr(k) {
@@ -172,6 +174,7 @@ func (tr *MarkdownTranslator) setOpenTagAttributes(a interface{}) string {
 	if nl {
 		tag.WriteString("\n")
 	}
+
 	return tag.String()
 }
 
