@@ -63,7 +63,7 @@ type ADF struct {
 // Node is an ADF content node.
 type Node struct {
 	NodeType   string      `json:"type"`
-	Content    []Node      `json:"content"`
+	Content    []*Node     `json:"content"`
 	Attributes interface{} `json:"attrs"`
 	NodeValue
 }
@@ -171,7 +171,7 @@ func (a *Translator) Translate() string {
 }
 
 func (a *Translator) walk() {
-	if len(a.doc.Content) == 0 {
+	if a.doc == nil || len(a.doc.Content) == 0 {
 		return
 	}
 	for _, parent := range a.doc.Content {
@@ -183,7 +183,7 @@ func (a *Translator) visit(n *Node, depth int) {
 	a.buf.WriteString(a.tsl.Open(n, depth))
 
 	for _, child := range n.Content {
-		a.visit(&child, depth+1)
+		a.visit(child, depth+1)
 	}
 
 	if NodeType(n.NodeType) == NodeTypeChild {

@@ -6,6 +6,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/create"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/list"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/move"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/view"
 )
 
 const helpText = `Issue manage issues in a given project. See available commands below.`
@@ -23,7 +24,7 @@ func NewCmdIssue() *cobra.Command {
 	lc := list.NewCmdList()
 	cc := create.NewCmdCreate()
 
-	cmd.AddCommand(lc, cc, move.NewCmdMove())
+	cmd.AddCommand(lc, cc, move.NewCmdMove(), view.NewCmdView())
 
 	list.SetFlags(lc)
 	create.SetFlags(cc)

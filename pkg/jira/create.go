@@ -60,9 +60,9 @@ func (c *Client) Create(req *CreateRequest) (*CreateResponse, error) {
 	return &out, err
 }
 
-// adf is a a trimmed version of Atlassian document format.
+// createRequestADF is a a trimmed version of Atlassian document format for create request.
 // See https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
-type adf struct {
+type createRequestADF struct {
 	Version int    `json:"version"`
 	DocType string `json:"type"`
 	Content []struct {
@@ -81,9 +81,9 @@ type createFields struct {
 	IssueType struct {
 		Name string `json:"name"`
 	} `json:"issuetype"`
-	Name        string `json:"name,omitempty"`
-	Summary     string `json:"summary"`
-	Description *adf   `json:"description,omitempty"`
+	Name        string            `json:"name,omitempty"`
+	Summary     string            `json:"summary"`
+	Description *createRequestADF `json:"description,omitempty"`
 	Priority    *struct {
 		Name string `json:"name,omitempty"`
 	} `json:"priority,omitempty"`
@@ -148,7 +148,7 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 	}
 
 	if req.Body != "" {
-		data.Fields.M.Description = &adf{
+		data.Fields.M.Description = &createRequestADF{
 			Version: 1,
 			DocType: "doc",
 			Content: []struct {

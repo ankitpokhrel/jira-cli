@@ -1,6 +1,8 @@
 package jira
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // IssueTypeEpic is an epic issue type.
 const IssueTypeEpic = "Epic"
@@ -34,9 +36,10 @@ type Issue struct {
 
 // IssueFields holds issue fields.
 type IssueFields struct {
-	Summary    string   `json:"summary"`
-	Labels     []string `json:"labels"`
-	Resolution struct {
+	Summary     string      `json:"summary"`
+	Description interface{} `json:"description"` // string in v1/v2, adf.ADF in v3
+	Labels      []string    `json:"labels"`
+	Resolution  struct {
 		Name string `json:"name"`
 	} `json:"resolution"`
 	IssueType struct {
