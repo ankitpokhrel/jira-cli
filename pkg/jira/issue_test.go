@@ -85,7 +85,7 @@ func TestGetIssueWithoutDescription(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/rest/api/3/issue/TEST-1", r.URL.Path)
 
-		resp, err := ioutil.ReadFile("./testdata/issue-2.json")
+		resp, err := ioutil.ReadFile("./testdata/issue-1.json")
 		assert.NoError(t, err)
 
 		w.Header().Set("Content-Type", "application/json")

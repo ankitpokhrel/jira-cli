@@ -100,11 +100,9 @@ func (l IssueList) data() tui.TableData {
 	if !(l.Display.Plain && l.Display.NoHeaders) {
 		data = append(data, headers)
 	}
-
 	if len(headers) == 0 {
 		headers = ValidIssueColumns()
 	}
-
 	for _, issue := range l.Data {
 		data = append(data, l.assignColumns(headers, issue))
 	}

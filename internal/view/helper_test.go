@@ -2,6 +2,7 @@
 package view
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -141,4 +142,18 @@ func TestPrepareTitle(t *testing.T) {
 			assert.Equal(t, tc.expected, prepareTitle(tc.input))
 		})
 	}
+}
+
+func TestGetPager(t *testing.T) {
+	t.Parallel()
+
+	pager := os.Getenv("PAGER")
+
+	_ = os.Setenv("PAGER", "")
+	assert.Equal(t, "less -r", GetPager())
+
+	_ = os.Setenv("PAGER", "more")
+	assert.Equal(t, "more", GetPager())
+
+	_ = os.Setenv("PAGER", pager)
 }
