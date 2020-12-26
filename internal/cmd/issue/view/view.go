@@ -14,7 +14,7 @@ const helpText = `View displays contents of an issue.`
 // NewCmdView is a view command.
 func NewCmdView() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "view",
+		Use:     "view KEY",
 		Short:   "View displays contents of an issue",
 		Long:    helpText,
 		Aliases: []string{"show"},

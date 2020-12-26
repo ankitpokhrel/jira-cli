@@ -37,7 +37,7 @@ type Issue struct {
 // IssueFields holds issue fields.
 type IssueFields struct {
 	Summary     string      `json:"summary"`
-	Description interface{} `json:"description"` // String in v1/v2, adf.ADF in v3
+	Description interface{} `json:"description"` // string in v1/v2, adf.ADF in v3
 	Labels      []string    `json:"labels"`
 	Resolution  struct {
 		Name string `json:"name"`

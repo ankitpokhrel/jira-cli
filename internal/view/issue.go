@@ -72,7 +72,6 @@ func (i Issue) data() tui.TextData {
 		i.Data.Fields.Priority.Name, lbl,
 		desc,
 	)
-
 	return tui.TextData(dt)
 }
 

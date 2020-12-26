@@ -21,7 +21,6 @@ func TestIssueData(t *testing.T) {
 			NoHeaders: false,
 		},
 	}
-
 	expected := tui.TableData{
 		[]string{
 			"TYPE", "KEY", "SUMMARY", "STATUS", "ASSIGNEE", "REPORTER", "PRIORITY", "RESOLUTION",
@@ -36,87 +35,74 @@ func TestIssueData(t *testing.T) {
 			"2020-12-13 14:05:20", "2020-12-13 14:07:20",
 		},
 	}
-
 	assert.Equal(t, expected, issue.data())
 }
 
 func TestIssueRenderInPlainView(t *testing.T) {
 	var b bytes.Buffer
 
-	data := getIssues()
-
 	issue := IssueList{
 		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
-		Data:    data,
+		Data:    getIssues(),
 		Display: DisplayFormat{
 			Plain:      true,
 			NoHeaders:  false,
 			NoTruncate: false,
 		},
 	}
-
 	assert.NoError(t, issue.renderPlain(&b))
 
 	expected := `TYPE	KEY	SUMMARY	STATUS
 Bug	TEST-1	This is a test	Done
 Story	TEST-2	This is another test	Open
 `
-
 	assert.Equal(t, expected, b.String())
 }
 
 func TestIssueRenderInPlainViewAndNoTruncate(t *testing.T) {
 	var b bytes.Buffer
 
-	data := getIssues()
-
 	issue := IssueList{
 		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
-		Data:    data,
+		Data:    getIssues(),
 		Display: DisplayFormat{
 			Plain:      true,
 			NoHeaders:  false,
 			NoTruncate: true,
 		},
 	}
-
 	assert.NoError(t, issue.renderPlain(&b))
 
 	expected := `TYPE	KEY	SUMMARY	STATUS	ASSIGNEE	REPORTER	PRIORITY	RESOLUTION	CREATED	UPDATED
 Bug	TEST-1	This is a test	Done	Person A	Person Z	High	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20
 Story	TEST-2	This is another test	Open		Person A	Normal		2020-12-13 14:05:20	2020-12-13 14:07:20
 `
-
 	assert.Equal(t, expected, b.String())
 }
 
 func TestIssueRenderInPlainViewWithoutHeaders(t *testing.T) {
 	var b bytes.Buffer
 
-	data := getIssues()
-
 	issue := IssueList{
 		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
-		Data:    data,
+		Data:    getIssues(),
 		Display: DisplayFormat{
 			Plain:      true,
 			NoHeaders:  true,
 			NoTruncate: true,
 		},
 	}
-
 	assert.NoError(t, issue.renderPlain(&b))
 
 	expected := `Bug	TEST-1	This is a test	Done	Person A	Person Z	High	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20
 Story	TEST-2	This is another test	Open		Person A	Normal		2020-12-13 14:05:20	2020-12-13 14:07:20
 `
-
 	assert.Equal(t, expected, b.String())
 }
 

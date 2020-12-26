@@ -72,7 +72,6 @@ func TestGetIssue(t *testing.T) {
 			Updated: "2020-12-03T14:05:20.974+0100",
 		},
 	}
-
 	assert.Equal(t, expected, actual)
 
 	unexpectedStatusCode = true

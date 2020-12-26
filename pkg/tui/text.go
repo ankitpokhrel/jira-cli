@@ -27,25 +27,22 @@ func NewText() *Text {
 // Render renders the text layout.
 func (tv *Text) Render(td TextData) error {
 	tv.painter.SetText(string(td))
-
 	return tv.screen.Paint(tv.painter)
 }
 
 func (tv *Text) init() {
 	view := tview.NewTextView()
 
-	view.
-		SetDoneFunc(func(key tcell.Key) {
-			if key == tcell.KeyEsc {
-				tv.screen.Stop()
-			}
-		}).
-		SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-			if event.Key() == tcell.KeyRune && event.Rune() == 'q' {
-				tv.screen.Stop()
-			}
-			return event
-		})
+	view.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEsc {
+			tv.screen.Stop()
+		}
+	}).SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyRune && event.Rune() == 'q' {
+			tv.screen.Stop()
+		}
+		return event
+	})
 
 	tv.painter = view
 }
