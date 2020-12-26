@@ -59,7 +59,7 @@ func (i Issue) data() tui.TextData {
 	if it == "Bug" {
 		iti = "🐞"
 	}
-	tr := adf.NewTranslator(i.Data.Fields.Description, &adf.MarkdownTranslator{})
+	tr := adf.NewTranslator(i.Data.Fields.Description.(*adf.ADF), &adf.MarkdownTranslator{})
 	dt := fmt.Sprintf(
 		"%s %s  %s %s  ⌛ %s  👷 %s\n# %s\n⏱️  %s  🔎 %s  🚀 %s  🏷️  %s\n\n-----------\n%s",
 		iti, it, sti, st, formatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as,

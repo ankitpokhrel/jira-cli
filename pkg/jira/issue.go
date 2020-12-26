@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 )
 
 // GetIssue fetches issue details using GET /issue/{key} endpoint.
@@ -28,5 +30,22 @@ func (c *Client) GetIssue(key string) (*Issue, error) {
 
 	err = json.NewDecoder(res.Body).Decode(&out)
 
+	out.Fields.Description = ifaceToADF(out.Fields.Description)
+
 	return &out, err
+}
+
+func ifaceToADF(v interface{}) *adf.ADF {
+	if v == nil {
+		return nil
+	}
+	var doc *adf.ADF
+	js, err := json.Marshal(v)
+	if err != nil {
+		return nil // ignore invalid data
+	}
+	if err = json.Unmarshal(js, &doc); err != nil {
+		return nil // ignore invalid data
+	}
+	return doc
 }
