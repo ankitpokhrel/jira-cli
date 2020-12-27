@@ -194,25 +194,25 @@ func (a *Translator) visit(n *Node, depth int) {
 	}
 
 	if NodeType(n.NodeType) == NodeTypeChild {
-		var tag string
+		var tag strings.Builder
 
 		opened := make([]MarkNode, 0, len(n.Marks))
 		if n.NodeType == ChildNodeText {
 			for _, m := range n.Marks {
 				opened = append(opened, m)
-				tag += a.tsl.Open(m, depth)
+				tag.WriteString(a.tsl.Open(m, depth))
 			}
 		}
 
-		tag += sanitize(n.Text)
+		tag.WriteString(sanitize(n.Text))
 
 		// Close tags in reverse order.
 		for i := len(opened) - 1; i >= 0; i-- {
 			m := opened[i]
-			tag += a.tsl.Close(m)
+			tag.WriteString(a.tsl.Close(m))
 		}
 
-		a.buf.WriteString(tag)
+		a.buf.WriteString(tag.String())
 	}
 
 	a.buf.WriteString(a.tsl.Close(n))
