@@ -18,6 +18,7 @@ const (
 	NodePanel       = "panel"
 	NodeParagraph   = "paragraph"
 	NodeTable       = "table"
+	NodeMedia       = "media"
 
 	ChildNodeText        = "text"
 	ChildNodeListItem    = "listItem"
@@ -25,10 +26,16 @@ const (
 	ChildNodeTableHeader = "tableHeader"
 	ChildNodeTableCell   = "tableCell"
 
-	MarkEm     = "em"
-	MarkLink   = "link"
-	MarkStrike = "strike"
-	MarkStrong = "strong"
+	InlineNodeCard      = "inlineCard"
+	InlineNodeMention   = "mention"
+	InlineNodeHardBreak = "hardBreak"
+
+	MarkEm        = "em"
+	MarkLink      = "link"
+	MarkCode      = "code"
+	MarkStrike    = "strike"
+	MarkStrong    = "strong"
+	MarkUnderline = "underline"
 )
 
 // TagOpener is a tag opener.
@@ -197,7 +204,7 @@ func (a *Translator) visit(n *Node, depth int) {
 			}
 		}
 
-		tag += n.Text
+		tag += sanitize(n.Text)
 
 		// Close tags in reverse order.
 		for i := len(opened) - 1; i >= 0; i-- {
@@ -209,4 +216,11 @@ func (a *Translator) visit(n *Node, depth int) {
 	}
 
 	a.buf.WriteString(a.tsl.Close(n))
+}
+
+func sanitize(s string) string {
+	s = strings.TrimSpace(s)
+	s = strings.ReplaceAll(s, "<", "❬")
+	s = strings.ReplaceAll(s, ">", "❭")
+	return s
 }
