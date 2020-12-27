@@ -27,6 +27,7 @@ const (
 	ChildNodeTableCell   = "tableCell"
 
 	InlineNodeCard      = "inlineCard"
+	InlineNodeEmoji     = "emoji"
 	InlineNodeMention   = "mention"
 	InlineNodeHardBreak = "hardBreak"
 
@@ -126,6 +127,7 @@ func ParentNodes() []string {
 		NodePanel,
 		NodeParagraph,
 		NodeTable,
+		NodeMedia,
 	}
 }
 

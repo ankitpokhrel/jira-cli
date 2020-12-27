@@ -134,6 +134,8 @@ func (tr *MarkdownTranslator) Close(n Connector) string {
 		}
 	case InlineNodeMention:
 		tag.WriteString(" ")
+	case InlineNodeEmoji:
+		tag.WriteString(" ")
 	case MarkStrong:
 		tag.WriteString("** ")
 	case MarkEm:
