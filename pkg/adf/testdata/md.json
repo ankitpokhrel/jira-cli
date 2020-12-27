@@ -27,6 +27,25 @@
       ]
     },
     {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "1. Some text"
+        },
+        {
+          "type": "hardBreak"
+        },
+        {
+          "type": "text",
+          "text": "2. Some more text"
+        },
+        {
+          "type": "hardBreak"
+        }
+      ]
+    },
+    {
       "type": "blockquote",
       "content": [
         {
@@ -37,6 +56,21 @@
               "text": "Blockquote text"
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "Inline Node"
+        },
+        {
+          "type": "inlineCard",
+          "attrs": {
+            "url": "https://antiklabs.atlassian.net/wiki/spaces/ANK/pages/124234/hello-world"
+          }
         }
       ]
     },
@@ -67,6 +101,18 @@
       ]
     },
     {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "mention",
+          "attrs": {
+            "id": "5fb82376aca10c006949f35b",
+            "text": "Person A"
+          }
+        }
+      ]
+    },
+    {
       "type": "panel",
       "attrs": {
         "panelType": "warning"
@@ -77,13 +123,10 @@
           "content": [
             {
               "type": "text",
-              "text": "Strong and underlined",
+              "text": "Strong",
               "marks": [
                 {
                   "type": "strong"
-                },
-                {
-                  "type": "underline"
                 }
               ]
             },
@@ -141,6 +184,20 @@
           "marks": [
             {
               "type": "underline"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "Inline Code Block",
+          "marks": [
+            {
+              "type": "code"
             }
           ]
         }

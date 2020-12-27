@@ -20,6 +20,7 @@ type MarkdownTranslator struct {
 }
 
 // Open implements TagOpener interface.
+//nolint:gocyclo
 func (tr *MarkdownTranslator) Open(n Connector, d int) string {
 	var tag strings.Builder
 
@@ -29,6 +30,14 @@ func (tr *MarkdownTranslator) Open(n Connector, d int) string {
 	switch nt {
 	case NodeBlockquote:
 		tag.WriteString("> ")
+	case NodeCodeBlock:
+		tag.WriteString("```")
+	case NodePanel:
+		tag.WriteString("---\n")
+	case NodeTable:
+		tag.WriteString("\n")
+	case NodeMedia:
+		tag.WriteString("\n[attachment]")
 	case NodeBulletList:
 		tr.list.ol = false
 		tr.list.ul = true
@@ -42,12 +51,6 @@ func (tr *MarkdownTranslator) Open(n Connector, d int) string {
 		} else {
 			tag.WriteString("- ")
 		}
-	case NodeCodeBlock:
-		tag.WriteString("```")
-	case NodePanel:
-		tag.WriteString("```\n")
-	case NodeTable:
-		tag.WriteString("\n")
 	case ChildNodeTableHeader:
 		if tr.table.cols != 0 {
 			tag.WriteString(" | ")
@@ -64,14 +67,24 @@ func (tr *MarkdownTranslator) Open(n Connector, d int) string {
 			tr.table.sep = true
 		}
 		tr.table.ccol = 0
+	case InlineNodeHardBreak:
+		tag.WriteString("\n\n")
+	case InlineNodeMention:
+		tag.WriteString(" @")
+	case InlineNodeCard:
+		tag.WriteString(" 📍 ")
 	case MarkStrong:
-		tag.WriteString("**")
+		tag.WriteString(" **")
 	case MarkEm:
-		tag.WriteString("_")
+		tag.WriteString(" _")
+	case MarkUnderline:
+		tag.WriteString(" +")
+	case MarkCode:
+		tag.WriteString(" `")
 	case MarkStrike:
-		tag.WriteString("~")
+		tag.WriteString(" ~")
 	case MarkLink:
-		tag.WriteString("[")
+		tag.WriteString(" [")
 	}
 
 	tag.WriteString(tr.setOpenTagAttributes(n.GetAttributes()))
@@ -80,6 +93,7 @@ func (tr *MarkdownTranslator) Open(n Connector, d int) string {
 }
 
 // Close implements TagCloser interface.
+//nolint:gocyclo
 func (tr *MarkdownTranslator) Close(n Connector) string {
 	var tag strings.Builder
 
@@ -87,9 +101,9 @@ func (tr *MarkdownTranslator) Close(n Connector) string {
 	case NodeBlockquote:
 		tag.WriteString("\n")
 	case NodeCodeBlock:
-		tag.WriteString("```\n")
+		tag.WriteString("\n```\n")
 	case NodePanel:
-		tag.WriteString("```\n")
+		tag.WriteString("---\n")
 	case NodeHeading:
 		tag.WriteString("\n")
 	case NodeBulletList:
@@ -100,7 +114,7 @@ func (tr *MarkdownTranslator) Close(n Connector) string {
 		tr.list.counter = 0
 	case NodeParagraph:
 		if tr.table.rows == 0 {
-			tag.WriteString("\n")
+			tag.WriteString("\n\n")
 		}
 	case NodeTable:
 		tr.table.rows = 0
@@ -118,12 +132,20 @@ func (tr *MarkdownTranslator) Close(n Connector) string {
 			tr.table.sep = false
 			tag.WriteString("\n")
 		}
+	case InlineNodeMention:
+		tag.WriteString(" ")
+	case InlineNodeEmoji:
+		tag.WriteString(" ")
 	case MarkStrong:
-		tag.WriteString("**")
+		tag.WriteString("** ")
 	case MarkEm:
-		tag.WriteString("_")
+		tag.WriteString("_ ")
+	case MarkUnderline:
+		tag.WriteString("+ ")
+	case MarkCode:
+		tag.WriteString("` ")
 	case MarkStrike:
-		tag.WriteString("~")
+		tag.WriteString("~ ")
 	case MarkLink:
 		tag.WriteString("]")
 	}
@@ -168,11 +190,14 @@ func (tr *MarkdownTranslator) setOpenTagAttributes(a interface{}) string {
 					tag.WriteString("#")
 				}
 				tag.WriteString(" ")
+			case "text":
+				tag.WriteString(fmt.Sprintf("%s", v))
+				nl = false
 			}
 		}
-	}
-	if nl {
-		tag.WriteString("\n")
+		if nl {
+			tag.WriteString("\n")
+		}
 	}
 
 	return tag.String()
@@ -185,13 +210,15 @@ func (tr *MarkdownTranslator) setCloseTagAttributes(a interface{}) string {
 	var tag strings.Builder
 	attrs := a.(map[string]interface{})
 	if h, ok := attrs["href"]; ok {
-		tag.WriteString(fmt.Sprintf("(%s)", h))
+		tag.WriteString(fmt.Sprintf("(%s) ", h))
+	} else if h, ok := attrs["url"]; ok {
+		tag.WriteString(fmt.Sprintf("%s ", h))
 	}
 	return tag.String()
 }
 
 func (tr *MarkdownTranslator) isValidAttr(attr string) bool {
-	known := []string{"language", "level"}
+	known := []string{"language", "level", "text"}
 	for _, k := range known {
 		if k == attr {
 			return true

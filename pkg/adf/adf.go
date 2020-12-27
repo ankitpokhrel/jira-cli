@@ -18,6 +18,7 @@ const (
 	NodePanel       = "panel"
 	NodeParagraph   = "paragraph"
 	NodeTable       = "table"
+	NodeMedia       = "media"
 
 	ChildNodeText        = "text"
 	ChildNodeListItem    = "listItem"
@@ -25,10 +26,17 @@ const (
 	ChildNodeTableHeader = "tableHeader"
 	ChildNodeTableCell   = "tableCell"
 
-	MarkEm     = "em"
-	MarkLink   = "link"
-	MarkStrike = "strike"
-	MarkStrong = "strong"
+	InlineNodeCard      = "inlineCard"
+	InlineNodeEmoji     = "emoji"
+	InlineNodeMention   = "mention"
+	InlineNodeHardBreak = "hardBreak"
+
+	MarkEm        = "em"
+	MarkLink      = "link"
+	MarkCode      = "code"
+	MarkStrike    = "strike"
+	MarkStrong    = "strong"
+	MarkUnderline = "underline"
 )
 
 // TagOpener is a tag opener.
@@ -119,6 +127,7 @@ func ParentNodes() []string {
 		NodePanel,
 		NodeParagraph,
 		NodeTable,
+		NodeMedia,
 	}
 }
 
@@ -187,26 +196,33 @@ func (a *Translator) visit(n *Node, depth int) {
 	}
 
 	if NodeType(n.NodeType) == NodeTypeChild {
-		var tag string
+		var tag strings.Builder
 
 		opened := make([]MarkNode, 0, len(n.Marks))
 		if n.NodeType == ChildNodeText {
 			for _, m := range n.Marks {
 				opened = append(opened, m)
-				tag += a.tsl.Open(m, depth)
+				tag.WriteString(a.tsl.Open(m, depth))
 			}
 		}
 
-		tag += n.Text
+		tag.WriteString(sanitize(n.Text))
 
 		// Close tags in reverse order.
 		for i := len(opened) - 1; i >= 0; i-- {
 			m := opened[i]
-			tag += a.tsl.Close(m)
+			tag.WriteString(a.tsl.Close(m))
 		}
 
-		a.buf.WriteString(tag)
+		a.buf.WriteString(tag.String())
 	}
 
 	a.buf.WriteString(a.tsl.Close(n))
+}
+
+func sanitize(s string) string {
+	s = strings.TrimSpace(s)
+	s = strings.ReplaceAll(s, "<", "❬")
+	s = strings.ReplaceAll(s, ">", "❭")
+	return s
 }
