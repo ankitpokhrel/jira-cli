@@ -57,7 +57,16 @@ func prepareTitle(text string) string {
 }
 
 func navigate(server string) tui.SelectedFunc {
-	return func(r, c int, path string) {
+	return func(r, c int, d interface{}) {
+		var path string
+
+		switch data := d.(type) {
+		case tui.TableData:
+			path = data[r][1]
+		case tui.PreviewData:
+			path = data.Key
+		}
+
 		if path == "" {
 			return
 		}
