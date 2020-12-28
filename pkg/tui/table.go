@@ -126,9 +126,7 @@ func (t *Table) initTableView() {
 		if key == tcell.KeyEsc {
 			t.screen.Stop()
 		}
-	})
-
-	view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	}).SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyRune && event.Rune() == 'q' {
 			t.screen.Stop()
 		}

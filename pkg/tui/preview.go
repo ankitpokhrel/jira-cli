@@ -39,11 +39,9 @@ func NewPreview(opts ...PreviewOption) *Preview {
 		screen:   NewScreen(),
 		contents: NewTable(),
 	}
-
 	for _, opt := range opts {
 		opt(&pv)
 	}
-
 	pv.init()
 
 	return &pv
@@ -127,13 +125,11 @@ func (pv *Preview) renderContents(pd PreviewData) {
 	switch v := pd.Contents(pd.Key).(type) {
 	case string:
 		pv.printText(v)
-
 	case TableData:
 		pv.screen.QueueUpdateDraw(func() {
 			pv.contents.view.Clear()
 
 			data := pd.Contents(pd.Key).(TableData)
-
 			if len(data) == 1 {
 				pv.printText("No results to show.")
 				return
@@ -206,7 +202,6 @@ func (pv *Preview) initLayout(view *tview.Table, nextView *tview.Table) {
 			switch event.Rune() {
 			case 'q':
 				pv.screen.Stop()
-
 			case 'w':
 				if view.HasFocus() {
 					pv.screen.SetFocus(nextView)
@@ -215,7 +210,6 @@ func (pv *Preview) initLayout(view *tview.Table, nextView *tview.Table) {
 				}
 			}
 		}
-
 		return event
 	})
 
@@ -224,7 +218,6 @@ func (pv *Preview) initLayout(view *tview.Table, nextView *tview.Table) {
 
 func (pv *Preview) printText(s string) {
 	lines := splitText(s)
-
 	for i, line := range lines {
 		pv.contents.view.SetCell(i, 0, tview.NewTableCell(pad(line, 1)).
 			SetStyle(tcell.StyleDefault).
