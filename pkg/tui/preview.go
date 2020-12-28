@@ -95,7 +95,7 @@ func (pv *Preview) Render(pd []PreviewData) error {
 	if pv.selectedFunc != nil {
 		pv.sidebar.SetSelectedFunc(func(r, c int) {
 			if r > 0 {
-				pv.selectedFunc(r, c, pd[r].Key)
+				pv.selectedFunc(r, c, pd[r])
 			}
 		})
 	}
@@ -141,7 +141,7 @@ func (pv *Preview) renderContents(pd PreviewData) {
 
 			if pv.contents.selectedFunc != nil {
 				pv.contents.view.SetSelectedFunc(func(r, c int) {
-					pv.contents.selectedFunc(r, c, data[r][1])
+					pv.contents.selectedFunc(r, c, data)
 				})
 			}
 
