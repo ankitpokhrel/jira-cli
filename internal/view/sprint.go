@@ -8,6 +8,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
@@ -23,14 +25,16 @@ type SprintList struct {
 	Data    []*jira.Sprint
 	Issues  SprintIssueFunc
 	Display DisplayFormat
-
-	issueCache map[string]tui.TableData
 }
 
 // Render renders the sprint explorer view.
 func (sl SprintList) Render() error {
-	data := sl.data()
+	renderer, err := MDRenderer()
+	if err != nil {
+		return err
+	}
 
+	data := sl.data()
 	view := tui.NewPreview(
 		tui.WithPreviewFooterText(
 			fmt.Sprintf(
@@ -39,10 +43,28 @@ func (sl SprintList) Render() error {
 			),
 		),
 		tui.WithInitialText(helpText),
-		tui.WithContentTableOpts(tui.WithSelectedFunc(navigate(sl.Server))),
+		tui.WithContentTableOpts(
+			tui.WithSelectedFunc(navigate(sl.Server)),
+			tui.WithViewModeFunc(func(r, c int, d interface{}) error {
+				issue := func() *jira.Issue {
+					s := cmdutil.Info("Fetching issue details...")
+					defer s.Stop()
+
+					dt := d.(tui.TableData)
+					issue, _ := api.Client(jira.Config{Debug: true}).GetIssue(dt[r][1])
+
+					return issue
+				}()
+				out, err := renderer.Render(Issue{Data: issue}.String())
+				if err != nil {
+					return err
+				}
+				return PagerOut(out)
+			}),
+		),
 	)
 
-	return view.Render(data)
+	return view.Paint(data)
 }
 
 // RenderInTable renders the list in table view.
@@ -65,7 +87,7 @@ func (sl SprintList) RenderInTable() error {
 		),
 	)
 
-	return view.Render(data)
+	return view.Paint(data)
 }
 
 // renderPlain renders the issue in plain view.
@@ -97,17 +119,8 @@ func (sl SprintList) data() []tui.PreviewData {
 				formatDateTimeHuman(s.EndDate, time.RFC3339),
 			),
 			Contents: func(key string) interface{} {
-				if sl.issueCache == nil {
-					sl.issueCache = make(map[string]tui.TableData)
-				}
-
-				if _, ok := sl.issueCache[key]; !ok {
-					issues := sl.Issues(bid, sid)
-
-					sl.issueCache[key] = sl.tabularize(issues)
-				}
-
-				return sl.issueCache[key]
+				issues := sl.Issues(bid, sid)
+				return sl.tabularize(issues)
 			},
 		})
 	}
