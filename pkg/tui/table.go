@@ -47,16 +47,17 @@ func NewTable(opts ...TableOption) *Table {
 
 	tbl := Table{
 		screen:      NewScreen(),
+		view:        tview.NewTable(),
+		footer:      tview.NewTextView(),
 		colPad:      defaultColPad,
 		maxColWidth: defaultColWidth,
 	}
-
 	for _, opt := range opts {
 		opt(&tbl)
 	}
 
-	tbl.initTableView()
-	tbl.initFooterView()
+	tbl.initTable()
+	tbl.initFooter()
 
 	tbl.painter = tview.NewGrid().
 		SetRows(0, 1, 2).
@@ -95,7 +96,7 @@ func WithSelectedFunc(fn SelectedFunc) TableOption {
 	}
 }
 
-// WithViewModeFunc sets a func that is triggered when user a press 'v'.
+// WithViewModeFunc sets a func that is triggered when a user press 'v'.
 func WithViewModeFunc(fn ViewModeFunc) TableOption {
 	return func(t *Table) {
 		t.viewModeFunc = fn
@@ -122,42 +123,36 @@ func (t *Table) render(data TableData) {
 	renderTableCell(t, data)
 }
 
-func (t *Table) initFooterView() {
-	view := tview.NewTextView().
+func (t *Table) initFooter() {
+	t.footer.
 		SetWordWrap(true).
 		SetText(pad(t.footerText, 1)).
 		SetTextColor(tcell.ColorDefault)
-
-	t.footer = view
 }
 
-func (t *Table) initTableView() {
-	view := tview.NewTable()
-
-	view.SetSelectable(true, false).
-		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true))
-
-	view.SetDoneFunc(func(key tcell.Key) {
-		if key == tcell.KeyEsc {
-			t.screen.Stop()
-		}
-	}).SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
-		if ev.Key() == tcell.KeyRune {
-			switch ev.Rune() {
-			case 'q':
+func (t *Table) initTable() {
+	t.view.SetSelectable(true, false).
+		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true)).
+		SetDoneFunc(func(key tcell.Key) {
+			if key == tcell.KeyEsc {
 				t.screen.Stop()
-				os.Exit(0)
-			case 'v':
-				r, c := t.view.GetSelection()
-				t.screen.Suspend(func() { _ = t.viewModeFunc(r, c, t.data) })
 			}
-		}
-		return ev
-	})
+		}).
+		SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
+			if ev.Key() == tcell.KeyRune {
+				switch ev.Rune() {
+				case 'q':
+					t.screen.Stop()
+					os.Exit(0)
+				case 'v':
+					r, c := t.view.GetSelection()
+					t.screen.Suspend(func() { _ = t.viewModeFunc(r, c, t.data) })
+				}
+			}
+			return ev
+		})
 
-	view.SetFixed(1, 1)
-
-	t.view = view
+	t.view.SetFixed(1, 1)
 }
 
 func renderTableHeader(t *Table, data []string) {

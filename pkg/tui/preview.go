@@ -41,7 +41,9 @@ func NewPreview(opts ...PreviewOption) *Preview {
 
 	pv := Preview{
 		screen:        NewScreen(),
+		sidebar:       tview.NewTable(),
 		contents:      NewTable(),
+		footer:        tview.NewTextView(),
 		contentsCache: make(map[string]interface{}),
 	}
 	for _, opt := range opts {
@@ -153,9 +155,9 @@ func (pv *Preview) renderContents(pd PreviewData) {
 }
 
 func (pv *Preview) init() {
-	pv.initSidebarView()
-	pv.initContentsView()
-	pv.initFooterView()
+	pv.initSidebar()
+	pv.initContents()
+	pv.initFooter()
 
 	pv.painter = tview.NewGrid().
 		SetRows(0, 1, 2).
@@ -170,9 +172,7 @@ func (pv *Preview) init() {
 	pv.initLayout(pv.contents.view)
 }
 
-func (pv *Preview) initSidebarView() {
-	pv.sidebar = tview.NewTable()
-
+func (pv *Preview) initSidebar() {
 	pv.sidebar.SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
 		if ev.Key() == tcell.KeyRune {
 			switch ev.Rune() {
@@ -187,51 +187,47 @@ func (pv *Preview) initSidebarView() {
 	})
 }
 
-func (pv *Preview) initContentsView() {
+func (pv *Preview) initContents() {
 	pv.contents.view.
 		SetBorder(true).
-		SetBorderColor(tcell.ColorDarkGray)
+		SetBorderColor(tcell.ColorDarkGray).
+		SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
+			if ev.Key() == tcell.KeyRune {
+				switch ev.Rune() {
+				case 'q':
+					pv.screen.Stop()
+					os.Exit(0)
+				case 'w':
+					pv.screen.SetFocus(pv.sidebar)
+				case 'v':
+					if pv.contents.viewModeFunc != nil {
+						sr, _ := pv.sidebar.GetSelection()
+						r, c := pv.contents.view.GetSelection()
+						contents := pv.contentsCache[pv.data[sr].Key]
 
-	pv.contents.view.SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
-		if ev.Key() == tcell.KeyRune {
-			switch ev.Rune() {
-			case 'q':
-				pv.screen.Stop()
-				os.Exit(0)
-			case 'w':
-				pv.screen.SetFocus(pv.sidebar)
-			case 'v':
-				if pv.contents.viewModeFunc != nil {
-					sr, _ := pv.sidebar.GetSelection()
-					r, c := pv.contents.view.GetSelection()
-					contents := pv.contentsCache[pv.data[sr].Key]
-
-					pv.screen.Suspend(func() { _ = pv.contents.viewModeFunc(r, c, contents) })
+						pv.screen.Suspend(func() { _ = pv.contents.viewModeFunc(r, c, contents) })
+					}
 				}
 			}
-		}
-		return ev
-	})
+			return ev
+		})
 }
 
-func (pv *Preview) initFooterView() {
-	view := tview.NewTextView().
+func (pv *Preview) initFooter() {
+	pv.footer.
 		SetWordWrap(true).
 		SetText(pad(pv.footerText, 1)).
 		SetTextColor(tcell.ColorDefault)
-
-	pv.footer = view
 }
 
 func (pv *Preview) initLayout(view *tview.Table) {
 	view.SetSelectable(true, false).
-		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true))
-
-	view.SetDoneFunc(func(key tcell.Key) {
-		if key == tcell.KeyEsc {
-			pv.screen.Stop()
-		}
-	})
+		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true)).
+		SetDoneFunc(func(key tcell.Key) {
+			if key == tcell.KeyEsc {
+				pv.screen.Stop()
+			}
+		})
 
 	view.SetFixed(1, 1)
 }
