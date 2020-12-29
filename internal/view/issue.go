@@ -13,8 +13,6 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
-const wordWrap = 120
-
 // Issue is a list view for issues.
 type Issue struct {
 	Data    *jira.Issue
@@ -28,10 +26,7 @@ func (i Issue) Render() error {
 	}
 
 	data := i.data()
-	r, err := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(wordWrap),
-	)
+	r, err := MDRenderer()
 	if err != nil {
 		return err
 	}
@@ -43,6 +38,10 @@ func (i Issue) Render() error {
 }
 
 func (i Issue) data() tui.TextData {
+	return tui.TextData(i.String())
+}
+
+func (i Issue) String() string {
 	as := i.Data.Fields.Assignee.Name
 	if as == "" {
 		as = "Unassigned"
@@ -64,7 +63,7 @@ func (i Issue) data() tui.TextData {
 		tr := adf.NewTranslator(i.Data.Fields.Description.(*adf.ADF), &adf.MarkdownTranslator{})
 		desc = tr.Translate()
 	}
-	dt := fmt.Sprintf(
+	return fmt.Sprintf(
 		"%s %s  %s %s  ⌛ %s  👷 %s\n# %s\n⏱️  %s  🔎 %s  🚀 %s  🏷️  %s\n\n-----------\n%s",
 		iti, it, sti, st, formatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as,
 		i.Data.Fields.Summary,
@@ -72,7 +71,6 @@ func (i Issue) data() tui.TextData {
 		i.Data.Fields.Priority.Name, lbl,
 		desc,
 	)
-	return tui.TextData(dt)
 }
 
 // renderPlain renders the issue in plain view.

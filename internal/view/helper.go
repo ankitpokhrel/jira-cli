@@ -10,26 +10,36 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/charmbracelet/glamour"
 	"github.com/pkg/browser"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
-const helpText = `Use up and down arrow keys or 'j' and 'k' letters to navigate through the list.
-
-	Press 'w' to toggle focus between the sidebar and the contents screen. On contents screen,
-	you can use arrow keys or 'j', 'k', 'h', and 'l' letters to navigate through the epic issue list.
-
-	Press ENTER to open the selected issue in the browser.
-
+const (
+	wordWrap = 120
+	helpText = `USAGE
+	-----
+	
+	The layout contains 2 sections, viz: Sidebar and Contents screen.  
+	
+	You can use up and down arrow keys or 'j' and 'k' letters to navigate through the sidebar.
+	Press 'w' to toggle focus between the sidebar and the contents screen. 
+	
+	On contents screen:
+	  - Use arrow keys or 'j', 'k', 'h', and 'l' letters to navigate through the issue list.
+	  - Use 'g' and 'SHIFT+G' to quickly navigate to the top and bottom respectively.
+	  - Press 'v' to view selected issue details.
+	  - Hit ENTER to open the selected issue in a browser.
+	
 	Press 'q' / ESC / CTRL+C to quit.`
+)
 
 func formatDateTime(dt, format string) string {
 	t, err := time.Parse(format, dt)
 	if err != nil {
 		return dt
 	}
-
 	return t.Format("2006-01-02 15:04:05")
 }
 
@@ -38,7 +48,6 @@ func formatDateTimeHuman(dt, format string) string {
 	if err != nil {
 		return dt
 	}
-
 	return t.Format("Mon, 02 Jan 06")
 }
 
@@ -80,14 +89,12 @@ func navigate(server string) tui.SelectedFunc {
 func renderPlain(w io.Writer, data tui.TableData) error {
 	for _, items := range data {
 		n := len(items)
-
 		for j, v := range items {
 			_, _ = fmt.Fprintf(w, "%s", v)
 			if j != n-1 {
 				_, _ = fmt.Fprintf(w, "\t")
 			}
 		}
-
 		_, _ = fmt.Fprintln(w)
 	}
 
@@ -150,4 +157,12 @@ func PagerOut(out string) error {
 	cmd.Stdin = strings.NewReader(out)
 	cmd.Stdout = os.Stdout
 	return cmd.Run()
+}
+
+// MDRenderer constructs markdown renderer.
+func MDRenderer() (*glamour.TermRenderer, error) {
+	return glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(wordWrap),
+	)
 }

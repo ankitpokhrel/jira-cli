@@ -7,6 +7,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
@@ -40,16 +42,35 @@ func (l IssueList) Render() error {
 		return l.renderPlain(w)
 	}
 
-	data := l.data()
+	renderer, err := MDRenderer()
+	if err != nil {
+		return err
+	}
 
+	data := l.data()
 	view := tui.NewTable(
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
 		tui.WithTableFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(data)-1, l.Total, l.Project)),
 		tui.WithSelectedFunc(navigate(l.Server)),
+		tui.WithViewModeFunc(func(r, c int, _ interface{}) error {
+			issue := func() *jira.Issue {
+				s := cmdutil.Info("Fetching issue details...")
+				defer s.Stop()
+
+				issue, _ := api.Client(jira.Config{Debug: true}).GetIssue(data[r][1])
+
+				return issue
+			}()
+			out, err := renderer.Render(Issue{Data: issue}.String())
+			if err != nil {
+				return err
+			}
+			return PagerOut(out)
+		}),
 	)
 
-	return view.Render(data)
+	return view.Paint(data)
 }
 
 // renderPlain renders the issue in plain view.

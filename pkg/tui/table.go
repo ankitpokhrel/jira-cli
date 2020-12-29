@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -17,19 +18,24 @@ var errNoData = fmt.Errorf("no data")
 // SelectedFunc is fired when a user press enter key in the table cell.
 type SelectedFunc func(row, column int, data interface{})
 
+// ViewModeFunc sets view mode handler func which gets triggered when a user press 'v'.
+type ViewModeFunc func(row, column int, data interface{}) error
+
 // TableData is the data to be displayed in a table.
 type TableData [][]string
 
 // Table is a table layout.
 type Table struct {
 	screen       *Screen
-	painter      *tview.Grid
+	painter      tview.Primitive
 	view         *tview.Table
 	footer       *tview.TextView
+	data         TableData
 	colPad       uint
 	maxColWidth  uint
 	footerText   string
 	selectedFunc SelectedFunc
+	viewModeFunc ViewModeFunc
 }
 
 // TableOption is a functional option to wrap table properties.
@@ -89,22 +95,31 @@ func WithSelectedFunc(fn SelectedFunc) TableOption {
 	}
 }
 
-// Render renders the table layout. First row is treated as a table header.
-func (t *Table) Render(data TableData) error {
+// WithViewModeFunc sets a func that is triggered when user a press 'v'.
+func WithViewModeFunc(fn ViewModeFunc) TableOption {
+	return func(t *Table) {
+		t.viewModeFunc = fn
+	}
+}
+
+// Paint paints the table layout. First row is treated as a table header.
+func (t *Table) Paint(data TableData) error {
 	if len(data) == 0 {
 		return errNoData
 	}
+	t.data = data
+	t.render(data)
+	return t.screen.Paint(t.painter)
+}
 
+func (t *Table) render(data TableData) {
 	if t.selectedFunc != nil {
 		t.view.SetSelectedFunc(func(r, c int) {
 			t.selectedFunc(r, c, data)
 		})
 	}
-
 	renderTableHeader(t, data[0])
 	renderTableCell(t, data)
-
-	return t.screen.Paint(t.painter)
 }
 
 func (t *Table) initFooterView() {
@@ -126,14 +141,51 @@ func (t *Table) initTableView() {
 		if key == tcell.KeyEsc {
 			t.screen.Stop()
 		}
-	}).SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyRune && event.Rune() == 'q' {
-			t.screen.Stop()
+	}).SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
+		if ev.Key() == tcell.KeyRune {
+			switch ev.Rune() {
+			case 'q':
+				t.screen.Stop()
+				os.Exit(0)
+			case 'v':
+				r, c := t.view.GetSelection()
+				t.screen.Suspend(func() { _ = t.viewModeFunc(r, c, t.data) })
+			}
 		}
-		return event
+		return ev
 	})
 
 	view.SetFixed(1, 1)
 
 	t.view = view
+}
+
+func renderTableHeader(t *Table, data []string) {
+	style := tcell.StyleDefault.Bold(true).Background(tcell.ColorDarkCyan)
+
+	for c := 0; c < len(data); c++ {
+		text := " " + data[c]
+
+		cell := tview.NewTableCell(text).
+			SetStyle(style).
+			SetSelectable(false).
+			SetMaxWidth(int(t.maxColWidth)).
+			SetTextColor(tcell.ColorSnow)
+
+		t.view.SetCell(0, c, cell)
+	}
+}
+
+func renderTableCell(t *Table, data [][]string) {
+	rows, cols := len(data), len(data[0])
+
+	for r := 1; r < rows; r++ {
+		for c := 0; c < cols; c++ {
+			cell := tview.NewTableCell(pad(data[r][c], t.colPad)).
+				SetMaxWidth(int(t.maxColWidth)).
+				SetTextColor(tcell.ColorDefault)
+
+			t.view.SetCell(r, c, cell)
+		}
+	}
 }

@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"os"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -18,14 +20,16 @@ type PreviewData struct {
 //
 // It contains 2 tables internally, viz: sidebar and contents.
 type Preview struct {
-	screen       *Screen
-	painter      *tview.Grid
-	sidebar      *tview.Table
-	contents     *Table
-	footer       *tview.TextView
-	initialText  string
-	footerText   string
-	selectedFunc SelectedFunc
+	screen              *Screen
+	painter             *tview.Grid
+	sidebar             *tview.Table
+	contents            *Table
+	footer              *tview.TextView
+	data                []PreviewData
+	initialText         string
+	footerText          string
+	sidebarSelectedFunc SelectedFunc
+	contentsCache       map[string]interface{}
 }
 
 // PreviewOption is a functional option that wraps preview properties.
@@ -36,8 +40,9 @@ func NewPreview(opts ...PreviewOption) *Preview {
 	tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault
 
 	pv := Preview{
-		screen:   NewScreen(),
-		contents: NewTable(),
+		screen:        NewScreen(),
+		contents:      NewTable(),
+		contentsCache: make(map[string]interface{}),
 	}
 	for _, opt := range opts {
 		opt(&pv)
@@ -64,7 +69,7 @@ func WithPreviewFooterText(text string) PreviewOption {
 // WithSidebarSelectedFunc sets a function that is called when any option in sidebar is selected.
 func WithSidebarSelectedFunc(fn SelectedFunc) PreviewOption {
 	return func(p *Preview) {
-		p.selectedFunc = fn
+		p.sidebarSelectedFunc = fn
 	}
 }
 
@@ -77,11 +82,13 @@ func WithContentTableOpts(opts ...TableOption) PreviewOption {
 	}
 }
 
-// Render renders the preview layout.
-func (pv *Preview) Render(pd []PreviewData) error {
+// Paint paints the preview layout.
+func (pv *Preview) Paint(pd []PreviewData) error {
 	if len(pd) == 0 {
 		return errNoData
 	}
+
+	pv.data = pd
 
 	pv.sidebar.SetSelectionChangedFunc(func(r, c int) {
 		pv.contents.view.Clear()
@@ -90,10 +97,10 @@ func (pv *Preview) Render(pd []PreviewData) error {
 		go pv.renderContents(pd[r])
 	})
 
-	if pv.selectedFunc != nil {
+	if pv.sidebarSelectedFunc != nil {
 		pv.sidebar.SetSelectedFunc(func(r, c int) {
 			if r > 0 {
-				pv.selectedFunc(r, c, pd[r])
+				pv.sidebarSelectedFunc(r, c, pd[r])
 			}
 		})
 	}
@@ -122,27 +129,25 @@ func (pv *Preview) renderContents(pd PreviewData) {
 		return
 	}
 
-	switch v := pd.Contents(pd.Key).(type) {
+	if _, ok := pv.contentsCache[pd.Key]; !ok {
+		pv.contentsCache[pd.Key] = pd.Contents(pd.Key)
+	}
+
+	switch v := pv.contentsCache[pd.Key].(type) {
 	case string:
 		pv.printText(v)
 	case TableData:
+		data := pv.contentsCache[pd.Key].(TableData)
+
 		pv.screen.QueueUpdateDraw(func() {
 			pv.contents.view.Clear()
 
-			data := pd.Contents(pd.Key).(TableData)
 			if len(data) == 1 {
 				pv.printText("No results to show.")
 				return
 			}
 
-			if pv.contents.selectedFunc != nil {
-				pv.contents.view.SetSelectedFunc(func(r, c int) {
-					pv.contents.selectedFunc(r, c, data)
-				})
-			}
-
-			renderTableHeader(pv.contents, data[0])
-			renderTableCell(pv.contents, data)
+			pv.contents.render(data)
 		})
 	}
 }
@@ -161,21 +166,52 @@ func (pv *Preview) init() {
 		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
 		AddItem(pv.footer, 2, 0, 1, 3, 0, 0, false)
 
-	pv.initLayout(pv.sidebar, pv.contents.view)
-	pv.initLayout(pv.contents.view, pv.sidebar)
+	pv.initLayout(pv.sidebar)
+	pv.initLayout(pv.contents.view)
 }
 
 func (pv *Preview) initSidebarView() {
 	pv.sidebar = tview.NewTable()
+
+	pv.sidebar.SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
+		if ev.Key() == tcell.KeyRune {
+			switch ev.Rune() {
+			case 'q':
+				pv.screen.Stop()
+				os.Exit(0)
+			case 'w':
+				pv.screen.SetFocus(pv.contents.view)
+			}
+		}
+		return ev
+	})
 }
 
 func (pv *Preview) initContentsView() {
-	contents := tview.NewTable()
-
-	contents.SetBorder(true).
+	pv.contents.view.
+		SetBorder(true).
 		SetBorderColor(tcell.ColorDarkGray)
 
-	pv.contents.view = contents
+	pv.contents.view.SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
+		if ev.Key() == tcell.KeyRune {
+			switch ev.Rune() {
+			case 'q':
+				pv.screen.Stop()
+				os.Exit(0)
+			case 'w':
+				pv.screen.SetFocus(pv.sidebar)
+			case 'v':
+				if pv.contents.viewModeFunc != nil {
+					sr, _ := pv.sidebar.GetSelection()
+					r, c := pv.contents.view.GetSelection()
+					contents := pv.contentsCache[pv.data[sr].Key]
+
+					pv.screen.Suspend(func() { _ = pv.contents.viewModeFunc(r, c, contents) })
+				}
+			}
+		}
+		return ev
+	})
 }
 
 func (pv *Preview) initFooterView() {
@@ -187,7 +223,7 @@ func (pv *Preview) initFooterView() {
 	pv.footer = view
 }
 
-func (pv *Preview) initLayout(view *tview.Table, nextView *tview.Table) {
+func (pv *Preview) initLayout(view *tview.Table) {
 	view.SetSelectable(true, false).
 		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true))
 
@@ -195,22 +231,6 @@ func (pv *Preview) initLayout(view *tview.Table, nextView *tview.Table) {
 		if key == tcell.KeyEsc {
 			pv.screen.Stop()
 		}
-	})
-
-	view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyRune {
-			switch event.Rune() {
-			case 'q':
-				pv.screen.Stop()
-			case 'w':
-				if view.HasFocus() {
-					pv.screen.SetFocus(nextView)
-				} else {
-					pv.screen.SetFocus(view)
-				}
-			}
-		}
-		return event
 	})
 
 	view.SetFixed(1, 1)
