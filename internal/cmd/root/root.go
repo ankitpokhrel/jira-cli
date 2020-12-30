@@ -58,8 +58,8 @@ func init() {
 func NewCmdRoot() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "jira",
-		Short: "Jira cli designed for developers",
-		Long:  `A jira command line designed for developers to help with frequent jira chores.`,
+		Short: "Interactive Jira CLI",
+		Long:  "Interactive Jira CLI.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
@@ -85,6 +85,8 @@ func NewCmdRoot() *cobra.Command {
 		fmt.Sprintf("Jira project to look into (defaults to value from $HOME/%s/%s.yml)", configDir, configName),
 	)
 	cmd.PersistentFlags().BoolVar(&debug, "debug", false, "Turn on debug output")
+
+	cmd.SetHelpFunc(helpFunc)
 
 	_ = viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config"))
 	_ = viper.BindPFlag("project", cmd.PersistentFlags().Lookup("project"))

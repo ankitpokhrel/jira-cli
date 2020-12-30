@@ -12,11 +12,12 @@ import (
 // NewCmdProject is a project command.
 func NewCmdProject() *cobra.Command {
 	return &cobra.Command{
-		Use:     "project",
-		Short:   "All accessible jira projects",
-		Long:    "Project lists all jira projects that a user has access to.",
-		Aliases: []string{"projects"},
-		Run:     projects,
+		Use:         "project",
+		Short:       "All accessible jira projects",
+		Long:        "Project lists all jira projects that a user has access to.",
+		Aliases:     []string{"projects"},
+		Annotations: map[string]string{"cmd:main": "true"},
+		Run:         projects,
 	}
 }
 

@@ -11,11 +11,12 @@ const helpText = `Sprint manage sprints in a project board. See available comman
 // NewCmdSprint is a sprint command.
 func NewCmdSprint() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "sprint",
-		Short:   "Sprint manage sprints in a project board",
-		Long:    helpText,
-		Aliases: []string{"sprints"},
-		RunE:    sprint,
+		Use:         "sprint",
+		Short:       "Sprint manage sprints in a project board",
+		Long:        helpText,
+		Aliases:     []string{"sprints"},
+		Annotations: map[string]string{"cmd:main": "true"},
+		RunE:        sprint,
 	}
 
 	lc := list.NewCmdList()

@@ -14,11 +14,12 @@ const helpText = `Issue manage issues in a given project. See available commands
 // NewCmdIssue is an issue command.
 func NewCmdIssue() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "issue",
-		Short:   "Issue manage issues in a project",
-		Long:    helpText,
-		Aliases: []string{"issues"},
-		RunE:    issue,
+		Use:         "issue",
+		Short:       "Issue manage issues in a project",
+		Long:        helpText,
+		Aliases:     []string{"issues"},
+		Annotations: map[string]string{"cmd:main": "true"},
+		RunE:        issue,
 	}
 
 	lc := list.NewCmdList()

@@ -12,11 +12,12 @@ const helpText = `Epic manage epics in a given project. See available commands b
 // NewCmdEpic is an epic command.
 func NewCmdEpic() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "epic [ISSUE KEY]",
-		Short:   "Epic manage epics in a project.",
-		Long:    helpText,
-		Aliases: []string{"epics"},
-		RunE:    epic,
+		Use:         "epic",
+		Short:       "Epic manage epics in a project",
+		Long:        helpText,
+		Aliases:     []string{"epics"},
+		Annotations: map[string]string{"cmd:main": "true"},
+		RunE:        epic,
 	}
 
 	lc := list.NewCmdList()

@@ -14,39 +14,44 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
-const helpText = `List lists top 100 epics.
+const (
+	helpText = `List lists top 100 epics.
 
 By default epics are displayed in an explorer view. You can use --table
-and --plain flags to display output in different modes.
+and --plain flags to display output in different modes.`
 
-	# Display epics in an explorer view
-	jira epic list
+	examples = `# Display epics in an explorer view
+$ jira epic list
 
-	# Display epics or epic issues in an interactive table view
-	jira epic list --table
-	jira epic list <KEY>
+# Display epics or epic issues in an interactive table view
+$ jira epic list --table
+$ jira epic list <KEY>
 
-	# Display epics or epic issues in a plain table view
-	jira epic list --table --plain
-	jira epic list <KEY> --plain
+# Display epics or epic issues in a plain table view
+$ jira epic list --table --plain
+$ jira epic list <KEY> --plain
 
-	# Display epics or epic issues in a plain table view without headers
-	jira epic list --table --plain --no-headers
-	jira epic list <KEY> --plain --no-headers
+# Display epics or epic issues in a plain table view without headers
+$ jira epic list --table --plain --no-headers
+$ jira epic list <KEY> --plain --no-headers
 
-	# Display some columns of epic or epic issues in a plain table view
-	jira epic list --table --plain --columns key,summary,status
-	jira epic list <KEY> --plain --columns type,key,summary
-`
+# Display some columns of epic or epic issues in a plain table view
+$ jira epic list --table --plain --columns key,summary,status
+$ jira epic list <KEY> --plain --columns type,key,summary`
+)
 
 // NewCmdList is a list command.
 func NewCmdList() *cobra.Command {
 	return &cobra.Command{
-		Use:     "list [EPIC KEY]",
+		Use:     "list [EPIC_KEY]",
 		Short:   "List lists issues in a project",
 		Long:    helpText,
+		Example: examples,
 		Aliases: []string{"lists"},
-		Args:    cobra.MaximumNArgs(1),
+		Annotations: map[string]string{
+			"help:args": "[EPIC_KEY]\tKey for the issue of type epic, eg: ISSUE-1",
+		},
+		Args: cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			table, err := cmd.Flags().GetBool("table")
 			cmdutil.ExitIfError(err)
