@@ -1,7 +1,6 @@
 *~
 *.out
 *.swp
-tmp/*
 /*.json
 
 .DS_Store

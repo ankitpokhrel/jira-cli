@@ -1,9 +1,9 @@
 package view
 
 import (
+	"bytes"
 	"fmt"
 	"io"
-	"os"
 	"text/tabwriter"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -16,20 +16,20 @@ type BoardOption func(*Board)
 type Board struct {
 	data   []*jira.Board
 	writer io.Writer
+	buf    *bytes.Buffer
 }
 
 // NewBoard initializes a board.
 func NewBoard(data []*jira.Board, opts ...BoardOption) *Board {
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
-
 	b := Board{
-		data:   data,
-		writer: w,
+		data: data,
+		buf:  new(bytes.Buffer),
 	}
+	b.writer = tabwriter.NewWriter(b.buf, 0, 8, 1, '\t', 0)
+
 	for _, opt := range opts {
 		opt(&b)
 	}
-
 	return &b
 }
 
@@ -48,10 +48,13 @@ func (b Board) Render() error {
 		fmt.Fprintf(b.writer, "%d\t%s\t%s\n", d.ID, prepareTitle(d.Name), d.Type)
 	}
 	if _, ok := b.writer.(*tabwriter.Writer); ok {
-		return b.writer.(*tabwriter.Writer).Flush()
+		err := b.writer.(*tabwriter.Writer).Flush()
+		if err != nil {
+			return err
+		}
 	}
 
-	return nil
+	return PagerOut(b.buf.String())
 }
 
 func (b Board) header() []string {
