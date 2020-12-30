@@ -14,28 +14,29 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
-const helpText = `List lists issues in a given project.
+const (
+	helpText = `List lists issues in a given project.
 
 You can combine different flags to create a unique query. For instance,
 	
-	# Issues that are of high priority, is in progress, was created this month,
-	# and has given labels
-	jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high prio"
+# Issues that are of high priority, is in progress, was created this month, and has given labels
+jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high prio"
 
 Issues are displayed in an interactive list view by default. You can use a --plain flag
 to display output in a plain text mode. A --no-headers flag will hide the table headers
-in plain view. A --no-truncate flag will display all available fields in plain mode.
+in plain view. A --no-truncate flag will display all available fields in plain mode.`
 
-EG:
-	# Display issues in a plain table view without headers
-	jira issue list --plain --no-headers
+	examples = `$ jira issue list
 
-	# Display some columns of the issue in a plain table view
-	jira issue list --plain --columns key,assignee,status
+# Display issues in a plain table view without headers
+$ jira issue list --plain --no-headers
 
-	# Display issues in a plain table view and show all fields
-	jira issue list --plain --no-truncate
-`
+# Display some columns of the issue in a plain table view
+$ jira issue list --plain --columns key,assignee,status
+
+# Display issues in a plain table view and show all fields
+$ jira issue list --plain --no-truncate`
+)
 
 // NewCmdList is a list command.
 func NewCmdList() *cobra.Command {
@@ -43,6 +44,7 @@ func NewCmdList() *cobra.Command {
 		Use:     "list",
 		Short:   "List lists issues in a project",
 		Long:    helpText,
+		Example: examples,
 		Aliases: []string{"lists"},
 		Run:     List,
 	}
@@ -108,14 +110,17 @@ func List(cmd *cobra.Command, _ []string) {
 
 // SetFlags sets flags supported by a list command.
 func SetFlags(cmd *cobra.Command) {
-	cmd.Flags().Bool("history", false, "Issues you accessed recently")
-	cmd.Flags().BoolP("watching", "w", false, "Issues you are watching")
+	cmd.Flags().SortFlags = false
+
 	cmd.Flags().StringP("type", "t", "", "Filter issues by type")
 	cmd.Flags().StringP("resolution", "R", "", "Filter issues by resolution type")
 	cmd.Flags().StringP("status", "s", "", "Filter issues by status")
 	cmd.Flags().StringP("priority", "y", "", "Filter issues by priority")
 	cmd.Flags().StringP("reporter", "r", "", "Filter issues by reporter (email or display name)")
 	cmd.Flags().StringP("assignee", "a", "", "Filter issues by assignee (email or display name)")
+	cmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
+	cmd.Flags().Bool("history", false, "Issues you accessed recently")
+	cmd.Flags().BoolP("watching", "w", false, "Issues you are watching")
 	cmd.Flags().String("created", "", "Filter issues by created date\n"+
 		"Accepts: today, week, month, year, or a date in yyyy-mm-dd and yyyy/mm/dd format,\n"+
 		"or a period format using w = weeks, d = days, h = hours, m = minutes. eg: -10d\n"+
@@ -128,7 +133,6 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().String("updated-after", "", "Filter by issues updated after certain date")
 	cmd.Flags().String("created-before", "", "Filter by issues created before certain date")
 	cmd.Flags().String("updated-before", "", "Filter by issues updated before certain date")
-	cmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
 	cmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")

@@ -13,11 +13,12 @@ import (
 // NewCmdBoard is a board command.
 func NewCmdBoard() *cobra.Command {
 	return &cobra.Command{
-		Use:     "board",
-		Short:   "Board lists all boards in a project",
-		Long:    "Board lists all boards in a project",
-		Aliases: []string{"boards"},
-		Run:     board,
+		Use:         "board",
+		Short:       "Board lists all boards in a project",
+		Long:        "Board lists all boards in a project.",
+		Aliases:     []string{"boards"},
+		Annotations: map[string]string{"cmd:main": "true"},
+		Run:         board,
 	}
 }
 

@@ -14,23 +14,25 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/surveyext"
 )
 
-const helpText = `Create an issue in a given project with minimal information.
+const (
+	helpText = `Create an issue in a given project with minimal information.`
+	examples = `$ jira issue create
 
-EG:
-	# Create issue in configured project
-	jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
+# Create issue in the configured project
+$ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 
-	# Create issue in another project
-	jira issue create -pPRJ -tBug -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'
-`
+# Create issue in another project
+$ jira issue create -pPRJ -tBug -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'`
+)
 
 // NewCmdCreate is a create command.
 func NewCmdCreate() *cobra.Command {
 	return &cobra.Command{
-		Use:   "create",
-		Short: "Create an issue in a project",
-		Long:  helpText,
-		Run:   create,
+		Use:     "create",
+		Short:   "Create an issue in a project",
+		Long:    helpText,
+		Example: examples,
+		Run:     create,
 	}
 }
 

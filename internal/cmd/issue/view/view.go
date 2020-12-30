@@ -9,17 +9,24 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
-const helpText = `View displays contents of an issue.`
+const (
+	helpText = `View displays contents of an issue.`
+	examples = `$ jira issue view ISSUE-1`
+)
 
 // NewCmdView is a view command.
 func NewCmdView() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "view KEY",
+		Use:     "view ISSUE_KEY",
 		Short:   "View displays contents of an issue",
 		Long:    helpText,
+		Example: examples,
 		Aliases: []string{"show"},
-		Args:    cobra.MinimumNArgs(1),
-		Run:     view,
+		Annotations: map[string]string{
+			"help:args": "ISSUE_KEY\tIssue key, eg: ISSUE-1",
+		},
+		Args: cobra.MinimumNArgs(1),
+		Run:  view,
 	}
 
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")

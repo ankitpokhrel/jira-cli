@@ -10,16 +10,25 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 )
 
-const helpText = `Open opens issue in a browser. If the issue key is not given, it will open the project page.`
+const (
+	helpText = `Open opens issue in a browser. If the issue key is not given, it will open the project page.`
+	examples = `$ jira open
+$ jira open ISSUE-1`
+)
 
 // NewCmdOpen is an open command.
 func NewCmdOpen() *cobra.Command {
 	return &cobra.Command{
-		Use:     "open [ISSUE KEY]",
+		Use:     "open [ISSUE_KEY]",
 		Short:   "Open issue in a browser",
 		Long:    helpText,
+		Example: examples,
 		Aliases: []string{"browse", "navigate"},
-		Run:     open,
+		Annotations: map[string]string{
+			"cmd:main":  "true",
+			"help:args": "[ISSUE_KEY]\tIssue key, eg: ISSUE-1",
+		},
+		Run: open,
 	}
 }
 

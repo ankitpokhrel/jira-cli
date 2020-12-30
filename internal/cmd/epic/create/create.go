@@ -14,23 +14,25 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/surveyext"
 )
 
-const helpText = `Create an epic in a given project with minimal information.
+const (
+	helpText = `Create an epic in a given project with minimal information.`
+	examples = `$ jira epic create
 
-EG:
-	# Create epic in configured project
-	jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Bug description"
+# Create epic in the configured project
+$ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Bug description"
 
-	# Create epic in another project
-	jira epic create -pPRJ -n"Amazing epic" -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'
-`
+# Create epic in another project
+$ jira epic create -pPRJ -n"Amazing epic" -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'`
+)
 
 // NewCmdCreate is a create command.
 func NewCmdCreate() *cobra.Command {
 	return &cobra.Command{
-		Use:   "create",
-		Short: "Create an issue in a project",
-		Long:  helpText,
-		Run:   create,
+		Use:     "create",
+		Short:   "Create an issue in a project",
+		Long:    helpText,
+		Example: examples,
+		Run:     create,
 	}
 }
 

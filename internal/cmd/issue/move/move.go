@@ -14,7 +14,11 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
-const helpText = `Move transitions an issue from one state to another.`
+const (
+	helpText = `Move transitions an issue from one state to another.`
+	examples = `$ jira issue move ISSUE-1 "In Progress"
+$ jira issue move ISSUE-1 Done`
+)
 
 // NewCmdMove is a move command.
 func NewCmdMove() *cobra.Command {
@@ -22,8 +26,13 @@ func NewCmdMove() *cobra.Command {
 		Use:     "move ISSUE_KEY STATE",
 		Short:   "Transition an issue to a given state",
 		Long:    helpText,
+		Example: examples,
 		Aliases: []string{"transition"},
-		Run:     move,
+		Annotations: map[string]string{
+			"help:args": `ISSUE_KEY	Issue key, eg: ISSUE-1
+STATE		State you want to transition the issue to`,
+		},
+		Run: move,
 	}
 
 	cmd.Flags().Bool("web", false, "Open issue in web browser after successful transistion")

@@ -20,42 +20,43 @@ const (
 	numSprints = 25
 	helpText   = `
 Sprints are displayed in an explorer view by default. You can use --list
-and --plain flags to display output in different modes.
+and --plain flags to display output in different modes.`
 
-EG:
-	# Display epics in an explorer view
-	jira sprint list
+	examples = `$ jira sprint list
 
-	# Display sprints or sprint issues in an interactive list
-	jira sprint list --table
-	jira sprint list <SPRINT_ID> --table
+# Display sprints or sprint issues in an interactive list
+$ jira sprint list --table
+$ jira sprint list <SPRINT_ID> --table
 
-	# Display sprints or sprint issues in a plain table view
-	jira sprint list --table --plain
-	jira sprint list <SPRINT_ID> --table --plain
+# Display sprints or sprint issues in a plain table view
+$ jira sprint list --table --plain
+$ jira sprint list <SPRINT_ID> --table --plain
 
-	# Display sprints or sprint issues in a plain table view without headers
-	jira sprint list --table --plain --no-headers
-	jira sprint list <SPRINT_ID> --plain --no-headers
+# Display sprints or sprint issues in a plain table view without headers
+$ jira sprint list --table --plain --no-headers
+$ jira sprint list <SPRINT_ID> --plain --no-headers
 
-	# Display some columns of sprint or sprint issues in a plain table view
-	jira sprint list --table --plain --columns name,start,end
-	jira sprint list <SPRINT_ID> --plain --columns type,key,summary
+# Display some columns of sprint or sprint issues in a plain table view
+$ jira sprint list --table --plain --columns name,start,end
+$ jira sprint list <SPRINT_ID> --plain --columns type,key,summary
 
-	# Display sprint issues in a plain table view and show all fields
-	jira sprint list <SPRINT_ID> --table --plain --no-truncate
-`
+# Display sprint issues in a plain table view and show all fields
+$ jira sprint list <SPRINT_ID> --table --plain --no-truncate`
 )
 
 // NewCmdList is a sprint list command.
 func NewCmdList() *cobra.Command {
 	return &cobra.Command{
-		Use:     "list [SPRINT ID]",
+		Use:     "list [SPRINT_ID]",
 		Short:   fmt.Sprintf("Sprint lists top %d sprints in a board", numSprints),
 		Long:    fmt.Sprintf("Sprint lists top %d sprints in a board\n", numSprints) + helpText,
+		Example: examples,
 		Args:    cobra.MaximumNArgs(1),
 		Aliases: []string{"lists"},
-		Run:     sprintList,
+		Annotations: map[string]string{
+			"help:args": "[SPRINT_ID]\tID of the sprint",
+		},
+		Run: sprintList,
 	}
 }
 
