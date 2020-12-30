@@ -177,7 +177,6 @@ func TestSprintTableLayoutData(t *testing.T) {
 		[]string{"1", "Sprint 1", "2020-12-07 16:12:00", "2020-12-13 16:12:00", "2020-12-13 16:12:00", "closed"},
 		[]string{"2", "Sprint 2", "2020-12-13 16:12:00", "2020-12-19 16:12:00", "", "active"},
 	}
-
 	assert.Equal(t, expected, sprint.tableData())
 }
 
@@ -212,14 +211,12 @@ func TestSprintRenderInPlainView(t *testing.T) {
 			NoHeaders: false,
 		},
 	}
-
 	assert.NoError(t, sprint.renderPlain(&b))
 
 	expected := `ID	NAME	START	END	COMPLETE	STATE
 1	Sprint 1	2020-12-07 16:12:00	2020-12-13 16:12:00	2020-12-13 16:12:00	closed
 2	Sprint 2	2020-12-13 16:12:00	2020-12-19 16:12:00		active
 `
-
 	assert.Equal(t, expected, b.String())
 }
 
@@ -254,13 +251,11 @@ func TestSprintRenderInPlainViewWithoutHeaders(t *testing.T) {
 			NoHeaders: true,
 		},
 	}
-
 	assert.NoError(t, sprint.renderPlain(&b))
 
 	expected := `1	Sprint 1	2020-12-07 16:12:00	2020-12-13 16:12:00	2020-12-13 16:12:00	closed
 2	Sprint 2	2020-12-13 16:12:00	2020-12-19 16:12:00		active
 `
-
 	assert.Equal(t, expected, b.String())
 }
 
@@ -296,13 +291,11 @@ func TestSprintRenderInPlainViewWithFewColumns(t *testing.T) {
 			Columns:   []string{"name", "start", "end"},
 		},
 	}
-
 	assert.NoError(t, sprint.renderPlain(&b))
 
 	expected := `NAME	START	END
 Sprint 1	2020-12-07 16:12:00	2020-12-13 16:12:00
 Sprint 2	2020-12-13 16:12:00	2020-12-19 16:12:00
 `
-
 	assert.Equal(t, expected, b.String())
 }

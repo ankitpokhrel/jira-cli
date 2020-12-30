@@ -122,14 +122,12 @@ func TestIssueRenderInPlainViewWithFewColumns(t *testing.T) {
 			Columns:   []string{"key", "type", "status", "created"},
 		},
 	}
-
 	assert.NoError(t, issue.renderPlain(&b))
 
 	expected := `KEY	TYPE	STATUS	CREATED
 TEST-1	Bug	Done	2020-12-13 14:05:20
 TEST-2	Story	Open	2020-12-13 14:05:20
 `
-
 	assert.Equal(t, expected, b.String())
 }
 

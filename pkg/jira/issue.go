@@ -41,7 +41,9 @@ func ifaceToADF(v interface{}) *adf.ADF {
 	if v == nil {
 		return nil
 	}
+
 	var doc *adf.ADF
+
 	js, err := json.Marshal(v)
 	if err != nil {
 		return nil // ignore invalid data
@@ -49,5 +51,6 @@ func ifaceToADF(v interface{}) *adf.ADF {
 	if err = json.Unmarshal(js, &doc); err != nil {
 		return nil // ignore invalid data
 	}
+
 	return doc
 }

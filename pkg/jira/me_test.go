@@ -37,7 +37,6 @@ func TestMe(t *testing.T) {
 		Name:  "Person A",
 		Email: "user@test.com",
 	}
-
 	assert.Equal(t, expected, actual)
 
 	unexpectedStatusCode = true

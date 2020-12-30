@@ -31,11 +31,9 @@ func (c *Client) Transitions(key string) ([]*Transition, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if res == nil {
 		return nil, ErrEmptyResponse
 	}
-
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
@@ -65,11 +63,9 @@ func (c *Client) Transition(key string, data *TransitionRequest) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-
 	if res == nil {
 		return 0, ErrEmptyResponse
 	}
-
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusNoContent {

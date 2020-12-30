@@ -16,35 +16,25 @@ type Issue struct {
 
 // NewIssue creates and initializes a new Issue type.
 func NewIssue(project string, flags FlagParser) (*Issue, error) {
-	issue := Issue{
-		Project: project,
-		Flags:   flags,
-	}
-
 	ip := issueParams{}
-
-	err := ip.init(flags)
-	if err != nil {
+	if err := ip.init(flags); err != nil {
 		return nil, err
 	}
-
-	issue.params = &ip
-
-	return &issue, nil
+	return &Issue{
+		Project: project,
+		Flags:   flags,
+		params:  &ip,
+	}, nil
 }
 
 // Get returns constructed jql query.
 func (i *Issue) Get() string {
-	obf := "created"
-
-	q := jql.NewJQL(i.Project)
-
+	q, obf := jql.NewJQL(i.Project), "created"
 	q.And(func() {
 		if i.params.latest {
 			q.History()
 			obf = "lastViewed"
 		}
-
 		if i.params.watching {
 			q.Watching()
 		}
@@ -63,17 +53,14 @@ func (i *Issue) Get() string {
 			q.In("labels", i.params.labels...)
 		}
 	})
-
 	if i.params.reverse {
 		q.OrderBy(obf, jql.DirectionAscending)
 	} else {
 		q.OrderBy(obf, jql.DirectionDescending)
 	}
-
 	if i.params.debug {
 		fmt.Printf("JQL: %s\n", q.String())
 	}
-
 	return q.String()
 }
 
@@ -102,11 +89,9 @@ func (i *Issue) setCreatedFilters(q *jql.JQL) {
 		i.setDateFilters(q, "createdDate", i.params.created)
 		return
 	}
-
 	if i.params.createdAfter != "" {
 		q.Gt("createdDate", i.params.createdAfter, true)
 	}
-
 	if i.params.createdBefore != "" {
 		q.Lt("createdDate", i.params.createdBefore, true)
 	}
@@ -117,11 +102,9 @@ func (i *Issue) setUpdatedFilters(q *jql.JQL) {
 		i.setDateFilters(q, "updatedDate", i.params.updated)
 		return
 	}
-
 	if i.params.updatedAfter != "" {
 		q.Gt("updatedDate", i.params.updatedAfter, true)
 	}
-
 	if i.params.updatedBefore != "" {
 		q.Lt("updatedDate", i.params.updatedBefore, true)
 	}
@@ -134,14 +117,12 @@ func isValidDate(date string) (time.Time, string, bool) {
 		"2006-01-02 03:04",
 		"2006/01/02 03:04",
 	}
-
 	for _, format := range supportedFormats {
 		dt, err := time.Parse(format, date)
 		if err == nil {
 			return dt, format, true
 		}
 	}
-
 	return time.Now(), "", false
 }
 
@@ -186,7 +167,6 @@ func (ip *issueParams) init(flags FlagParser) error {
 			return err
 		}
 	}
-
 	stringParamsMap := make(map[string]string)
 	for _, param := range stringParams {
 		stringParamsMap[param], err = flags.GetString(param)
@@ -194,7 +174,6 @@ func (ip *issueParams) init(flags FlagParser) error {
 			return err
 		}
 	}
-
 	labels, err := flags.GetStringArray("label")
 	if err != nil {
 		return err

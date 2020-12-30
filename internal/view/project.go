@@ -26,7 +26,6 @@ func NewProject(data []*jira.Project, opts ...ProjectOption) *Project {
 		data:   data,
 		writer: w,
 	}
-
 	for _, opt := range opts {
 		opt(&p)
 	}
@@ -46,9 +45,8 @@ func (p Project) Render() error {
 	p.printHeader()
 
 	for _, d := range p.data {
-		_, _ = fmt.Fprintf(p.writer, "%s\t%s\t%s\n", d.Key, prepareTitle(d.Name), d.Lead.Name)
+		fmt.Fprintf(p.writer, "%s\t%s\t%s\n", d.Key, prepareTitle(d.Name), d.Lead.Name)
 	}
-
 	if _, ok := p.writer.(*tabwriter.Writer); ok {
 		return p.writer.(*tabwriter.Writer).Flush()
 	}
@@ -66,13 +64,11 @@ func (p Project) header() []string {
 
 func (p Project) printHeader() {
 	n := len(p.header())
-
 	for i, h := range p.header() {
-		_, _ = fmt.Fprintf(p.writer, "%s", h)
+		fmt.Fprintf(p.writer, "%s", h)
 		if i != n-1 {
-			_, _ = fmt.Fprintf(p.writer, "\t")
+			fmt.Fprintf(p.writer, "\t")
 		}
 	}
-
-	_, _ = fmt.Fprintln(p.writer)
+	fmt.Fprintln(p.writer)
 }

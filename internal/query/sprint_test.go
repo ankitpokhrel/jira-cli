@@ -25,11 +25,9 @@ func (tfp sprintFlagParser) GetString(name string) (string, error) {
 	if tfp.err.state && name == "state" {
 		return "", fmt.Errorf("oops! couldn't fetch state flag")
 	}
-
 	if tfp.emptyState && name == "state" {
 		return "", nil
 	}
-
 	return "future", nil
 }
 
@@ -54,7 +52,6 @@ func TestSprintGet(t *testing.T) {
 					emptyState: true,
 				})
 				assert.NoError(t, err)
-
 				return s
 			},
 			expected: "state=active,closed",
@@ -64,7 +61,6 @@ func TestSprintGet(t *testing.T) {
 			initialize: func() *Sprint {
 				s, err := NewSprint(&sprintFlagParser{})
 				assert.NoError(t, err)
-
 				return s
 			},
 			expected: "state=future",
@@ -76,7 +72,6 @@ func TestSprintGet(t *testing.T) {
 					state: true,
 				}})
 				assert.Error(t, err)
-
 				return s
 			},
 			expected: "",
@@ -90,7 +85,6 @@ func TestSprintGet(t *testing.T) {
 			t.Parallel()
 
 			q := tc.initialize()
-
 			if q != nil {
 				assert.Equal(t, tc.expected, q.Get())
 			}

@@ -18,11 +18,9 @@ func (c *Client) Me() (*Me, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if res != nil {
 		defer func() { _ = res.Body.Close() }()
 	}
-
 	if res.StatusCode != http.StatusOK {
 		return nil, ErrUnexpectedStatusCode
 	}

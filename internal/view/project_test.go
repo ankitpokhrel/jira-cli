@@ -21,9 +21,7 @@ func TestProjectRender(t *testing.T) {
 		{Key: "SCND", Name: "[2] Second", Lead: lead{Name: "Person B"}},
 		{Key: "THIRD", Name: "Third", Lead: lead{Name: "Person C"}},
 	}
-
 	board := NewProject(data, WithProjectWriter(&b))
-
 	assert.NoError(t, board.Render())
 
 	expected := `KEY	NAME	LEAD
@@ -31,6 +29,5 @@ FRST	First	Person A
 SCND	⦗2⦘ Second	Person B
 THIRD	Third	Person C
 `
-
 	assert.Equal(t, expected, b.String())
 }

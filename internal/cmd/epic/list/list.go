@@ -41,7 +41,7 @@ and --plain flags to display output in different modes.
 
 // NewCmdList is a list command.
 func NewCmdList() *cobra.Command {
-	cmd := cobra.Command{
+	return &cobra.Command{
 		Use:     "list [EPIC KEY]",
 		Short:   "List lists issues in a project",
 		Long:    helpText,
@@ -61,8 +61,6 @@ func NewCmdList() *cobra.Command {
 			}
 		},
 	}
-
-	return &cmd
 }
 
 // SetFlags sets flags supported by an epic list command.
@@ -103,7 +101,6 @@ func singleEpicView(flags query.FlagParser, key, project, server string, client 
 
 		return resp.Issues, resp.Total
 	}()
-
 	if total == 0 {
 		cmdutil.PrintErrF("No result found for given query in project \"%s\"", project)
 		return

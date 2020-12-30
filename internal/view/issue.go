@@ -37,10 +37,6 @@ func (i Issue) Render() error {
 	return PagerOut(out)
 }
 
-func (i Issue) data() tui.TextData {
-	return tui.TextData(i.String())
-}
-
 func (i Issue) String() string {
 	as := i.Data.Fields.Assignee.Name
 	if as == "" {
@@ -71,6 +67,10 @@ func (i Issue) String() string {
 		i.Data.Fields.Priority.Name, lbl,
 		desc,
 	)
+}
+
+func (i Issue) data() tui.TextData {
+	return tui.TextData(i.String())
 }
 
 // renderPlain renders the issue in plain view.

@@ -90,21 +90,19 @@ func (l IssueList) validColumnsMap() map[string]struct{} {
 }
 
 func (l IssueList) header() []string {
-	validColumns, columnsMap := ValidIssueColumns(), l.validColumnsMap()
-
 	if len(l.Display.Columns) == 0 {
+		validColumns := ValidIssueColumns()
 		if l.Display.NoTruncate || !l.Display.Plain {
 			return validColumns
 		}
-
 		return validColumns[0:4]
 	}
 
 	var headers []string
 
+	columnsMap := l.validColumnsMap()
 	for _, c := range l.Display.Columns {
 		c = strings.ToUpper(c)
-
 		if _, ok := columnsMap[c]; ok {
 			headers = append(headers, strings.ToUpper(c))
 		}
@@ -117,7 +115,6 @@ func (l IssueList) data() tui.TableData {
 	var data tui.TableData
 
 	headers := l.header()
-
 	if !(l.Display.Plain && l.Display.NoHeaders) {
 		data = append(data, headers)
 	}

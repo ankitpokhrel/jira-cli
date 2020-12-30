@@ -93,7 +93,6 @@ func TestSprints(t *testing.T) {
 			},
 		},
 	}
-
 	assert.Equal(t, expected, actual)
 
 	unexpectedStatusCode = true
@@ -152,9 +151,7 @@ func TestSprintsInBoards(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
-
 	actual := client.SprintsInBoards([]int{2}, "state=active,closed", 3)
-
 	expected := []*Sprint{
 		{
 			ID:        5,
@@ -183,7 +180,6 @@ func TestSprintsInBoards(t *testing.T) {
 			BoardID:      2,
 		},
 	}
-
 	assert.Equal(t, expected, actual)
 }
 
@@ -305,7 +301,6 @@ func TestSprintIssues(t *testing.T) {
 			},
 		},
 	}
-
 	assert.Equal(t, expected, actual)
 
 	unexpectedStatusCode = true

@@ -67,7 +67,6 @@ func (el EpicList) data() []tui.PreviewData {
 			return helpText
 		},
 	})
-
 	for _, issue := range el.Data {
 		data = append(data, tui.PreviewData{
 			Key:  issue.Key,
@@ -97,7 +96,6 @@ func (el EpicList) tabularize(issues []*jira.Issue) tui.TableData {
 		"CREATED",
 		"UPDATED",
 	})
-
 	for _, issue := range issues {
 		data = append(data, []string{
 			issue.Fields.IssueType.Name,

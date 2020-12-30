@@ -17,9 +17,7 @@ func TestBoardRender(t *testing.T) {
 		{ID: 2, Name: "⦗2⦘ Second", Type: "kanban"},
 		{ID: 3, Name: "Third", Type: "nextgen"},
 	}
-
 	board := NewBoard(data, WithBoardWriter(&b))
-
 	assert.NoError(t, board.Render())
 
 	expected := `ID	NAME	TYPE
@@ -27,6 +25,5 @@ func TestBoardRender(t *testing.T) {
 2	⦗2⦘ Second	kanban
 3	Third	nextgen
 `
-
 	assert.Equal(t, expected, b.String())
 }

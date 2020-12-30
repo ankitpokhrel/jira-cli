@@ -14,12 +14,6 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
-type moveParams struct {
-	key   string
-	state string
-	debug bool
-}
-
 const helpText = `Move transitions an issue from one state to another.`
 
 // NewCmdMove is a move command.
@@ -112,27 +106,6 @@ func move(cmd *cobra.Command, args []string) {
 	}
 }
 
-func parseArgsAndFlags(args []string, flags query.FlagParser) *moveParams {
-	var key, state string
-
-	nargs := len(args)
-	if nargs >= 1 {
-		key = strings.ToUpper(args[0])
-	}
-	if nargs >= 2 {
-		state = args[1]
-	}
-
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
-
-	return &moveParams{
-		key:   key,
-		state: state,
-		debug: debug,
-	}
-}
-
 func getQuestions(params *moveParams) []*survey.Question {
 	var qs []*survey.Question
 
@@ -153,4 +126,31 @@ func getQuestions(params *moveParams) []*survey.Question {
 	}
 
 	return qs
+}
+
+type moveParams struct {
+	key   string
+	state string
+	debug bool
+}
+
+func parseArgsAndFlags(args []string, flags query.FlagParser) *moveParams {
+	var key, state string
+
+	nargs := len(args)
+	if nargs >= 1 {
+		key = strings.ToUpper(args[0])
+	}
+	if nargs >= 2 {
+		state = args[1]
+	}
+
+	debug, err := flags.GetBool("debug")
+	cmdutil.ExitIfError(err)
+
+	return &moveParams{
+		key:   key,
+		state: state,
+		debug: debug,
+	}
 }

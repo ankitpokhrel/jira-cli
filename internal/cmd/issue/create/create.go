@@ -24,16 +24,6 @@ EG:
 	jira issue create -pPRJ -tBug -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'
 `
 
-type createParams struct {
-	issueType string
-	summary   string
-	body      string
-	priority  string
-	labels    []string
-	noInput   bool
-	debug     bool
-}
-
 // NewCmdCreate is a create command.
 func NewCmdCreate() *cobra.Command {
 	return &cobra.Command{
@@ -110,6 +100,46 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
 
+func getQuestions(params *createParams) []*survey.Question {
+	var qs []*survey.Question
+
+	if params.issueType == "" {
+		qs = append(qs, &survey.Question{
+			Name:     "issueType",
+			Prompt:   &survey.Input{Message: "Issue type"},
+			Validate: survey.Required,
+		})
+	}
+	if params.summary == "" {
+		qs = append(qs, &survey.Question{
+			Name:     "summary",
+			Prompt:   &survey.Input{Message: "Summary"},
+			Validate: survey.Required,
+		})
+	}
+	if !params.noInput && params.body == "" {
+		qs = append(qs, &survey.Question{
+			Name: "body",
+			Prompt: &surveyext.JiraEditor{
+				Editor:       &survey.Editor{Message: "Description", HideDefault: true},
+				BlankAllowed: true,
+			},
+		})
+	}
+
+	return qs
+}
+
+type createParams struct {
+	issueType string
+	summary   string
+	body      string
+	priority  string
+	labels    []string
+	noInput   bool
+	debug     bool
+}
+
 func parseFlags(flags query.FlagParser) *createParams {
 	issueType, err := flags.GetString("type")
 	cmdutil.ExitIfError(err)
@@ -141,34 +171,4 @@ func parseFlags(flags query.FlagParser) *createParams {
 		noInput:   noInput,
 		debug:     debug,
 	}
-}
-
-func getQuestions(params *createParams) []*survey.Question {
-	var qs []*survey.Question
-
-	if params.issueType == "" {
-		qs = append(qs, &survey.Question{
-			Name:     "issueType",
-			Prompt:   &survey.Input{Message: "Issue type"},
-			Validate: survey.Required,
-		})
-	}
-	if params.summary == "" {
-		qs = append(qs, &survey.Question{
-			Name:     "summary",
-			Prompt:   &survey.Input{Message: "Summary"},
-			Validate: survey.Required,
-		})
-	}
-	if !params.noInput && params.body == "" {
-		qs = append(qs, &survey.Question{
-			Name: "body",
-			Prompt: &surveyext.JiraEditor{
-				Editor:       &survey.Editor{Message: "Description", HideDefault: true},
-				BlankAllowed: true,
-			},
-		})
-	}
-
-	return qs
 }

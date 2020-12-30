@@ -37,7 +37,6 @@ func initialize(*cobra.Command, []string) {
 		default:
 			cmdutil.PrintErrF("\n\033[0;31m✗\033[0m Unable to generate configuration: %s", err.Error())
 		}
-
 		os.Exit(1)
 	}
 

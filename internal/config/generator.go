@@ -181,29 +181,24 @@ func (c *JiraCLIConfig) configureProjectAndBoardDetails() error {
 	if err := c.getProjectSuggestions(); err != nil {
 		return err
 	}
-
 	projectPrompt := survey.Select{
 		Message: "Default project:",
 		Help:    "This is your project key that you want to access by default when using the cli.",
 		Options: c.projectSuggestions,
 	}
-	err := survey.AskOne(&projectPrompt, &project, survey.WithValidator(survey.Required))
-	if err != nil {
+	if err := survey.AskOne(&projectPrompt, &project, survey.WithValidator(survey.Required)); err != nil {
 		return err
 	}
 
 	if err := c.getBoardSuggestions(project); err != nil {
 		return err
 	}
-
 	boardPrompt := survey.Select{
 		Message: "Default board:",
 		Help:    "This is your default project board that you want to access by default when using the cli.",
 		Options: c.boardSuggestions,
 	}
-
-	err = survey.AskOne(&boardPrompt, &board, survey.WithValidator(survey.Required))
-	if err != nil {
+	if err := survey.AskOne(&boardPrompt, &board, survey.WithValidator(survey.Required)); err != nil {
 		return err
 	}
 
@@ -229,10 +224,8 @@ func (c *JiraCLIConfig) configureMetadata() error {
 		return ErrUnexpectedResponseFormat
 	}
 
-	fields := meta.Projects[0].IssueTypes[0].Fields
-
 	var key string
-
+	fields := meta.Projects[0].IssueTypes[0].Fields
 	for field, value := range fields {
 		if !strings.Contains(field, "customfield") {
 			continue
@@ -243,7 +236,6 @@ func (c *JiraCLIConfig) configureMetadata() error {
 			break
 		}
 	}
-
 	c.value.epic = &jira.Epic{Field: key}
 
 	return nil
@@ -324,13 +316,11 @@ func create(path, name string) error {
 	}
 
 	file := path + name
-
 	if Exists(file) {
 		if err := os.Rename(file, file+".bkp"); err != nil {
 			return err
 		}
 	}
-
 	_, err := os.Create(file)
 
 	return err

@@ -21,11 +21,9 @@ func Client(config jira.Config) *jira.Client {
 	if config.Server == "" {
 		config.Server = viper.GetString("server")
 	}
-
 	if config.Login == "" {
 		config.Login = viper.GetString("login")
 	}
-
 	if config.APIToken == "" {
 		config.APIToken = viper.GetString("api_token")
 	}
