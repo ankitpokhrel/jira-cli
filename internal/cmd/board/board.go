@@ -1,6 +1,8 @@
 package board
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -28,10 +30,21 @@ func board(cmd *cobra.Command, _ []string) {
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
-	resp, err := api.Client(jira.Config{Debug: debug}).Boards(project, jira.BoardTypeAll)
-	cmdutil.ExitIfError(err)
+	boards, total := func() ([]*jira.Board, int) {
+		s := cmdutil.Info(fmt.Sprintf("Fetching boards in project %s...", project))
+		defer s.Stop()
 
-	v := view.NewBoard(resp.Boards)
+		resp, err := api.Client(jira.Config{Debug: debug}).Boards(project, jira.BoardTypeAll)
+		cmdutil.ExitIfError(err)
+
+		return resp.Boards, resp.Total
+	}()
+	if total == 0 {
+		cmdutil.PrintErrF("No boards found in project \"%s\"", project)
+		return
+	}
+
+	v := view.NewBoard(boards)
 
 	cmdutil.ExitIfError(v.Render())
 }

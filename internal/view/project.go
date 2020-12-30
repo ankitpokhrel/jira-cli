@@ -1,9 +1,9 @@
 package view
 
 import (
+	"bytes"
 	"fmt"
 	"io"
-	"os"
 	"text/tabwriter"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -16,20 +16,20 @@ type ProjectOption func(*Project)
 type Project struct {
 	data   []*jira.Project
 	writer io.Writer
+	buf    *bytes.Buffer
 }
 
 // NewProject initializes a project.
 func NewProject(data []*jira.Project, opts ...ProjectOption) *Project {
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
-
 	p := Project{
-		data:   data,
-		writer: w,
+		data: data,
+		buf:  new(bytes.Buffer),
 	}
+	p.writer = tabwriter.NewWriter(p.buf, 0, 8, 1, '\t', 0)
+
 	for _, opt := range opts {
 		opt(&p)
 	}
-
 	return &p
 }
 
@@ -48,10 +48,13 @@ func (p Project) Render() error {
 		fmt.Fprintf(p.writer, "%s\t%s\t%s\n", d.Key, prepareTitle(d.Name), d.Lead.Name)
 	}
 	if _, ok := p.writer.(*tabwriter.Writer); ok {
-		return p.writer.(*tabwriter.Writer).Flush()
+		err := p.writer.(*tabwriter.Writer).Flush()
+		if err != nil {
+			return err
+		}
 	}
 
-	return nil
+	return PagerOut(p.buf.String())
 }
 
 func (p Project) header() []string {
