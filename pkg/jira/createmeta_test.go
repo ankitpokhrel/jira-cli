@@ -81,7 +81,6 @@ func TestGetCreateMeta(t *testing.T) {
 			},
 		},
 	}}
-
 	assert.Equal(t, expected, actual)
 
 	unexpectedStatusCode = true

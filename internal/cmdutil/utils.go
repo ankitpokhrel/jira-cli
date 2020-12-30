@@ -47,9 +47,7 @@ func Info(msg string) *spinner.Spinner {
 		spinner.WithHiddenCursor(true),
 		spinner.WithWriter(color.Error),
 	)
-
 	s.Start()
-
 	return s
 }
 

@@ -42,11 +42,9 @@ func (c *Client) Create(req *CreateRequest) (*CreateResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if res == nil {
 		return nil, ErrEmptyResponse
 	}
-
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusCreated {
@@ -146,7 +144,6 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 			Name string `json:"name,omitempty"`
 		}{Name: req.Priority}
 	}
-
 	if req.Body != "" {
 		data.Fields.M.Description = &createRequestADF{
 			Version: 1,

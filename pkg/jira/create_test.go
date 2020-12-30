@@ -101,7 +101,6 @@ func TestCreateEpic(t *testing.T) {
 		ID:  "10057",
 		Key: "TEST-3",
 	}
-
 	assert.Equal(t, expected, actual)
 
 	testServer.statusCode(400)

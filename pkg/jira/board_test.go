@@ -59,6 +59,5 @@ func TestBoards(t *testing.T) {
 			},
 		},
 	}
-
 	assert.Equal(t, expected, actual)
 }

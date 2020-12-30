@@ -207,7 +207,6 @@ func TestJQL(t *testing.T) {
 			t.Parallel()
 
 			jql := tc.initialize()
-
 			assert.Equal(t, tc.expected, jql.String())
 		})
 	}

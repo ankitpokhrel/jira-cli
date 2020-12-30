@@ -53,7 +53,6 @@ func TestTransitions(t *testing.T) {
 			IsAvailable: false,
 		},
 	}
-
 	assert.Equal(t, expected, actual)
 
 	unexpectedStatusCode = true

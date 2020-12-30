@@ -57,7 +57,6 @@ func (j *JQL) FilterBy(field, value string) *JQL {
 
 		j.filters = append(j.filters, q)
 	}
-
 	return j
 }
 
@@ -74,7 +73,6 @@ func (j *JQL) Gt(field, value string, wrap bool) *JQL {
 
 		j.filters = append(j.filters, q)
 	}
-
 	return j
 }
 
@@ -91,7 +89,6 @@ func (j *JQL) Gte(field, value string, wrap bool) *JQL {
 
 		j.filters = append(j.filters, q)
 	}
-
 	return j
 }
 
@@ -108,32 +105,26 @@ func (j *JQL) Lt(field, value string, wrap bool) *JQL {
 
 		j.filters = append(j.filters, q)
 	}
-
 	return j
 }
 
 // In constructs a query with IN clause.
 func (j *JQL) In(field string, value ...string) *JQL {
 	n := len(value)
-
 	if field != "" && n > 0 {
 		var q strings.Builder
 
 		q.WriteString(fmt.Sprintf("%s IN (", field))
-
 		for i, v := range value {
 			q.WriteString(fmt.Sprintf("\"%s\"", v))
-
 			if i != n-1 {
 				q.WriteString(", ")
 			}
 		}
-
 		q.WriteString(")")
 
 		j.filters = append(j.filters, q.String())
 	}
-
 	return j
 }
 
@@ -147,7 +138,6 @@ func (j *JQL) OrderBy(field, dir string) *JQL {
 func (j *JQL) And(fn GroupFunc) *JQL {
 	fn()
 	j.mergeFilters("AND")
-
 	return j
 }
 
@@ -155,7 +145,6 @@ func (j *JQL) And(fn GroupFunc) *JQL {
 func (j *JQL) Or(fn GroupFunc) *JQL {
 	fn()
 	j.mergeFilters("OR")
-
 	return j
 }
 
@@ -187,10 +176,8 @@ func (j *JQL) mergeFilters(separator string) {
 
 func (j *JQL) compile() string {
 	q := strings.Join(j.filters, " ")
-
 	if j.orderBy != "" {
 		q += " " + j.orderBy
 	}
-
 	return q
 }

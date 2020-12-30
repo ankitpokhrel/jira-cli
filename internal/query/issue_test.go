@@ -37,48 +37,37 @@ func (tfp issueFlagParser) GetBool(name string) (bool, error) {
 	if tfp.err.history && name == "history" {
 		return false, fmt.Errorf("oops! couldn't fetch history flag")
 	}
-
 	if tfp.err.watching && name == "watching" {
 		return false, fmt.Errorf("oops! couldn't fetch watching flag")
 	}
-
 	if tfp.noHistory && name == "history" {
 		return false, nil
 	}
-
 	if tfp.noWatching && name == "watching" {
 		return false, nil
 	}
-
 	if tfp.orderDesc && name == "reverse" {
 		return false, nil
 	}
-
 	return true, nil
 }
 
-//nolint:gocyclo
 func (tfp issueFlagParser) GetString(name string) (string, error) {
 	if tfp.err.resolution && name == "resolution" {
 		return "", fmt.Errorf("oops! couldn't fetch resolution flag")
 	}
-
 	if tfp.err.issueType && name == "type" {
 		return "", fmt.Errorf("oops! couldn't fetch type flag")
 	}
-
 	if tfp.created != "" && name == "created" {
 		return tfp.created, nil
 	}
-
 	if tfp.updated != "" && name == "updated" {
 		return tfp.updated, nil
 	}
-
 	if tfp.emptyType && name == "type" {
 		return "", nil
 	}
-
 	if strings.HasPrefix(name, "created") {
 		if tfp.withCreated {
 			switch name {
@@ -88,10 +77,8 @@ func (tfp issueFlagParser) GetString(name string) (string, error) {
 				return tfp.createdBefore, nil
 			}
 		}
-
 		return "", nil
 	}
-
 	if strings.HasPrefix(name, "updated") {
 		if tfp.withUpdated {
 			switch name {
@@ -101,10 +88,8 @@ func (tfp issueFlagParser) GetString(name string) (string, error) {
 				return tfp.updatedBefore, nil
 			}
 		}
-
 		return "", nil
 	}
-
 	return "test", nil
 }
 
@@ -112,7 +97,6 @@ func (tfp issueFlagParser) GetStringArray(name string) ([]string, error) {
 	if tfp.err.labels && name == "label" {
 		return []string{}, fmt.Errorf("oops! couldn't fetch label flag")
 	}
-
 	return tfp.labels, nil
 }
 
@@ -131,7 +115,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -143,7 +126,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{noHistory: true})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN watchedIssues() AND ` +
@@ -155,7 +137,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{noHistory: true, noWatching: true})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND ` +
@@ -169,7 +150,6 @@ func TestIssueGet(t *testing.T) {
 					history: true,
 				}})
 				assert.Error(t, err)
-
 				return i
 			},
 			expected: "",
@@ -181,7 +161,6 @@ func TestIssueGet(t *testing.T) {
 					watching: true,
 				}})
 				assert.Error(t, err)
-
 				return i
 			},
 			expected: "",
@@ -193,7 +172,6 @@ func TestIssueGet(t *testing.T) {
 					resolution: true,
 				}})
 				assert.Error(t, err)
-
 				return i
 			},
 			expected: "",
@@ -205,7 +183,6 @@ func TestIssueGet(t *testing.T) {
 					labels: true,
 				}})
 				assert.Error(t, err)
-
 				return i
 			},
 			expected: "",
@@ -217,7 +194,6 @@ func TestIssueGet(t *testing.T) {
 					issueType: true,
 				}})
 				assert.Error(t, err)
-
 				return i
 			},
 			expected: "",
@@ -227,7 +203,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{emptyType: true})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -239,7 +214,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{orderDesc: true})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -251,7 +225,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{labels: []string{"first", "second", "third"}})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -263,7 +236,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{created: "today", updated: "today"})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -275,7 +247,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{created: "week", updated: "week"})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -287,7 +258,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{created: "month", updated: "month"})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -299,7 +269,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{created: "year", updated: "year"})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -311,7 +280,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{created: "2020-12-31", updated: "2020-12-31"})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -324,7 +292,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{created: "2020-15-31", updated: "2020-12-31 10:30:30"})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -336,7 +303,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{createdAfter: "2020-12-01", createdBefore: "2020-12-31", withCreated: true})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -348,7 +314,6 @@ func TestIssueGet(t *testing.T) {
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{updatedAfter: "2020-12-01", updatedBefore: "2020-12-31", withUpdated: true})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -367,7 +332,6 @@ func TestIssueGet(t *testing.T) {
 					withUpdated:   true,
 				})
 				assert.NoError(t, err)
-
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
@@ -384,7 +348,6 @@ func TestIssueGet(t *testing.T) {
 			t.Parallel()
 
 			q := tc.initialize()
-
 			if q != nil {
 				assert.Equal(t, tc.expected, q.Get())
 			}

@@ -14,11 +14,9 @@ func (c *Client) Epic(jql string) (*SearchResult, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if res == nil {
 		return nil, ErrEmptyResponse
 	}
-
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
@@ -43,11 +41,9 @@ func (c *Client) EpicIssues(key, jql string) (*SearchResult, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if res == nil {
 		return nil, ErrEmptyResponse
 	}
-
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {

@@ -26,7 +26,6 @@ func NewBoard(data []*jira.Board, opts ...BoardOption) *Board {
 		data:   data,
 		writer: w,
 	}
-
 	for _, opt := range opts {
 		opt(&b)
 	}
@@ -46,9 +45,8 @@ func (b Board) Render() error {
 	b.printHeader()
 
 	for _, d := range b.data {
-		_, _ = fmt.Fprintf(b.writer, "%d\t%s\t%s\n", d.ID, prepareTitle(d.Name), d.Type)
+		fmt.Fprintf(b.writer, "%d\t%s\t%s\n", d.ID, prepareTitle(d.Name), d.Type)
 	}
-
 	if _, ok := b.writer.(*tabwriter.Writer); ok {
 		return b.writer.(*tabwriter.Writer).Flush()
 	}
@@ -66,13 +64,11 @@ func (b Board) header() []string {
 
 func (b Board) printHeader() {
 	n := len(b.header())
-
 	for i, h := range b.header() {
-		_, _ = fmt.Fprintf(b.writer, "%s", h)
+		fmt.Fprintf(b.writer, "%s", h)
 		if i != n-1 {
-			_, _ = fmt.Fprintf(b.writer, "\t")
+			fmt.Fprintf(b.writer, "\t")
 		}
 	}
-
-	_, _ = fmt.Fprintln(b.writer, "")
+	fmt.Fprintln(b.writer, "")
 }

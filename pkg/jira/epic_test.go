@@ -98,7 +98,6 @@ func TestEpic(t *testing.T) {
 			},
 		},
 	}
-
 	assert.Equal(t, expected, actual)
 
 	unexpectedStatusCode = true
@@ -225,7 +224,6 @@ func TestEpicIssues(t *testing.T) {
 			},
 		},
 	}
-
 	assert.Equal(t, expected, actual)
 
 	unexpectedStatusCode = true

@@ -40,7 +40,6 @@ func (c *Client) GetCreateMeta(req *CreateMetaRequest) (*CreateMetaResponse, err
 	if res == nil {
 		return nil, ErrEmptyResponse
 	}
-
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {

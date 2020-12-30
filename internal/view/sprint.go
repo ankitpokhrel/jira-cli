@@ -75,7 +75,6 @@ func (sl SprintList) RenderInTable() error {
 	}
 
 	data := sl.tableData()
-
 	view := tui.NewTable(
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
@@ -105,7 +104,6 @@ func (sl SprintList) data() []tui.PreviewData {
 			return helpText
 		},
 	})
-
 	for _, s := range sl.Data {
 		bid, sid := s.BoardID, s.ID
 
@@ -132,7 +130,6 @@ func (sl SprintList) tabularize(issues []*jira.Issue) tui.TableData {
 	var data tui.TableData
 
 	data = append(data, ValidIssueColumns())
-
 	for _, issue := range issues {
 		data = append(data, []string{
 			issue.Fields.IssueType.Name,
@@ -163,17 +160,15 @@ func (sl SprintList) validColumnsMap() map[string]struct{} {
 }
 
 func (sl SprintList) tableHeader() []string {
-	validColumns, columnsMap := ValidSprintColumns(), sl.validColumnsMap()
-
 	if len(sl.Display.Columns) == 0 {
-		return validColumns
+		return ValidSprintColumns()
 	}
 
 	var headers []string
 
+	columnsMap := sl.validColumnsMap()
 	for _, c := range sl.Display.Columns {
 		c = strings.ToUpper(c)
-
 		if _, ok := columnsMap[c]; ok {
 			headers = append(headers, strings.ToUpper(c))
 		}
@@ -186,15 +181,12 @@ func (sl SprintList) tableData() tui.TableData {
 	var data tui.TableData
 
 	headers := sl.tableHeader()
-
 	if !(sl.Display.Plain && sl.Display.NoHeaders) {
 		data = append(data, headers)
 	}
-
 	if len(headers) == 0 {
 		headers = ValidSprintColumns()
 	}
-
 	for _, s := range sl.Data {
 		data = append(data, sl.assignColumns(headers, s))
 	}

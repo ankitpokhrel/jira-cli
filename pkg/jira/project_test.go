@@ -63,7 +63,6 @@ func TestProjects(t *testing.T) {
 			}{Name: "Person C"},
 		},
 	}
-
 	assert.Equal(t, expected, actual)
 
 	unexpectedStatusCode = true

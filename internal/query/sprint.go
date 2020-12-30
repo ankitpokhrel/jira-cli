@@ -12,34 +12,25 @@ type Sprint struct {
 
 // NewSprint creates and initializes a new Sprint type.
 func NewSprint(flags FlagParser) (*Sprint, error) {
-	sprint := Sprint{
-		Flags: flags,
-	}
-
 	sp := sprintParams{}
-
-	err := sp.init(flags)
-	if err != nil {
+	if err := sp.init(flags); err != nil {
 		return nil, err
 	}
-
-	sprint.params = &sp
-
-	return &sprint, nil
+	return &Sprint{
+		Flags:  flags,
+		params: &sp,
+	}, nil
 }
 
 // Get returns constructed query params.
 func (s *Sprint) Get() string {
 	state := "state=active,closed"
-
 	if s.params.status != "" {
 		state = fmt.Sprintf("state=%s", s.params.status)
 	}
-
 	if s.params.debug {
 		fmt.Printf("JQL: %s\n", state)
 	}
-
 	return state
 }
 
@@ -53,14 +44,11 @@ func (sp *sprintParams) init(flags FlagParser) error {
 	if err != nil {
 		return err
 	}
-
 	debug, err := flags.GetBool("debug")
 	if err != nil {
 		return err
 	}
-
 	sp.status = status
 	sp.debug = debug
-
 	return nil
 }

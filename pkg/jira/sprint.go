@@ -28,11 +28,9 @@ func (c *Client) Sprints(boardID int, qp string, startAt, max int) (*SprintResul
 	if err != nil {
 		return nil, err
 	}
-
 	if res == nil {
 		return nil, ErrEmptyResponse
 	}
-
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
@@ -78,12 +76,10 @@ func (c *Client) SprintsInBoards(boardIDs []int, qp string, limit int) []*Sprint
 			if _, ok := seen[s.ID]; ok {
 				continue
 			}
-
 			sprints = append(sprints, s)
 			seen[s.ID] = struct{}{}
 		}
 	}
-
 	reverse(sprints)
 
 	return sprints
@@ -100,11 +96,9 @@ func (c *Client) SprintIssues(boardID, sprintID int, jql string) (*SearchResult,
 	if err != nil {
 		return nil, err
 	}
-
 	if res == nil {
 		return nil, ErrEmptyResponse
 	}
-
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
@@ -135,12 +129,10 @@ func (c *Client) lastNSprints(boardID int, qp string, limit int) (*SprintResult,
 		if err != nil {
 			break
 		}
-
 		if s.IsLast {
 			total = s.StartAt + len(s.Sprints)
 			break
 		}
-
 		n += limit
 	}
 
@@ -164,12 +156,9 @@ func injectBoardID(sprints []*Sprint, boardID int) {
 
 func reverse(s []*Sprint) {
 	n := len(s)
-
-	//nolint:gomnd
 	if n < 2 {
 		return
 	}
-
 	for i := 0; i < n/2; i++ {
 		j := n - i - 1
 		s[i], s[j] = s[j], s[i]

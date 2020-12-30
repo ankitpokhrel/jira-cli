@@ -12,11 +12,9 @@ func (c *Client) Project() ([]*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if res == nil {
 		return nil, ErrEmptyResponse
 	}
-
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
