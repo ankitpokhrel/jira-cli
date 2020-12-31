@@ -5,7 +5,8 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+
+	"github.com/ankitpokhrel/jira-cli/pkg/tui/primitive"
 )
 
 func pad(in string, n uint) string {
@@ -42,8 +43,10 @@ func splitText(s string) []string {
 	return lines
 }
 
-func getInfoModal() *tview.Modal {
-	return tview.NewModal().
+func getInfoModal() *primitive.Modal {
+	return primitive.NewModal().
 		SetText("\n\nProcessing. Please wait...").
-		SetBackgroundColor(tcell.ColorSpecial)
+		SetBackgroundColor(tcell.ColorSpecial).
+		SetTextColor(tcell.ColorDefault).
+		SetBorderColor(tcell.ColorDefault)
 }
