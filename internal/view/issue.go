@@ -25,12 +25,11 @@ func (i Issue) Render() error {
 		return i.renderPlain(os.Stdout)
 	}
 
-	data := i.data()
 	r, err := MDRenderer()
 	if err != nil {
 		return err
 	}
-	out, err := r.Render(string(data))
+	out, err := r.Render(i.String())
 	if err != nil {
 		return err
 	}
@@ -82,7 +81,7 @@ func (i Issue) renderPlain(w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	out, err := r.Render(string(i.data()))
+	out, err := r.Render(i.String())
 	if err != nil {
 		return err
 	}
