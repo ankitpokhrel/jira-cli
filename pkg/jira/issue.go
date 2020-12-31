@@ -27,9 +27,7 @@ func (c *Client) GetIssue(key string) (*Issue, error) {
 	}
 
 	var out Issue
-
-	err = json.NewDecoder(res.Body).Decode(&out)
-	if err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
 		return nil, err
 	}
 	out.Fields.Description = ifaceToADF(out.Fields.Description)

@@ -71,6 +71,5 @@ func (c *Client) Transition(key string, data *TransitionRequest) (int, error) {
 	if res.StatusCode != http.StatusNoContent {
 		return res.StatusCode, ErrUnexpectedStatusCode
 	}
-
 	return res.StatusCode, nil
 }
