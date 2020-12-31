@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/ankitpokhrel/jira-cli/api"
-	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
@@ -35,21 +34,19 @@ func (el EpicList) Render() error {
 		tui.WithSidebarSelectedFunc(navigate(el.Server)),
 		tui.WithContentTableOpts(
 			tui.WithSelectedFunc(navigate(el.Server)),
-			tui.WithViewModeFunc(func(r, c int, d interface{}) error {
-				issue := func() *jira.Issue {
-					s := cmdutil.Info("Fetching issue details...")
-					defer s.Stop()
-
-					dt := d.(tui.TableData)
-					issue, _ := api.Client(jira.Config{Debug: true}).GetIssue(dt[r][1])
-
+			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) error) {
+				dataFn := func() interface{} {
+					issue, _ := api.Client(jira.Config{Debug: true}).GetIssue(d.(tui.TableData)[r][1])
 					return issue
-				}()
-				out, err := renderer.Render(Issue{Data: issue}.String())
-				if err != nil {
-					return err
 				}
-				return PagerOut(out)
+				renderFn := func(i interface{}) error {
+					out, err := renderer.Render(Issue{Data: i.(*jira.Issue)}.String())
+					if err != nil {
+						return err
+					}
+					return PagerOut(out)
+				}
+				return dataFn, renderFn
 			}),
 		),
 	)

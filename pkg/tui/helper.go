@@ -3,6 +3,9 @@ package tui
 import (
 	"bufio"
 	"strings"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 func pad(in string, n uint) string {
@@ -37,4 +40,10 @@ func splitText(s string) []string {
 	}
 
 	return lines
+}
+
+func getInfoModal() *tview.Modal {
+	return tview.NewModal().
+		SetText("\n\nProcessing. Please wait...").
+		SetBackgroundColor(tcell.ColorSpecial)
 }

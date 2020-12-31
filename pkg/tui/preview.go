@@ -21,7 +21,7 @@ type PreviewData struct {
 // It contains 2 tables internally, viz: sidebar and contents.
 type Preview struct {
 	screen              *Screen
-	painter             *tview.Grid
+	painter             *tview.Pages
 	sidebar             *tview.Table
 	contents            *Table
 	footer              *tview.TextView
@@ -159,7 +159,7 @@ func (pv *Preview) init() {
 	pv.initContents()
 	pv.initFooter()
 
-	pv.painter = tview.NewGrid().
+	grid := tview.NewGrid().
 		SetRows(0, 1, 2).
 		SetColumns(sidebarMaxWidth, 1, 0).
 		AddItem(pv.sidebar, 0, 0, 2, 1, 0, 0, true).
@@ -168,23 +168,30 @@ func (pv *Preview) init() {
 		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
 		AddItem(pv.footer, 2, 0, 1, 3, 0, 0, false)
 
+	pv.painter = tview.NewPages().
+		AddPage("primary", grid, true, true).
+		AddPage("secondary", getInfoModal(), true, false)
+
 	pv.initLayout(pv.sidebar)
 	pv.initLayout(pv.contents.view)
 }
 
 func (pv *Preview) initSidebar() {
-	pv.sidebar.SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
-		if ev.Key() == tcell.KeyRune {
-			switch ev.Rune() {
-			case 'q':
-				pv.screen.Stop()
-				os.Exit(0)
-			case 'w':
-				pv.screen.SetFocus(pv.contents.view)
+	pv.sidebar.
+		SetSelectable(true, false).
+		SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
+			if ev.Key() == tcell.KeyRune {
+				switch ev.Rune() {
+				case 'q':
+					pv.screen.Stop()
+					os.Exit(0)
+				case 'w':
+					pv.screen.SetFocus(pv.contents.view)
+					pv.contents.view.SetSelectable(true, false).Select(1, 0)
+				}
 			}
-		}
-		return ev
-	})
+			return ev
+		})
 }
 
 func (pv *Preview) initContents() {
@@ -199,14 +206,27 @@ func (pv *Preview) initContents() {
 					os.Exit(0)
 				case 'w':
 					pv.screen.SetFocus(pv.sidebar)
+					pv.contents.view.SetSelectable(false, false)
 				case 'v':
-					if pv.contents.viewModeFunc != nil {
-						sr, _ := pv.sidebar.GetSelection()
-						r, c := pv.contents.view.GetSelection()
-						contents := pv.contentsCache[pv.data[sr].Key]
-
-						pv.screen.Suspend(func() { _ = pv.contents.viewModeFunc(r, c, contents) })
+					if pv.contents.viewModeFunc == nil {
+						break
 					}
+					sr, _ := pv.sidebar.GetSelection()
+					r, c := pv.contents.view.GetSelection()
+
+					go func() {
+						pv.painter.ShowPage("secondary")
+						defer func() {
+							pv.painter.HidePage("secondary")
+							pv.screen.SetFocus(pv.contents.view)
+						}()
+
+						contents := pv.contentsCache[pv.data[sr].Key]
+						dataFn, renderFn := pv.contents.viewModeFunc(r, c, contents)
+						data := dataFn()
+
+						pv.screen.Suspend(func() { _ = renderFn(data) })
+					}()
 				}
 			}
 			return ev
@@ -221,8 +241,7 @@ func (pv *Preview) initFooter() {
 }
 
 func (pv *Preview) initLayout(view *tview.Table) {
-	view.SetSelectable(true, false).
-		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true)).
+	view.SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true)).
 		SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEsc {
 				pv.screen.Stop()

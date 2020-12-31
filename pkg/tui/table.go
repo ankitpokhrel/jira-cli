@@ -19,7 +19,7 @@ var errNoData = fmt.Errorf("no data")
 type SelectedFunc func(row, column int, data interface{})
 
 // ViewModeFunc sets view mode handler func which gets triggered when a user press 'v'.
-type ViewModeFunc func(row, column int, data interface{}) error
+type ViewModeFunc func(row, col int, data interface{}) (func() interface{}, func(data interface{}) error)
 
 // TableData is the data to be displayed in a table.
 type TableData [][]string
@@ -27,7 +27,7 @@ type TableData [][]string
 // Table is a table layout.
 type Table struct {
 	screen       *Screen
-	painter      tview.Primitive
+	painter      *tview.Pages
 	view         *tview.Table
 	footer       *tview.TextView
 	data         TableData
@@ -59,11 +59,15 @@ func NewTable(opts ...TableOption) *Table {
 	tbl.initTable()
 	tbl.initFooter()
 
-	tbl.painter = tview.NewGrid().
+	grid := tview.NewGrid().
 		SetRows(0, 1, 2).
 		AddItem(tbl.view, 0, 0, 1, 1, 0, 0, true).
 		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
 		AddItem(tbl.footer, 2, 0, 1, 1, 0, 0, false)
+
+	tbl.painter = tview.NewPages().
+		AddPage("primary", grid, true, true).
+		AddPage("secondary", getInfoModal(), true, false)
 
 	return &tbl
 }
@@ -146,7 +150,16 @@ func (t *Table) initTable() {
 					os.Exit(0)
 				case 'v':
 					r, c := t.view.GetSelection()
-					t.screen.Suspend(func() { _ = t.viewModeFunc(r, c, t.data) })
+
+					go func() {
+						t.painter.ShowPage("secondary")
+						defer t.painter.HidePage("secondary")
+
+						dataFn, renderFn := t.viewModeFunc(r, c, t.data)
+						data := dataFn()
+
+						t.screen.Suspend(func() { _ = renderFn(data) })
+					}()
 				}
 			}
 			return ev
