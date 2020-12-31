@@ -69,7 +69,7 @@ func GetPager() string {
 		return ""
 	}
 	pager := os.Getenv("PAGER")
-	if pager == "" {
+	if pager == "" && cmdExists("less") {
 		pager = "less -r"
 	}
 	return pager
@@ -163,6 +163,10 @@ func renderPlain(w io.Writer, data tui.TableData) error {
 	if _, ok := w.(*tabwriter.Writer); ok {
 		return w.(*tabwriter.Writer).Flush()
 	}
-
 	return nil
+}
+
+func cmdExists(cmd string) bool {
+	_, err := exec.LookPath(cmd)
+	return err == nil
 }
