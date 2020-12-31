@@ -100,9 +100,8 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 
 		return resp.Issues, resp.Total
 	}()
-
 	if total == 0 {
-		cmdutil.PrintErrF("No result found for given query in project \"%s\"", project)
+		cmdutil.Errorf("No result found for given query in project \"%s\"", project)
 		return
 	}
 
@@ -157,9 +156,8 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 
 		return client.SprintsInBoards([]int{boardID}, q.Get(), numSprints)
 	}()
-
 	if len(sprints) == 0 {
-		cmdutil.PrintErrF("No result found for given query in project \"%s\"", project)
+		cmdutil.Errorf("No result found for given query in project \"%s\"", project)
 		return
 	}
 

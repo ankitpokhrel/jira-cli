@@ -51,9 +51,10 @@ func Info(msg string) *spinner.Spinner {
 	return s
 }
 
-// PrintErrF prints formatted error in stderr.
-func PrintErrF(msg string, a ...interface{}) {
+// Errorf prints formatted error in stderr and exits.
+func Errorf(msg string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, fmt.Sprintf("%s\n", msg), a...)
+	os.Exit(1)
 }
 
 // Navigate navigates to jira issue.
