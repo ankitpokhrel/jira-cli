@@ -59,7 +59,6 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 		token:  c.APIToken,
 		debug:  c.Debug,
 	}
-
 	client.transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{

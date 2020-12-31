@@ -71,7 +71,7 @@ func List(cmd *cobra.Command, _ []string) {
 		return resp.Issues, resp.Total
 	}()
 	if total == 0 {
-		cmdutil.PrintErrF("No result found for given query in project \"%s\"", project)
+		cmdutil.Errorf("No result found for given query in project \"%s\"", project)
 		return
 	}
 

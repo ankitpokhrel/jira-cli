@@ -12,11 +12,9 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
-const refreshRate = 100 * time.Millisecond
-
-// ExitWithErrMessage exits after printing given message in stderr.
-func ExitWithErrMessage(msg string) {
-	fmt.Fprintf(os.Stderr, "%s\n", msg)
+// Errorf prints formatted error in stderr and exits.
+func Errorf(msg string, a ...interface{}) {
+	fmt.Fprintf(os.Stderr, fmt.Sprintf("%s\n", msg), a...)
 	os.Exit(1)
 }
 
@@ -27,19 +25,21 @@ func ExitIfError(err error) {
 
 		switch err {
 		case jira.ErrUnexpectedStatusCode:
-			msg = "Received unexpected response code from jira. Please check the parameters you supplied and try again."
+			msg = "jira: Received unexpected response.\nPlease check the parameters you supplied and try again."
 		case jira.ErrEmptyResponse:
-			msg = "Received empty response from jira. Please try again."
+			msg = "jira: Received empty response.\nPlease try again."
 		default:
 			msg = err.Error()
 		}
 
-		ExitWithErrMessage(fmt.Sprintf("Error: %s", msg))
+		Errorf("\nError: %s", msg)
 	}
 }
 
 // Info displays spinner.
 func Info(msg string) *spinner.Spinner {
+	const refreshRate = 100 * time.Millisecond
+
 	s := spinner.New(
 		spinner.CharSets[14],
 		refreshRate,
@@ -48,12 +48,8 @@ func Info(msg string) *spinner.Spinner {
 		spinner.WithWriter(color.Error),
 	)
 	s.Start()
-	return s
-}
 
-// PrintErrF prints formatted error in stderr.
-func PrintErrF(msg string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, fmt.Sprintf("%s\n", msg), a...)
+	return s
 }
 
 // Navigate navigates to jira issue.

@@ -38,7 +38,8 @@ func init() {
 		} else {
 			home, err := homedir.Dir()
 			if err != nil {
-				cmdutil.ExitWithErrMessage(fmt.Sprintf("Error: %s", err))
+				cmdutil.Errorf("Error: %s", err)
+				return
 			}
 
 			viper.AddConfigPath(fmt.Sprintf("%s/%s", home, configDir))
@@ -71,7 +72,7 @@ func NewCmdRoot() *cobra.Command {
 
 			configFile := viper.ConfigFileUsed()
 			if !jiraConfig.Exists(configFile) {
-				cmdutil.ExitWithErrMessage("Missing configuration file.\nRun 'jira init' to configure the tool.")
+				cmdutil.Errorf("Missing configuration file.\nRun 'jira init' to configure the tool.")
 			}
 		},
 	}

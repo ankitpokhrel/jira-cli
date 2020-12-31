@@ -83,11 +83,11 @@ func move(cmd *cobra.Command, args []string) {
 		return nil
 	}()
 	if tr == nil {
-		cmdutil.PrintErrF("\u001B[0;31m✗\u001B[0m Unable to transition issue to state \"%s\"", params.state)
+		cmdutil.Errorf("\u001B[0;31m✗\u001B[0m Unable to transition issue to state \"%s\"", params.state)
 		return
 	}
 	if !tr.IsAvailable {
-		cmdutil.PrintErrF(
+		cmdutil.Errorf(
 			"\u001B[0;31m✗\u001B[0m Transition state \"%s\" for issue \"%s\" is not available",
 			tr.Name, params.key,
 		)
