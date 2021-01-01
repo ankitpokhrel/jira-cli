@@ -2,11 +2,15 @@
 
 <div>
     <p align="center">
-        <img alt="Build" src="https://img.shields.io/github/workflow/status/ankitpokhrel/jira-cli/build?style=flat-square" />
-        <img alt="GO Report-card" src="https://goreportcard.com/badge/github.com/ankitpokhrel/jira-cli?style=flat-square" />
+        <a href="https://github.com/ankitpokhrel/jira-cli/actions?query=workflow%3Abuild+branch%3Amaster">
+            <img alt="Build" src="https://img.shields.io/github/workflow/status/ankitpokhrel/jira-cli/build?style=flat-square" />
+        </a>
+        <a href="https://goreportcard.com/report/github.com/ankitpokhrel/jira-cli">
+            <img alt="GO Report-card" src="https://goreportcard.com/badge/github.com/ankitpokhrel/jira-cli?style=flat-square" />
+        </a>
     </p>
     <p align="center">
-        <i>Jira command line to help me with my frequent Jira chores</i>
+        <i>Interactive Jira CLI</i>
     </p>
     <img align="center" alt="TusPHP Demo" src=".github/assets/demo.gif" /><br/><br/>
     <p align="center">:construction: This project is still a work in progress and, things can change without notice :construction:</p><br/>
@@ -16,10 +20,10 @@ Jira UI is terrible! It is slow, buggy, and doesn't even load on occasions. Fort
 Even though not everything is available in the public API, things can be hacked around to port routine tasks to the CLI and avoid
 the UI as much as possible.
 
-This tool mostly focuses on issue search and navigation at the moment. However, it will include some daily operations like issue creation,
+This tool mostly focuses on issue search and navigation at the moment. However, it also includes features like issue creation,
 updating a ticket status, and so on.
 
-### Installation
+## Installation
 Install the runnable binary to your `$GOPATH/bin`.
 
 ```sh
@@ -28,15 +32,15 @@ $ go get github.com/ankitpokhrel/jira-cli/cmd/jira
 
 Releases and other installation options will be available later.
 
-### Shell completion
-Check `jira completion --help` for more info on setting up a bash/zsh shell completion. 
-
-### Getting started
+## Getting started
 1. [Get a Jira API token](https://id.atlassian.com/manage-profile/security/api-tokens) and export it to your shell as a `JIRA_API_TOKEN` variable.
     Add it to your shell configuration file, for instance, `$HOME/.bashrc`, so that the variable is always available.
 2. Run `jira init` to generate a config file required for the tool.
 
-### Usage
+#### Shell completion
+Check `jira completion --help` for more info on setting up a bash/zsh shell completion. 
+
+## Usage
 The tool currently comes with an issue, epic, and sprint explorer. The flags are [POSIX-compliant](https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html).
 You can combine available flags in any order to create a unique query. For example, the command below will give you high priority issues created this month
 with status `To Do` that are assigned to you and has a label `backend` :exploding_head:.
@@ -45,20 +49,25 @@ $ jira issue list -yHigh -s"To Do" --created month -lbackend -a$(jira me)
 ```
 
 The lists are displayed in an interactive UI by default. 
-- Use arrow keys or `j, k, h, l` characters to navigate through the list. 
-- Press `ENTER` to open the selected issue in the browser.
+- Use arrow keys or `j, k, h, l` characters to navigate through the list.
+- Use `g` and `SHIFT+G` to quickly navigate to the top and bottom respectively.
+- Press `v` to view selected issue details.
+- Hit `ENTER` to open the selected issue in the browser.
 - In an explorer view, press `w` to toggle focus between the sidebar and the contents screen.
 - Press `q` / `ESC` / `CTRL+C` to quit.
 
-##### Notes
+##### Note
 The tool:
 - Doesn't yet support pagination and returns 100 records by default.
 - Only returns 25 recent sprints. 
 - Is only tested with the latest Jira cloud. 
 
+### Issue
+Issues are displayed in an interactive table view by default. You can output the results in a plain view using the `--plain` flag.
+
 Check some examples/use-cases below.
 
-#### Issue
+#### List
 
 <details><summary>List recent issues</summary>
 
@@ -158,10 +167,40 @@ $ jira issue list -w -pXYZ
 ```
 </details>
 
-#### Epic
+#### Create
+![Create an issue](.github/assets/create.gif)
 
+```sh
+# Create an issue using interactive prompt
+$ jira issue create
+
+# Pass required parameters to skip prompt or use --no-prompt option
+$ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
+```
+
+#### Move
+![Move an issue](.github/assets/move.gif)
+
+```sh
+# Move an issue using interactive prompt
+$ jira issue move
+
+# Pass required parameters to skip prompt
+$ jira issue move ISSUE-1 "In Progress"
+```
+
+#### View
+![View an issue](.github/assets/view.gif)
+
+```sh
+$ jira issue view ISSUE-1
+```
+
+### Epic
 Epics are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing epic issues, you can use all filters available for the issue command.
+
+#### List
 
 <details><summary>List epics</summary>
 
@@ -197,8 +236,18 @@ $ jira epic list KEY-1 -ax -yHigh
 ```
 </details>
 
-#### Sprint
+#### Create
+Creating an epic is same as creating the issue except you also need to provide an epic name. 
 
+```sh
+# Create an issue using interactive prompt
+$ jira epic create
+
+# Pass required parameters to skip prompt or use --no-prompt option
+$ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Epic description"
+```
+
+### Sprint
 Sprints are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing sprint issues, you can use all filters available for the issue command. The tool only shows 25 recent sprints.
 
@@ -234,7 +283,7 @@ $ jira sprint list SPRINT_ID -yHigh -a$(jira me)
 ```
 </details>
 
-#### Other commands
+### Other commands
 
 <details><summary>Navigate to the project</summary>
 
@@ -264,21 +313,19 @@ $ jira board
 ```
 </details>
 
-### Scripts
-
+## Scripts
 Often times, you may want to use the output of the command to do something cool. However, the default interactive UI might not allow you to do that.
 The tool comes with the `--plain` flag that displays results in a simple layout that can then be manipulated from the shell script.    
 
 Some example scripts are listed below.
 
-###### Tickets created per day this month
-
+#### Tickets created per day this month
 Using a similar trick like the one below, you can get the number of tickets created per month and compare it with last year's data.
 
 ```bash
 #!/usr/bin/env bash
 
-tickets=$(jira issue list --created month --plain --no-truncate | rev | awk '{print $2}' | rev | sed "1 d" | awk -F'-' '{print $3}' | sort -n | uniq -c)
+tickets=$(jira issue list --created month --plain --columns created --no-headers | awk '{print $1}' | awk -F'-' '{print $3}' | sort -n | uniq -c)
 
 echo "${tickets}" | while IFS=$'\t' read -r line; do
   day=$(echo "${line}" | awk '{print $2}')
@@ -291,62 +338,56 @@ done
 Day #01: 19
 Day #02: 10
 Day #03: 21
-Day #04: 15
-Day #05: 17
 ...
 ```
 
-###### Number of tickets per sprint
+#### Number of tickets per sprint
 
 ```bash
 #!/usr/bin/env bash
 
-sprints=$(jira sprint list --table --plain | cut -f1 -f2 | sed "1 d")
+sprints=$(jira sprint list --table --plain --columns id,name --no-headers)
 
 echo "${sprints}" | while IFS=$'\t' read -r id name; do
-  count=$(jira sprint list "${id}" --table --plain | wc -l)
+  count=$(jira sprint list "${id}" --table --plain --no-headers 2>/dev/null | wc -l)
 
-  printf "%10s: %3d\n" "${name}" $((count - 1))
+  printf "%10s: %3d\n" "${name}" $((count))
 done
 
 # Output
-Sprint 5:   58
-Sprint 4:   52
 Sprint 3:   55
 Sprint 2:   40
 Sprint 1:   30
 ...
 ```
 
-###### Number of unique assignee per sprint
+#### Number of unique assignee per sprint
 
 ```bash
 #!/usr/bin/env bash
 
-sprints=$(jira sprint list --table --plain | cut -f1 -f2 | sed "1 d")
+sprints=$(jira sprint list --table --plain --columns id,name --no-headers)
 
 echo "${sprints}" | while IFS=$'\t' read -r id name; do
-  count=$(jira sprint list "${id}" --table --plain | tr '\t' ',' | sed 's/,\{2,\}/,/g' | cut -d',' -f4 | sed "1 d" | sort -n | uniq | wc -l)
+  count=$(jira sprint list "${id}" --table --plain --columns assignee --no-headers 2>/dev/null | sort -n | uniq | wc -l)
 
-  printf "%10s: %3d\n" "${name}" $((count - 1))
+  printf "%10s: %3d\n" "${name}" $((count))
 done
 
 # Output
-Sprint 5:   6
-Sprint 4:   6
 Sprint 3:   5
 Sprint 2:   4
 Sprint 1:   3
 ```
 
-### Future improvements
-- [ ] Issue creation.
-- [ ] Ability to view issue details.
-- [ ] Possibility to change issue status.
+## Future improvements
+- [x] Issue creation.
+- [x] Ability to view issue details.
+- [x] Possibility to change issue status.
 - [ ] Pagination support.
 - [ ] Historical data can be cached locally for faster execution.
 
-### Development
+## Development
 1. Clone the repo.
    ```sh
    $ git clone git@github.com:ankitpokhrel/jira-cli.git
