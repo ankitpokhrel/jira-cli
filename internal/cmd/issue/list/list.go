@@ -118,6 +118,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("priority", "y", "", "Filter issues by priority")
 	cmd.Flags().StringP("reporter", "r", "", "Filter issues by reporter (email or display name)")
 	cmd.Flags().StringP("assignee", "a", "", "Filter issues by assignee (email or display name)")
+	cmd.Flags().StringP("component", "C", "", "Filter issues by component")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
 	cmd.Flags().Bool("history", false, "Issues you accessed recently")
 	cmd.Flags().BoolP("watching", "w", false, "Issues you are watching")
