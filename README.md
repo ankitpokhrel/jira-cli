@@ -13,7 +13,7 @@
         <i>Interactive Jira CLI</i>
     </p>
     <img align="center" alt="TusPHP Demo" src=".github/assets/demo.gif" /><br/><br/>
-    <p align="center">:construction: This project is still a work in progress and, things can change without notice :construction:</p><br/>
+    <p align="center">:construction: This project is still a work in progress :construction:</p><br/>
 </div>
 
 Jira UI is terrible! It is slow, buggy, and doesn't even load on occasions. Fortunately, Jira API seems to have a decent response time.
@@ -22,6 +22,12 @@ the UI as much as possible.
 
 This tool mostly focuses on issue search and navigation at the moment. However, it also includes features like issue creation,
 updating a ticket status, and so on.
+
+#### Note
+The tool:
+- Doesn't yet support pagination and returns 100 records by default.
+- Only returns 25 recent sprints. 
+- Is only tested with the latest Jira cloud. 
 
 ## Installation
 Install the runnable binary to your `$GOPATH/bin`.
@@ -43,11 +49,12 @@ Check `jira completion --help` for more info on setting up a bash/zsh shell comp
 ## Usage
 The tool currently comes with an issue, epic, and sprint explorer. The flags are [POSIX-compliant](https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html).
 You can combine available flags in any order to create a unique query. For example, the command below will give you high priority issues created this month
-with status `To Do` that are assigned to you and has a label `backend` :exploding_head:.
+with status `To Do` that are assigned to you and has a label `backend`.
 ```sh
 $ jira issue list -yHigh -s"To Do" --created month -lbackend -a$(jira me)
 ```
 
+##### Navigation
 The lists are displayed in an interactive UI by default. 
 - Use arrow keys or `j, k, h, l` characters to navigate through the list.
 - Use `g` and `SHIFT+G` to quickly navigate to the top and bottom respectively.
@@ -56,25 +63,27 @@ The lists are displayed in an interactive UI by default.
 - In an explorer view, press `w` to toggle focus between the sidebar and the contents screen.
 - Press `q` / `ESC` / `CTRL+C` to quit.
 
-##### Note
-The tool:
-- Doesn't yet support pagination and returns 100 records by default.
-- Only returns 25 recent sprints. 
-- Is only tested with the latest Jira cloud. 
-
 ### Issue
 Issues are displayed in an interactive table view by default. You can output the results in a plain view using the `--plain` flag.
 
-Check some examples/use-cases below.
-
 #### List
+The `list` command lets you search and navigate the issues.
 
-<details><summary>List recent issues</summary>
-
-```
+```sh
+# List recent issues
 $ jira issue list
+
+# List issues created in last 7 days
+$ jira issue list --created -7d
+
+# List issues in status "To Do"
+$ jira issue list -s"To Do"
+
+# List recent issues in plain mode 
+$ jira issue list --plain
 ```
-</details>
+
+Check some more examples/use-cases below.
 
 <details><summary>List issues that I am watching</summary>
 
@@ -168,7 +177,7 @@ $ jira issue list -w -pXYZ
 </details>
 
 #### Create
-![Create an issue](.github/assets/create.gif)
+The `create` command lets you create an issue.
 
 ```sh
 # Create an issue using interactive prompt
@@ -178,8 +187,10 @@ $ jira issue create
 $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 ```
 
+![Create an issue](.github/assets/create.gif)
+
 #### Move
-![Move an issue](.github/assets/move.gif)
+The `move` command lets you transition issue from one state to another.
 
 ```sh
 # Move an issue using interactive prompt
@@ -189,16 +200,22 @@ $ jira issue move
 $ jira issue move ISSUE-1 "In Progress"
 ```
 
+![Move an issue](.github/assets/move.gif)
+
 #### View
-![View an issue](.github/assets/view.gif)
+The `view` command lets you see issue details in a terminal.
 
 ```sh
 $ jira issue view ISSUE-1
 ```
 
+![View an issue](.github/assets/view.gif)
+
 ### Epic
 Epics are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing epic issues, you can use all filters available for the issue command.
+
+See [usage](#navigation) to learn more about UI interaction.
 
 #### List
 
@@ -250,6 +267,8 @@ $ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Epic de
 ### Sprint
 Sprints are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing sprint issues, you can use all filters available for the issue command. The tool only shows 25 recent sprints.
+
+See [usage](#navigation) to learn more about UI interaction.
 
 <details><summary>List sprints</summary>
 
@@ -319,8 +338,7 @@ The tool comes with the `--plain` flag that displays results in a simple layout 
 
 Some example scripts are listed below.
 
-#### Tickets created per day this month
-Using a similar trick like the one below, you can get the number of tickets created per month and compare it with last year's data.
+<details><summary>Tickets created per day this month</summary>
 
 ```bash
 #!/usr/bin/env bash
@@ -340,8 +358,9 @@ Day #02: 10
 Day #03: 21
 ...
 ```
+</details>
 
-#### Number of tickets per sprint
+<details><summary>Number of tickets per sprint</summary>
 
 ```bash
 #!/usr/bin/env bash
@@ -360,8 +379,9 @@ Sprint 2:   40
 Sprint 1:   30
 ...
 ```
+</details>
 
-#### Number of unique assignee per sprint
+<details><summary>Number of unique assignee per sprint</summary>
 
 ```bash
 #!/usr/bin/env bash
@@ -379,6 +399,10 @@ Sprint 3:   5
 Sprint 2:   4
 Sprint 1:   3
 ```
+</details>
+
+## Known Issues
+- A key event is lost in mac OS when switching back and forth from view mode to list mode - [tcell/issues#194](https://github.com/gdamore/tcell/issues/194) 
 
 ## Future improvements
 - [x] Issue creation.
