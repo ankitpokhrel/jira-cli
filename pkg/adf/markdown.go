@@ -77,8 +77,6 @@ func (tr *MarkdownTranslator) Open(n Connector, d int) string {
 		tag.WriteString(" **")
 	case MarkEm:
 		tag.WriteString(" _")
-	case MarkUnderline:
-		tag.WriteString(" +")
 	case MarkCode:
 		tag.WriteString(" `")
 	case MarkStrike:
@@ -140,8 +138,6 @@ func (tr *MarkdownTranslator) Close(n Connector) string {
 		tag.WriteString("** ")
 	case MarkEm:
 		tag.WriteString("_ ")
-	case MarkUnderline:
-		tag.WriteString("+ ")
 	case MarkCode:
 		tag.WriteString("` ")
 	case MarkStrike:

@@ -31,12 +31,11 @@ const (
 	InlineNodeMention   = "mention"
 	InlineNodeHardBreak = "hardBreak"
 
-	MarkEm        = "em"
-	MarkLink      = "link"
-	MarkCode      = "code"
-	MarkStrike    = "strike"
-	MarkStrong    = "strong"
-	MarkUnderline = "underline"
+	MarkEm     = "em"
+	MarkLink   = "link"
+	MarkCode   = "code"
+	MarkStrike = "strike"
+	MarkStrong = "strong"
 )
 
 // TagOpener is a tag opener.
