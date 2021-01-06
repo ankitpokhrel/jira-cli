@@ -42,55 +42,20 @@ STATE		State you want to transition the issue to`,
 
 func move(cmd *cobra.Command, args []string) {
 	params := parseArgsAndFlags(args, cmd.Flags())
-
-	qs := getQuestions(params)
-	if len(qs) > 0 {
-		ans := struct {
-			Key   string
-			State string
-		}{}
-
-		err := survey.Ask(qs, &ans)
-		cmdutil.ExitIfError(err)
-
-		if params.key == "" {
-			params.key = strings.ToUpper(ans.Key)
-		}
-		if params.state == "" {
-			params.state = ans.State
-		}
-	}
-
 	client := api.Client(jira.Config{Debug: params.debug})
-
-	transitions := func() []*jira.Transition {
-		s := cmdutil.Info("Verifying transition...")
-		defer s.Stop()
-
-		transitions, err := client.Transitions(params.key)
-		cmdutil.ExitIfError(err)
-
-		return transitions
-	}()
-
-	tr := func() *jira.Transition {
-		st := strings.ToLower(params.state)
-		for _, t := range transitions {
-			if strings.ToLower(t.Name) == st {
-				return t
-			}
-		}
-		return nil
-	}()
-	if tr == nil {
-		cmdutil.Errorf("\u001B[0;31m✗\u001B[0m Unable to transition issue to state \"%s\"", params.state)
-		return
+	mc := moveCmd{
+		client:      client,
+		transitions: nil,
+		params:      params,
 	}
-	if !tr.IsAvailable {
-		cmdutil.Errorf(
-			"\u001B[0;31m✗\u001B[0m Transition state \"%s\" for issue \"%s\" is not available",
-			tr.Name, params.key,
-		)
+
+	cmdutil.ExitIfError(mc.setIssueKey())
+	cmdutil.ExitIfError(mc.setAvailableTransitions())
+	cmdutil.ExitIfError(mc.setDesiredState())
+
+	tr, err := mc.verifyTransition()
+	if err != nil {
+		cmdutil.Errorf(err.Error())
 		return
 	}
 
@@ -98,7 +63,7 @@ func move(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info(fmt.Sprintf("Transitioning issue to \"%s\"...", tr.Name))
 		defer s.Stop()
 
-		_, err := client.Transition(params.key, &jira.TransitionRequest{
+		_, err := client.Transition(mc.params.key, &jira.TransitionRequest{
 			Transition: &jira.TransitionRequestData{ID: tr.ID.String(), Name: tr.Name},
 		})
 		cmdutil.ExitIfError(err)
@@ -107,34 +72,12 @@ func move(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 
 	fmt.Printf("\u001B[0;32m✓\u001B[0m Issue transitioned to state \"%s\"\n", tr.Name)
-	fmt.Printf("%s/browse/%s\n", server, params.key)
+	fmt.Printf("%s/browse/%s\n", server, mc.params.key)
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
-		err := cmdutil.Navigate(server, params.key)
+		err := cmdutil.Navigate(server, mc.params.key)
 		cmdutil.ExitIfError(err)
 	}
-}
-
-func getQuestions(params *moveParams) []*survey.Question {
-	var qs []*survey.Question
-
-	if params.key == "" {
-		qs = append(qs, &survey.Question{
-			Name:     "key",
-			Prompt:   &survey.Input{Message: "Issue key"},
-			Validate: survey.Required,
-		})
-	}
-
-	if params.state == "" {
-		qs = append(qs, &survey.Question{
-			Name:     "state",
-			Prompt:   &survey.Input{Message: "Desired state"},
-			Validate: survey.Required,
-		})
-	}
-
-	return qs
 }
 
 type moveParams struct {
@@ -162,4 +105,102 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *moveParams {
 		state: state,
 		debug: debug,
 	}
+}
+
+type moveCmd struct {
+	client      *jira.Client
+	transitions []*jira.Transition
+	params      *moveParams
+}
+
+func (mc *moveCmd) setIssueKey() error {
+	if mc.params.key != "" {
+		return nil
+	}
+
+	var ans string
+
+	qs := &survey.Question{
+		Name:     "key",
+		Prompt:   &survey.Input{Message: "Issue key"},
+		Validate: survey.Required,
+	}
+	if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {
+		return err
+	}
+	mc.params.key = ans
+
+	return nil
+}
+
+func (mc *moveCmd) setDesiredState() error {
+	if mc.params.state != "" {
+		return nil
+	}
+
+	var (
+		options []string
+		ans     string
+	)
+
+	for _, t := range mc.transitions {
+		if t.IsAvailable {
+			options = append(options, t.Name)
+		}
+	}
+
+	qs := &survey.Question{
+		Name: "state",
+		Prompt: &survey.Select{
+			Message: "Desired state:",
+			Options: options,
+		},
+		Validate: survey.Required,
+	}
+	if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {
+		return err
+	}
+	mc.params.state = ans
+
+	return nil
+}
+
+func (mc *moveCmd) setAvailableTransitions() error {
+	s := cmdutil.Info("Fetching available transitions. Please wait...")
+	defer s.Stop()
+
+	t, err := mc.client.Transitions(mc.params.key)
+	if err != nil {
+		return err
+	}
+	mc.transitions = t
+
+	return nil
+}
+
+func (mc *moveCmd) verifyTransition() (*jira.Transition, error) {
+	var tr *jira.Transition
+
+	st := strings.ToLower(mc.params.state)
+	all := make([]string, 0, len(mc.transitions))
+	for _, t := range mc.transitions {
+		if strings.ToLower(t.Name) == st {
+			tr = t
+		}
+		all = append(all, fmt.Sprintf("'%s'", t.Name))
+	}
+
+	if tr == nil {
+		return nil, fmt.Errorf(
+			"\u001B[0;31m✗\u001B[0m Invalid transition state \"%s\"\nAvailable states for issue %s: %s",
+			mc.params.state, mc.params.key, strings.Join(all, ", "),
+		)
+	}
+	if !tr.IsAvailable {
+		return nil, fmt.Errorf(
+			"\u001B[0;31m✗\u001B[0m Transition state \"%s\" for issue \"%s\" is not available",
+			mc.params.state, mc.params.key,
+		)
+	}
+	return tr, nil
 }
