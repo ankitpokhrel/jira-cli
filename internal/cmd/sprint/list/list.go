@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	numSprints = 25
+	numSprints = 100
 	helpText   = `
 Sprints are displayed in an explorer view by default. You can use --list
 and --plain flags to display output in different modes.`
@@ -142,14 +142,6 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 	sprints := func() []*jira.Sprint {
 		s := cmdutil.Info("Fetching sprints...")
 		defer s.Stop()
-
-		resp, err := client.Boards(project, jira.BoardTypeScrum)
-		cmdutil.ExitIfError(err)
-
-		boardIDs := make([]int, 0, resp.Total)
-		for _, board := range resp.Boards {
-			boardIDs = append(boardIDs, board.ID)
-		}
 
 		q, err := query.NewSprint(flags)
 		cmdutil.ExitIfError(err)
