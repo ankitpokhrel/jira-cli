@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	numSprints = 100
+	numSprints = 50 // This is the maximum result returned by the Jira API at once.
 	helpText   = `
 Sprints are displayed in an explorer view by default. You can use --list
 and --plain flags to display output in different modes.`
@@ -139,17 +139,22 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 }
 
 func sprintExplorerView(flags query.FlagParser, boardID int, project, server string, client *jira.Client) {
+	q, err := query.NewSprint(flags)
+	cmdutil.ExitIfError(err)
+
 	sprints := func() []*jira.Sprint {
 		s := cmdutil.Info("Fetching sprints...")
 		defer s.Stop()
-
-		q, err := query.NewSprint(flags)
-		cmdutil.ExitIfError(err)
 
 		return client.SprintsInBoards([]int{boardID}, q.Get(), numSprints)
 	}()
 	if len(sprints) == 0 {
 		cmdutil.Errorf("No result found for given query in project \"%s\"", project)
+		return
+	}
+
+	if q.Params().Current || q.Params().Prev || q.Params().Next {
+		singleSprintView(flags, boardID, sprints[0].ID, project, server, client)
 		return
 	}
 
@@ -200,9 +205,12 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().String("state", "", "Filter sprint by its state (comma separated).\n"+
 		"Valid values are future, active and closed.\n"+
 		`Defaults to "active,closed"`)
-	cmd.Flags().Bool("table", false, "Display sprints in table view")
+	cmd.Flags().Bool("table", false, "Display sprints in a table view")
 	cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
 		fmt.Sprintf("Accepts: %s", strings.Join(view.ValidSprintColumns(), ", ")))
+	cmd.Flags().Bool("current", false, "Display current active sprint in a table view")
+	cmd.Flags().Bool("prev", false, "Display previous sprint in a table view")
+	cmd.Flags().Bool("next", false, "Display next planned sprint in a table view")
 }
 
 func hideFlags(cmd *cobra.Command) {
