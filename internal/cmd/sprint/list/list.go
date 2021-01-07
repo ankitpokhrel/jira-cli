@@ -171,11 +171,11 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 	}
 
 	if q.Params().Current || q.Params().Prev || q.Params().Next {
-		sid := sprints[0].ID
+		sprint := sprints[0]
 		if q.Params().Next {
-			sid = sprints[len(sprints)-1].ID
+			sprint = sprints[len(sprints)-1]
 		}
-		singleSprintView(flags, boardID, sid, project, server, client, sprints[0])
+		singleSprintView(flags, boardID, sprint.ID, project, server, client, sprint)
 		return
 	}
 
