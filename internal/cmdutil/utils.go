@@ -57,3 +57,12 @@ func Navigate(server, path string) error {
 	url := fmt.Sprintf("%s/browse/%s", server, path)
 	return browser.OpenURL(url)
 }
+
+// FormatDateTimeHuman formats date time in human readable format.
+func FormatDateTimeHuman(dt, format string) string {
+	t, err := time.Parse(format, dt)
+	if err != nil {
+		return dt
+	}
+	return t.Format("Mon, 02 Jan 06")
+}

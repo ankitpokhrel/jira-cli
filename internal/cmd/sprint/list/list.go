@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -83,11 +84,11 @@ func sprintList(cmd *cobra.Command, args []string) {
 		sprintID, err := strconv.Atoi(args[0])
 		cmdutil.ExitIfError(err)
 
-		singleSprintView(cmd.Flags(), boardID, sprintID, project, server, client)
+		singleSprintView(cmd.Flags(), boardID, sprintID, project, server, client, nil)
 	}
 }
 
-func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, server string, client *jira.Client) {
+func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, server string, client *jira.Client, sprint *jira.Sprint) {
 	issues, total := func() ([]*jira.Issue, int) {
 		s := cmdutil.Info("Fetching sprint issues...")
 		defer s.Stop()
@@ -117,11 +118,27 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 	columns, err := flags.GetString("columns")
 	cmdutil.ExitIfError(err)
 
+	var ft string
+	if sprint != nil {
+		ft = fmt.Sprintf(
+			"Showing %d of %d results for project \"%s\" in sprint #%d - %s (%s - %s)",
+			len(issues), total, project, sprint.ID, sprint.Name,
+			cmdutil.FormatDateTimeHuman(sprint.StartDate, time.RFC3339),
+			cmdutil.FormatDateTimeHuman(sprint.EndDate, time.RFC3339),
+		)
+	} else {
+		ft = fmt.Sprintf(
+			"Showing %d of %d results for project \"%s\" in sprint #%d",
+			len(issues), total, project, sprintID,
+		)
+	}
+
 	v := view.IssueList{
-		Project: project,
-		Server:  server,
-		Total:   total,
-		Data:    issues,
+		Project:    project,
+		Server:     server,
+		Total:      total,
+		Data:       issues,
+		FooterText: ft,
 		Display: view.DisplayFormat{
 			Plain:      plain,
 			NoHeaders:  noHeaders,
@@ -154,7 +171,11 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 	}
 
 	if q.Params().Current || q.Params().Prev || q.Params().Next {
-		singleSprintView(flags, boardID, sprints[0].ID, project, server, client)
+		sid := sprints[0].ID
+		if q.Params().Next {
+			sid = sprints[len(sprints)-1].ID
+		}
+		singleSprintView(flags, boardID, sid, project, server, client, sprints[0])
 		return
 	}
 
