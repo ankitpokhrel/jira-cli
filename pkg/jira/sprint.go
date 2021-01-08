@@ -136,15 +136,17 @@ func (c *Client) lastNSprints(boardID int, qp string, limit int) (*SprintResult,
 		n += limit
 	}
 
+	if err != nil {
+		return nil, err
+	}
 	if total == 0 {
 		return nil, ErrNoResult
 	}
 
 	n = total - limit
 	if n < 0 {
-		n = 0
+		return s, err
 	}
-
 	return c.Sprints(boardID, qp, n, limit)
 }
 

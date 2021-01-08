@@ -27,11 +27,12 @@ type DisplayFormat struct {
 
 // IssueList is a list view for issues.
 type IssueList struct {
-	Total   int
-	Project string
-	Server  string
-	Data    []*jira.Issue
-	Display DisplayFormat
+	Total      int
+	Project    string
+	Server     string
+	Data       []*jira.Issue
+	Display    DisplayFormat
+	FooterText string
 }
 
 // Render renders the view.
@@ -47,10 +48,14 @@ func (l IssueList) Render() error {
 	}
 
 	data := l.data()
+	if l.FooterText == "" {
+		l.FooterText = fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(data)-1, l.Total, l.Project)
+	}
+
 	view := tui.NewTable(
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
-		tui.WithTableFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(data)-1, l.Total, l.Project)),
+		tui.WithTableFooterText(l.FooterText),
 		tui.WithSelectedFunc(navigate(l.Server)),
 		tui.WithViewModeFunc(func(r, c int, _ interface{}) (func() interface{}, func(interface{}) error) {
 			dataFn := func() interface{} {

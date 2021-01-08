@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
@@ -110,8 +111,8 @@ func (sl SprintList) data() []tui.PreviewData {
 				"➤ #%d %s: ⦗%s - %s⦘",
 				s.ID,
 				prepareTitle(s.Name),
-				formatDateTimeHuman(s.StartDate, time.RFC3339),
-				formatDateTimeHuman(s.EndDate, time.RFC3339),
+				cmdutil.FormatDateTimeHuman(s.StartDate, time.RFC3339),
+				cmdutil.FormatDateTimeHuman(s.EndDate, time.RFC3339),
 			),
 			Contents: func(key string) interface{} {
 				issues := sl.Issues(bid, sid)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmbracelet/glamour"
 
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
@@ -60,9 +61,9 @@ func (i Issue) String() string {
 	}
 	return fmt.Sprintf(
 		"%s %s  %s %s  ⌛ %s  👷 %s\n# %s\n⏱️  %s  🔎 %s  🚀 %s  🏷️  %s\n\n-----------\n%s",
-		iti, it, sti, st, formatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as,
+		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as,
 		i.Data.Fields.Summary,
-		formatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
+		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
 		i.Data.Fields.Priority.Name, lbl,
 		desc,
 	)

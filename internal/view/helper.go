@@ -105,14 +105,6 @@ func formatDateTime(dt, format string) string {
 	return t.Format("2006-01-02 15:04:05")
 }
 
-func formatDateTimeHuman(dt, format string) string {
-	t, err := time.Parse(format, dt)
-	if err != nil {
-		return dt
-	}
-	return t.Format("Mon, 02 Jan 06")
-}
-
 func prepareTitle(text string) string {
 	text = strings.TrimSpace(text)
 

@@ -26,8 +26,7 @@ updating a ticket status, and so on.
 #### Note
 The tool:
 - Doesn't yet support pagination and returns 100 records by default.
-- Only returns 25 recent sprints. 
-- Is only tested with the latest Jira cloud. 
+- Is only tested with the latest Jira cloud.
 
 ## Installation
 Install the runnable binary to your `$GOPATH/bin`.

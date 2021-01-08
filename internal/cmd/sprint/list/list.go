@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -17,7 +18,7 @@ import (
 )
 
 const (
-	numSprints = 25
+	numSprints = 50 // This is the maximum result returned by Jira API at once.
 	helpText   = `
 Sprints are displayed in an explorer view by default. You can use --list
 and --plain flags to display output in different modes.`
@@ -83,11 +84,11 @@ func sprintList(cmd *cobra.Command, args []string) {
 		sprintID, err := strconv.Atoi(args[0])
 		cmdutil.ExitIfError(err)
 
-		singleSprintView(cmd.Flags(), boardID, sprintID, project, server, client)
+		singleSprintView(cmd.Flags(), boardID, sprintID, project, server, client, nil)
 	}
 }
 
-func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, server string, client *jira.Client) {
+func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, server string, client *jira.Client, sprint *jira.Sprint) {
 	issues, total := func() ([]*jira.Issue, int) {
 		s := cmdutil.Info("Fetching sprint issues...")
 		defer s.Stop()
@@ -117,11 +118,27 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 	columns, err := flags.GetString("columns")
 	cmdutil.ExitIfError(err)
 
+	var ft string
+	if sprint != nil {
+		ft = fmt.Sprintf(
+			"Showing %d of %d results for project \"%s\" in sprint #%d - %s (%s - %s)",
+			len(issues), total, project, sprint.ID, sprint.Name,
+			cmdutil.FormatDateTimeHuman(sprint.StartDate, time.RFC3339),
+			cmdutil.FormatDateTimeHuman(sprint.EndDate, time.RFC3339),
+		)
+	} else {
+		ft = fmt.Sprintf(
+			"Showing %d of %d results for project \"%s\" in sprint #%d",
+			len(issues), total, project, sprintID,
+		)
+	}
+
 	v := view.IssueList{
-		Project: project,
-		Server:  server,
-		Total:   total,
-		Data:    issues,
+		Project:    project,
+		Server:     server,
+		Total:      total,
+		Data:       issues,
+		FooterText: ft,
 		Display: view.DisplayFormat{
 			Plain:      plain,
 			NoHeaders:  noHeaders,
@@ -139,25 +156,26 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 }
 
 func sprintExplorerView(flags query.FlagParser, boardID int, project, server string, client *jira.Client) {
+	q, err := query.NewSprint(flags)
+	cmdutil.ExitIfError(err)
+
 	sprints := func() []*jira.Sprint {
 		s := cmdutil.Info("Fetching sprints...")
 		defer s.Stop()
-
-		resp, err := client.Boards(project, jira.BoardTypeScrum)
-		cmdutil.ExitIfError(err)
-
-		boardIDs := make([]int, 0, resp.Total)
-		for _, board := range resp.Boards {
-			boardIDs = append(boardIDs, board.ID)
-		}
-
-		q, err := query.NewSprint(flags)
-		cmdutil.ExitIfError(err)
 
 		return client.SprintsInBoards([]int{boardID}, q.Get(), numSprints)
 	}()
 	if len(sprints) == 0 {
 		cmdutil.Errorf("No result found for given query in project \"%s\"", project)
+		return
+	}
+
+	if q.Params().Current || q.Params().Prev || q.Params().Next {
+		sprint := sprints[0]
+		if q.Params().Next {
+			sprint = sprints[len(sprints)-1]
+		}
+		singleSprintView(flags, boardID, sprint.ID, project, server, client, sprint)
 		return
 	}
 
@@ -208,9 +226,12 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().String("state", "", "Filter sprint by its state (comma separated).\n"+
 		"Valid values are future, active and closed.\n"+
 		`Defaults to "active,closed"`)
-	cmd.Flags().Bool("table", false, "Display sprints in table view")
+	cmd.Flags().Bool("table", false, "Display sprints in a table view")
 	cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
 		fmt.Sprintf("Accepts: %s", strings.Join(view.ValidSprintColumns(), ", ")))
+	cmd.Flags().Bool("current", false, "List issues in current active sprint")
+	cmd.Flags().Bool("prev", false, "List issues in previous sprint")
+	cmd.Flags().Bool("next", false, "List issues in next planned sprint")
 }
 
 func hideFlags(cmd *cobra.Command) {
