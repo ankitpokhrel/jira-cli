@@ -118,7 +118,8 @@ func TestEpicIssues(t *testing.T) {
 			w.WriteHeader(400)
 		} else {
 			assert.Equal(t, url.Values{
-				"jql": []string{"project=TEST AND status=Done ORDER BY created DESC"},
+				"jql":        []string{"project=TEST AND status=Done ORDER BY created DESC"},
+				"maxResults": []string{"100"},
 			}, qs)
 
 			resp, err := ioutil.ReadFile("./testdata/search.json")
@@ -133,7 +134,7 @@ func TestEpicIssues(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
 
-	actual, err := client.EpicIssues("TEST-0", "project=TEST AND status=Done ORDER BY created DESC")
+	actual, err := client.EpicIssues("TEST-0", "project=TEST AND status=Done ORDER BY created DESC", 100)
 	assert.NoError(t, err)
 
 	expected := &SearchResult{
@@ -228,6 +229,6 @@ func TestEpicIssues(t *testing.T) {
 
 	unexpectedStatusCode = true
 
-	_, err = client.EpicIssues("TEST-0", "project=TEST")
+	_, err = client.EpicIssues("TEST-0", "project=TEST", 100)
 	assert.Error(t, ErrUnexpectedStatusCode, err)
 }
