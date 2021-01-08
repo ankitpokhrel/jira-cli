@@ -207,6 +207,14 @@ func (pv *Preview) initContents() {
 				case 'w':
 					pv.screen.SetFocus(pv.sidebar)
 					pv.contents.view.SetSelectable(false, false)
+				case 'c':
+					if pv.contents.copyFunc == nil {
+						break
+					}
+					sr, _ := pv.sidebar.GetSelection()
+					r, c := pv.contents.view.GetSelection()
+					contents := pv.contentsCache[pv.data[sr].Key]
+					pv.contents.copyFunc(r, c, contents)
 				case 'v':
 					if pv.contents.viewModeFunc == nil {
 						break

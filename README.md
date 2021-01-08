@@ -45,6 +45,11 @@ Releases and other installation options will be available later.
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion. 
 
+## Known Limitations
+- The tool doesn't support pagination and returns 100 records by default.
+- The tool is only tested with the latest Jira cloud.
+- A key event is lost in mac OS when switching back and forth from view mode to list mode - [tcell/issues#194](https://github.com/gdamore/tcell/issues/194)
+
 ## Usage
 The tool currently comes with an issue, epic, and sprint explorer. The flags are [POSIX-compliant](https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html).
 You can combine available flags in any order to create a unique query. For example, the command below will give you high priority issues created this month
@@ -59,6 +64,7 @@ The lists are displayed in an interactive UI by default.
 - Use `g` and `SHIFT+G` to quickly navigate to the top and bottom respectively.
 - Press `v` to view selected issue details.
 - Hit `ENTER` to open the selected issue in the browser.
+- Press `c` to copy issue URL to the system clipboard. This requires `xclip` / `xsel` in linux.
 - In an explorer view, press `w` to toggle focus between the sidebar and the contents screen.
 - Press `q` / `ESC` / `CTRL+C` to quit.
 
@@ -398,10 +404,7 @@ Sprint 3:   5
 Sprint 2:   4
 Sprint 1:   3
 ```
-</details>
-
-## Known Issues
-- A key event is lost in mac OS when switching back and forth from view mode to list mode - [tcell/issues#194](https://github.com/gdamore/tcell/issues/194) 
+</details> 
 
 ## Future improvements
 - [x] Issue creation.

@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.4
+	github.com/atotto/clipboard v0.1.2
 	github.com/briandowns/spinner v1.12.0
 	github.com/charmbracelet/glamour v0.2.0
 	github.com/cli/safeexec v1.0.0
