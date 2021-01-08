@@ -65,7 +65,7 @@ func List(cmd *cobra.Command, _ []string) {
 		q, err := query.NewIssue(project, cmd.Flags())
 		cmdutil.ExitIfError(err)
 
-		resp, err := api.Client(jira.Config{Debug: debug}).Search(q.Get())
+		resp, err := api.Client(jira.Config{Debug: debug}).Search(q.Get(), q.Params().Limit)
 		cmdutil.ExitIfError(err)
 
 		return resp.Issues, resp.Total
@@ -135,6 +135,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().String("created-before", "", "Filter by issues created before certain date")
 	cmd.Flags().String("updated-before", "", "Filter by issues updated before certain date")
 	cmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
+	cmd.Flags().Uint("limit", 100, "Number of results to return")
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")

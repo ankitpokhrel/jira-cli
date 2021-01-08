@@ -11,12 +11,12 @@ import (
 type Issue struct {
 	Project string
 	Flags   FlagParser
-	params  *issueParams
+	params  *IssueParams
 }
 
 // NewIssue creates and initializes a new Issue type.
 func NewIssue(project string, flags FlagParser) (*Issue, error) {
-	ip := issueParams{}
+	ip := IssueParams{}
 	if err := ip.init(flags); err != nil {
 		return nil, err
 	}
@@ -30,35 +30,35 @@ func NewIssue(project string, flags FlagParser) (*Issue, error) {
 // Get returns constructed jql query.
 func (i *Issue) Get() string {
 	q, obf := jql.NewJQL(i.Project), "created"
-	if (i.params.updated != "" || i.params.updatedBefore != "" || i.params.updatedAfter != "") &&
-		(i.params.created == "" && i.params.createdBefore == "" && i.params.createdAfter == "") {
+	if (i.params.Updated != "" || i.params.UpdatedBefore != "" || i.params.UpdatedAfter != "") &&
+		(i.params.Created == "" && i.params.CreatedBefore == "" && i.params.CreatedAfter == "") {
 		obf = "updated"
 	}
 	q.And(func() {
-		if i.params.latest {
+		if i.params.Latest {
 			q.History()
 			obf = "lastViewed"
 		}
-		if i.params.watching {
+		if i.params.Watching {
 			q.Watching()
 		}
 
-		q.FilterBy("type", i.params.issueType).
-			FilterBy("resolution", i.params.resolution).
-			FilterBy("status", i.params.status).
-			FilterBy("priority", i.params.priority).
-			FilterBy("reporter", i.params.reporter).
-			FilterBy("assignee", i.params.assignee).
-			FilterBy("component", i.params.component)
+		q.FilterBy("type", i.params.IssueType).
+			FilterBy("resolution", i.params.Resolution).
+			FilterBy("status", i.params.Status).
+			FilterBy("priority", i.params.Priority).
+			FilterBy("reporter", i.params.Reporter).
+			FilterBy("assignee", i.params.Assignee).
+			FilterBy("component", i.params.Component)
 
 		i.setCreatedFilters(q)
 		i.setUpdatedFilters(q)
 
-		if len(i.params.labels) > 0 {
-			q.In("labels", i.params.labels...)
+		if len(i.params.Labels) > 0 {
+			q.In("labels", i.params.Labels...)
 		}
 	})
-	if i.params.reverse {
+	if i.params.Reverse {
 		q.OrderBy(obf, jql.DirectionAscending)
 	} else {
 		q.OrderBy(obf, jql.DirectionDescending)
@@ -67,6 +67,11 @@ func (i *Issue) Get() string {
 		fmt.Printf("JQL: %s\n", q.String())
 	}
 	return q.String()
+}
+
+// Params returns issue command params.
+func (i *Issue) Params() *IssueParams {
+	return i.params
 }
 
 func (i *Issue) setDateFilters(q *jql.JQL, field, value string) {
@@ -90,73 +95,55 @@ func (i *Issue) setDateFilters(q *jql.JQL, field, value string) {
 }
 
 func (i *Issue) setCreatedFilters(q *jql.JQL) {
-	if i.params.created != "" {
-		i.setDateFilters(q, "createdDate", i.params.created)
+	if i.params.Created != "" {
+		i.setDateFilters(q, "createdDate", i.params.Created)
 		return
 	}
-	if i.params.createdAfter != "" {
-		q.Gt("createdDate", i.params.createdAfter, true)
+	if i.params.CreatedAfter != "" {
+		q.Gt("createdDate", i.params.CreatedAfter, true)
 	}
-	if i.params.createdBefore != "" {
-		q.Lt("createdDate", i.params.createdBefore, true)
+	if i.params.CreatedBefore != "" {
+		q.Lt("createdDate", i.params.CreatedBefore, true)
 	}
 }
 
 func (i *Issue) setUpdatedFilters(q *jql.JQL) {
-	if i.params.updated != "" {
-		i.setDateFilters(q, "updatedDate", i.params.updated)
+	if i.params.Updated != "" {
+		i.setDateFilters(q, "updatedDate", i.params.Updated)
 		return
 	}
-	if i.params.updatedAfter != "" {
-		q.Gt("updatedDate", i.params.updatedAfter, true)
+	if i.params.UpdatedAfter != "" {
+		q.Gt("updatedDate", i.params.UpdatedAfter, true)
 	}
-	if i.params.updatedBefore != "" {
-		q.Lt("updatedDate", i.params.updatedBefore, true)
+	if i.params.UpdatedBefore != "" {
+		q.Lt("updatedDate", i.params.UpdatedBefore, true)
 	}
 }
 
-func isValidDate(date string) (time.Time, string, bool) {
-	supportedFormats := []string{
-		"2006-01-02",
-		"2006/01/02",
-		"2006-01-02 03:04",
-		"2006/01/02 03:04",
-	}
-	for _, format := range supportedFormats {
-		dt, err := time.Parse(format, date)
-		if err == nil {
-			return dt, format, true
-		}
-	}
-	return time.Now(), "", false
-}
-
-func addDay(dt time.Time, format string) string {
-	return dt.AddDate(0, 0, 1).Format(format)
-}
-
-type issueParams struct {
-	latest        bool
-	watching      bool
-	resolution    string
-	issueType     string
-	status        string
-	priority      string
-	reporter      string
-	assignee      string
-	component     string
-	created       string
-	updated       string
-	createdAfter  string
-	updatedAfter  string
-	createdBefore string
-	updatedBefore string
-	labels        []string
-	reverse       bool
+// IssueParams is issue command parameters.
+type IssueParams struct {
+	Latest        bool
+	Watching      bool
+	Resolution    string
+	IssueType     string
+	Status        string
+	Priority      string
+	Reporter      string
+	Assignee      string
+	Component     string
+	Created       string
+	Updated       string
+	CreatedAfter  string
+	UpdatedAfter  string
+	CreatedBefore string
+	UpdatedBefore string
+	Labels        []string
+	Reverse       bool
+	Limit         uint
 	debug         bool
 }
 
-func (ip *issueParams) init(flags FlagParser) error {
+func (ip *IssueParams) init(flags FlagParser) error {
 	var err error
 
 	boolParams := []string{"history", "watching", "reverse", "debug"}
@@ -183,58 +170,83 @@ func (ip *issueParams) init(flags FlagParser) error {
 	if err != nil {
 		return err
 	}
+	limit, err := flags.GetUint("limit")
+	if err != nil {
+		return err
+	}
 
-	ip.labels = labels
 	ip.setBoolParams(boolParamsMap)
 	ip.setStringParams(stringParamsMap)
+	ip.Labels = labels
+	ip.Limit = limit
 
 	return nil
 }
 
-func (ip *issueParams) setBoolParams(paramsMap map[string]bool) {
+func (ip *IssueParams) setBoolParams(paramsMap map[string]bool) {
 	for k, v := range paramsMap {
 		switch k {
 		case "history":
-			ip.latest = v
+			ip.Latest = v
 		case "watching":
-			ip.watching = v
+			ip.Watching = v
 		case "reverse":
-			ip.reverse = v
+			ip.Reverse = v
 		case "debug":
 			ip.debug = v
 		}
 	}
 }
 
-func (ip *issueParams) setStringParams(paramsMap map[string]string) {
+func (ip *IssueParams) setStringParams(paramsMap map[string]string) {
 	for k, v := range paramsMap {
 		switch k {
 		case "resolution":
-			ip.resolution = v
+			ip.Resolution = v
 		case "type":
-			ip.issueType = v
+			ip.IssueType = v
 		case "status":
-			ip.status = v
+			ip.Status = v
 		case "priority":
-			ip.priority = v
+			ip.Priority = v
 		case "reporter":
-			ip.reporter = v
+			ip.Reporter = v
 		case "assignee":
-			ip.assignee = v
+			ip.Assignee = v
 		case "component":
-			ip.component = v
+			ip.Component = v
 		case "created":
-			ip.created = v
+			ip.Created = v
 		case "created-after":
-			ip.createdAfter = v
+			ip.CreatedAfter = v
 		case "created-before":
-			ip.createdBefore = v
+			ip.CreatedBefore = v
 		case "updated":
-			ip.updated = v
+			ip.Updated = v
 		case "updated-after":
-			ip.updatedAfter = v
+			ip.UpdatedAfter = v
 		case "updated-before":
-			ip.updatedBefore = v
+			ip.UpdatedBefore = v
 		}
 	}
+}
+
+func isValidDate(date string) (time.Time, string, bool) {
+	supportedFormats := []string{
+		"2006-01-02",
+		"2006/01/02",
+		"2006-01-02 03:04",
+		"2006/01/02 03:04",
+	}
+	for _, format := range supportedFormats {
+		dt, err := time.Parse(format, date)
+		if err == nil {
+			return dt, format, true
+		}
+	}
+	return time.Now(), "", false
+}
+
+func addDay(dt time.Time, format string) string {
+	return dt.AddDate(0, 0, 1).Format(format)
 }
