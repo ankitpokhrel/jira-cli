@@ -23,11 +23,6 @@ the UI as much as possible.
 This tool mostly focuses on issue search and navigation at the moment. However, it also includes features like issue creation,
 updating a ticket status, and so on.
 
-#### Note
-The tool:
-- Doesn't yet support pagination and returns 100 records by default.
-- Is only tested with the latest Jira cloud.
-
 ## Installation
 Install the runnable binary to your `$GOPATH/bin`.
 
@@ -45,8 +40,7 @@ Releases and other installation options will be available later.
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion. 
 
-## Known Limitations
-- The tool doesn't support pagination and returns 100 records by default.
+#### Known Limitations
 - The tool is only tested with the latest Jira cloud.
 - A key event is lost in mac OS when switching back and forth from view mode to list mode - [tcell/issues#194](https://github.com/gdamore/tcell/issues/194)
 
@@ -410,7 +404,6 @@ Sprint 1:   3
 - [x] Issue creation.
 - [x] Ability to view issue details.
 - [x] Possibility to change issue status.
-- [ ] Pagination support.
 - [ ] Historical data can be cached locally for faster execution.
 
 ## Development
