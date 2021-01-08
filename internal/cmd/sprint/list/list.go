@@ -229,9 +229,9 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("table", false, "Display sprints in a table view")
 	cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
 		fmt.Sprintf("Accepts: %s", strings.Join(view.ValidSprintColumns(), ", ")))
-	cmd.Flags().Bool("current", false, "Display current active sprint in a table view")
-	cmd.Flags().Bool("prev", false, "Display previous sprint in a table view")
-	cmd.Flags().Bool("next", false, "Display next planned sprint in a table view")
+	cmd.Flags().Bool("current", false, "List issues in current active sprint")
+	cmd.Flags().Bool("prev", false, "List issues in previous sprint")
+	cmd.Flags().Bool("next", false, "List issues in next planned sprint")
 }
 
 func hideFlags(cmd *cobra.Command) {
