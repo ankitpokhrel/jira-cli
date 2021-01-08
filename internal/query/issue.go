@@ -30,6 +30,10 @@ func NewIssue(project string, flags FlagParser) (*Issue, error) {
 // Get returns constructed jql query.
 func (i *Issue) Get() string {
 	q, obf := jql.NewJQL(i.Project), "created"
+	if (i.params.updated != "" || i.params.updatedBefore != "" || i.params.updatedAfter != "") &&
+		(i.params.created == "" && i.params.createdBefore == "" && i.params.createdAfter == "") {
+		obf = "updated"
+	}
 	q.And(func() {
 		if i.params.latest {
 			q.History()

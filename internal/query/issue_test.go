@@ -339,6 +339,44 @@ func TestIssueGet(t *testing.T) {
 				`AND component="test" AND createdDate>="2020-11-01" AND createdDate<"2020-11-02" AND updatedDate>="-10d" ` +
 				`ORDER BY lastViewed ASC`,
 		},
+		{
+			name: "created order gets priority over updated flag",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{
+					created:       "2020-11-01",
+					updated:       "-10d",
+					createdAfter:  "2020-12-01",
+					updatedBefore: "2020-12-31",
+					withCreated:   true,
+					withUpdated:   true,
+					noHistory:     true,
+				})
+				assert.NoError(t, err)
+				return i
+			},
+			expected: `project="TEST" AND issue IN watchedIssues() AND type="test" AND resolution="test" ` +
+				`AND status="test" AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
+				`AND createdDate>="2020-11-01" AND createdDate<"2020-11-02" AND updatedDate>="-10d" ` +
+				`ORDER BY created ASC`,
+		},
+		{
+			name: "it orders by updated if only updated flags are present",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{
+					updatedAfter:  "2020-11-31",
+					updatedBefore: "2020-12-31",
+					withCreated:   false,
+					withUpdated:   true,
+					noHistory:     true,
+				})
+				assert.NoError(t, err)
+				return i
+			},
+			expected: `project="TEST" AND issue IN watchedIssues() AND type="test" AND resolution="test" ` +
+				`AND status="test" AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
+				`AND updatedDate>"2020-11-31" AND updatedDate<"2020-12-31" ` +
+				`ORDER BY updated ASC`,
+		},
 	}
 
 	for _, tc := range cases {
