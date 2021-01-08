@@ -195,7 +195,8 @@ func TestSprintIssues(t *testing.T) {
 			w.WriteHeader(400)
 		} else {
 			assert.Equal(t, url.Values{
-				"jql": []string{"project=TEST AND status=Done ORDER BY created DESC"},
+				"jql":        []string{"project=TEST AND status=Done ORDER BY created DESC"},
+				"maxResults": []string{"100"},
 			}, qs)
 
 			resp, err := ioutil.ReadFile("./testdata/search.json")
@@ -210,7 +211,7 @@ func TestSprintIssues(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
 
-	actual, err := client.SprintIssues(1, 2, "project=TEST AND status=Done ORDER BY created DESC")
+	actual, err := client.SprintIssues(1, 2, "project=TEST AND status=Done ORDER BY created DESC", 100)
 	assert.NoError(t, err)
 
 	expected := &SearchResult{
@@ -305,6 +306,6 @@ func TestSprintIssues(t *testing.T) {
 
 	unexpectedStatusCode = true
 
-	_, err = client.SprintIssues(1, 2, "project=TEST")
+	_, err = client.SprintIssues(1, 2, "project=TEST", 100)
 	assert.Error(t, ErrUnexpectedStatusCode, err)
 }

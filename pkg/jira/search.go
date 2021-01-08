@@ -8,8 +8,6 @@ import (
 	"net/url"
 )
 
-const maxResults = 100
-
 // SearchResult struct holds response from /search endpoint.
 type SearchResult struct {
 	StartAt    int      `json:"startAt"`
@@ -19,8 +17,8 @@ type SearchResult struct {
 }
 
 // Search fetches response from /search endpoint.
-func (c *Client) Search(jql string) (*SearchResult, error) {
-	path := fmt.Sprintf("/search?jql=%s&maxResults=%d", url.QueryEscape(jql), maxResults)
+func (c *Client) Search(jql string, limit uint) (*SearchResult, error) {
+	path := fmt.Sprintf("/search?jql=%s&maxResults=%d", url.QueryEscape(jql), limit)
 
 	res, err := c.Get(context.Background(), path, nil)
 	if err != nil {

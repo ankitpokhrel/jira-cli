@@ -39,7 +39,7 @@ func TestSearch(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
 
-	actual, err := client.Search("project=TEST AND status=Done ORDER BY created DESC")
+	actual, err := client.Search("project=TEST AND status=Done ORDER BY created DESC", 100)
 	assert.NoError(t, err)
 
 	expected := &SearchResult{
@@ -134,6 +134,6 @@ func TestSearch(t *testing.T) {
 
 	unexpectedStatusCode = true
 
-	_, err = client.Search("project=TEST")
+	_, err = client.Search("project=TEST", 100)
 	assert.Error(t, ErrUnexpectedStatusCode, err)
 }

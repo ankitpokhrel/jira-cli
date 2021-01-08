@@ -31,10 +31,10 @@ func (c *Client) Epic(jql string) (*SearchResult, error) {
 }
 
 // EpicIssues fetches issues in the given epic.
-func (c *Client) EpicIssues(key, jql string) (*SearchResult, error) {
-	path := fmt.Sprintf("/epic/%s/issue", key)
+func (c *Client) EpicIssues(key, jql string, limit uint) (*SearchResult, error) {
+	path := fmt.Sprintf("/epic/%s/issue?maxResults=%d", key, limit)
 	if jql != "" {
-		path += fmt.Sprintf("?jql=%s", url.QueryEscape(jql))
+		path += fmt.Sprintf("&jql=%s", url.QueryEscape(jql))
 	}
 
 	res, err := c.GetV1(context.Background(), path, nil)

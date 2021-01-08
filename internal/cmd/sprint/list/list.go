@@ -96,7 +96,7 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 		q, err := query.NewIssue(project, flags)
 		cmdutil.ExitIfError(err)
 
-		resp, err := client.SprintIssues(boardID, sprintID, q.Get())
+		resp, err := client.SprintIssues(boardID, sprintID, q.Get(), q.Params().Limit)
 		cmdutil.ExitIfError(err)
 
 		return resp.Issues, resp.Total
@@ -194,7 +194,7 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 		Server:  server,
 		Data:    sprints,
 		Issues: func(boardID, sprintID int) []*jira.Issue {
-			resp, err := client.SprintIssues(boardID, sprintID, "")
+			resp, err := client.SprintIssues(boardID, sprintID, "", q.Params().Limit)
 			if err != nil {
 				return []*jira.Issue{}
 			}

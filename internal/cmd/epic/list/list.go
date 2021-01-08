@@ -101,7 +101,7 @@ func singleEpicView(flags query.FlagParser, key, project, server string, client 
 		q, err := query.NewIssue(project, flags)
 		cmdutil.ExitIfError(err)
 
-		resp, err := client.EpicIssues(key, q.Get())
+		resp, err := client.EpicIssues(key, q.Get(), q.Params().Limit)
 		cmdutil.ExitIfError(err)
 
 		return resp.Issues, resp.Total
@@ -145,14 +145,14 @@ func singleEpicView(flags query.FlagParser, key, project, server string, client 
 }
 
 func epicExplorerView(flags query.FlagParser, project, server string, client *jira.Client) {
+	q, err := query.NewIssue(project, flags)
+	cmdutil.ExitIfError(err)
+
 	epics, total := func() ([]*jira.Issue, int) {
 		s := cmdutil.Info("Fetching epics...")
 		defer s.Stop()
 
-		q, err := query.NewIssue(project, flags)
-		cmdutil.ExitIfError(err)
-
-		resp, err := client.Search(q.Get())
+		resp, err := client.Search(q.Get(), q.Params().Limit)
 		cmdutil.ExitIfError(err)
 
 		return resp.Issues, resp.Total
@@ -168,7 +168,7 @@ func epicExplorerView(flags query.FlagParser, project, server string, client *ji
 		Server:  server,
 		Data:    epics,
 		Issues: func(key string) []*jira.Issue {
-			resp, err := client.EpicIssues(key, "")
+			resp, err := client.EpicIssues(key, "", q.Params().Limit)
 			if err != nil {
 				return []*jira.Issue{}
 			}
