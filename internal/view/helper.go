@@ -10,6 +10,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/glamour"
 	"github.com/pkg/browser"
 
@@ -30,6 +31,7 @@ const (
 	  - Use arrow keys or 'j', 'k', 'h', and 'l' letters to navigate through the issue list.
 	  - Use 'g' and 'SHIFT+G' to quickly navigate to the top and bottom respectively.
 	  - Press 'v' to view selected issue details.
+	  - Press 'c' to copy issue URL to the system clipboard.
 	  - Hit ENTER to open the selected issue in a browser.
 	
 	Press 'q' / ESC / CTRL+C to quit.`
@@ -119,24 +121,31 @@ func prepareTitle(text string) string {
 	return text
 }
 
+func jiraURLFromTuiData(server string, r int, d interface{}) string {
+	var path string
+
+	switch data := d.(type) {
+	case tui.TableData:
+		path = data[r][1]
+	case tui.PreviewData:
+		path = data.Key
+	}
+
+	if path == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s/browse/%s", server, path)
+}
+
 func navigate(server string) tui.SelectedFunc {
 	return func(r, c int, d interface{}) {
-		var path string
+		_ = browser.OpenURL(jiraURLFromTuiData(server, r, d))
+	}
+}
 
-		switch data := d.(type) {
-		case tui.TableData:
-			path = data[r][1]
-		case tui.PreviewData:
-			path = data.Key
-		}
-
-		if path == "" {
-			return
-		}
-
-		url := fmt.Sprintf("%s/browse/%s", server, path)
-
-		_ = browser.OpenURL(url)
+func copyURL(server string) tui.CopyFunc {
+	return func(r, c int, d interface{}) {
+		_ = clipboard.WriteAll(jiraURLFromTuiData(server, r, d))
 	}
 }
 

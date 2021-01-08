@@ -21,6 +21,9 @@ type SelectedFunc func(row, column int, data interface{})
 // ViewModeFunc sets view mode handler func which gets triggered when a user press 'v'.
 type ViewModeFunc func(row, col int, data interface{}) (func() interface{}, func(data interface{}) error)
 
+// CopyFunc is fired when a user press 'c' character in the table cell.
+type CopyFunc func(row, column int, data interface{})
+
 // TableData is the data to be displayed in a table.
 type TableData [][]string
 
@@ -36,6 +39,7 @@ type Table struct {
 	footerText   string
 	selectedFunc SelectedFunc
 	viewModeFunc ViewModeFunc
+	copyFunc     CopyFunc
 }
 
 // TableOption is a functional option to wrap table properties.
@@ -107,6 +111,13 @@ func WithViewModeFunc(fn ViewModeFunc) TableOption {
 	}
 }
 
+// WithCopyFunc sets a func that is triggered when a user press 'c'.
+func WithCopyFunc(fn CopyFunc) TableOption {
+	return func(t *Table) {
+		t.copyFunc = fn
+	}
+}
+
 // Paint paints the table layout. First row is treated as a table header.
 func (t *Table) Paint(data TableData) error {
 	if len(data) == 0 {
@@ -148,7 +159,16 @@ func (t *Table) initTable() {
 				case 'q':
 					t.screen.Stop()
 					os.Exit(0)
+				case 'c':
+					if t.copyFunc == nil {
+						break
+					}
+					r, c := t.view.GetSelection()
+					t.copyFunc(r, c, t.data)
 				case 'v':
+					if t.viewModeFunc == nil {
+						break
+					}
 					r, c := t.view.GetSelection()
 
 					go func() {
