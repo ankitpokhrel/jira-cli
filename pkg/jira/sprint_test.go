@@ -210,7 +210,7 @@ func TestSprintIssues(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
 
-	actual, err := client.SprintIssues(1, 2, "project=TEST AND status=Done ORDER BY created DESC")
+	actual, err := client.SprintIssues(1, 2, "project=TEST AND status=Done ORDER BY created DESC", 100)
 	assert.NoError(t, err)
 
 	expected := &SearchResult{
@@ -305,6 +305,6 @@ func TestSprintIssues(t *testing.T) {
 
 	unexpectedStatusCode = true
 
-	_, err = client.SprintIssues(1, 2, "project=TEST")
+	_, err = client.SprintIssues(1, 2, "project=TEST", 100)
 	assert.Error(t, ErrUnexpectedStatusCode, err)
 }

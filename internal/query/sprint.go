@@ -56,6 +56,7 @@ type SprintParams struct {
 	Current bool
 	Prev    bool
 	Next    bool
+	Limit   uint
 	debug   bool
 }
 
@@ -83,6 +84,12 @@ func (sp *SprintParams) init(flags FlagParser) error {
 		return err
 	}
 	sp.Next = next
+
+	limit, err := flags.GetUint("limit")
+	if err != nil {
+		return err
+	}
+	sp.Limit = limit
 
 	debug, err := flags.GetBool("debug")
 	if err != nil {

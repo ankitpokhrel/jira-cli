@@ -20,36 +20,32 @@ type sprintFlagParser struct {
 	next    bool
 }
 
-func (tfp sprintFlagParser) GetBool(name string) (bool, error) {
-	if tfp.err.current && name == "current" {
+func (sfp sprintFlagParser) GetBool(name string) (bool, error) {
+	if sfp.err.current && name == "current" {
 		return true, fmt.Errorf("oops! couldn't fetch current flag")
 	}
-	if tfp.current && name == "current" {
+	if sfp.current && name == "current" {
 		return true, nil
 	}
-	if tfp.prev && name == "prev" {
+	if sfp.prev && name == "prev" {
 		return true, nil
 	}
-	if tfp.next && name == "next" {
+	if sfp.next && name == "next" {
 		return true, nil
 	}
 	return false, nil
 }
 
-func (tfp sprintFlagParser) GetString(name string) (string, error) {
-	if tfp.err.state && name == "state" {
+func (sfp sprintFlagParser) GetString(name string) (string, error) {
+	if sfp.err.state && name == "state" {
 		return "", fmt.Errorf("oops! couldn't fetch state flag")
 	}
-	return tfp.state, nil
+	return sfp.state, nil
 }
 
-func (tfp sprintFlagParser) GetStringArray(string) ([]string, error) {
-	return []string{}, nil
-}
-
-func (tfp sprintFlagParser) Set(string, string) error {
-	return nil
-}
+func (sfp sprintFlagParser) GetStringArray(string) ([]string, error) { return []string{}, nil }
+func (sfp sprintFlagParser) GetUint(string) (uint, error)            { return 100, nil }
+func (sfp sprintFlagParser) Set(string, string) error                { return nil }
 
 func TestSprintGet(t *testing.T) {
 	cases := []struct {

@@ -86,10 +86,10 @@ func (c *Client) SprintsInBoards(boardIDs []int, qp string, limit int) []*Sprint
 }
 
 // SprintIssues fetches issues in the given sprint.
-func (c *Client) SprintIssues(boardID, sprintID int, jql string) (*SearchResult, error) {
-	path := fmt.Sprintf("/board/%d/sprint/%d/issue", boardID, sprintID)
+func (c *Client) SprintIssues(boardID, sprintID int, jql string, limit uint) (*SearchResult, error) {
+	path := fmt.Sprintf("/board/%d/sprint/%d/issue?maxResults=%d", boardID, sprintID, limit)
 	if jql != "" {
-		path += fmt.Sprintf("?jql=%s", url.QueryEscape(jql))
+		path += fmt.Sprintf("&jql=%s", url.QueryEscape(jql))
 	}
 
 	res, err := c.GetV1(context.Background(), path, nil)
