@@ -1,4 +1,5 @@
-.PHONY: deps build install lint test
+.ONESHELL:
+.PHONY: all deps build install lint test
 
 # Build vars
 git_commit  = $(shell git rev-parse HEAD)
@@ -9,16 +10,15 @@ LDFLAGS     := "-X $(VERSION_PKG).Version=$(VERSION) \
 				-X $(VERSION_PKG).GitCommit=$(git_commit) \
 				-X $(VERSION_PKG).BuildDate=$(build_date)"
 
+all: deps lint test install
+
 deps:
-	@echo "Installing dependencies..."
 	go mod vendor -v
 
 build: deps
-	@echo "Building application..."
 	CGO_ENABLED=0 go build -ldflags $(LDFLAGS) ./...
 
-install: deps
-	@echo "Installing application..."
+install:
 	CGO_ENABLED=0 go install -ldflags $(LDFLAGS) ./...
 
 lint:
@@ -26,4 +26,4 @@ lint:
 
 test:
 	@go clean -testcache ./...
-	@go test -race $(shell go list ./...)
+	go test -race $(shell go list ./...)
