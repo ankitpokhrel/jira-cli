@@ -16,9 +16,10 @@
     <p align="center">:construction: This project is still a work in progress :construction:</p><br/>
 </div>
 
-Jira UI is terrible! It is slow, buggy, and doesn't even load on occasions. Fortunately, Jira API seems to have a decent response time.
-Even though not everything is available in the public API, things can be hacked around to port routine tasks to the CLI and avoid
-the UI as much as possible.
+Jira UI is inconvenient! It is slow and doesn't even load on occasions. On top of that, it's tricky to figure
+out what you might be looking for. For instance, what tickets I worked on in the previous sprint? Fortunately,
+Jira API seems to have a decent response time. Even though not everything is available via the public API, things
+can be hacked around to port routine tasks to the CLI and speed up your workflow to some extent.
 
 This tool mostly focuses on issue search and navigation at the moment. However, it also includes features like issue creation,
 updating a ticket status, and so on.
@@ -40,7 +41,7 @@ Releases and other installation options will be available later.
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion. 
 
-#### Known Limitations
+#### Known limitations
 - The tool is only tested with the latest Jira cloud.
 - A key event is lost in mac OS when switching back and forth from view mode to list mode - [tcell/issues#194](https://github.com/gdamore/tcell/issues/194)
 
@@ -217,40 +218,27 @@ When viewing epic issues, you can use all filters available for the issue comman
 See [usage](#navigation) to learn more about UI interaction.
 
 #### List
-
-<details><summary>List epics</summary>
+You can use all flags supported by `issue list` command here except for the issue type.
 
 ```sh
+# List epics
 $ jira epic list
 
-// or, in a table view
+# List epics in a table view
 $ jira epic list --table
-```
-</details>
 
-<details><summary>List epics reported by me and are open</summary>
-
-```sh
+# List epics reported by me and are open
 $ jira epic list -r$(jira me) -sOpen
-```
-</details>
 
-<details><summary>List issues in an epic</summary>
-
-```sh
+# List issues in an epic
 $ jira epic list KEY-1
 
-// list all issue in an epic KEY-1 that is unassigned and has a high priority
+# List all issue in an epic KEY-1 that is unassigned and has a high priority
 $ jira epic list KEY-1 -ax -yHigh
-```
-</details>
 
-<details><summary>List issues in an epic that is unassigned and has a high priority</summary>
-
-```sh
-$ jira epic list KEY-1 -ax -yHigh
+# List high priority epics
+$ jira epic list KEY-1 -yHigh
 ```
-</details>
 
 #### Create
 Creating an epic is same as creating the issue except you also need to provide an epic name. 
@@ -259,7 +247,7 @@ Creating an epic is same as creating the issue except you also need to provide a
 # Create an issue using interactive prompt
 $ jira epic create
 
-# Pass required parameters to skip prompt or use --no-prompt option
+# Pass required parameters to skip prompt or use --no-prompt flag to skip prompt for unrequired params
 $ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Epic description"
 ```
 
@@ -269,50 +257,45 @@ When viewing sprint issues, you can use all filters available for the issue comm
 
 See [usage](#navigation) to learn more about UI interaction.
 
-<details><summary>List sprints</summary>
-
 ```sh
+# List sprints in an exporer view
 $ jira sprint list
 
-// or, in a table view
+# List sprints in a table view
 $ jira sprint list --table
-```
-</details>
 
-<details><summary>List future and active sprints</summary>
+# List issues in current active sprint
+$ jira sprint list --current
 
-```sh
+# List issues in current active sprint that are assigned to me
+$ jira sprint list --current -a$(jira me)
+
+# List issues in previous sprint
+$ jira sprint list --prev
+
+# List issues in next planned sprint
+$ jira sprint list --next
+
+# List future and active sprints
 $ jira sprint list --state future,active
-```
-</details>
 
-<details><summary>List issues in a sprint</summary>
-
-```sh
-// you can get sprint id with `jira sprint list` or `jira sprint list --table`
+# List issues in a particular sprint. You can use all flags supported by issue list command here. 
+# To get sprint id use `jira sprint list` or `jira sprint list --table`
 $ jira sprint list SPRINT_ID
-```
-</details>
 
-<details><summary>List high priority issues in a sprint are assigned to me</summary>
-
-```sh
+# List high priority issues in a sprint are assigned to me
 $ jira sprint list SPRINT_ID -yHigh -a$(jira me)
 ```
-</details>
 
 ### Other commands
 
 <details><summary>Navigate to the project</summary>
 
 ```sh
+# Navigate to the project
 $ jira open
-```
-</details>
 
-<details><summary>Navigate to the issue</summary>
-
-```sh
+# Navigate to the issue
 $ jira open KEY-1
 ```
 </details>
@@ -404,6 +387,8 @@ Sprint 1:   3
 - [x] Issue creation.
 - [x] Ability to view issue details.
 - [x] Possibility to change issue status.
+- [ ] Possibility to assign issue to a user.
+- [ ] Comments management.
 - [ ] Historical data can be cached locally for faster execution.
 
 ## Development
@@ -414,11 +399,11 @@ Sprint 1:   3
 
 2. Make changes, build the binary, and test your changes.
    ```sh
+   $ make deps
    $ make install
    ```   
 
 3. Run linter and tests before submitting a PR.
    ```sh
-   $ make lint
-   $ make test
+   $ make ci
    ```
