@@ -1,5 +1,5 @@
 .ONESHELL:
-.PHONY: all deps build install lint test
+.PHONY: all deps build install lint test ci
 
 # Build vars
 git_commit  = $(shell git rev-parse HEAD)
@@ -27,3 +27,5 @@ lint:
 test:
 	@go clean -testcache ./...
 	go test -race $(shell go list ./...)
+
+ci: lint test
