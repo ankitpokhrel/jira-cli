@@ -16,13 +16,8 @@
     <p align="center">:construction: This project is still a work in progress :construction:</p><br/>
 </div>
 
-Jira UI is inconvenient! It is slow and doesn't even load on occasions. On top of that, it's tricky to figure
-out what you might be looking for. For instance, what tickets I worked on in the previous sprint? Fortunately,
-Jira API seems to have a decent response time. Even though not everything is available via the public API, things
-can be hacked around to port routine tasks to the CLI and speed up your workflow to some extent.
-
 This tool mostly focuses on issue search and navigation at the moment. However, it also includes features like issue creation,
-updating a ticket status, and so on.
+updating a ticket status, and so on. Note that the tool is only tested with the latest Jira cloud.
 
 ## Installation
 Install the runnable binary to your `$GOPATH/bin`.
@@ -41,8 +36,7 @@ Releases and other installation options will be available later.
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion. 
 
-#### Known limitations
-- The tool is only tested with the latest Jira cloud.
+#### Known issues
 - A key event is lost in mac OS when switching back and forth from view mode to list mode - [tcell/issues#194](https://github.com/gdamore/tcell/issues/194)
 
 ## Usage
