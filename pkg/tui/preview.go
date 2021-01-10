@@ -188,6 +188,8 @@ func (pv *Preview) initSidebar() {
 				case 'w':
 					pv.screen.SetFocus(pv.contents.view)
 					pv.contents.view.SetSelectable(true, false).Select(1, 0)
+				default:
+					pv.contents.view.SetSelectable(false, false)
 				}
 			}
 			return ev
