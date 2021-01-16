@@ -47,20 +47,14 @@ func TestGetCreateMeta(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected := &CreateMetaResponse{[]struct {
-		Key        string `json:"key"`
-		Name       string `json:"name"`
-		IssueTypes []struct {
-			Name   string                 `json:"name"`
-			Fields map[string]interface{} `json:"fields"`
-		} `json:"issuetypes"`
+		Key        string                 `json:"key"`
+		Name       string                 `json:"name"`
+		IssueTypes []*CreateMetaIssueType `json:"issuetypes"`
 	}{
 		{
 			Key:  "TEST",
 			Name: "Test Project",
-			IssueTypes: []struct {
-				Name   string                 `json:"name"`
-				Fields map[string]interface{} `json:"fields"`
-			}{
+			IssueTypes: []*CreateMetaIssueType{
 				{
 					Name: "Epic",
 					Fields: map[string]interface{}{

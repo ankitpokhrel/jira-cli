@@ -31,11 +31,12 @@ var (
 // JiraCLIConfig is a Jira CLI config.
 type JiraCLIConfig struct {
 	value struct {
-		server  string
-		login   string
-		project string
-		board   *jira.Board
-		epic    *jira.Epic
+		server     string
+		login      string
+		project    string
+		board      *jira.Board
+		epic       *jira.Epic
+		issueTypes []*jira.IssueType
 	}
 	jiraClient         *jira.Client
 	projectSuggestions []string
@@ -209,13 +210,12 @@ func (c *JiraCLIConfig) configureProjectAndBoardDetails() error {
 }
 
 func (c *JiraCLIConfig) configureMetadata() error {
-	s := cmdutil.Info("Fetching metadata...")
+	s := cmdutil.Info("Configuring metadata. Please wait...")
 	defer s.Stop()
 
 	meta, err := c.jiraClient.GetCreateMeta(&jira.CreateMetaRequest{
-		Projects:       c.value.project,
-		IssueTypeNames: jira.IssueTypeEpic,
-		Expand:         "projects.issuetypes.fields",
+		Projects: c.value.project,
+		Expand:   "projects.issuetypes.fields",
 	})
 	if err != nil {
 		return err
@@ -224,19 +224,34 @@ func (c *JiraCLIConfig) configureMetadata() error {
 		return ErrUnexpectedResponseFormat
 	}
 
-	var key string
-	fields := meta.Projects[0].IssueTypes[0].Fields
-	for field, value := range fields {
+	var (
+		epicMeta map[string]interface{}
+		epicKey  string
+	)
+	issueTypes := make([]*jira.IssueType, 0, len(meta.Projects[0].IssueTypes))
+	for _, it := range meta.Projects[0].IssueTypes {
+		if it.Name == jira.IssueTypeEpic {
+			epicMeta = it.Fields
+		}
+		issueTypes = append(issueTypes, &jira.IssueType{
+			ID:      it.ID,
+			Name:    it.Name,
+			Subtask: it.Subtask,
+		})
+	}
+	c.value.issueTypes = issueTypes
+
+	for field, value := range epicMeta {
 		if !strings.Contains(field, "customfield") {
 			continue
 		}
 		v := value.(map[string]interface{})
 		if v["name"].(string) == "Epic Name" {
-			key = v["key"].(string)
+			epicKey = v["key"].(string)
 			break
 		}
 	}
-	c.value.epic = &jira.Epic{Field: key}
+	c.value.epic = &jira.Epic{Field: epicKey}
 
 	return nil
 }
@@ -245,10 +260,9 @@ func (c *JiraCLIConfig) write() error {
 	viper.Set("server", c.value.server)
 	viper.Set("login", c.value.login)
 	viper.Set("project", c.value.project)
-	viper.Set("board.id", c.value.board.ID)
-	viper.Set("board.name", c.value.board.Name)
-	viper.Set("board.type", c.value.board.Type)
-	viper.Set("epic.field", c.value.epic.Field)
+	viper.Set("board", c.value.board)
+	viper.Set("epic", c.value.epic)
+	viper.Set("issue.types", c.value.issueTypes)
 
 	return viper.WriteConfig()
 }
