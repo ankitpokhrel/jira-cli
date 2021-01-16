@@ -56,7 +56,11 @@ func TestGetCreateMeta(t *testing.T) {
 			Name: "Test Project",
 			IssueTypes: []*CreateMetaIssueType{
 				{
-					Name: "Epic",
+					IssueType: IssueType{
+						ID:      "10001",
+						Name:    "Epic",
+						Subtask: false,
+					},
 					Fields: map[string]interface{}{
 						"customfield_10011": map[string]interface{}{
 							"name": "Epic Name",

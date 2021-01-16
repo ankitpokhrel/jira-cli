@@ -43,9 +43,8 @@ func create(cmd *cobra.Command, _ []string) {
 	params := parseFlags(cmd.Flags())
 	client := api.Client(jira.Config{Debug: params.debug})
 	cc := createCmd{
-		client:     client,
-		issueTypes: nil,
-		params:     params,
+		client: client,
+		params: params,
 	}
 
 	cmdutil.ExitIfError(cc.setIssueTypes())
