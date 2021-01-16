@@ -14,24 +14,30 @@ type CreateMetaRequest struct {
 	Expand         string
 }
 
-// CreateMetaResponse struct holds response from POST /issue/createmeta endpoint.
+// CreateMetaResponse struct holds response from GET /issue/createmeta endpoint.
 type CreateMetaResponse struct {
 	Projects []struct {
-		Key        string `json:"key"`
-		Name       string `json:"name"`
-		IssueTypes []struct {
-			Name   string                 `json:"name"`
-			Fields map[string]interface{} `json:"fields"`
-		} `json:"issuetypes"`
+		Key        string                 `json:"key"`
+		Name       string                 `json:"name"`
+		IssueTypes []*CreateMetaIssueType `json:"issuetypes"`
 	} `json:"projects"`
+}
+
+// CreateMetaIssueType struct holds issue types from GET /issue/createmeta endpoint.
+type CreateMetaIssueType struct {
+	IssueType
+	Fields map[string]interface{} `json:"fields"`
 }
 
 // GetCreateMeta gets create metadata using GET /issue/createmeta endpoint.
 func (c *Client) GetCreateMeta(req *CreateMetaRequest) (*CreateMetaResponse, error) {
 	path := fmt.Sprintf(
-		"/issue/createmeta?projectKeys=%s&issuetypeNames=%s&expand=%s",
-		req.Projects, req.IssueTypeNames, req.Expand,
+		"/issue/createmeta?projectKeys=%s&expand=%s",
+		req.Projects, req.Expand,
 	)
+	if req.IssueTypeNames != "" {
+		path += fmt.Sprintf("&issuetypeNames=%s", req.IssueTypeNames)
+	}
 
 	res, err := c.Get(context.Background(), path, nil)
 	if err != nil {

@@ -35,7 +35,7 @@ STATE		State you want to transition the issue to`,
 		Run: move,
 	}
 
-	cmd.Flags().Bool("web", false, "Open issue in web browser after successful transistion")
+	cmd.Flags().Bool("web", false, "Open issue in web browser after successful transition")
 
 	return &cmd
 }

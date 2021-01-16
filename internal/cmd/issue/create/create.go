@@ -40,9 +40,16 @@ func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
 
-	flags := parseFlags(cmd.Flags())
-	qs := getQuestions(flags)
+	params := parseFlags(cmd.Flags())
+	client := api.Client(jira.Config{Debug: params.debug})
+	cc := createCmd{
+		client: client,
+		params: params,
+	}
 
+	cmdutil.ExitIfError(cc.setIssueTypes())
+
+	qs := cc.getQuestions()
 	if len(qs) > 0 {
 		ans := struct {
 			IssueType string
@@ -53,14 +60,14 @@ func create(cmd *cobra.Command, _ []string) {
 		err := survey.Ask(qs, &ans)
 		cmdutil.ExitIfError(err)
 
-		if flags.issueType == "" {
-			flags.issueType = ans.IssueType
+		if params.issueType == "" {
+			params.issueType = ans.IssueType
 		}
-		if flags.summary == "" {
-			flags.summary = ans.Summary
+		if params.summary == "" {
+			params.summary = ans.Summary
 		}
-		if flags.body == "" {
-			flags.body = ans.Body
+		if params.body == "" {
+			params.body = ans.Body
 		}
 	}
 
@@ -68,13 +75,13 @@ func create(cmd *cobra.Command, _ []string) {
 		s := cmdutil.Info("Creating an issue...")
 		defer s.Stop()
 
-		resp, err := api.Client(jira.Config{Debug: flags.debug}).Create(&jira.CreateRequest{
+		resp, err := client.Create(&jira.CreateRequest{
 			Project:   project,
-			IssueType: flags.issueType,
-			Summary:   flags.summary,
-			Body:      flags.body,
-			Priority:  flags.priority,
-			Labels:    flags.labels,
+			IssueType: params.issueType,
+			Summary:   params.summary,
+			Body:      params.body,
+			Priority:  params.priority,
+			Labels:    params.labels,
 		})
 		cmdutil.ExitIfError(err)
 
@@ -102,24 +109,61 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
 
-func getQuestions(params *createParams) []*survey.Question {
+type createCmd struct {
+	client     *jira.Client
+	issueTypes []*jira.IssueType
+	params     *createParams
+}
+
+func (cc *createCmd) setIssueTypes() error {
+	issueTypes := make([]*jira.IssueType, 0)
+	availableTypes, ok := viper.Get("issue.types").([]interface{})
+	if !ok {
+		return fmt.Errorf("invalid issue types in config")
+	}
+	for _, at := range availableTypes {
+		tp := at.(map[interface{}]interface{})
+		st := tp["subtask"].(bool)
+		if st {
+			continue
+		}
+		issueTypes = append(issueTypes, &jira.IssueType{
+			ID:      tp["id"].(string),
+			Name:    tp["name"].(string),
+			Subtask: st,
+		})
+	}
+	cc.issueTypes = issueTypes
+
+	return nil
+}
+
+func (cc *createCmd) getQuestions() []*survey.Question {
 	var qs []*survey.Question
 
-	if params.issueType == "" {
+	if cc.params.issueType == "" {
+		var options []string
+		for _, t := range cc.issueTypes {
+			options = append(options, t.Name)
+		}
+
 		qs = append(qs, &survey.Question{
-			Name:     "issueType",
-			Prompt:   &survey.Input{Message: "Issue type"},
+			Name: "issueType",
+			Prompt: &survey.Select{
+				Message: "Issue type:",
+				Options: options,
+			},
 			Validate: survey.Required,
 		})
 	}
-	if params.summary == "" {
+	if cc.params.summary == "" {
 		qs = append(qs, &survey.Question{
 			Name:     "summary",
 			Prompt:   &survey.Input{Message: "Summary"},
 			Validate: survey.Required,
 		})
 	}
-	if !params.noInput && params.body == "" {
+	if !cc.params.noInput && cc.params.body == "" {
 		qs = append(qs, &survey.Question{
 			Name: "body",
 			Prompt: &surveyext.JiraEditor{

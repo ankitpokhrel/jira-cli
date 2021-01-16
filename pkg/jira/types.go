@@ -65,6 +65,13 @@ type IssueFields struct {
 	Updated string `json:"updated"`
 }
 
+// IssueType holds issue type info.
+type IssueType struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Subtask bool   `json:"subtask"`
+}
+
 // Sprint holds sprint info.
 type Sprint struct {
 	ID           int    `json:"id"`

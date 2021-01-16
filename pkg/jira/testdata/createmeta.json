@@ -7,7 +7,9 @@
       "name": "Test Project",
       "issuetypes": [
         {
+          "id": "10001",
           "name": "Epic",
+          "subtask": false,
           "fields": {
             "customfield_10011": {
               "name": "Epic Name",
