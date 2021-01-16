@@ -116,9 +116,6 @@ type createCmd struct {
 }
 
 func (cc *createCmd) setIssueTypes() error {
-	s := cmdutil.Info("Fetching available issue types. Please wait...")
-	defer s.Stop()
-
 	issueTypes := make([]*jira.IssueType, 0)
 	availableTypes, ok := viper.Get("issue.types").([]interface{})
 	if !ok {
