@@ -86,14 +86,17 @@ func create(cmd *cobra.Command, _ []string) {
 		s := cmdutil.Info("Creating an issue...")
 		defer s.Stop()
 
-		resp, err := client.Create(&jira.CreateRequest{
-			Project:   project,
-			IssueType: params.issueType,
-			Summary:   params.summary,
-			Body:      params.body,
-			Priority:  params.priority,
-			Labels:    params.labels,
-		})
+		cr := jira.CreateRequest{
+			Project:    project,
+			IssueType:  params.issueType,
+			Summary:    params.summary,
+			Body:       params.body,
+			Priority:   params.priority,
+			Labels:     params.labels,
+			Components: params.components,
+		}
+
+		resp, err := client.Create(&cr)
 		cmdutil.ExitIfError(err)
 
 		return resp.Key
@@ -116,6 +119,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("body", "b", "", "Issue description")
 	cmd.Flags().StringP("priority", "y", "", "Issue priority")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Issue labels")
+	cmd.Flags().StringArrayP("component", "C", []string{}, "Issue components")
 	cmd.Flags().Bool("web", false, "Open issue in web browser after successful creation")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
@@ -208,13 +212,14 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 }
 
 type createParams struct {
-	issueType string
-	summary   string
-	body      string
-	priority  string
-	labels    []string
-	noInput   bool
-	debug     bool
+	issueType  string
+	summary    string
+	body       string
+	priority   string
+	labels     []string
+	components []string
+	noInput    bool
+	debug      bool
 }
 
 func parseFlags(flags query.FlagParser) *createParams {
@@ -233,6 +238,9 @@ func parseFlags(flags query.FlagParser) *createParams {
 	labels, err := flags.GetStringArray("label")
 	cmdutil.ExitIfError(err)
 
+	components, err := flags.GetStringArray("component")
+	cmdutil.ExitIfError(err)
+
 	noInput, err := flags.GetBool("no-input")
 	cmdutil.ExitIfError(err)
 
@@ -240,12 +248,13 @@ func parseFlags(flags query.FlagParser) *createParams {
 	cmdutil.ExitIfError(err)
 
 	return &createParams{
-		issueType: issueType,
-		summary:   summary,
-		body:      body,
-		priority:  priority,
-		labels:    labels,
-		noInput:   noInput,
-		debug:     debug,
+		issueType:  issueType,
+		summary:    summary,
+		body:       body,
+		priority:   priority,
+		labels:     labels,
+		components: components,
+		noInput:    noInput,
+		debug:      debug,
 	}
 }

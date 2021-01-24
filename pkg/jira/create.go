@@ -14,13 +14,14 @@ type CreateResponse struct {
 
 // CreateRequest struct holds request data for create request.
 type CreateRequest struct {
-	Project   string
-	Name      string
-	IssueType string
-	Summary   string
-	Body      string
-	Priority  string
-	Labels    []string
+	Project    string
+	Name       string
+	IssueType  string
+	Summary    string
+	Body       string
+	Priority   string
+	Labels     []string
+	Components []string
 	// EpicFieldName is the dynamic epic field name
 	// that changes per jira installation.
 	EpicFieldName string
@@ -85,7 +86,10 @@ type createFields struct {
 	Priority    *struct {
 		Name string `json:"name,omitempty"`
 	} `json:"priority,omitempty"`
-	Labels []string `json:"labels,omitempty"`
+	Labels     []string `json:"labels,omitempty"`
+	Components []struct {
+		Name string `json:"name,omitempty"`
+	} `json:"components,omitempty"`
 
 	epicFieldName string
 }
@@ -162,6 +166,18 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 				}{{ValueType: "text", Text: req.Body}},
 			}},
 		}
+	}
+	if len(req.Components) > 0 {
+		comps := make([]struct {
+			Name string `json:"name,omitempty"`
+		}, 0, len(req.Components))
+
+		for _, c := range req.Components {
+			comps = append(comps, struct {
+				Name string `json:"name,omitempty"`
+			}{c})
+		}
+		data.Fields.M.Components = comps
 	}
 
 	return &data

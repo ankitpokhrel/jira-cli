@@ -71,6 +71,7 @@ func create(cmd *cobra.Command, _ []string) {
 			Body:          flags.body,
 			Priority:      flags.priority,
 			Labels:        flags.labels,
+			Components:    flags.components,
 			EpicFieldName: viper.GetString("epic.field"),
 		})
 		cmdutil.ExitIfError(err)
@@ -95,6 +96,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("body", "b", "", "Epic description")
 	cmd.Flags().StringP("priority", "y", "", "Epic priority")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Epic labels")
+	cmd.Flags().StringArrayP("component", "C", []string{}, "Issue components")
 	cmd.Flags().Bool("web", false, "Open epic in web browser after successful creation")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
@@ -130,13 +132,14 @@ func getQuestions(params *createParams) []*survey.Question {
 }
 
 type createParams struct {
-	name     string
-	summary  string
-	body     string
-	priority string
-	labels   []string
-	noInput  bool
-	debug    bool
+	name       string
+	summary    string
+	body       string
+	priority   string
+	labels     []string
+	components []string
+	noInput    bool
+	debug      bool
 }
 
 func parseFlags(flags query.FlagParser) *createParams {
@@ -155,6 +158,9 @@ func parseFlags(flags query.FlagParser) *createParams {
 	labels, err := flags.GetStringArray("label")
 	cmdutil.ExitIfError(err)
 
+	components, err := flags.GetStringArray("component")
+	cmdutil.ExitIfError(err)
+
 	noInput, err := flags.GetBool("no-input")
 	cmdutil.ExitIfError(err)
 
@@ -162,12 +168,13 @@ func parseFlags(flags query.FlagParser) *createParams {
 	cmdutil.ExitIfError(err)
 
 	return &createParams{
-		name:     name,
-		summary:  summary,
-		body:     body,
-		priority: priority,
-		labels:   labels,
-		noInput:  noInput,
-		debug:    debug,
+		name:       name,
+		summary:    summary,
+		body:       body,
+		priority:   priority,
+		labels:     labels,
+		components: components,
+		noInput:    noInput,
+		debug:      debug,
 	}
 }
