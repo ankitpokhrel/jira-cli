@@ -96,7 +96,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("body", "b", "", "Epic description")
 	cmd.Flags().StringP("priority", "y", "", "Epic priority")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Epic labels")
-	cmd.Flags().StringArrayP("component", "C", []string{}, "Issue components")
+	cmd.Flags().StringArrayP("component", "C", []string{}, "Epic components")
 	cmd.Flags().Bool("web", false, "Open epic in web browser after successful creation")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
