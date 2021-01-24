@@ -23,6 +23,9 @@ $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 
 # Create issue in another project
 $ jira issue create -pPRJ -tBug -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'`
+
+	actionSubmit = "Submit"
+	actionCancel = "Cancel"
 )
 
 // NewCmdCreate is a create command.
@@ -39,6 +42,7 @@ func NewCmdCreate() *cobra.Command {
 func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
+	action := actionSubmit
 
 	params := parseFlags(cmd.Flags())
 	client := api.Client(jira.Config{Debug: params.debug})
@@ -55,6 +59,7 @@ func create(cmd *cobra.Command, _ []string) {
 			IssueType string
 			Summary   string
 			Body      string
+			Action    string
 		}{}
 
 		err := survey.Ask(qs, &ans)
@@ -69,6 +74,12 @@ func create(cmd *cobra.Command, _ []string) {
 		if params.body == "" {
 			params.body = ans.Body
 		}
+		action = ans.Action
+	}
+
+	if action == actionCancel {
+		fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
+		return
 	}
 
 	key := func() string {
@@ -88,7 +99,7 @@ func create(cmd *cobra.Command, _ []string) {
 		return resp.Key
 	}()
 
-	fmt.Printf("\u001B[0;32m✓\u001B[0m Issue created: %s/browse/%s\n", server, key)
+	fmt.Printf("\033[0;32m✓\033[0m Issue created\n%s/browse/%s\n", server, key)
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, key)
@@ -127,9 +138,13 @@ func (cc *createCmd) setIssueTypes() error {
 		if st {
 			continue
 		}
+		name := tp["name"].(string)
+		if name == jira.IssueTypeEpic {
+			continue
+		}
 		issueTypes = append(issueTypes, &jira.IssueType{
 			ID:      tp["id"].(string),
-			Name:    tp["name"].(string),
+			Name:    name,
 			Subtask: st,
 		})
 	}
@@ -163,7 +178,12 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 			Validate: survey.Required,
 		})
 	}
-	if !cc.params.noInput && cc.params.body == "" {
+
+	if cc.params.noInput {
+		return qs
+	}
+
+	if cc.params.body == "" {
 		qs = append(qs, &survey.Question{
 			Name: "body",
 			Prompt: &surveyext.JiraEditor{
@@ -172,6 +192,17 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 			},
 		})
 	}
+	qs = append(qs, &survey.Question{
+		Name: "action",
+		Prompt: &survey.Select{
+			Message: "What's next?",
+			Options: []string{
+				actionSubmit,
+				actionCancel,
+			},
+		},
+		Validate: survey.Required,
+	})
 
 	return qs
 }
