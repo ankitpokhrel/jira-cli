@@ -23,6 +23,9 @@ $ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Bug des
 
 # Create epic in another project
 $ jira epic create -pPRJ -n"Amazing epic" -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'`
+
+	actionSubmit = "Submit"
+	actionCancel = "Cancel"
 )
 
 // NewCmdCreate is a create command.
@@ -39,12 +42,13 @@ func NewCmdCreate() *cobra.Command {
 func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
+	action := actionSubmit
 
 	flags := parseFlags(cmd.Flags())
 	qs := getQuestions(flags)
 
 	if len(qs) > 0 {
-		ans := struct{ Name, Summary, Body string }{}
+		ans := struct{ Name, Summary, Body, Action string }{}
 		err := survey.Ask(qs, &ans)
 		cmdutil.ExitIfError(err)
 
@@ -57,6 +61,12 @@ func create(cmd *cobra.Command, _ []string) {
 		if flags.body == "" {
 			flags.body = ans.Body
 		}
+		action = ans.Action
+	}
+
+	if action == actionCancel {
+		fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
+		return
 	}
 
 	key := func() string {
@@ -79,7 +89,7 @@ func create(cmd *cobra.Command, _ []string) {
 		return resp.Key
 	}()
 
-	fmt.Printf("\u001B[0;32m✓\u001B[0m Epic created: %s/browse/%s\n", server, key)
+	fmt.Printf("\033[0;32m✓\033[0m Epic created\n%s/browse/%s\n", server, key)
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, key)
@@ -118,7 +128,12 @@ func getQuestions(params *createParams) []*survey.Question {
 			Validate: survey.Required,
 		})
 	}
-	if !params.noInput && params.body == "" {
+
+	if params.noInput {
+		return qs
+	}
+
+	if params.body == "" {
 		qs = append(qs, &survey.Question{
 			Name: "body",
 			Prompt: &surveyext.JiraEditor{
@@ -127,6 +142,17 @@ func getQuestions(params *createParams) []*survey.Question {
 			},
 		})
 	}
+	qs = append(qs, &survey.Question{
+		Name: "action",
+		Prompt: &survey.Select{
+			Message: "What's next?",
+			Options: []string{
+				actionSubmit,
+				actionCancel,
+			},
+		},
+		Validate: survey.Required,
+	})
 
 	return qs
 }

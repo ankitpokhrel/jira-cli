@@ -55,13 +55,7 @@ func create(cmd *cobra.Command, _ []string) {
 
 	qs := cc.getQuestions()
 	if len(qs) > 0 {
-		ans := struct {
-			IssueType string
-			Summary   string
-			Body      string
-			Action    string
-		}{}
-
+		ans := struct{ IssueType, Summary, Body, Action string }{}
 		err := survey.Ask(qs, &ans)
 		cmdutil.ExitIfError(err)
 
