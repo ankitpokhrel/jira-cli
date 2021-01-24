@@ -2,6 +2,8 @@ package create
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
@@ -24,8 +26,9 @@ $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 # Create issue in another project
 $ jira issue create -pPRJ -tBug -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'`
 
-	actionSubmit = "Submit"
-	actionCancel = "Cancel"
+	actionSubmit   = "Submit"
+	actionCancel   = "Cancel"
+	actionMetadata = "Add metadata"
 )
 
 // NewCmdCreate is a create command.
@@ -42,7 +45,6 @@ func NewCmdCreate() *cobra.Command {
 func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
-	action := actionSubmit
 
 	params := parseFlags(cmd.Flags())
 	client := api.Client(jira.Config{Debug: params.debug})
@@ -55,7 +57,7 @@ func create(cmd *cobra.Command, _ []string) {
 
 	qs := cc.getQuestions()
 	if len(qs) > 0 {
-		ans := struct{ IssueType, Summary, Body, Action string }{}
+		ans := struct{ IssueType, Summary, Body string }{}
 		err := survey.Ask(qs, &ans)
 		cmdutil.ExitIfError(err)
 
@@ -68,12 +70,43 @@ func create(cmd *cobra.Command, _ []string) {
 		if params.body == "" {
 			params.body = ans.Body
 		}
-		action = ans.Action
 	}
 
-	if action == actionCancel {
-		fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
-		return
+	answer := struct{ Action string }{}
+	for answer.Action != actionSubmit {
+		err := survey.Ask([]*survey.Question{cc.getNextAction()}, &answer)
+		cmdutil.ExitIfError(err)
+
+		switch answer.Action {
+		case actionCancel:
+			fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
+			os.Exit(0)
+		case actionMetadata:
+			ans := struct{ Metadata []string }{}
+			err := survey.Ask(cc.getMetadata(), &ans)
+			cmdutil.ExitIfError(err)
+
+			if len(ans.Metadata) > 0 {
+				qs = cc.getMetadataQuestions(ans.Metadata)
+				ans := struct {
+					Priority   string
+					Labels     string
+					Components string
+				}{}
+				err := survey.Ask(qs, &ans)
+				cmdutil.ExitIfError(err)
+
+				if ans.Priority != "" {
+					params.priority = ans.Priority
+				}
+				if len(ans.Labels) > 0 {
+					params.labels = strings.Split(ans.Labels, ",")
+				}
+				if len(ans.Components) > 0 {
+					params.components = strings.Split(ans.Components, ",")
+				}
+			}
+		}
 	}
 
 	key := func() string {
@@ -190,17 +223,65 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 			},
 		})
 	}
-	qs = append(qs, &survey.Question{
+
+	return qs
+}
+
+func (cc *createCmd) getNextAction() *survey.Question {
+	return &survey.Question{
 		Name: "action",
 		Prompt: &survey.Select{
 			Message: "What's next?",
 			Options: []string{
 				actionSubmit,
+				actionMetadata,
 				actionCancel,
 			},
 		},
 		Validate: survey.Required,
-	})
+	}
+}
+
+func (cc *createCmd) getMetadata() []*survey.Question {
+	return []*survey.Question{
+		{
+			Name: "metadata",
+			Prompt: &survey.MultiSelect{
+				Message: "What would you like to add?",
+				Options: []string{"Priority", "Components", "Labels"},
+			},
+		},
+	}
+}
+
+func (cc *createCmd) getMetadataQuestions(cat []string) []*survey.Question {
+	var qs []*survey.Question
+
+	for _, c := range cat {
+		switch c {
+		case "Priority":
+			qs = append(qs, &survey.Question{
+				Name:   "priority",
+				Prompt: &survey.Input{Message: "Priority"},
+			})
+		case "Components":
+			qs = append(qs, &survey.Question{
+				Name: "components",
+				Prompt: &survey.Input{
+					Message: "Components",
+					Help:    "Comma separated list of valid components. For eg: BE,FE",
+				},
+			})
+		case "Labels":
+			qs = append(qs, &survey.Question{
+				Name: "labels",
+				Prompt: &survey.Input{
+					Message: "Labels",
+					Help:    "Comma separated list of labels. For eg: backend,urgent",
+				},
+			})
+		}
+	}
 
 	return qs
 }
