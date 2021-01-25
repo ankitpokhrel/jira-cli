@@ -2,12 +2,15 @@ package create
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdcommon"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -23,26 +26,27 @@ $ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Bug des
 
 # Create epic in another project
 $ jira epic create -pPRJ -n"Amazing epic" -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'`
-
-	actionSubmit = "Submit"
-	actionCancel = "Cancel"
 )
 
 // NewCmdCreate is a create command.
 func NewCmdCreate() *cobra.Command {
 	return &cobra.Command{
 		Use:     "create",
-		Short:   "Create an issue in a project",
+		Short:   "Create an epic in a project",
 		Long:    helpText,
 		Example: examples,
 		Run:     create,
 	}
 }
 
+// SetFlags sets flags supported by create command.
+func SetFlags(cmd *cobra.Command) {
+	cmdcommon.SetCreateFlags(cmd, "Epic")
+}
+
 func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
-	action := actionSubmit
 
 	flags := parseFlags(cmd.Flags())
 	qs := getQuestions(flags)
@@ -61,12 +65,43 @@ func create(cmd *cobra.Command, _ []string) {
 		if flags.body == "" {
 			flags.body = ans.Body
 		}
-		action = ans.Action
 	}
 
-	if action == actionCancel {
-		fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
-		return
+	answer := struct{ Action string }{}
+	for answer.Action != cmdcommon.ActionSubmit {
+		err := survey.Ask([]*survey.Question{cmdcommon.GetNextAction()}, &answer)
+		cmdutil.ExitIfError(err)
+
+		switch answer.Action {
+		case cmdcommon.ActionCancel:
+			fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
+			os.Exit(0)
+		case cmdcommon.ActionMetadata:
+			ans := struct{ Metadata []string }{}
+			err := survey.Ask(cmdcommon.GetMetadata(), &ans)
+			cmdutil.ExitIfError(err)
+
+			if len(ans.Metadata) > 0 {
+				qs = cmdcommon.GetMetadataQuestions(ans.Metadata)
+				ans := struct {
+					Priority   string
+					Labels     string
+					Components string
+				}{}
+				err := survey.Ask(qs, &ans)
+				cmdutil.ExitIfError(err)
+
+				if ans.Priority != "" {
+					flags.priority = ans.Priority
+				}
+				if len(ans.Labels) > 0 {
+					flags.labels = strings.Split(ans.Labels, ",")
+				}
+				if len(ans.Components) > 0 {
+					flags.components = strings.Split(ans.Components, ",")
+				}
+			}
+		}
 	}
 
 	key := func() string {
@@ -95,20 +130,6 @@ func create(cmd *cobra.Command, _ []string) {
 		err := cmdutil.Navigate(server, key)
 		cmdutil.ExitIfError(err)
 	}
-}
-
-// SetFlags sets flags supported by create command.
-func SetFlags(cmd *cobra.Command) {
-	cmd.Flags().SortFlags = false
-
-	cmd.Flags().StringP("name", "n", "", "Epic name")
-	cmd.Flags().StringP("summary", "s", "", "Epic summary or title")
-	cmd.Flags().StringP("body", "b", "", "Epic description")
-	cmd.Flags().StringP("priority", "y", "", "Epic priority")
-	cmd.Flags().StringArrayP("label", "l", []string{}, "Epic labels")
-	cmd.Flags().StringArrayP("component", "C", []string{}, "Epic components")
-	cmd.Flags().Bool("web", false, "Open epic in web browser after successful creation")
-	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
 
 func getQuestions(params *createParams) []*survey.Question {
@@ -142,17 +163,6 @@ func getQuestions(params *createParams) []*survey.Question {
 			},
 		})
 	}
-	qs = append(qs, &survey.Question{
-		Name: "action",
-		Prompt: &survey.Select{
-			Message: "What's next?",
-			Options: []string{
-				actionSubmit,
-				actionCancel,
-			},
-		},
-		Validate: survey.Required,
-	})
 
 	return qs
 }
