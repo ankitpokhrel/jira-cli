@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdcommon"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -25,22 +26,22 @@ $ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Bug des
 
 # Create epic in another project
 $ jira epic create -pPRJ -n"Amazing epic" -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'`
-
-	//TODO: Refactor to remove duplication with issue/create
-	actionSubmit   = "Submit"
-	actionCancel   = "Cancel"
-	actionMetadata = "Add metadata"
 )
 
 // NewCmdCreate is a create command.
 func NewCmdCreate() *cobra.Command {
 	return &cobra.Command{
 		Use:     "create",
-		Short:   "Create an issue in a project",
+		Short:   "Create an epic in a project",
 		Long:    helpText,
 		Example: examples,
 		Run:     create,
 	}
+}
+
+// SetFlags sets flags supported by create command.
+func SetFlags(cmd *cobra.Command) {
+	cmdcommon.SetCreateFlags(cmd, "Epic")
 }
 
 func create(cmd *cobra.Command, _ []string) {
@@ -67,21 +68,21 @@ func create(cmd *cobra.Command, _ []string) {
 	}
 
 	answer := struct{ Action string }{}
-	for answer.Action != actionSubmit {
-		err := survey.Ask([]*survey.Question{getNextAction()}, &answer)
+	for answer.Action != cmdcommon.ActionSubmit {
+		err := survey.Ask([]*survey.Question{cmdcommon.GetNextAction()}, &answer)
 		cmdutil.ExitIfError(err)
 
 		switch answer.Action {
-		case actionCancel:
+		case cmdcommon.ActionCancel:
 			fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
 			os.Exit(0)
-		case actionMetadata:
+		case cmdcommon.ActionMetadata:
 			ans := struct{ Metadata []string }{}
-			err := survey.Ask(getMetadata(), &ans)
+			err := survey.Ask(cmdcommon.GetMetadata(), &ans)
 			cmdutil.ExitIfError(err)
 
 			if len(ans.Metadata) > 0 {
-				qs = getMetadataQuestions(ans.Metadata)
+				qs = cmdcommon.GetMetadataQuestions(ans.Metadata)
 				ans := struct {
 					Priority   string
 					Labels     string
@@ -131,20 +132,6 @@ func create(cmd *cobra.Command, _ []string) {
 	}
 }
 
-// SetFlags sets flags supported by create command.
-func SetFlags(cmd *cobra.Command) {
-	cmd.Flags().SortFlags = false
-
-	cmd.Flags().StringP("name", "n", "", "Epic name")
-	cmd.Flags().StringP("summary", "s", "", "Epic summary or title")
-	cmd.Flags().StringP("body", "b", "", "Epic description")
-	cmd.Flags().StringP("priority", "y", "", "Epic priority")
-	cmd.Flags().StringArrayP("label", "l", []string{}, "Epic labels")
-	cmd.Flags().StringArrayP("component", "C", []string{}, "Epic components")
-	cmd.Flags().Bool("web", false, "Open epic in web browser after successful creation")
-	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
-}
-
 func getQuestions(params *createParams) []*survey.Question {
 	var qs []*survey.Question
 
@@ -175,65 +162,6 @@ func getQuestions(params *createParams) []*survey.Question {
 				BlankAllowed: true,
 			},
 		})
-	}
-
-	return qs
-}
-
-func getNextAction() *survey.Question {
-	return &survey.Question{
-		Name: "action",
-		Prompt: &survey.Select{
-			Message: "What's next?",
-			Options: []string{
-				actionSubmit,
-				actionMetadata,
-				actionCancel,
-			},
-		},
-		Validate: survey.Required,
-	}
-}
-
-func getMetadata() []*survey.Question {
-	return []*survey.Question{
-		{
-			Name: "metadata",
-			Prompt: &survey.MultiSelect{
-				Message: "What would you like to add?",
-				Options: []string{"Priority", "Components", "Labels"},
-			},
-		},
-	}
-}
-
-func getMetadataQuestions(cat []string) []*survey.Question {
-	var qs []*survey.Question
-
-	for _, c := range cat {
-		switch c {
-		case "Priority":
-			qs = append(qs, &survey.Question{
-				Name:   "priority",
-				Prompt: &survey.Input{Message: "Priority"},
-			})
-		case "Components":
-			qs = append(qs, &survey.Question{
-				Name: "components",
-				Prompt: &survey.Input{
-					Message: "Components",
-					Help:    "Comma separated list of valid components. For eg: BE,FE",
-				},
-			})
-		case "Labels":
-			qs = append(qs, &survey.Question{
-				Name: "labels",
-				Prompt: &survey.Input{
-					Message: "Labels",
-					Help:    "Comma separated list of labels. For eg: backend,urgent",
-				},
-			})
-		}
 	}
 
 	return qs

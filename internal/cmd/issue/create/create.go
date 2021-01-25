@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdcommon"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -25,10 +26,6 @@ $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 
 # Create issue in another project
 $ jira issue create -pPRJ -tBug -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'`
-
-	actionSubmit   = "Submit"
-	actionCancel   = "Cancel"
-	actionMetadata = "Add metadata"
 )
 
 // NewCmdCreate is a create command.
@@ -40,6 +37,11 @@ func NewCmdCreate() *cobra.Command {
 		Example: examples,
 		Run:     create,
 	}
+}
+
+// SetFlags sets flags supported by create command.
+func SetFlags(cmd *cobra.Command) {
+	cmdcommon.SetCreateFlags(cmd, "Issue")
 }
 
 func create(cmd *cobra.Command, _ []string) {
@@ -73,21 +75,21 @@ func create(cmd *cobra.Command, _ []string) {
 	}
 
 	answer := struct{ Action string }{}
-	for answer.Action != actionSubmit {
-		err := survey.Ask([]*survey.Question{cc.getNextAction()}, &answer)
+	for answer.Action != cmdcommon.ActionSubmit {
+		err := survey.Ask([]*survey.Question{cmdcommon.GetNextAction()}, &answer)
 		cmdutil.ExitIfError(err)
 
 		switch answer.Action {
-		case actionCancel:
+		case cmdcommon.ActionCancel:
 			fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
 			os.Exit(0)
-		case actionMetadata:
+		case cmdcommon.ActionMetadata:
 			ans := struct{ Metadata []string }{}
-			err := survey.Ask(cc.getMetadata(), &ans)
+			err := survey.Ask(cmdcommon.GetMetadata(), &ans)
 			cmdutil.ExitIfError(err)
 
 			if len(ans.Metadata) > 0 {
-				qs = cc.getMetadataQuestions(ans.Metadata)
+				qs = cmdcommon.GetMetadataQuestions(ans.Metadata)
 				ans := struct {
 					Priority   string
 					Labels     string
@@ -135,20 +137,6 @@ func create(cmd *cobra.Command, _ []string) {
 		err := cmdutil.Navigate(server, key)
 		cmdutil.ExitIfError(err)
 	}
-}
-
-// SetFlags sets flags supported by create command.
-func SetFlags(cmd *cobra.Command) {
-	cmd.Flags().SortFlags = false
-
-	cmd.Flags().StringP("type", "t", "", "Issue type")
-	cmd.Flags().StringP("summary", "s", "", "Issue summary or title")
-	cmd.Flags().StringP("body", "b", "", "Issue description")
-	cmd.Flags().StringP("priority", "y", "", "Issue priority")
-	cmd.Flags().StringArrayP("label", "l", []string{}, "Issue labels")
-	cmd.Flags().StringArrayP("component", "C", []string{}, "Issue components")
-	cmd.Flags().Bool("web", false, "Open issue in web browser after successful creation")
-	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
 
 type createCmd struct {
@@ -222,65 +210,6 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 				BlankAllowed: true,
 			},
 		})
-	}
-
-	return qs
-}
-
-func (cc *createCmd) getNextAction() *survey.Question {
-	return &survey.Question{
-		Name: "action",
-		Prompt: &survey.Select{
-			Message: "What's next?",
-			Options: []string{
-				actionSubmit,
-				actionMetadata,
-				actionCancel,
-			},
-		},
-		Validate: survey.Required,
-	}
-}
-
-func (cc *createCmd) getMetadata() []*survey.Question {
-	return []*survey.Question{
-		{
-			Name: "metadata",
-			Prompt: &survey.MultiSelect{
-				Message: "What would you like to add?",
-				Options: []string{"Priority", "Components", "Labels"},
-			},
-		},
-	}
-}
-
-func (cc *createCmd) getMetadataQuestions(cat []string) []*survey.Question {
-	var qs []*survey.Question
-
-	for _, c := range cat {
-		switch c {
-		case "Priority":
-			qs = append(qs, &survey.Question{
-				Name:   "priority",
-				Prompt: &survey.Input{Message: "Priority"},
-			})
-		case "Components":
-			qs = append(qs, &survey.Question{
-				Name: "components",
-				Prompt: &survey.Input{
-					Message: "Components",
-					Help:    "Comma separated list of valid components. For eg: BE,FE",
-				},
-			})
-		case "Labels":
-			qs = append(qs, &survey.Question{
-				Name: "labels",
-				Prompt: &survey.Input{
-					Message: "Labels",
-					Help:    "Comma separated list of labels. For eg: backend,urgent",
-				},
-			})
-		}
 	}
 
 	return qs
