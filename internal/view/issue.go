@@ -50,6 +50,16 @@ func (i Issue) String() string {
 	if len(i.Data.Fields.Labels) > 0 {
 		lbl = strings.Join(i.Data.Fields.Labels, ", ")
 	}
+	components := make([]string, 0, len(i.Data.Fields.Components))
+	for _, c := range i.Data.Fields.Components {
+		components = append(components, c.Name)
+	}
+	cmpt := "None"
+	if len(components) > 0 {
+		cmpt = strings.Join(components, ", ")
+	}
+	if len(i.Data.Fields.Labels) > 0 {
+	}
 	it, iti := i.Data.Fields.IssueType.Name, "⭐"
 	if it == "Bug" {
 		iti = "🐞"
@@ -60,11 +70,11 @@ func (i Issue) String() string {
 		desc = tr.Translate()
 	}
 	return fmt.Sprintf(
-		"%s %s  %s %s  ⌛ %s  👷 %s\n# %s\n⏱️  %s  🔎 %s  🚀 %s  🏷️  %s\n\n-----------\n%s",
+		"%s %s  %s %s  ⌛ %s  👷 %s\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s\n\n-----------\n%s",
 		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as,
 		i.Data.Fields.Summary,
 		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
-		i.Data.Fields.Priority.Name, lbl,
+		i.Data.Fields.Priority.Name, cmpt, lbl,
 		desc,
 	)
 }

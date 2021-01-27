@@ -61,6 +61,9 @@ type IssueFields struct {
 	Status struct {
 		Name string `json:"name"`
 	} `json:"status"`
+	Components []struct {
+		Name string `json:"name"`
+	} `json:"components"`
 	Created string `json:"created"`
 	Updated string `json:"updated"`
 }
