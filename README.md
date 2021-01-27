@@ -54,6 +54,7 @@ The lists are displayed in an interactive UI by default.
 - Press `v` to view selected issue details.
 - Hit `ENTER` to open the selected issue in the browser.
 - Press `c` to copy issue URL to the system clipboard. This requires `xclip` / `xsel` in linux.
+- Press 'CTRL+K' to copy issue key to the system clipboard.
 - In an explorer view, press `w` to toggle focus between the sidebar and the contents screen.
 - Press `q` / `ESC` / `CTRL+C` to quit.
 

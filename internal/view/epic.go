@@ -49,6 +49,7 @@ func (el EpicList) Render() error {
 				return dataFn, renderFn
 			}),
 			tui.WithCopyFunc(copyURL(el.Server)),
+			tui.WithCopyKeyFunc(copyKey()),
 		),
 	)
 

@@ -72,6 +72,7 @@ func (l IssueList) Render() error {
 			return dataFn, renderFn
 		}),
 		tui.WithCopyFunc(copyURL(l.Server)),
+		tui.WithCopyKeyFunc(copyKey()),
 	)
 
 	return view.Paint(data)

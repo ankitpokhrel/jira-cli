@@ -201,6 +201,17 @@ func (pv *Preview) initContents() {
 		SetBorder(true).
 		SetBorderColor(tcell.ColorDarkGray).
 		SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
+			contents := func() interface{} {
+				sr, _ := pv.sidebar.GetSelection()
+				return pv.contentsCache[pv.data[sr].Key]
+			}
+			if ev.Key() == tcell.KeyCtrlK {
+				if pv.contents.copyKeyFunc == nil {
+					return ev
+				}
+				r, c := pv.contents.view.GetSelection()
+				pv.contents.copyKeyFunc(r, c, contents())
+			}
 			if ev.Key() == tcell.KeyRune {
 				switch ev.Rune() {
 				case 'q':
@@ -213,10 +224,8 @@ func (pv *Preview) initContents() {
 					if pv.contents.copyFunc == nil {
 						break
 					}
-					sr, _ := pv.sidebar.GetSelection()
 					r, c := pv.contents.view.GetSelection()
-					contents := pv.contentsCache[pv.data[sr].Key]
-					pv.contents.copyFunc(r, c, contents)
+					pv.contents.copyFunc(r, c, contents())
 				case 'v':
 					if pv.contents.viewModeFunc == nil {
 						break

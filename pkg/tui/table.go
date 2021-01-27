@@ -24,6 +24,9 @@ type ViewModeFunc func(row, col int, data interface{}) (func() interface{}, func
 // CopyFunc is fired when a user press 'c' character in the table cell.
 type CopyFunc func(row, column int, data interface{})
 
+// CopyKeyFunc is fired when a user press 'CTRL+K' character in the table cell.
+type CopyKeyFunc func(row, column int, data interface{})
+
 // TableData is the data to be displayed in a table.
 type TableData [][]string
 
@@ -40,6 +43,7 @@ type Table struct {
 	selectedFunc SelectedFunc
 	viewModeFunc ViewModeFunc
 	copyFunc     CopyFunc
+	copyKeyFunc  CopyKeyFunc
 }
 
 // TableOption is a functional option to wrap table properties.
@@ -118,6 +122,13 @@ func WithCopyFunc(fn CopyFunc) TableOption {
 	}
 }
 
+// WithCopyKeyFunc sets a func that is triggered when a user press 'CTRL+K'.
+func WithCopyKeyFunc(fn CopyKeyFunc) TableOption {
+	return func(t *Table) {
+		t.copyKeyFunc = fn
+	}
+}
+
 // Paint paints the table layout. First row is treated as a table header.
 func (t *Table) Paint(data TableData) error {
 	if len(data) == 0 {
@@ -154,6 +165,13 @@ func (t *Table) initTable() {
 			}
 		}).
 		SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
+			if ev.Key() == tcell.KeyCtrlK {
+				if t.copyKeyFunc == nil {
+					return ev
+				}
+				r, c := t.view.GetSelection()
+				t.copyKeyFunc(r, c, t.data)
+			}
 			if ev.Key() == tcell.KeyRune {
 				switch ev.Rune() {
 				case 'q':

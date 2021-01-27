@@ -32,6 +32,7 @@ const (
 	  - Use 'g' and 'SHIFT+G' to quickly navigate to the top and bottom respectively.
 	  - Press 'v' to view selected issue details.
 	  - Press 'c' to copy issue URL to the system clipboard.
+	  - Press 'CTRL+K' to copy issue key to the system clipboard.
 	  - Hit ENTER to open the selected issue in a browser.
 	
 	Press 'q' / ESC / CTRL+C to quit.`
@@ -121,7 +122,7 @@ func prepareTitle(text string) string {
 	return text
 }
 
-func jiraURLFromTuiData(server string, r int, d interface{}) string {
+func issueKeyFromTuiData(r int, d interface{}) string {
 	var path string
 
 	switch data := d.(type) {
@@ -134,7 +135,11 @@ func jiraURLFromTuiData(server string, r int, d interface{}) string {
 	if path == "" {
 		return ""
 	}
-	return fmt.Sprintf("%s/browse/%s", server, path)
+	return path
+}
+
+func jiraURLFromTuiData(server string, r int, d interface{}) string {
+	return fmt.Sprintf("%s/browse/%s", server, issueKeyFromTuiData(r, d))
 }
 
 func navigate(server string) tui.SelectedFunc {
@@ -146,6 +151,12 @@ func navigate(server string) tui.SelectedFunc {
 func copyURL(server string) tui.CopyFunc {
 	return func(r, c int, d interface{}) {
 		_ = clipboard.WriteAll(jiraURLFromTuiData(server, r, d))
+	}
+}
+
+func copyKey() tui.CopyKeyFunc {
+	return func(r, c int, d interface{}) {
+		_ = clipboard.WriteAll(issueKeyFromTuiData(r, d))
 	}
 }
 
