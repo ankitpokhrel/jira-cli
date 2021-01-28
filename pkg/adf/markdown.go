@@ -24,7 +24,7 @@ type MarkdownTranslator struct {
 func (tr *MarkdownTranslator) Open(n Connector, d int) string {
 	var tag strings.Builder
 
-	nt := n.GetType()
+	nt, attrs := n.GetType(), n.GetAttributes()
 	tag.WriteString(tr.levelUp(nt, d))
 
 	switch nt {
@@ -32,6 +32,20 @@ func (tr *MarkdownTranslator) Open(n Connector, d int) string {
 		tag.WriteString("> ")
 	case NodeCodeBlock:
 		tag.WriteString("```")
+
+		nl := true
+		if attrs != nil {
+			a := attrs.(map[string]interface{})
+			for k := range a {
+				if k == "language" {
+					nl = false
+					break
+				}
+			}
+		}
+		if nl {
+			tag.WriteString("\n")
+		}
 	case NodePanel:
 		tag.WriteString("---\n")
 	case NodeTable:
@@ -85,7 +99,7 @@ func (tr *MarkdownTranslator) Open(n Connector, d int) string {
 		tag.WriteString(" [")
 	}
 
-	tag.WriteString(tr.setOpenTagAttributes(n.GetAttributes()))
+	tag.WriteString(tr.setOpenTagAttributes(attrs))
 
 	return tag.String()
 }
