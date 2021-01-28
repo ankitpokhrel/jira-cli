@@ -60,6 +60,7 @@ func (sl SprintList) Render() error {
 				return dataFn, renderFn
 			}),
 			tui.WithCopyFunc(copyURL(sl.Server)),
+			tui.WithCopyKeyFunc(copyKey()),
 		),
 	)
 
