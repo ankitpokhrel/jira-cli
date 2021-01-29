@@ -178,7 +178,7 @@ The `create` command lets you create an issue.
 # Create an issue using interactive prompt
 $ jira issue create
 
-# Pass required parameters to skip prompt or use --no-prompt option
+# Pass required parameters to skip prompt or use --no-input option
 $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 ```
 
@@ -242,7 +242,7 @@ Creating an epic is same as creating the issue except you also need to provide a
 # Create an issue using interactive prompt
 $ jira epic create
 
-# Pass required parameters to skip prompt or use --no-prompt flag to skip prompt for unrequired params
+# Pass required parameters to skip prompt or use --no-input flag to skip prompt for non-mandatory params
 $ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Epic description"
 ```
 

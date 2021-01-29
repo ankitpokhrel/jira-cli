@@ -74,38 +74,40 @@ func create(cmd *cobra.Command, _ []string) {
 		}
 	}
 
-	answer := struct{ Action string }{}
-	for answer.Action != cmdcommon.ActionSubmit {
-		err := survey.Ask([]*survey.Question{cmdcommon.GetNextAction()}, &answer)
-		cmdutil.ExitIfError(err)
-
-		switch answer.Action {
-		case cmdcommon.ActionCancel:
-			fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
-			os.Exit(0)
-		case cmdcommon.ActionMetadata:
-			ans := struct{ Metadata []string }{}
-			err := survey.Ask(cmdcommon.GetMetadata(), &ans)
+	if !params.noInput {
+		answer := struct{ Action string }{}
+		for answer.Action != cmdcommon.ActionSubmit {
+			err := survey.Ask([]*survey.Question{cmdcommon.GetNextAction()}, &answer)
 			cmdutil.ExitIfError(err)
 
-			if len(ans.Metadata) > 0 {
-				qs = cmdcommon.GetMetadataQuestions(ans.Metadata)
-				ans := struct {
-					Priority   string
-					Labels     string
-					Components string
-				}{}
-				err := survey.Ask(qs, &ans)
+			switch answer.Action {
+			case cmdcommon.ActionCancel:
+				fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
+				os.Exit(0)
+			case cmdcommon.ActionMetadata:
+				ans := struct{ Metadata []string }{}
+				err := survey.Ask(cmdcommon.GetMetadata(), &ans)
 				cmdutil.ExitIfError(err)
 
-				if ans.Priority != "" {
-					params.priority = ans.Priority
-				}
-				if len(ans.Labels) > 0 {
-					params.labels = strings.Split(ans.Labels, ",")
-				}
-				if len(ans.Components) > 0 {
-					params.components = strings.Split(ans.Components, ",")
+				if len(ans.Metadata) > 0 {
+					qs = cmdcommon.GetMetadataQuestions(ans.Metadata)
+					ans := struct {
+						Priority   string
+						Labels     string
+						Components string
+					}{}
+					err := survey.Ask(qs, &ans)
+					cmdutil.ExitIfError(err)
+
+					if ans.Priority != "" {
+						params.priority = ans.Priority
+					}
+					if len(ans.Labels) > 0 {
+						params.labels = strings.Split(ans.Labels, ",")
+					}
+					if len(ans.Components) > 0 {
+						params.components = strings.Split(ans.Components, ",")
+					}
 				}
 			}
 		}
