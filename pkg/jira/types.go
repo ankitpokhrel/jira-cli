@@ -92,3 +92,11 @@ type Transition struct {
 	Name        string      `json:"name"`
 	IsAvailable bool        `json:"isAvailable"`
 }
+
+// User holds user info.
+type User struct {
+	AccountID string `json:"accountId"`
+	Email     string `json:"emailAddress"`
+	Name      string `json:"displayName"`
+	Active    bool   `json:"active"`
+}

@@ -127,3 +127,34 @@ func TestGetIssueWithoutDescription(t *testing.T) {
 	}
 	assert.Equal(t, expected, actual)
 }
+
+func TestAssignIssue(t *testing.T) {
+	var unexpectedStatusCode bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/3/issue/TEST-1/assignee", r.URL.Path)
+		assert.Equal(t, "application/json", r.Header.Get("Accept"))
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+		if unexpectedStatusCode {
+			w.WriteHeader(400)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(204)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+
+	err := client.AssignIssue("TEST-1", "a12b3")
+	assert.NoError(t, err)
+
+	err = client.AssignIssue("TEST-1", "none")
+	assert.NoError(t, err)
+
+	unexpectedStatusCode = true
+
+	err = client.AssignIssue("TEST-1", "default")
+	assert.Error(t, ErrUnexpectedStatusCode, err)
+}

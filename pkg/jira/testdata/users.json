@@ -1,0 +1,14 @@
+[
+  {
+    "accountId": "5fb82376aca10c006949f35b",
+    "emailAddress": "jane@domain.tld",
+    "displayName": "Jane Doe",
+    "active": true
+  },
+  {
+    "accountId": "5fb82376aca10c006949f35c",
+    "emailAddress": "jon@domain.tld",
+    "displayName": "Jon Doe",
+    "active": false
+  }
+]

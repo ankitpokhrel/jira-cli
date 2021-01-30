@@ -9,6 +9,17 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 )
 
+const (
+	// AssigneeNone is a empty assignee.
+	AssigneeNone = "none"
+	// AssigneeDefault is a default assignee.
+	AssigneeDefault = "default"
+)
+
+type assignRequest struct {
+	AccountID *string `json:"accountId"`
+}
+
 // GetIssue fetches issue details using GET /issue/{key} endpoint.
 func (c *Client) GetIssue(key string) (*Issue, error) {
 	path := fmt.Sprintf("/issue/%s", key)
@@ -33,6 +44,41 @@ func (c *Client) GetIssue(key string) (*Issue, error) {
 	out.Fields.Description = ifaceToADF(out.Fields.Description)
 
 	return &out, nil
+}
+
+// AssignIssue assigns issue to the user using PUT /issue/{key}/assignee endpoint.
+func (c *Client) AssignIssue(key, accountID string) error {
+	aid := new(string)
+	switch accountID {
+	case AssigneeNone:
+		*aid = "-1"
+	case AssigneeDefault:
+		aid = nil
+	default:
+		*aid = accountID
+	}
+	body, err := json.Marshal(assignRequest{AccountID: aid})
+	if err != nil {
+		return err
+	}
+
+	path := fmt.Sprintf("/issue/%s/assignee", key)
+	res, err := c.Put(context.Background(), path, body, Header{
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	})
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusNoContent {
+		return ErrUnexpectedStatusCode
+	}
+	return nil
 }
 
 func ifaceToADF(v interface{}) *adf.ADF {
