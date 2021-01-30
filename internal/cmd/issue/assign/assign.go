@@ -2,9 +2,11 @@ package assign
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/briandowns/spinner"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,8 +34,11 @@ $ jira issue assign ISSUE-1 default
 $ jira issue assign ISSUE-1 x`
 
 	maxSearchResults = 100
-	assigneeDefault  = "Default"
-	assigneeNone     = "No-one (Unassign)"
+	lineBreak        = "----------"
+	optionSearch     = "[Search...]"
+	optionDefault    = "Default"
+	optionNone       = "No-one (Unassign)"
+	optionCancel     = "Cancel"
 )
 
 // NewCmdAssign is an assign command.
@@ -78,10 +83,10 @@ func assign(cmd *cobra.Command, args []string) {
 	case u != nil:
 		assignee = u.AccountID
 		uname = u.Name
-	case lu == strings.ToLower(assigneeNone) || lu == "x":
+	case lu == strings.ToLower(optionNone) || lu == "x":
 		assignee = jira.AssigneeNone
 		uname = "unassigned"
-	case lu == strings.ToLower(assigneeDefault):
+	case lu == strings.ToLower(optionDefault):
 		assignee = jira.AssigneeDefault
 		uname = assignee
 	}
@@ -161,32 +166,118 @@ func (ac *assignCmd) setIssueKey() error {
 }
 
 func (ac *assignCmd) setAssignee() error {
-	if ac.params.user != "" {
-		return nil
-	}
+	var (
+		ans  string
+		last bool
+	)
 
-	options := []string{assigneeDefault, assigneeNone}
-	for _, t := range ac.users {
-		if t.Active {
-			options = append(options, t.Name)
+	for {
+		qs := &survey.Question{
+			Name: "user",
+			Prompt: &survey.Select{
+				Message: "Assign to user:",
+				Help:    "Can't find the user? Select search and look for a keyword or cancel to abort",
+				Options: ac.getOptions(last),
+			},
+			Validate: func(val interface{}) error {
+				errInvalidSelection := fmt.Errorf("invalid selection")
+
+				ans, ok := val.(core.OptionAnswer)
+				if !ok {
+					return errInvalidSelection
+				}
+				if len(ans.Value) == 0 || ans.Value == lineBreak {
+					return errInvalidSelection
+				}
+
+				return nil
+			},
 		}
-	}
 
-	var ans string
-
-	qs := &survey.Question{
-		Name: "user",
-		Prompt: &survey.Select{
-			Message: "Assign to user:",
-			Options: options,
-		},
-		Validate: survey.Required,
-	}
-	if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {
-		return err
+		if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {
+			return err
+		}
+		if ans == optionCancel {
+			fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
+			os.Exit(0)
+		}
+		if ans != optionSearch {
+			break
+		}
+		if err := ac.getSearchKeyword(); err != nil {
+			return err
+		}
+		last = true
 	}
 	ac.params.user = ans
 
+	return nil
+}
+
+func (ac *assignCmd) getOptions(last bool) []string {
+	var validUsers []string
+
+	for _, t := range ac.users {
+		if t.Active {
+			validUsers = append(validUsers, t.Name)
+		}
+	}
+	always := []string{optionDefault, optionNone, optionCancel}
+	options := []string{optionSearch}
+
+	if last {
+		options = append(options, validUsers...)
+		options = append(options, lineBreak)
+		options = append(options, always...)
+	} else {
+		options = append(options, always...)
+		options = append(options, lineBreak)
+		options = append(options, validUsers...)
+	}
+
+	return options
+}
+
+func (ac *assignCmd) getSearchKeyword() error {
+	qs := &survey.Question{
+		Name: "user",
+		Prompt: &survey.Input{
+			Message: "Search user:",
+			Help:    "Type user email or display name to search for a user",
+		},
+		Validate: func(val interface{}) error {
+			errInvalidKeyword := fmt.Errorf("enter atleast 3 characters to search")
+
+			str, ok := val.(string)
+			if !ok {
+				return errInvalidKeyword
+			}
+			if len(str) < 3 {
+				return errInvalidKeyword
+			}
+
+			return nil
+		},
+	}
+	if err := survey.Ask([]*survey.Question{qs}, &ac.params.user); err != nil {
+		return err
+	}
+	return ac.searchAndAssignUser()
+}
+
+func (ac *assignCmd) searchAndAssignUser() error {
+	q := ac.params.user
+	if q == "" {
+		q = "*"
+	}
+	u, err := ac.client.UserSearch(&jira.UserSearchOptions{
+		Query:      q,
+		MaxResults: maxSearchResults,
+	})
+	if err != nil {
+		return err
+	}
+	ac.users = u
 	return nil
 }
 
@@ -194,20 +285,11 @@ func (ac *assignCmd) setAvailableUsers() error {
 	s := cmdutil.Info("Fetching available users. Please wait...")
 	defer s.Stop()
 
-	t, err := ac.client.UserSearch(&jira.UserSearchOptions{
-		Query:      ac.params.key,
-		MaxResults: maxSearchResults,
-	})
-	if err != nil {
-		return err
-	}
-	ac.users = t
-
-	return nil
+	return ac.searchAndAssignUser()
 }
 
 func (ac *assignCmd) verifyAssignee() (*jira.User, error) {
-	u, d, n := strings.ToLower(ac.params.user), strings.ToLower(assigneeDefault), strings.ToLower(assigneeNone)
+	u, d, n := strings.ToLower(ac.params.user), strings.ToLower(optionDefault), strings.ToLower(optionNone)
 	if u == d || u == n || u == "x" {
 		return nil, nil
 	}
