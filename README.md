@@ -207,6 +207,8 @@ $ jira issue assign ISSUE-1 default
 $ jira issue assign ISSUE-1 x
 ```
 
+![Assign issue to a user](.github/assets/assign.gif)
+
 #### Move/Transition
 The `move` command lets you transition issue from one state to another.
 
