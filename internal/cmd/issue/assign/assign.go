@@ -33,12 +33,13 @@ $ jira issue assign ISSUE-1 default
 # Unassign
 $ jira issue assign ISSUE-1 x`
 
-	maxSearchResults = 100
-	lineBreak        = "----------"
-	optionSearch     = "[Search...]"
-	optionDefault    = "Default"
-	optionNone       = "No-one (Unassign)"
-	optionCancel     = "Cancel"
+	maxResults = 100
+	lineBreak  = "----------"
+
+	optionSearch  = "[Search...]"
+	optionDefault = "Default"
+	optionNone    = "No-one (Unassign)"
+	optionCancel  = "Cancel"
 )
 
 // NewCmdAssign is an assign command.
@@ -272,7 +273,7 @@ func (ac *assignCmd) searchAndAssignUser() error {
 	}
 	u, err := ac.client.UserSearch(&jira.UserSearchOptions{
 		Query:      q,
-		MaxResults: maxSearchResults,
+		MaxResults: maxResults,
 	})
 	if err != nil {
 		return err
