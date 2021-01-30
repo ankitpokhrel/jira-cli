@@ -197,6 +197,9 @@ $ jira issue assign ISSUE-1 "Jon Doe"
 # Assign to self
 $ jira issue assign ISSUE-1 $(jira me)
 
+# Will prompt for selection if keyword suffix returns multiple entries
+$ jira issue assign ISSUE-1 suffix
+
 # Assign to default assignee
 $ jira issue assign ISSUE-1 default
 

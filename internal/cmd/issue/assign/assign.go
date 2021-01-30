@@ -51,7 +51,7 @@ func NewCmdAssign() *cobra.Command {
 		Example: examples,
 		Annotations: map[string]string{
 			"help:args": `ISSUE_KEY	Issue key, eg: ISSUE-1
-ASSIGNEE	Exact email or display name of the user to assign the issue to`,
+ASSIGNEE	Email or display name of the user to assign the issue to`,
 		},
 		Run: assign,
 	}
@@ -167,10 +167,18 @@ func (ac *assignCmd) setIssueKey() error {
 }
 
 func (ac *assignCmd) setAssignee() error {
+	if ac.params.user != "" && len(ac.users) == 1 {
+		ac.params.user = ac.users[0].Name
+		return nil
+	}
+
 	var (
 		ans  string
 		last bool
 	)
+	if ac.params.user != "" && len(ac.users) > 0 {
+		last = true
+	}
 
 	for {
 		qs := &survey.Question{
