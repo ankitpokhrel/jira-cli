@@ -54,7 +54,7 @@ The lists are displayed in an interactive UI by default.
 - Press `v` to view selected issue details.
 - Hit `ENTER` to open the selected issue in the browser.
 - Press `c` to copy issue URL to the system clipboard. This requires `xclip` / `xsel` in linux.
-- Press 'CTRL+K' to copy issue key to the system clipboard.
+- Press `CTRL+K` to copy issue key to the system clipboard.
 - In an explorer view, press `w` to toggle focus between the sidebar and the contents screen.
 - Press `q` / `ESC` / `CTRL+C` to quit.
 
@@ -184,7 +184,27 @@ $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 
 ![Create an issue](.github/assets/create.gif)
 
-#### Move
+#### Assign
+The `assign` command lets you assign user to an issue.
+
+```sh
+# Assign user to an issue using interactive prompt
+$ jira issue assign
+
+# Pass required parameters to skip prompt
+$ jira issue assign ISSUE-1 "Jon Doe"
+
+# Assign to self
+$ jira issue assign ISSUE-1 $(jira me)
+
+# Assign to default assignee
+$ jira issue assign ISSUE-1 default
+
+# Unassign
+$ jira issue assign ISSUE-1 x
+```
+
+#### Move/Transition
 The `move` command lets you transition issue from one state to another.
 
 ```sh
@@ -198,7 +218,8 @@ $ jira issue move ISSUE-1 "In Progress"
 ![Move an issue](.github/assets/move.gif)
 
 #### View
-The `view` command lets you see issue details in a terminal.
+The `view` command lets you see issue details in a terminal. Atlassian document is roughly converted to a markdown
+and is nicely displayed in the terminal.
 
 ```sh
 $ jira issue view ISSUE-1
@@ -253,7 +274,7 @@ When viewing sprint issues, you can use all filters available for the issue comm
 See [usage](#navigation) to learn more about UI interaction.
 
 ```sh
-# List sprints in an exporer view
+# List sprints in an explorer view
 $ jira sprint list
 
 # List sprints in a table view
@@ -382,7 +403,7 @@ Sprint 1:   3
 - [x] Issue creation.
 - [x] Ability to view issue details.
 - [x] Possibility to change issue status.
-- [ ] Possibility to assign issue to a user.
+- [x] Possibility to assign issue to a user.
 - [ ] Comments management.
 - [ ] Historical data can be cached locally for faster execution.
 
