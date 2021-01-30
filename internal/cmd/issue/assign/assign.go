@@ -172,6 +172,11 @@ func (ac *assignCmd) setAssignee() error {
 		return nil
 	}
 
+	lu := strings.ToLower(ac.params.user)
+	if lu == strings.ToLower(optionNone) || lu == strings.ToLower(optionDefault) || lu == "x" {
+		return nil
+	}
+
 	var (
 		ans  string
 		last bool
