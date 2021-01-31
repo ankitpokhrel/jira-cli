@@ -47,7 +47,7 @@ func NewCmdList() *cobra.Command {
 		Short:   "List lists issues in a project",
 		Long:    helpText,
 		Example: examples,
-		Aliases: []string{"lists"},
+		Aliases: []string{"lists", "ls"},
 		Annotations: map[string]string{
 			"help:args": "[EPIC_KEY]\tKey for the issue of type epic, eg: ISSUE-1",
 		},

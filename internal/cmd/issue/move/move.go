@@ -30,7 +30,7 @@ func NewCmdMove() *cobra.Command {
 		Short:   "Transition an issue to a given state",
 		Long:    helpText,
 		Example: examples,
-		Aliases: []string{"transition"},
+		Aliases: []string{"transition", "mv"},
 		Annotations: map[string]string{
 			"help:args": `ISSUE_KEY	Issue key, eg: ISSUE-1
 STATE		State you want to transition the issue to`,
