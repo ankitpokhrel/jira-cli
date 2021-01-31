@@ -2,7 +2,6 @@ package create
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -82,8 +81,7 @@ func create(cmd *cobra.Command, _ []string) {
 
 			switch answer.Action {
 			case cmdcommon.ActionCancel:
-				fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
-				os.Exit(0)
+				cmdutil.Errorf("\033[0;31m✗\033[0m Action aborted")
 			case cmdcommon.ActionMetadata:
 				ans := struct{ Metadata []string }{}
 				err := survey.Ask(cmdcommon.GetMetadata(), &ans)
@@ -134,6 +132,18 @@ func create(cmd *cobra.Command, _ []string) {
 	}()
 
 	fmt.Printf("\033[0;32m✓\033[0m Issue created\n%s/browse/%s\n", server, key)
+
+	if params.assignee != "" {
+		user, err := client.UserSearch(&jira.UserSearchOptions{
+			Query: params.assignee,
+		})
+		if err != nil || len(user) == 0 {
+			cmdutil.Errorf("\033[0;31m✗\033[0m Unable to find assignee")
+		}
+		if err = client.AssignIssue(key, user[0].AccountID); err != nil {
+			cmdutil.Errorf("\033[0;31m✗\033[0m Unable to set assignee: %s", err.Error())
+		}
+	}
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, key)
@@ -222,6 +232,7 @@ type createParams struct {
 	summary    string
 	body       string
 	priority   string
+	assignee   string
 	labels     []string
 	components []string
 	noInput    bool
@@ -241,6 +252,9 @@ func parseFlags(flags query.FlagParser) *createParams {
 	priority, err := flags.GetString("priority")
 	cmdutil.ExitIfError(err)
 
+	assignee, err := flags.GetString("assignee")
+	cmdutil.ExitIfError(err)
+
 	labels, err := flags.GetStringArray("label")
 	cmdutil.ExitIfError(err)
 
@@ -258,6 +272,7 @@ func parseFlags(flags query.FlagParser) *createParams {
 		summary:    summary,
 		body:       body,
 		priority:   priority,
+		assignee:   assignee,
 		labels:     labels,
 		components: components,
 		noInput:    noInput,

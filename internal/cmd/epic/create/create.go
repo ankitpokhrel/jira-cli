@@ -2,7 +2,6 @@ package create
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -48,27 +47,28 @@ func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
 
-	flags := parseFlags(cmd.Flags())
-	qs := getQuestions(flags)
+	params := parseFlags(cmd.Flags())
+	client := api.Client(jira.Config{Debug: params.debug})
 
+	qs := getQuestions(params)
 	if len(qs) > 0 {
 		ans := struct{ Name, Summary, Body, Action string }{}
 		err := survey.Ask(qs, &ans)
 		cmdutil.ExitIfError(err)
 
-		if flags.name == "" {
-			flags.name = ans.Name
+		if params.name == "" {
+			params.name = ans.Name
 		}
-		if flags.summary == "" {
-			flags.summary = ans.Summary
+		if params.summary == "" {
+			params.summary = ans.Summary
 		}
-		if flags.body == "" {
-			flags.body = ans.Body
+		if params.body == "" {
+			params.body = ans.Body
 		}
 	}
 
 	// TODO: Remove duplicates with issue/create.
-	if !flags.noInput {
+	if !params.noInput {
 		answer := struct{ Action string }{}
 		for answer.Action != cmdcommon.ActionSubmit {
 			err := survey.Ask([]*survey.Question{cmdcommon.GetNextAction()}, &answer)
@@ -76,8 +76,7 @@ func create(cmd *cobra.Command, _ []string) {
 
 			switch answer.Action {
 			case cmdcommon.ActionCancel:
-				fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
-				os.Exit(0)
+				cmdutil.Errorf("\033[0;31m✗\033[0m Action aborted")
 			case cmdcommon.ActionMetadata:
 				ans := struct{ Metadata []string }{}
 				err := survey.Ask(cmdcommon.GetMetadata(), &ans)
@@ -94,13 +93,13 @@ func create(cmd *cobra.Command, _ []string) {
 					cmdutil.ExitIfError(err)
 
 					if ans.Priority != "" {
-						flags.priority = ans.Priority
+						params.priority = ans.Priority
 					}
 					if len(ans.Labels) > 0 {
-						flags.labels = strings.Split(ans.Labels, ",")
+						params.labels = strings.Split(ans.Labels, ",")
 					}
 					if len(ans.Components) > 0 {
-						flags.components = strings.Split(ans.Components, ",")
+						params.components = strings.Split(ans.Components, ",")
 					}
 				}
 			}
@@ -111,15 +110,15 @@ func create(cmd *cobra.Command, _ []string) {
 		s := cmdutil.Info("Creating an epic...")
 		defer s.Stop()
 
-		resp, err := api.Client(jira.Config{Debug: flags.debug}).Create(&jira.CreateRequest{
+		resp, err := client.Create(&jira.CreateRequest{
 			Project:       project,
 			IssueType:     jira.IssueTypeEpic,
-			Name:          flags.name,
-			Summary:       flags.summary,
-			Body:          flags.body,
-			Priority:      flags.priority,
-			Labels:        flags.labels,
-			Components:    flags.components,
+			Name:          params.name,
+			Summary:       params.summary,
+			Body:          params.body,
+			Priority:      params.priority,
+			Labels:        params.labels,
+			Components:    params.components,
 			EpicFieldName: viper.GetString("epic.field"),
 		})
 		cmdutil.ExitIfError(err)
@@ -128,6 +127,18 @@ func create(cmd *cobra.Command, _ []string) {
 	}()
 
 	fmt.Printf("\033[0;32m✓\033[0m Epic created\n%s/browse/%s\n", server, key)
+
+	if params.assignee != "" {
+		user, err := client.UserSearch(&jira.UserSearchOptions{
+			Query: params.assignee,
+		})
+		if err != nil || len(user) == 0 {
+			cmdutil.Errorf("\033[0;31m✗\033[0m Unable to find assignee")
+		}
+		if err = client.AssignIssue(key, user[0].AccountID); err != nil {
+			cmdutil.Errorf("\033[0;31m✗\033[0m Unable to set assignee: %s", err.Error())
+		}
+	}
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, key)
@@ -175,6 +186,7 @@ type createParams struct {
 	summary    string
 	body       string
 	priority   string
+	assignee   string
 	labels     []string
 	components []string
 	noInput    bool
@@ -194,6 +206,9 @@ func parseFlags(flags query.FlagParser) *createParams {
 	priority, err := flags.GetString("priority")
 	cmdutil.ExitIfError(err)
 
+	assignee, err := flags.GetString("assignee")
+	cmdutil.ExitIfError(err)
+
 	labels, err := flags.GetStringArray("label")
 	cmdutil.ExitIfError(err)
 
@@ -211,6 +226,7 @@ func parseFlags(flags query.FlagParser) *createParams {
 		summary:    summary,
 		body:       body,
 		priority:   priority,
+		assignee:   assignee,
 		labels:     labels,
 		components: components,
 		noInput:    noInput,
