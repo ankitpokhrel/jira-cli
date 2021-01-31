@@ -53,7 +53,7 @@ func NewCmdList() *cobra.Command {
 		Long:    fmt.Sprintf("Sprint lists top %d sprints in a board\n", numSprints) + helpText,
 		Example: examples,
 		Args:    cobra.MaximumNArgs(1),
-		Aliases: []string{"lists"},
+		Aliases: []string{"lists", "ls"},
 		Annotations: map[string]string{
 			"help:args": "[SPRINT_ID]\tID of the sprint",
 		},

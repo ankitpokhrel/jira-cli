@@ -45,7 +45,7 @@ func NewCmdList() *cobra.Command {
 		Short:   "List lists issues in a project",
 		Long:    helpText,
 		Example: examples,
-		Aliases: []string{"lists"},
+		Aliases: []string{"lists", "ls"},
 		Run:     List,
 	}
 }

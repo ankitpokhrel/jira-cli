@@ -49,6 +49,7 @@ func NewCmdAssign() *cobra.Command {
 		Short:   "Assign issue to a user",
 		Long:    helpText,
 		Example: examples,
+		Aliases: []string{"asg"},
 		Annotations: map[string]string{
 			"help:args": `ISSUE_KEY	Issue key, eg: ISSUE-1
 ASSIGNEE	Email or display name of the user to assign the issue to`,
