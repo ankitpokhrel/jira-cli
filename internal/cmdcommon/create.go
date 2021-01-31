@@ -26,6 +26,7 @@ func SetCreateFlags(cmd *cobra.Command, prefix string) {
 	cmd.Flags().StringP("summary", "s", "", prefix+" summary or title")
 	cmd.Flags().StringP("body", "b", "", prefix+" description")
 	cmd.Flags().StringP("priority", "y", "", prefix+" priority")
+	cmd.Flags().StringP("assignee", "a", "", prefix+" assignee (email or display name)")
 	cmd.Flags().StringArrayP("label", "l", []string{}, prefix+" labels")
 	cmd.Flags().StringArrayP("component", "C", []string{}, prefix+" components")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful creation")
