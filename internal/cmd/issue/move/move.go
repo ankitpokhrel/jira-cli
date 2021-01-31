@@ -2,6 +2,7 @@ package move
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -18,6 +19,8 @@ const (
 	helpText = `Move transitions an issue from one state to another.`
 	examples = `$ jira issue move ISSUE-1 "In Progress"
 $ jira issue move ISSUE-1 Done`
+
+	optionCancel = "Cancel"
 )
 
 // NewCmdMove is a move command.
@@ -52,6 +55,11 @@ func move(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(mc.setIssueKey())
 	cmdutil.ExitIfError(mc.setAvailableTransitions())
 	cmdutil.ExitIfError(mc.setDesiredState())
+
+	if mc.params.state == optionCancel {
+		fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
+		os.Exit(0)
+	}
 
 	tr, err := mc.verifyTransition()
 	if err != nil {
@@ -148,6 +156,7 @@ func (mc *moveCmd) setDesiredState() error {
 			options = append(options, t.Name)
 		}
 	}
+	options = append(options, optionCancel)
 
 	qs := &survey.Question{
 		Name: "state",
