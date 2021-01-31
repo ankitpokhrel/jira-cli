@@ -34,6 +34,6 @@ linters-settings:
   gomnd:
     settings:
       mnd:
-        ignored-numbers: 0,1,2
+        ignored-numbers: 0,1,2,3
 issues:
   exclude-use-default: false
