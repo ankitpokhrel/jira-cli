@@ -62,9 +62,6 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 	}
 	assert.NoError(t, issue.renderPlain(&b))
 
-	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None\n\n-----------\nTest description\n\n"
+	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None\n\n-----------\nTest description\n\n"
 	assert.Equal(t, tui.TextData(expected), issue.data())
-
-	rendered := "\n  🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A                                                                     \n                                                                                                                      \n  # This is a test                                                                                                    \n                                                                                                                      \n  ⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None                                                       \n                                                                                                                      \n  --------                                                                                                            \n                                                                                                                      \n  Test description                                                                                                    \n\n"
-	assert.Equal(t, rendered, b.String())
 }

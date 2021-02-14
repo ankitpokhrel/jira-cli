@@ -70,8 +70,8 @@ func (i Issue) String() string {
 		desc = tr.Translate()
 	}
 	return fmt.Sprintf(
-		"%s %s  %s %s  ⌛ %s  👷 %s\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s\n\n-----------\n%s",
-		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as,
+		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s\n\n-----------\n%s",
+		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as, i.Data.Key,
 		i.Data.Fields.Summary,
 		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
 		i.Data.Fields.Priority.Name, cmpt, lbl,
