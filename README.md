@@ -122,7 +122,7 @@ $ jira issue list -R"Won't do"
 ```
 </details>
 
-<details><summary>List issues whose status is not done and is created before 6 month and is assigned to someones</summary>
+<details><summary>List issues whose status is not done and is created before 6 months and is assigned to someone</summary>
 
 ```sh
 # Tilde (~) acts as a not operator
