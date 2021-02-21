@@ -122,6 +122,14 @@ $ jira issue list -R"Won't do"
 ```
 </details>
 
+<details><summary>List issues whose status is not done and is created before 6 month and is assigned to someones</summary>
+
+```sh
+# Tilde (~) acts as a not operator
+$ jira issue list -s~Done --created-before -24w -a~x
+```
+</details>
+
 <details><summary>List issues created within an hour and updated in the last 30 minutes :stopwatch:</summary>
 
 ```sh

@@ -49,9 +49,17 @@ func (j *JQL) FilterBy(field, value string) *JQL {
 	if field != "" && value != "" {
 		var q string
 
-		if value == "x" {
+		switch {
+		case value == "x":
 			q = fmt.Sprintf("%s IS EMPTY", field)
-		} else {
+		case value[0] == '~':
+			value = value[1:]
+			if value == "x" {
+				q = fmt.Sprintf("%s IS NOT EMPTY", field)
+			} else {
+				q = fmt.Sprintf("%s!=\"%s\"", field, strings.TrimLeft(value, " "))
+			}
+		default:
 			q = fmt.Sprintf("%s=\"%s\"", field, value)
 		}
 
