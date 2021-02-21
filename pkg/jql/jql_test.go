@@ -82,6 +82,18 @@ func TestJQL(t *testing.T) {
 			expected: "project=\"TEST\" AND type=\"Story\" AND resolution=\"Done\" AND assignee=\"test@user.com\"",
 		},
 		{
+			name: "it queries with not filter",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+				jql.And(func() {
+					jql.FilterBy("type", "~Story").
+						FilterBy("assignee", "~x")
+				})
+				return jql
+			},
+			expected: "project=\"TEST\" AND type!=\"Story\" AND assignee IS NOT EMPTY",
+		},
+		{
 			name: "it queries for unassigned issues",
 			initialize: func() *JQL {
 				jql := NewJQL("TEST")

@@ -28,14 +28,20 @@ in plain view. A --no-truncate flag will display all available fields in plain m
 
 	examples = `$ jira issue list
 
-# Display issues in a plain table view without headers
+# List issues in a plain table view without headers
 $ jira issue list --plain --no-headers
 
-# Display some columns of the issue in a plain table view
+# List some columns of the issue in a plain table view
 $ jira issue list --plain --columns key,assignee,status
 
-# Display issues in a plain table view and show all fields
-$ jira issue list --plain --no-truncate`
+# List issues in a plain table view and show all fields
+$ jira issue list --plain --no-truncate
+
+# List issues of type "Epic" in status "Done"
+$ jira issue list -tEpic -sDone
+
+# List issues in status other than "Open" and is assigned to no one
+$ jira issue list -s~Open -ax`
 )
 
 // NewCmdList is a list command.
