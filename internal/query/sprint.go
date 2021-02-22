@@ -2,6 +2,8 @@ package query
 
 import (
 	"fmt"
+
+	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
 // Sprint is a query type for sprint command.
@@ -30,13 +32,13 @@ func (s *Sprint) Get() string {
 	case s.params.Status != "":
 		state = fmt.Sprintf("state=%s", s.params.Status)
 	case s.params.Current:
-		state = "state=active"
+		state = fmt.Sprintf("state=%s", jira.SprintStateActive)
 	case s.params.Prev:
-		state = "state=closed"
+		state = fmt.Sprintf("state=%s", jira.SprintStateClosed)
 	case s.params.Next:
-		state = "state=future"
+		state = fmt.Sprintf("state=%s", jira.SprintStateFuture)
 	default:
-		state = "state=active,closed"
+		state = fmt.Sprintf("state=%s,%s", jira.SprintStateActive, jira.SprintStateClosed)
 	}
 	if s.params.debug {
 		fmt.Printf("JQL: %s\n", state)

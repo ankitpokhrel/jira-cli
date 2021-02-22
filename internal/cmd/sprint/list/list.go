@@ -120,12 +120,19 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 
 	var ft string
 	if sprint != nil {
-		ft = fmt.Sprintf(
-			"Showing %d of %d results for project \"%s\" in sprint #%d - %s (%s - %s)",
-			len(issues), total, project, sprint.ID, sprint.Name,
-			cmdutil.FormatDateTimeHuman(sprint.StartDate, time.RFC3339),
-			cmdutil.FormatDateTimeHuman(sprint.EndDate, time.RFC3339),
-		)
+		if sprint.Status == jira.SprintStateFuture {
+			ft = fmt.Sprintf(
+				"Showing %d of %d results for project \"%s\" in sprint #%d ➤ %s (Future Sprint)",
+				len(issues), total, project, sprint.ID, sprint.Name,
+			)
+		} else {
+			ft = fmt.Sprintf(
+				"Showing %d of %d results for project \"%s\" in sprint #%d ➤ %s (%s - %s)",
+				len(issues), total, project, sprint.ID, sprint.Name,
+				cmdutil.FormatDateTimeHuman(sprint.StartDate, time.RFC3339),
+				cmdutil.FormatDateTimeHuman(sprint.EndDate, time.RFC3339),
+			)
+		}
 	} else {
 		ft = fmt.Sprintf(
 			"Showing %d of %d results for project \"%s\" in sprint #%d",
