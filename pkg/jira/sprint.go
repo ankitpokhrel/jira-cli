@@ -8,6 +8,13 @@ import (
 	"net/url"
 )
 
+// Sprint states.
+const (
+	SprintStateActive = "active"
+	SprintStateClosed = "closed"
+	SprintStateFuture = "future"
+)
+
 // SprintResult holds response from /board/{boardID}/sprint endpoint.
 type SprintResult struct {
 	MaxResults int       `json:"maxResults"`
