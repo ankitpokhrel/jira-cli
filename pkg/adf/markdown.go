@@ -15,6 +15,7 @@ type MarkdownTranslator struct {
 	}
 	list struct {
 		ol, ul  bool
+		depth   int
 		counter int // each level has same numeric counter at the moment.
 	}
 }
@@ -25,7 +26,6 @@ func (tr *MarkdownTranslator) Open(n Connector, d int) string {
 	var tag strings.Builder
 
 	nt, attrs := n.GetType(), n.GetAttributes()
-	tag.WriteString(tr.levelUp(nt, d))
 
 	switch nt {
 	case NodeBlockquote:
@@ -55,10 +55,15 @@ func (tr *MarkdownTranslator) Open(n Connector, d int) string {
 	case NodeBulletList:
 		tr.list.ol = false
 		tr.list.ul = true
+		tr.list.depth = d
 	case NodeOrderedList:
 		tr.list.ol = true
 		tr.list.ul = false
+		tr.list.depth = d
 	case ChildNodeListItem:
+		for i := 0; i < tr.list.depth/2; i++ {
+			tag.WriteString("\t")
+		}
 		if tr.list.ol {
 			tr.list.counter++
 			tag.WriteString(fmt.Sprintf("%d. ", tr.list.counter))
@@ -121,9 +126,7 @@ func (tr *MarkdownTranslator) Close(n Connector) string {
 	case NodeBulletList:
 		fallthrough
 	case NodeOrderedList:
-		tr.list.ol = false
-		tr.list.ul = false
-		tr.list.counter = 0
+		tr.list.depth = 0
 	case NodeParagraph:
 		if tr.table.rows == 0 {
 			tag.WriteString("\n\n")
@@ -162,19 +165,6 @@ func (tr *MarkdownTranslator) Close(n Connector) string {
 
 	tag.WriteString(tr.setCloseTagAttributes(n.GetAttributes()))
 
-	return tag.String()
-}
-
-func (tr *MarkdownTranslator) levelUp(nt string, depth int) string {
-	if !IsParentNode(nt) {
-		return ""
-	}
-	var tag strings.Builder
-	if nt == NodeBulletList || nt == NodeBlockquote || nt == NodeOrderedList {
-		for i := 0; i < (depth / 2); i++ {
-			tag.WriteString("\t")
-		}
-	}
 	return tag.String()
 }
 
