@@ -34,10 +34,7 @@ Releases and other installation options will be available later.
 2. Run `jira init` to generate a config file required for the tool.
 
 #### Shell completion
-Check `jira completion --help` for more info on setting up a bash/zsh shell completion. 
-
-#### Known issues
-- A key event is lost in mac OS when switching back and forth from view mode to list mode - [tcell/issues#194](https://github.com/gdamore/tcell/issues/194)
+Check `jira completion --help` for more info on setting up a bash/zsh shell completion.
 
 ## Usage
 The tool currently comes with an issue, epic, and sprint explorer. The flags are [POSIX-compliant](https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html).
