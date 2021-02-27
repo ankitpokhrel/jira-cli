@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
@@ -17,8 +16,12 @@ import (
 )
 
 const (
-	configDir  = ".config/jira"
-	configFile = ".jira.yml"
+	// Dir is a jira-cli config directory.
+	Dir = ".jira"
+	// FileName is a jira-cli config file name.
+	FileName = ".config"
+	// FileExt is a jira-cli config file extension.
+	FileExt = "yml"
 )
 
 var (
@@ -77,12 +80,12 @@ func (c *JiraCLIConfig) Generate() error {
 		s := cmdutil.Info("Creating new configuration...")
 		defer s.Stop()
 
-		home, err := homedir.Dir()
+		home, err := cmdutil.GetConfigHome()
 		if err != nil {
 			return err
 		}
 
-		return create(fmt.Sprintf("%s/%s/", home, configDir), configFile)
+		return create(fmt.Sprintf("%s/%s/", home, Dir), fmt.Sprintf("%s.%s", FileName, FileExt))
 	}(); err != nil {
 		return err
 	}

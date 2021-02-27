@@ -7,6 +7,7 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
+	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/browser"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -65,4 +66,17 @@ func FormatDateTimeHuman(dt, format string) string {
 		return dt
 	}
 	return t.Format("Mon, 02 Jan 06")
+}
+
+// GetConfigHome returns the config home directory.
+func GetConfigHome() (string, error) {
+	home := os.Getenv("XDG_CONFIG_HOME")
+	if home != "" {
+		return home, nil
+	}
+	home, err := homedir.Dir()
+	if err != nil {
+		return "", err
+	}
+	return home + "/.config", nil
 }

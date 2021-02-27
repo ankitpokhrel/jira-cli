@@ -1,15 +1,19 @@
 package cmdutil
 
 import (
+	"os"
 	"testing"
 	"time"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
 func TestFormatDateTimeHuman(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name     string
 		format   func() string
@@ -54,4 +58,21 @@ func TestFormatDateTimeHuman(t *testing.T) {
 			assert.Equal(t, tc.expected, tc.format())
 		})
 	}
+}
+
+func TestGetConfigHome(t *testing.T) {
+	t.Parallel()
+
+	userHome, err := homedir.Dir()
+	assert.NoError(t, err)
+
+	configHome, err := GetConfigHome()
+	assert.NoError(t, err)
+	assert.Equal(t, userHome+"/.config", configHome)
+
+	assert.NoError(t, os.Setenv("XDG_CONFIG_HOME", "./test"))
+
+	configHome, err = GetConfigHome()
+	assert.NoError(t, err)
+	assert.Equal(t, "./test", configHome)
 }
