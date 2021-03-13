@@ -3,6 +3,7 @@ package epic
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/epic/add"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/epic/create"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/epic/list"
 )
@@ -22,8 +23,9 @@ func NewCmdEpic() *cobra.Command {
 
 	lc := list.NewCmdList()
 	cc := create.NewCmdCreate()
+	ac := add.NewCmdAdd()
 
-	cmd.AddCommand(lc, cc)
+	cmd.AddCommand(lc, cc, ac)
 
 	list.SetFlags(lc)
 	create.SetFlags(cc)
