@@ -99,6 +99,15 @@ func (c *Client) Post(ctx context.Context, path string, body []byte, headers Hea
 	return res, err
 }
 
+// PostV1 sends POST request to v1 version of the jira api.
+func (c *Client) PostV1(ctx context.Context, path string, body []byte, headers Header) (*http.Response, error) {
+	res, err := c.request(ctx, http.MethodPost, c.server+baseURLv1+path, body, headers)
+	if err != nil {
+		return res, err
+	}
+	return res, err
+}
+
 // Put sends PUT request to v3 version of the jira api.
 func (c *Client) Put(ctx context.Context, path string, body []byte, headers Header) (*http.Response, error) {
 	res, err := c.request(ctx, http.MethodPut, c.server+baseURLv3+path, body, headers)

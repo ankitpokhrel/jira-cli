@@ -2,10 +2,12 @@
 package jira
 
 import (
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -230,5 +232,40 @@ func TestEpicIssues(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.EpicIssues("TEST-0", "project=TEST", 100)
+	assert.Error(t, ErrUnexpectedStatusCode, err)
+}
+
+func TestEpicIssuesAdd(t *testing.T) {
+	var unexpectedStatusCode bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/agile/1.0/epic/TEST-0/issue", r.URL.Path)
+
+		if unexpectedStatusCode {
+			w.WriteHeader(400)
+		} else {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "application/json", r.Header.Get("Accept"))
+			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+			expectedBody := `{"issues":["TEST-1","TEST-2"]}`
+			actualBody := new(strings.Builder)
+			_, _ = io.Copy(actualBody, r.Body)
+
+			assert.Equal(t, expectedBody, actualBody.String())
+
+			w.WriteHeader(204)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+
+	err := client.EpicIssuesAdd("TEST-0", "TEST-1", "TEST-2")
+	assert.NoError(t, err)
+
+	unexpectedStatusCode = true
+
+	err = client.EpicIssuesAdd("TEST-0", "TEST-1")
 	assert.Error(t, ErrUnexpectedStatusCode, err)
 }
