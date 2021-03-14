@@ -51,6 +51,7 @@ func add(cmd *cobra.Command, args []string) {
 		if params.epicKey == "" {
 			params.epicKey = ans.EpicKey
 		}
+
 		if len(params.issues) == 0 {
 			issues := strings.Split(ans.Issues, ",")
 			for i, iss := range issues {
@@ -61,7 +62,7 @@ func add(cmd *cobra.Command, args []string) {
 	}
 
 	err := func() error {
-		s := cmdutil.Info("Adding issues to an epic...")
+		s := cmdutil.Info("Adding issues to the epic...")
 		defer s.Stop()
 
 		return client.EpicIssuesAdd(params.epicKey, params.issues...)
@@ -81,7 +82,6 @@ func parseFlags(flags query.FlagParser, args []string) *addParams {
 	if nArgs > 0 {
 		epicKey = args[0]
 	}
-
 	if nArgs > 1 {
 		issues = args[1:]
 	}

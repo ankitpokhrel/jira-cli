@@ -277,6 +277,17 @@ $ jira epic create
 $ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Epic description"
 ```
 
+#### Add
+Add command allows you to add issues to the epic. You can add up to 50 issues to the epic at once.
+
+```sh
+# Add issues to the epic using interactive prompt
+$ jira epic add
+
+# Pass required parameters to skip prompt
+$ jira epic add EPIC_KEY ISSUE_1 ISSUE_2
+```
+
 ### Sprint
 Sprints are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing sprint issues, you can use all filters available for the issue command. The tool only shows 25 recent sprints.
