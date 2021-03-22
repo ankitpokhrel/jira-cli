@@ -269,3 +269,38 @@ func TestEpicIssuesAdd(t *testing.T) {
 	err = client.EpicIssuesAdd("TEST-0", "TEST-1")
 	assert.Error(t, ErrUnexpectedStatusCode, err)
 }
+
+func TestEpicIssuesRemove(t *testing.T) {
+	var unexpectedStatusCode bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/agile/1.0/epic/none/issue", r.URL.Path)
+
+		if unexpectedStatusCode {
+			w.WriteHeader(400)
+		} else {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "application/json", r.Header.Get("Accept"))
+			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+			expectedBody := `{"issues":["TEST-1","TEST-2"]}`
+			actualBody := new(strings.Builder)
+			_, _ = io.Copy(actualBody, r.Body)
+
+			assert.Equal(t, expectedBody, actualBody.String())
+
+			w.WriteHeader(204)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+
+	err := client.EpicIssuesRemove("TEST-1", "TEST-2")
+	assert.NoError(t, err)
+
+	unexpectedStatusCode = true
+
+	err = client.EpicIssuesRemove("TEST-1", "TEST-2")
+	assert.Error(t, ErrUnexpectedStatusCode, err)
+}
