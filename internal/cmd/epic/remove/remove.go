@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	helpText = `Remove issues from an epic.`
+	helpText = `Remove/unassign epic from issues.`
 	examples = `$ jira epic remove ISSUE_1 ISSUE_2`
 )
 
@@ -22,12 +22,12 @@ const (
 func NewCmdRemove() *cobra.Command {
 	return &cobra.Command{
 		Use:     "remove ISSUE_1 [...ISSUE_N]",
-		Short:   "Remove issues from an epic",
+		Short:   "Remove/unassign epic from issues",
 		Long:    helpText,
 		Example: examples,
 		Aliases: []string{"rm", "unassign"},
 		Annotations: map[string]string{
-			"help:args": "ISSUE_1 [...ISSUE_N]\tKey of the issues to remove from epics (max 50 issues at once)",
+			"help:args": "ISSUE_1 [...ISSUE_N]\tKey of the issues to remove assigned epic (max 50 issues at once)",
 		},
 		Run: remove,
 	}
@@ -56,14 +56,14 @@ func remove(cmd *cobra.Command, args []string) {
 	}
 
 	err := func() error {
-		s := cmdutil.Info("Removing issues from epics...")
+		s := cmdutil.Info("Removing assigned epic from issues...")
 		defer s.Stop()
 
 		return client.EpicIssuesRemove(params.issues...)
 	}()
 	cmdutil.ExitIfError(err)
 
-	fmt.Printf("\033[0;32m✓\033[0m Issues removed from epics\n")
+	fmt.Printf("\033[0;32m✓\033[0m Epic unassigned from given issues\n")
 }
 
 func parseFlags(flags query.FlagParser, args []string) *removeParams {
