@@ -87,3 +87,34 @@ func (c *Client) EpicIssuesAdd(key string, issues ...string) error {
 	}
 	return nil
 }
+
+// EpicIssuesRemove removes issues from epics.
+func (c *Client) EpicIssuesRemove(issues ...string) error {
+	path := "/epic/none/issue"
+
+	data := struct {
+		Issues []string `json:"issues"`
+	}{Issues: issues}
+
+	body, err := json.Marshal(&data)
+	if err != nil {
+		return err
+	}
+
+	res, err := c.PostV1(context.Background(), path, body, Header{
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	})
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusNoContent {
+		return ErrUnexpectedStatusCode
+	}
+	return nil
+}

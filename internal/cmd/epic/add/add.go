@@ -26,6 +26,7 @@ func NewCmdAdd() *cobra.Command {
 		Short:   "Add issues to an epic",
 		Long:    helpText,
 		Example: examples,
+		Aliases: []string{"assign"},
 		Annotations: map[string]string{
 			"help:args": "EPIC_KEY\t\tEpic to which you want to assign issues to, eg: EPIC-1\n" +
 				"ISSUE_1 [...ISSUE_N]\tKey of the issues to add to an epic (max 50 issues at once)",
