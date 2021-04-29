@@ -235,6 +235,17 @@ and is nicely displayed in the terminal.
 $ jira issue view ISSUE-1
 ```
 
+#### Link
+The `link` command lets you link two issues.
+
+```sh
+# Link an issue using interactive prompt
+$ jira issue link
+
+# Pass required parameters to skip prompt
+$ jira issue link ISSUE-1 ISSUE-2 Blocks
+```
+
 ![View an issue](.github/assets/view.gif)
 
 ### Epic
