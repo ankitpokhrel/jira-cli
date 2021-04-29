@@ -81,6 +81,79 @@ func (c *Client) AssignIssue(key, accountID string) error {
 	return nil
 }
 
+// GetIssueLinkTypes fetches issue link types using GET /issueLinkType endpoint.
+func (c *Client) GetIssueLinkTypes() ([]*IssueLinkType, error) {
+	res, err := c.Get(context.Background(), "/issueLinkType", nil)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, ErrUnexpectedStatusCode
+	}
+
+	var out struct {
+		IssueLinkTypes []*IssueLinkType `json:"issueLinkTypes"`
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
+		return nil, err
+	}
+
+	return out.IssueLinkTypes, nil
+}
+
+type linkRequest struct {
+	InwardIssue struct {
+		Key string `json:"key"`
+	} `json:"inwardIssue"`
+	OutwardIssue struct {
+		Key string `json:"key"`
+	} `json:"outwardIssue"`
+	LinkType struct {
+		Name string `json:"name"`
+	} `json:"type"`
+}
+
+// LinkIssue connects issues to the given link type using POST /issueLink endpoint.
+func (c *Client) LinkIssue(inwardIssue, outwardIssue, linkType string) error {
+	body, err := json.Marshal(linkRequest{
+		InwardIssue: struct {
+			Key string `json:"key"`
+		}{Key: inwardIssue},
+		OutwardIssue: struct {
+			Key string `json:"key"`
+		}{Key: outwardIssue},
+		LinkType: struct {
+			Name string `json:"name"`
+		}{Name: linkType},
+	})
+	if err != nil {
+		return err
+	}
+
+	res, err := c.Post(context.Background(), "/issueLink", body, Header{
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	})
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusCreated {
+		return ErrUnexpectedStatusCode
+	}
+	return nil
+}
+
 func ifaceToADF(v interface{}) *adf.ADF {
 	if v == nil {
 		return nil
