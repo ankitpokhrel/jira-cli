@@ -288,6 +288,17 @@ $ jira epic add
 $ jira epic add EPIC_KEY ISSUE_1 ISSUE_2
 ```
 
+#### Remove
+The `remove` command allows you to remove issues from the epic. You can remove up to 50 issues from the epic at once.
+
+```sh
+# Remove issues to the epic using interactive prompt
+$ jira epic remove
+
+# Pass required parameters to skip prompt
+$ jira epic remove ISSUE_1 ISSUE_N
+```
+
 ### Sprint
 Sprints are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing sprint issues, you can use all filters available for the issue command. The tool only shows 25 recent sprints.
