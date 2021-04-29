@@ -176,7 +176,7 @@ func (lc *linkCmd) setDesiredLinkType() error {
 		return nil
 	}
 
-	options := make([]string, len(lc.linkTypes))
+	options := make([]string, 0, len(lc.linkTypes))
 	for _, t := range lc.linkTypes {
 		options = append(options, fmt.Sprintf("%s: %s", t.Name, t.Inward))
 	}
