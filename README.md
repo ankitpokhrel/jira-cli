@@ -12,7 +12,7 @@
     <p align="center">
         <i>Interactive Jira CLI</i>
     </p>
-    <img align="center" alt="TusPHP Demo" src=".github/assets/demo.gif" /><br/><br/>
+    <img align="center" alt="JiraCLI Demo" src=".github/assets/demo.gif" /><br/><br/>
     <p align="center">:construction: This project is still a work in progress :construction:</p><br/>
 </div>
 
@@ -44,7 +44,7 @@ with status `To Do` that are assigned to you and has a label `backend`.
 $ jira issue list -yHigh -s"To Do" --created month -lbackend -a$(jira me)
 ```
 
-##### Navigation
+### Navigation
 The lists are displayed in an interactive UI by default. 
 - Use arrow keys or `j, k, h, l` characters to navigate through the list.
 - Use `g` and `SHIFT+G` to quickly navigate to the top and bottom respectively.
@@ -55,6 +55,7 @@ The lists are displayed in an interactive UI by default.
 - In an explorer view, press `w` to toggle focus between the sidebar and the contents screen.
 - Press `q` / `ESC` / `CTRL+C` to quit.
 
+## Commands
 ### Issue
 Issues are displayed in an interactive table view by default. You can output the results in a plain view using the `--plain` flag.
 
@@ -235,6 +236,8 @@ and is nicely displayed in the terminal.
 $ jira issue view ISSUE-1
 ```
 
+![View an issue](.github/assets/view.gif)
+
 #### Link
 The `link` command lets you link two issues.
 
@@ -245,8 +248,6 @@ $ jira issue link
 # Pass required parameters to skip prompt
 $ jira issue link ISSUE-1 ISSUE-2 Blocks
 ```
-
-![View an issue](.github/assets/view.gif)
 
 ### Epic
 Epics are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
@@ -440,15 +441,7 @@ Sprint 3:   5
 Sprint 2:   4
 Sprint 1:   3
 ```
-</details> 
-
-## Future improvements
-- [x] Issue creation.
-- [x] Ability to view issue details.
-- [x] Possibility to change issue status.
-- [x] Possibility to assign issue to a user.
-- [ ] Comments management.
-- [ ] Historical data can be cached locally for faster execution.
+</details>
 
 ## Development
 1. Clone the repo.
