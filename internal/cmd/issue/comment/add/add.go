@@ -18,7 +18,7 @@ import (
 
 const (
 	helpText = `Add adds comment to an issue.`
-	examples = `$ jira issue comment
+	examples = `$ jira issue comment add
 
 # Pass required parameters to skip prompt 
 $ jira issue comment add ISSUE-1 "My comment"
