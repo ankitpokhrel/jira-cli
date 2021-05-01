@@ -238,6 +238,23 @@ $ jira issue view ISSUE-1
 
 ![View an issue](.github/assets/view.gif)
 
+#### Comment
+The `comment` command provides a list of sub-commands to manage issue comments.
+
+##### Add
+The `add` command lets you add comment to an issue. The command only supports plain text comment at the moment.
+
+```sh
+# Add a comment using interactive prompt
+$ jira issue comment
+
+# Pass required parameters to skip prompt
+$ jira issue comment ISSUE-1 "My comment body"
+
+# Supports multi-line comments
+$ jira issue comment ISSUE-1 $'This comment has\n\nNew line'
+```
+
 #### Link
 The `link` command lets you link two issues.
 
