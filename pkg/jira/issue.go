@@ -154,6 +154,67 @@ func (c *Client) LinkIssue(inwardIssue, outwardIssue, linkType string) error {
 	return nil
 }
 
+// commentRequestADF is a a trimmed version of Atlassian document format for add comment request.
+// See https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
+type commentRequestADF struct {
+	Version int    `json:"version"`
+	DocType string `json:"type"`
+	Content []struct {
+		NodeType string `json:"type"`
+		Content  []struct {
+			ValueType string `json:"type"`
+			Text      string `json:"text"`
+		} `json:"content"`
+	} `json:"content"`
+}
+
+type issueCommentRequest struct {
+	Body *commentRequestADF `json:"body"`
+}
+
+// AddIssueComment adds comment to an issue using POST /issue/{key}/comment endpoint.
+// It only supports plain text comments at the moment.
+func (c *Client) AddIssueComment(key, comment string) error {
+	body, err := json.Marshal(&issueCommentRequest{Body: &commentRequestADF{
+		Version: 1,
+		DocType: "doc",
+		Content: []struct {
+			NodeType string `json:"type"`
+			Content  []struct {
+				ValueType string `json:"type"`
+				Text      string `json:"text"`
+			} `json:"content"`
+		}{{
+			NodeType: "paragraph",
+			Content: []struct {
+				ValueType string `json:"type"`
+				Text      string `json:"text"`
+			}{{ValueType: "text", Text: comment}},
+		}},
+	}})
+	if err != nil {
+		return err
+	}
+
+	path := fmt.Sprintf("/issue/%s/comment", key)
+	res, err := c.Post(context.Background(), path, body, Header{
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	})
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusCreated {
+		return ErrUnexpectedStatusCode
+	}
+	return nil
+}
+
 func ifaceToADF(v interface{}) *adf.ADF {
 	if v == nil {
 		return nil

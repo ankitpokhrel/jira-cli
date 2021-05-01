@@ -249,6 +249,23 @@ $ jira issue link
 $ jira issue link ISSUE-1 ISSUE-2 Blocks
 ```
 
+#### Comment
+The `comment` command provides a list of sub-commands to manage issue comments.
+
+##### Add
+The `add` command lets you add comment to an issue. The command only supports plain text comment at the moment.
+
+```sh
+# Add a comment using interactive prompt
+$ jira issue comment add
+
+# Pass required parameters to skip prompt
+$ jira issue comment add ISSUE-1 "My comment body"
+
+# Supports multi-line comments
+$ jira issue comment add ISSUE-1 $'This comment has\n\nNew line'
+```
+
 ### Epic
 Epics are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing epic issues, you can use all filters available for the issue command.
