@@ -61,11 +61,17 @@ func link(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
+	lt, err := lc.verifyIssueLinkType()
+	if err != nil {
+		cmdutil.Errorf(err.Error())
+		return
+	}
+
 	func() {
 		s := cmdutil.Info("Linking issues")
 		defer s.Stop()
 
-		err := client.LinkIssue(lc.params.inwardIssueKey, lc.params.outwardIssueKey, lc.params.linkType)
+		err := client.LinkIssue(lc.params.inwardIssueKey, lc.params.outwardIssueKey, lt.Name)
 		cmdutil.ExitIfError(err)
 	}()
 
@@ -198,4 +204,25 @@ func (lc *linkCmd) setDesiredLinkType() error {
 	lc.params.linkType = strings.Split(ans, ":")[0]
 
 	return nil
+}
+
+func (lc *linkCmd) verifyIssueLinkType() (*jira.IssueLinkType, error) {
+	var lt *jira.IssueLinkType
+
+	st := strings.ToLower(lc.params.linkType)
+	all := make([]string, 0, len(lc.linkTypes))
+	for _, t := range lc.linkTypes {
+		if strings.ToLower(t.Name) == st {
+			lt = t
+		}
+		all = append(all, fmt.Sprintf("'%s'", t.Name))
+	}
+
+	if lt == nil {
+		return nil, fmt.Errorf(
+			"\u001B[0;31m✗\u001B[0m Invalid issue link type \"%s\"\nAvailable issue link types are: %s",
+			lc.params.linkType, strings.Join(all, ", "),
+		)
+	}
+	return lt, nil
 }
