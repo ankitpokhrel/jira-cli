@@ -258,7 +258,6 @@ func TestAddIssueComment(t *testing.T) {
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
-			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(201)
 		}
 	}))
