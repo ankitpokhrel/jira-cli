@@ -76,6 +76,28 @@ func TestPost(t *testing.T) {
 	_ = resp.Body.Close()
 }
 
+func TestPostV2(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/2/issue", r.URL.Path)
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+		assert.Equal(t, "jira-cli", r.Header.Get("X-Requested-By"))
+
+		w.WriteHeader(201)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	resp, err := client.PostV2(context.Background(), "/issue", []byte("hello"), Header{
+		"Content-Type":   "application/json",
+		"X-Requested-By": "jira-cli",
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, 201, resp.StatusCode)
+
+	_ = resp.Body.Close()
+}
+
 func TestPostV1(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/rest/agile/1.0/issue", r.URL.Path)

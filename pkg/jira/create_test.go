@@ -15,7 +15,7 @@ type createTestServer struct{ code int }
 
 func (c createTestServer) serve(t *testing.T, expectedBody string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/rest/api/3/issue", r.URL.Path)
+		assert.Equal(t, "/rest/api/2/issue", r.URL.Path)
 		assert.Equal(t, "POST", r.Method)
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
@@ -44,8 +44,7 @@ func (c createTestServer) statusCode(code int) {
 
 func TestCreate(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Bug"},` +
-		`"summary":"Test bug","description":{"version":1,"type":"doc","content":[{"type":"paragraph","content":` +
-		`[{"type":"text","text":"Test description"}]}]},"priority":{"name":"Normal"},"labels":["test","dev"],` +
+		`"summary":"Test bug","description":"Test description","priority":{"name":"Normal"},"labels":["test","dev"],` +
 		`"components":[{"name":"BE"},{"name":"FE"}]}}`
 	testServer := createTestServer{code: 201}
 	server := testServer.serve(t, expectedBody)
@@ -79,8 +78,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestCreateEpic(t *testing.T) {
-	expectedBody := `{"update":{},"fields":{"customfield_10001":"CLI","description":{"content":[{"content":[{"text":` +
-		`"Test description","type":"text"}],"type":"paragraph"}],"type":"doc","version":1},"issuetype":{"name":` +
+	expectedBody := `{"update":{},"fields":{"customfield_10001":"CLI","description":"Test description","issuetype":{"name":` +
 		`"Bug"},"priority":{"name":"Normal"},"project":{"key":"TEST"},"summary":"Test bug"}}`
 	testServer := createTestServer{code: 201}
 	server := testServer.serve(t, expectedBody)

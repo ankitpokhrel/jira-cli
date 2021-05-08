@@ -13,6 +13,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gdamore/tcell/v2 v2.2.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
+	github.com/kentaro-m/blackfriday-confluence v0.0.0-20200514101926-773172e7101d
 	github.com/kr/text v0.2.0
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
@@ -21,6 +22,7 @@ require (
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4
 	github.com/rivo/tview v0.0.0-20210217110421-8a8f78a6dd01
+	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/spf13/afero v1.5.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.1.3
