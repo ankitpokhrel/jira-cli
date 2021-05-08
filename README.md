@@ -192,7 +192,7 @@ $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 
 The create command supports [Github](https://github.github.com/gfm/) and/or [Jira flavored markdown](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) for writing description.
 
-![Markdown render preview](.github/assets/md-preview.jpg)
+![Markdown render preview](.github/assets/markdown.jpg)
 
 #### Assign
 The `assign` command lets you assign user to an issue.
