@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+
+	"github.com/ankitpokhrel/jira-cli/pkg/md"
 )
 
 // CreateResponse struct holds response from POST /issue endpoint.
@@ -36,7 +38,7 @@ func (c *Client) Create(req *CreateRequest) (*CreateResponse, error) {
 		return nil, err
 	}
 
-	res, err := c.Post(context.Background(), "/issue", body, Header{
+	res, err := c.PostV2(context.Background(), "/issue", body, Header{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	})
@@ -59,20 +61,6 @@ func (c *Client) Create(req *CreateRequest) (*CreateResponse, error) {
 	return &out, err
 }
 
-// createRequestADF is a a trimmed version of Atlassian document format for create request.
-// See https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
-type createRequestADF struct {
-	Version int    `json:"version"`
-	DocType string `json:"type"`
-	Content []struct {
-		NodeType string `json:"type"`
-		Content  []struct {
-			ValueType string `json:"type"`
-			Text      string `json:"text"`
-		} `json:"content"`
-	} `json:"content"`
-}
-
 type createFields struct {
 	Project struct {
 		Key string `json:"key"`
@@ -80,9 +68,9 @@ type createFields struct {
 	IssueType struct {
 		Name string `json:"name"`
 	} `json:"issuetype"`
-	Name        string            `json:"name,omitempty"`
-	Summary     string            `json:"summary"`
-	Description *createRequestADF `json:"description,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Summary     string `json:"summary"`
+	Description string `json:"description,omitempty"`
 	Priority    *struct {
 		Name string `json:"name,omitempty"`
 	} `json:"priority,omitempty"`
@@ -139,6 +127,7 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 			Name:          req.Name,
 			Summary:       req.Summary,
 			Labels:        req.Labels,
+			Description:   md.JiraToGithubFlavored(req.Body),
 			epicFieldName: req.EpicFieldName,
 		}},
 	}
@@ -147,25 +136,6 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 		data.Fields.M.Priority = &struct {
 			Name string `json:"name,omitempty"`
 		}{Name: req.Priority}
-	}
-	if req.Body != "" {
-		data.Fields.M.Description = &createRequestADF{
-			Version: 1,
-			DocType: "doc",
-			Content: []struct {
-				NodeType string `json:"type"`
-				Content  []struct {
-					ValueType string `json:"type"`
-					Text      string `json:"text"`
-				} `json:"content"`
-			}{{
-				NodeType: "paragraph",
-				Content: []struct {
-					ValueType string `json:"type"`
-					Text      string `json:"text"`
-				}{{ValueType: "text", Text: req.Body}},
-			}},
-		}
 	}
 	if len(req.Components) > 0 {
 		comps := make([]struct {

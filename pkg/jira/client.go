@@ -15,6 +15,7 @@ const (
 	RFC3339 = "2006-01-02T15:04:05-0700"
 
 	baseURLv3 = "/rest/api/3"
+	baseURLv2 = "/rest/api/2"
 	baseURLv1 = "/rest/agile/1.0"
 )
 
@@ -93,6 +94,15 @@ func (c *Client) GetV1(ctx context.Context, path string, headers Header) (*http.
 // Post sends POST request to v3 version of the jira api.
 func (c *Client) Post(ctx context.Context, path string, body []byte, headers Header) (*http.Response, error) {
 	res, err := c.request(ctx, http.MethodPost, c.server+baseURLv3+path, body, headers)
+	if err != nil {
+		return res, err
+	}
+	return res, err
+}
+
+// PostV2 sends POST request to v2 version of the jira api.
+func (c *Client) PostV2(ctx context.Context, path string, body []byte, headers Header) (*http.Response, error) {
+	res, err := c.request(ctx, http.MethodPost, c.server+baseURLv2+path, body, headers)
 	if err != nil {
 		return res, err
 	}
