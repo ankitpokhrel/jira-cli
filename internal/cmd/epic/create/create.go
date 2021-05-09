@@ -260,7 +260,7 @@ func parseFlags(flags query.FlagParser) *createParams {
 	components, err := flags.GetStringArray("component")
 	cmdutil.ExitIfError(err)
 
-	bodyFile, err := flags.GetString("body-file")
+	bodyFile, err := flags.GetString("template")
 	cmdutil.ExitIfError(err)
 
 	noInput, err := flags.GetBool("no-input")

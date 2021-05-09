@@ -29,7 +29,7 @@ func SetCreateFlags(cmd *cobra.Command, prefix string) {
 	cmd.Flags().StringP("assignee", "a", "", prefix+" assignee (email or display name)")
 	cmd.Flags().StringArrayP("label", "l", []string{}, prefix+" labels")
 	cmd.Flags().StringArrayP("component", "C", []string{}, prefix+" components")
-	cmd.Flags().StringP("body-file", "F", "", "Path to a file to read body/description from")
+	cmd.Flags().StringP("template", "T", "", "Path to a file to read body/description from")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful creation")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
