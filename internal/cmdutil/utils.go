@@ -2,6 +2,7 @@ package cmdutil
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -79,4 +80,26 @@ func GetConfigHome() (string, error) {
 		return "", err
 	}
 	return home + "/.config", nil
+}
+
+// StdinHasData checks if standard input has any data to be processed.
+func StdinHasData() bool {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	if fi.Mode()&os.ModeNamedPipe == 0 {
+		return false
+	}
+	return true
+}
+
+// ReadFile reads contents of the given file.
+func ReadFile(filePath string) ([]byte, error) {
+	if filePath == "-" {
+		b, err := ioutil.ReadAll(os.Stdin)
+		_ = os.Stdin.Close()
+		return b, err
+	}
+	return ioutil.ReadFile(filePath)
 }

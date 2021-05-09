@@ -54,6 +54,16 @@ func create(cmd *cobra.Command, _ []string) {
 		params: params,
 	}
 
+	if cc.isNonInteractive() {
+		cc.params.noInput = true
+
+		if cc.isMandatoryParamsMissing() {
+			cmdutil.Errorf(
+				"\u001B[0;31m✗\u001B[0m Mandatory params `--summary` and `--type` is required when using non-interactive mode",
+			)
+		}
+	}
+
 	cmdutil.ExitIfError(cc.setIssueTypes())
 
 	qs := cc.getQuestions()
@@ -210,7 +220,18 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 		})
 	}
 
+	var defaultBody string
+
+	if cc.params.bodyFile != "" {
+		b, err := cmdutil.ReadFile(cc.params.bodyFile)
+		if err != nil {
+			b = []byte(fmt.Sprintf("Unable to load body from file: %s", cc.params.bodyFile))
+		}
+		defaultBody = string(b)
+	}
+
 	if cc.params.noInput {
+		cc.params.body = defaultBody
 		return qs
 	}
 
@@ -218,13 +239,26 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 		qs = append(qs, &survey.Question{
 			Name: "body",
 			Prompt: &surveyext.JiraEditor{
-				Editor:       &survey.Editor{Message: "Description", HideDefault: true},
+				Editor: &survey.Editor{
+					Message:       "Description",
+					Default:       defaultBody,
+					HideDefault:   true,
+					AppendDefault: true,
+				},
 				BlankAllowed: true,
 			},
 		})
 	}
 
 	return qs
+}
+
+func (cc *createCmd) isNonInteractive() bool {
+	return cmdutil.StdinHasData() || cc.params.bodyFile == "-"
+}
+
+func (cc *createCmd) isMandatoryParamsMissing() bool {
+	return cc.params.summary == "" || cc.params.issueType == ""
 }
 
 type createParams struct {
@@ -235,6 +269,7 @@ type createParams struct {
 	assignee   string
 	labels     []string
 	components []string
+	bodyFile   string
 	noInput    bool
 	debug      bool
 }
@@ -261,6 +296,9 @@ func parseFlags(flags query.FlagParser) *createParams {
 	components, err := flags.GetStringArray("component")
 	cmdutil.ExitIfError(err)
 
+	bodyFile, err := flags.GetString("body-file")
+	cmdutil.ExitIfError(err)
+
 	noInput, err := flags.GetBool("no-input")
 	cmdutil.ExitIfError(err)
 
@@ -275,6 +313,7 @@ func parseFlags(flags query.FlagParser) *createParams {
 		assignee:   assignee,
 		labels:     labels,
 		components: components,
+		bodyFile:   bodyFile,
 		noInput:    noInput,
 		debug:      debug,
 	}
