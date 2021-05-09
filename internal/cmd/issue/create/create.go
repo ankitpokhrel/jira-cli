@@ -222,10 +222,10 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 
 	var defaultBody string
 
-	if cc.params.bodyFile != "" {
-		b, err := cmdutil.ReadFile(cc.params.bodyFile)
+	if cc.params.template != "" {
+		b, err := cmdutil.ReadFile(cc.params.template)
 		if err != nil {
-			b = []byte(fmt.Sprintf("Unable to load body from file: %s", cc.params.bodyFile))
+			cmdutil.Errorf(fmt.Sprintf("\u001B[0;31m✗\u001B[0m Error: %s", err))
 		}
 		defaultBody = string(b)
 	}
@@ -254,7 +254,7 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 }
 
 func (cc *createCmd) isNonInteractive() bool {
-	return cmdutil.StdinHasData() || cc.params.bodyFile == "-"
+	return cmdutil.StdinHasData() || cc.params.template == "-"
 }
 
 func (cc *createCmd) isMandatoryParamsMissing() bool {
@@ -269,7 +269,7 @@ type createParams struct {
 	assignee   string
 	labels     []string
 	components []string
-	bodyFile   string
+	template   string
 	noInput    bool
 	debug      bool
 }
@@ -296,7 +296,7 @@ func parseFlags(flags query.FlagParser) *createParams {
 	components, err := flags.GetStringArray("component")
 	cmdutil.ExitIfError(err)
 
-	bodyFile, err := flags.GetString("template")
+	template, err := flags.GetString("template")
 	cmdutil.ExitIfError(err)
 
 	noInput, err := flags.GetBool("no-input")
@@ -313,7 +313,7 @@ func parseFlags(flags query.FlagParser) *createParams {
 		assignee:   assignee,
 		labels:     labels,
 		components: components,
-		bodyFile:   bodyFile,
+		template:   template,
 		noInput:    noInput,
 		debug:      debug,
 	}
