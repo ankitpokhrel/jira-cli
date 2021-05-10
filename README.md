@@ -190,9 +190,23 @@ $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 
 ![Create an issue](.github/assets/create.gif)
 
-The create command supports [Github](https://github.github.com/gfm/) and/or [Jira flavored markdown](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) for writing description.
+The command supports both [Github-flavored](https://github.github.com/gfm/)
+and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) markdown for writing
+description. You can load pre-defined templates using `--template` flag.
+
+```sh
+# Load description from template file
+$ jira issue create --template /path/to/template.tmpl
+
+# Get description from standard input
+$ jira issue create --template -
+
+# Or, use pipe to read input directly from standard input
+$ echo "Description from stdin" | jira issue create -s"Summary" -tTask
+```
 
 ![Markdown render preview](.github/assets/markdown.jpg)
+> The preview above shows markdown template passed in Jira CLI and how it is rendered in the Jira UI.
 
 #### Assign
 The `assign` command lets you assign user to an issue.
