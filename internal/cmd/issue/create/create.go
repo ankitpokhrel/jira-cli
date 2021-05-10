@@ -59,7 +59,7 @@ func create(cmd *cobra.Command, _ []string) {
 
 		if cc.isMandatoryParamsMissing() {
 			cmdutil.Errorf(
-				"\u001B[0;31m✗\u001B[0m Mandatory params `--summary` and `--type` is required when using non-interactive mode",
+				"\u001B[0;31m✗\u001B[0m Params `--summary` and `--type` is mandatory when using a non-interactive mode",
 			)
 		}
 	}
@@ -222,7 +222,7 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 
 	var defaultBody string
 
-	if cc.params.template != "" {
+	if cc.params.template != "" || cmdutil.StdinHasData() {
 		b, err := cmdutil.ReadFile(cc.params.template)
 		if err != nil {
 			cmdutil.Errorf(fmt.Sprintf("\u001B[0;31m✗\u001B[0m Error: %s", err))

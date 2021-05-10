@@ -190,8 +190,8 @@ $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 
 ![Create an issue](.github/assets/create.gif)
 
-The command supports [Github-flavored](https://github.github.com/gfm/)
-and/or [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) markdown for writing
+The command supports both [Github-flavored](https://github.github.com/gfm/)
+and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) markdown for writing
 description. You can load pre-defined templates using `--template` flag.
 
 ```sh

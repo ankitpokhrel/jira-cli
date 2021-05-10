@@ -96,10 +96,13 @@ func StdinHasData() bool {
 
 // ReadFile reads contents of the given file.
 func ReadFile(filePath string) ([]byte, error) {
-	if filePath == "-" {
+	if filePath != "-" && filePath != "" {
+		return ioutil.ReadFile(filePath)
+	}
+	if filePath == "-" || StdinHasData() {
 		b, err := ioutil.ReadAll(os.Stdin)
 		_ = os.Stdin.Close()
 		return b, err
 	}
-	return ioutil.ReadFile(filePath)
+	return []byte(""), nil
 }
