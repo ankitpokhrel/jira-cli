@@ -271,7 +271,9 @@ $ jira issue link ISSUE-1 ISSUE-2 Blocks
 The `comment` command provides a list of sub-commands to manage issue comments.
 
 ##### Add
-The `add` command lets you add comment to an issue. The command only supports plain text comment at the moment.
+The `add` command lets you add comment to an issue. The command supports both [Github-flavored](https://github.github.com/gfm/)
+and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) markdown for writing
+comment. You can load pre-defined templates using `--template` flag.
 
 ```sh
 # Add a comment using interactive prompt
@@ -280,8 +282,14 @@ $ jira issue comment add
 # Pass required parameters to skip prompt
 $ jira issue comment add ISSUE-1 "My comment body"
 
-# Supports multi-line comments
-$ jira issue comment add ISSUE-1 $'This comment has\n\nNew line'
+# Load comment from template file
+$ jira issue comment add ISSUE-1 --template /path/to/template.tmpl
+
+# Get comment from standard input
+$ jira issue comment add ISSUE-1 --template -
+
+# Or, use pipe to read input directly from standard input
+$ echo "Comment from stdin" | jira issue comment add ISSUE-1
 ```
 
 ### Epic

@@ -43,6 +43,7 @@ func NewCmdCommentAdd() *cobra.Command {
 	}
 
 	cmd.Flags().Bool("web", false, "Open issue in web browser after adding comment")
+	cmd.Flags().StringP("template", "T", "", "Path to a file to read comment body from")
 
 	return &cmd
 }
@@ -54,6 +55,12 @@ func add(cmd *cobra.Command, args []string) {
 		client:    client,
 		linkTypes: nil,
 		params:    params,
+	}
+
+	if ac.isNonInteractive() && ac.isMandatoryParamsMissing() {
+		cmdutil.Errorf(
+			"\u001B[0;31m✗\u001B[0m `ISSUE_KEY` is mandatory when using a non-interactive mode",
+		)
 	}
 
 	cmdutil.ExitIfError(ac.setIssueKey())
@@ -102,6 +109,7 @@ func add(cmd *cobra.Command, args []string) {
 type addParams struct {
 	issueKey string
 	body     string
+	template string
 	debug    bool
 }
 
@@ -119,9 +127,13 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 	debug, err := flags.GetBool("debug")
 	cmdutil.ExitIfError(err)
 
+	template, err := flags.GetString("template")
+	cmdutil.ExitIfError(err)
+
 	return &addParams{
 		issueKey: issueKey,
 		body:     body,
+		template: template,
 		debug:    debug,
 	}
 }
@@ -162,11 +174,31 @@ func (ac *addCmd) getQuestions() []*survey.Question {
 			Validate: survey.Required,
 		})
 	}
+
+	var defaultBody string
+
+	if ac.params.template != "" || cmdutil.StdinHasData() {
+		b, err := cmdutil.ReadFile(ac.params.template)
+		if err != nil {
+			cmdutil.Errorf(fmt.Sprintf("\u001B[0;31m✗\u001B[0m Error: %s", err))
+		}
+		defaultBody = string(b)
+	}
+
+	if defaultBody != "" {
+		ac.params.body = defaultBody
+	}
+
 	if ac.params.body == "" {
 		qs = append(qs, &survey.Question{
 			Name: "body",
 			Prompt: &surveyext.JiraEditor{
-				Editor:       &survey.Editor{Message: "Comment body", HideDefault: true},
+				Editor: &survey.Editor{
+					Message:       "Comment body",
+					Default:       defaultBody,
+					HideDefault:   true,
+					AppendDefault: true,
+				},
 				BlankAllowed: false,
 			},
 		})
@@ -187,4 +219,12 @@ func (ac *addCmd) getNextAction() *survey.Question {
 		},
 		Validate: survey.Required,
 	}
+}
+
+func (ac *addCmd) isNonInteractive() bool {
+	return cmdutil.StdinHasData() || ac.params.template == "-"
+}
+
+func (ac *addCmd) isMandatoryParamsMissing() bool {
+	return ac.params.issueKey == ""
 }
