@@ -44,6 +44,7 @@ func NewCmdCommentAdd() *cobra.Command {
 
 	cmd.Flags().Bool("web", false, "Open issue in web browser after adding comment")
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read comment body from")
+	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 
 	return &cmd
 }
@@ -57,10 +58,14 @@ func add(cmd *cobra.Command, args []string) {
 		params:    params,
 	}
 
-	if ac.isNonInteractive() && ac.isMandatoryParamsMissing() {
-		cmdutil.Errorf(
-			"\u001B[0;31m✗\u001B[0m `ISSUE_KEY` is mandatory when using a non-interactive mode",
-		)
+	if ac.isNonInteractive() {
+		ac.params.noInput = true
+
+		if ac.isMandatoryParamsMissing() {
+			cmdutil.Errorf(
+				"\u001B[0;31m✗\u001B[0m `ISSUE_KEY` is mandatory when using a non-interactive mode",
+			)
+		}
 	}
 
 	cmdutil.ExitIfError(ac.setIssueKey())
@@ -77,9 +82,11 @@ func add(cmd *cobra.Command, args []string) {
 		if params.body == "" {
 			params.body = ans.Body
 		}
+	}
 
+	if !params.noInput {
 		answer := struct{ Action string }{}
-		err = survey.Ask([]*survey.Question{ac.getNextAction()}, &answer)
+		err := survey.Ask([]*survey.Question{ac.getNextAction()}, &answer)
 		cmdutil.ExitIfError(err)
 
 		if answer.Action == cmdcommon.ActionCancel {
@@ -110,6 +117,7 @@ type addParams struct {
 	issueKey string
 	body     string
 	template string
+	noInput  bool
 	debug    bool
 }
 
@@ -130,10 +138,14 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 	template, err := flags.GetString("template")
 	cmdutil.ExitIfError(err)
 
+	noInput, err := flags.GetBool("no-input")
+	cmdutil.ExitIfError(err)
+
 	return &addParams{
 		issueKey: issueKey,
 		body:     body,
 		template: template,
+		noInput:  noInput,
 		debug:    debug,
 	}
 }
@@ -185,8 +197,9 @@ func (ac *addCmd) getQuestions() []*survey.Question {
 		defaultBody = string(b)
 	}
 
-	if defaultBody != "" {
+	if ac.params.noInput && ac.params.body == "" {
 		ac.params.body = defaultBody
+		return qs
 	}
 
 	if ac.params.body == "" {

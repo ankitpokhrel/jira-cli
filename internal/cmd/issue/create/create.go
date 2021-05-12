@@ -231,7 +231,9 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 	}
 
 	if cc.params.noInput {
-		cc.params.body = defaultBody
+		if cc.params.body == "" {
+			cc.params.body = defaultBody
+		}
 		return qs
 	}
 
