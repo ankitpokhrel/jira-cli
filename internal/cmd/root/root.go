@@ -2,6 +2,7 @@ package root
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -19,6 +20,8 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	jiraConfig "github.com/ankitpokhrel/jira-cli/internal/config"
 )
+
+const jiraAPITokenLink = "https://id.atlassian.com/manage-profile/security/api-tokens"
 
 var (
 	config string
@@ -64,6 +67,8 @@ func NewCmdRoot() *cobra.Command {
 				return
 			}
 
+			checkForJiraToken()
+
 			configFile := viper.ConfigFileUsed()
 			if !jiraConfig.Exists(configFile) {
 				cmdutil.Errorf("Missing configuration file.\nRun 'jira init' to configure the tool.")
@@ -104,4 +109,19 @@ func addChildCommands(cmd *cobra.Command) {
 		completion.NewCmdCompletion(),
 		version.NewCmdVersion(),
 	)
+}
+
+func checkForJiraToken() {
+	if os.Getenv("JIRA_API_TOKEN") != "" {
+		return
+	}
+
+	msg := fmt.Sprintf(`You need to define JIRA_API_TOKEN env for the tool to work. 
+
+You can generate a token using this link: %s
+
+After generating the token, export it to your shell and run 'jira init' if you haven't already.`, jiraAPITokenLink)
+
+	fmt.Fprintf(os.Stderr, "%s\n", msg)
+	os.Exit(1)
 }
