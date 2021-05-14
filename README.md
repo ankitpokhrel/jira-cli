@@ -17,7 +17,10 @@
 </div>
 
 This tool mostly focuses on issue search and navigation at the moment. However, it also includes features like issue creation,
-updating a ticket status, and so on. Note that the tool is only tested with the latest Jira cloud.
+updating a ticket status, and so on. 
+
+**Note**
+> The tool is only tested with the latest Jira cloud since that's what I usually work with. There is a plan to support local Jira instance in the future, however, it might not happen soon.
 
 ## Installation
 Install the runnable binary to your `$GOPATH/bin`.
