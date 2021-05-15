@@ -168,6 +168,7 @@ func (c *JiraCLIConfig) verifyLoginDetails(server, login string) error {
 	c.jiraClient = api.Client(jira.Config{
 		Server: server,
 		Login:  login,
+		Debug:  viper.GetBool("debug"),
 	})
 	if _, err := c.jiraClient.Me(); err != nil {
 		return err
