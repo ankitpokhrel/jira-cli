@@ -68,5 +68,5 @@ func TestProjects(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.Project()
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }

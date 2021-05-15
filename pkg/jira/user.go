@@ -59,7 +59,7 @@ func (c *Client) UserSearch(opt *UserSearchOptions) ([]*User, error) {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out []*User

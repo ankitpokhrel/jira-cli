@@ -38,7 +38,7 @@ func (c *Client) Boards(project, boardType string) (*BoardResult, error) {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out BoardResult

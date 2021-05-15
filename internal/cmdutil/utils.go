@@ -22,20 +22,30 @@ func Errorf(msg string, a ...interface{}) {
 
 // ExitIfError exists with error message if err is not nil.
 func ExitIfError(err error) {
-	if err != nil {
-		var msg string
+	if err == nil {
+		return
+	}
 
+	var msg string
+
+	if e, ok := err.(*jira.ErrUnexpectedResponse); ok {
+		dm := "jira: Received unexpected response.\nPlease check the parameters you supplied and try again."
+		bd := e.Error()
+
+		msg = dm
+		if len(bd) > 0 {
+			msg = fmt.Sprintf("%s\n%s", bd, dm)
+		}
+	} else {
 		switch err {
-		case jira.ErrUnexpectedStatusCode:
-			msg = "jira: Received unexpected response.\nPlease check the parameters you supplied and try again."
 		case jira.ErrEmptyResponse:
 			msg = "jira: Received empty response.\nPlease try again."
 		default:
 			msg = err.Error()
 		}
-
-		Errorf("\nError: %s", msg)
 	}
+
+	Errorf("\n%s", msg)
 }
 
 // Info displays spinner.

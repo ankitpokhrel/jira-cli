@@ -22,7 +22,7 @@ func (c *Client) Me() (*Me, error) {
 		defer func() { _ = res.Body.Close() }()
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var me Me

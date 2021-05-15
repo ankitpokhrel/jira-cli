@@ -74,7 +74,7 @@ func TestCreate(t *testing.T) {
 	testServer.statusCode(400)
 
 	_, err = client.Create(&requestData)
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
 func TestCreateEpic(t *testing.T) {
@@ -106,5 +106,5 @@ func TestCreateEpic(t *testing.T) {
 	testServer.statusCode(400)
 
 	_, err = client.Create(&requestData)
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }

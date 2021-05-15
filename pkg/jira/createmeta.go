@@ -49,7 +49,7 @@ func (c *Client) GetCreateMeta(req *CreateMetaRequest) (*CreateMetaResponse, err
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out CreateMetaResponse

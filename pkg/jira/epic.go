@@ -20,7 +20,7 @@ func (c *Client) Epic(jql string) (*SearchResult, error) {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out SearchResult
@@ -47,7 +47,7 @@ func (c *Client) EpicIssues(key, jql string, limit uint) (*SearchResult, error) 
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out SearchResult
@@ -83,7 +83,7 @@ func (c *Client) EpicIssuesAdd(key string, issues ...string) error {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusNoContent {
-		return ErrUnexpectedStatusCode
+		return formatUnexpectedResponse(res)
 	}
 	return nil
 }
@@ -114,7 +114,7 @@ func (c *Client) EpicIssuesRemove(issues ...string) error {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusNoContent {
-		return ErrUnexpectedStatusCode
+		return formatUnexpectedResponse(res)
 	}
 	return nil
 }
