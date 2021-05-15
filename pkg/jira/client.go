@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 	"time"
 )
@@ -128,16 +129,22 @@ func (c *Client) Put(ctx context.Context, path string, body []byte, headers Head
 }
 
 func (c *Client) request(ctx context.Context, method, endpoint string, body []byte, headers Header) (*http.Response, error) {
-	if c.debug {
-		fmt.Printf("\nRequesting %s: %s\n", method, endpoint)
-		fmt.Printf("With request body: %s\n", string(body))
-		fmt.Printf("With request headers: %v\n", headers)
-	}
+	var (
+		req *http.Request
+		res *http.Response
+		err error
+	)
 
-	req, err := http.NewRequest(method, endpoint, bytes.NewReader(body))
+	req, err = http.NewRequest(method, endpoint, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		if c.debug {
+			dump(req, res)
+		}
+	}()
 
 	for k, v := range headers {
 		req.Header.Set(k, v)
@@ -145,7 +152,21 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 
 	req.SetBasicAuth(c.login, c.token)
 
-	res, err := c.transport.RoundTrip(req.WithContext(ctx))
+	res, err = c.transport.RoundTrip(req.WithContext(ctx))
 
 	return res, err
+}
+
+func dump(req *http.Request, res *http.Response) {
+	reqDump, _ := httputil.DumpRequest(req, true)
+	respDump, _ := httputil.DumpResponse(res, false)
+
+	prettyPrintDump("Request Details", reqDump)
+	prettyPrintDump("Response Details", respDump)
+}
+
+func prettyPrintDump(heading string, data []byte) {
+	fmt.Printf("\n\n%s", strings.ToUpper(heading))
+	fmt.Printf(fmt.Sprintf("\n%s\n\n", strings.Repeat("-", 60)))
+	fmt.Print(string(data))
 }
