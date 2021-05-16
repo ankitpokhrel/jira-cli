@@ -29,7 +29,10 @@ func ExitIfError(err error) {
 	var msg string
 
 	if e, ok := err.(*jira.ErrUnexpectedResponse); ok {
-		dm := "jira: Received unexpected response.\nPlease check the parameters you supplied and try again."
+		dm := fmt.Sprintf(
+			"jira: Received unexpected response '%s'.\nPlease check the parameters you supplied and try again.",
+			e.Status,
+		)
 		bd := e.Error()
 
 		msg = dm
@@ -41,11 +44,11 @@ func ExitIfError(err error) {
 		case jira.ErrEmptyResponse:
 			msg = "jira: Received empty response.\nPlease try again."
 		default:
-			msg = err.Error()
+			msg = fmt.Sprintf("Error: %s", err.Error())
 		}
 	}
 
-	Errorf("\n%s", msg)
+	Errorf("%s", msg)
 }
 
 // Info displays spinner.

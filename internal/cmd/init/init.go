@@ -27,8 +27,8 @@ func initialize(*cobra.Command, []string) {
 	c := jiraConfig.NewJiraCLIConfig()
 
 	if err := c.Generate(); err != nil {
-		if _, ok := err.(*jira.ErrUnexpectedResponse); ok {
-			cmdutil.Errorf("\n\033[0;31m✗\033[0m Received unexpected status code from jira. Please try again.")
+		if e, ok := err.(*jira.ErrUnexpectedResponse); ok {
+			cmdutil.Errorf("\n\033[0;31m✗\033[0m Received unexpected response '%s' from jira. Please try again.", e.Status)
 		} else {
 			switch err {
 			case jiraConfig.ErrSkip:

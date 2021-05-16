@@ -41,6 +41,7 @@ func (e *ErrUnexpectedResponse) Error() string {
 
 // Errors is a jira error type.
 type Errors struct {
+	Errors          map[string]string
 	ErrorMessages   []string
 	WarningMessages []string
 }
@@ -48,10 +49,13 @@ type Errors struct {
 func (e Errors) String() string {
 	var out strings.Builder
 
-	if len(e.ErrorMessages) > 0 {
-		out.WriteString("Error:\n")
+	if len(e.ErrorMessages) > 0 || len(e.Errors) > 0 {
+		out.WriteString("\nError:\n")
 		for _, v := range e.ErrorMessages {
 			out.WriteString(fmt.Sprintf("  - %s\n", v))
+		}
+		for k, v := range e.Errors {
+			out.WriteString(fmt.Sprintf("  - %s: %s\n", k, v))
 		}
 	}
 
