@@ -98,7 +98,7 @@ func TestSprints(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.Sprints(2, "state=active,closed", 0, 10)
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
 func TestSprintsInBoards(t *testing.T) {
@@ -307,5 +307,5 @@ func TestSprintIssues(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.SprintIssues(1, 2, "project=TEST", 100)
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }

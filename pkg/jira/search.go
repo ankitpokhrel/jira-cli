@@ -30,7 +30,7 @@ func (c *Client) Search(jql string, limit uint) (*SearchResult, error) {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out SearchResult

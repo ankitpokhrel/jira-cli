@@ -27,15 +27,17 @@ func initialize(*cobra.Command, []string) {
 	c := jiraConfig.NewJiraCLIConfig()
 
 	if err := c.Generate(); err != nil {
-		switch err {
-		case jiraConfig.ErrSkip:
-			fmt.Printf("\033[0;32m✓\033[0m Skipping config generation. Current config: %s\n", viper.ConfigFileUsed())
-		case jira.ErrUnexpectedStatusCode:
-			cmdutil.Errorf("\n\033[0;31m✗\033[0m Received unexpected status code from jira. Please try again.")
-		case jiraConfig.ErrUnexpectedResponseFormat:
-			cmdutil.Errorf("\n\033[0;31m✗\033[0m Got response in unexpected format when fetching metadata. Please try again.")
-		default:
-			cmdutil.Errorf("\n\033[0;31m✗\033[0m Unable to generate configuration: %s", err.Error())
+		if e, ok := err.(*jira.ErrUnexpectedResponse); ok {
+			cmdutil.Errorf("\n\033[0;31m✗\033[0m Received unexpected response '%s' from jira. Please try again.", e.Status)
+		} else {
+			switch err {
+			case jiraConfig.ErrSkip:
+				fmt.Printf("\033[0;32m✓\033[0m Skipping config generation. Current config: %s\n", viper.ConfigFileUsed())
+			case jiraConfig.ErrUnexpectedResponseFormat:
+				cmdutil.Errorf("\n\033[0;31m✗\033[0m Got response in unexpected format when fetching metadata. Please try again.")
+			default:
+				cmdutil.Errorf("\n\033[0;31m✗\033[0m Unable to generate configuration: %s", err.Error())
+			}
 		}
 		os.Exit(1)
 	}

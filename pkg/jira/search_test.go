@@ -135,5 +135,5 @@ func TestSearch(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.Search("project=TEST", 100)
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }

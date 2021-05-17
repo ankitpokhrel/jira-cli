@@ -51,7 +51,7 @@ func (c *Client) Create(req *CreateRequest) (*CreateResponse, error) {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusCreated {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out CreateResponse

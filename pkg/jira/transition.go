@@ -37,7 +37,7 @@ func (c *Client) Transitions(key string) ([]*Transition, error) {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out transitionResponse
@@ -69,7 +69,7 @@ func (c *Client) Transition(key string, data *TransitionRequest) (int, error) {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusNoContent {
-		return res.StatusCode, ErrUnexpectedStatusCode
+		return res.StatusCode, formatUnexpectedResponse(res)
 	}
 	return res.StatusCode, nil
 }

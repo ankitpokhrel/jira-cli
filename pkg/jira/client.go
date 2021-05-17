@@ -3,6 +3,7 @@ package jira
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -25,9 +26,48 @@ var (
 	ErrNoResult = fmt.Errorf("jira: no result")
 	// ErrEmptyResponse denotes empty response from the server.
 	ErrEmptyResponse = fmt.Errorf("jira: empty response from server")
-	// ErrUnexpectedStatusCode denotes response code other than 200.
-	ErrUnexpectedStatusCode = fmt.Errorf("jira: unexpected status code")
 )
+
+// ErrUnexpectedResponse denotes response code other than the expected one.
+type ErrUnexpectedResponse struct {
+	Body       Errors
+	Status     string
+	StatusCode int
+}
+
+func (e *ErrUnexpectedResponse) Error() string {
+	return e.Body.String()
+}
+
+// Errors is a jira error type.
+type Errors struct {
+	Errors          map[string]string
+	ErrorMessages   []string
+	WarningMessages []string
+}
+
+func (e Errors) String() string {
+	var out strings.Builder
+
+	if len(e.ErrorMessages) > 0 || len(e.Errors) > 0 {
+		out.WriteString("\nError:\n")
+		for _, v := range e.ErrorMessages {
+			out.WriteString(fmt.Sprintf("  - %s\n", v))
+		}
+		for k, v := range e.Errors {
+			out.WriteString(fmt.Sprintf("  - %s: %s\n", k, v))
+		}
+	}
+
+	if len(e.WarningMessages) > 0 {
+		out.WriteString("\nWarning:\n")
+		for _, v := range e.WarningMessages {
+			out.WriteString(fmt.Sprintf("  - %s\n", v))
+		}
+	}
+
+	return out.String()
+}
 
 // Header is a key, value pair for request headers.
 type Header map[string]string
@@ -169,4 +209,17 @@ func prettyPrintDump(heading string, data []byte) {
 	fmt.Printf("\n\n%s", strings.ToUpper(heading))
 	fmt.Printf(fmt.Sprintf("\n%s\n\n", strings.Repeat("-", 60)))
 	fmt.Print(string(data))
+}
+
+func formatUnexpectedResponse(res *http.Response) *ErrUnexpectedResponse {
+	var b Errors
+
+	// We don't care about decoding error here.
+	_ = json.NewDecoder(res.Body).Decode(&b)
+
+	return &ErrUnexpectedResponse{
+		Body:       b,
+		Status:     res.Status,
+		StatusCode: res.StatusCode,
+	}
 }

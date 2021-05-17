@@ -35,7 +35,7 @@ func (c *Client) GetIssue(key string) (*Issue, error) {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out Issue
@@ -77,7 +77,7 @@ func (c *Client) AssignIssue(key, accountID string) error {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusNoContent {
-		return ErrUnexpectedStatusCode
+		return formatUnexpectedResponse(res)
 	}
 	return nil
 }
@@ -94,7 +94,7 @@ func (c *Client) GetIssueLinkTypes() ([]*IssueLinkType, error) {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out struct {
@@ -150,7 +150,7 @@ func (c *Client) LinkIssue(inwardIssue, outwardIssue, linkType string) error {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusCreated {
-		return ErrUnexpectedStatusCode
+		return formatUnexpectedResponse(res)
 	}
 	return nil
 }
@@ -181,7 +181,7 @@ func (c *Client) AddIssueComment(key, comment string) error {
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusCreated {
-		return ErrUnexpectedStatusCode
+		return formatUnexpectedResponse(res)
 	}
 	return nil
 }

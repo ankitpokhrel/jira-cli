@@ -73,5 +73,5 @@ func TestUserSearch(t *testing.T) {
 	_, err = client.UserSearch(&UserSearchOptions{
 		Username: "doe",
 	})
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }

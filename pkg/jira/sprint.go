@@ -41,7 +41,7 @@ func (c *Client) Sprints(boardID int, qp string, startAt, max int) (*SprintResul
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out SprintResult
@@ -109,7 +109,7 @@ func (c *Client) SprintIssues(boardID, sprintID int, jql string, limit uint) (*S
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, ErrUnexpectedStatusCode
+		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out SearchResult

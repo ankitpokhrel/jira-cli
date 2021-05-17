@@ -79,7 +79,7 @@ func TestGetIssue(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.GetIssue("TEST-1")
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
 func TestGetIssueWithoutDescription(t *testing.T) {
@@ -159,7 +159,7 @@ func TestAssignIssue(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.AssignIssue("TEST-1", "default")
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
 func TestGetIssueLinkTypes(t *testing.T) {
@@ -209,7 +209,7 @@ func TestGetIssueLinkTypes(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.GetIssueLinkTypes()
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
 func TestLinkIssue(t *testing.T) {
@@ -236,7 +236,7 @@ func TestLinkIssue(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.LinkIssue("TEST-1", "TEST-2", "invalid")
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
 func TestAddIssueComment(t *testing.T) {
@@ -271,5 +271,5 @@ func TestAddIssueComment(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.AddIssueComment("TEST-1", "comment")
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }

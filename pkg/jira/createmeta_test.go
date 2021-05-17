@@ -88,5 +88,5 @@ func TestGetCreateMeta(t *testing.T) {
 		IssueTypeNames: "Epic",
 		Expand:         "projects.issuetypes.fields",
 	})
-	assert.Error(t, ErrUnexpectedStatusCode, err)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
