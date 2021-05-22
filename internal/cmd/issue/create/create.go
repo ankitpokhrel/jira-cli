@@ -187,7 +187,7 @@ func (cc *createCmd) getIssueType() *survey.Question {
 		qs = &survey.Question{
 			Name: "issueType",
 			Prompt: &survey.Select{
-				Message: "Issue type:",
+				Message: "Issue type",
 				Options: options,
 			},
 			Validate: survey.Required,
