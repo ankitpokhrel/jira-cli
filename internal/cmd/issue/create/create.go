@@ -66,14 +66,25 @@ func create(cmd *cobra.Command, _ []string) {
 
 	cmdutil.ExitIfError(cc.setIssueTypes())
 
-	qs := cc.getQuestions()
-	if len(qs) > 0 {
-		ans := struct{ IssueType, Summary, Body string }{}
-		err := survey.Ask(qs, &ans)
+	it := cc.getIssueType()
+	if it != nil {
+		ans := struct{ IssueType string }{}
+		err := survey.Ask([]*survey.Question{it}, &ans)
 		cmdutil.ExitIfError(err)
 
 		if params.issueType == "" {
 			params.issueType = ans.IssueType
+		}
+	}
+
+	qs := cc.getQuestions()
+	if len(qs) > 0 {
+		ans := struct{ ParentIssueKey, Summary, Body string }{}
+		err := survey.Ask(qs, &ans)
+		cmdutil.ExitIfError(err)
+
+		if params.parentIssueKey == "" {
+			params.parentIssueKey = ans.ParentIssueKey
 		}
 		if params.summary == "" {
 			params.summary = ans.Summary
@@ -126,13 +137,14 @@ func create(cmd *cobra.Command, _ []string) {
 		defer s.Stop()
 
 		cr := jira.CreateRequest{
-			Project:    project,
-			IssueType:  params.issueType,
-			Summary:    params.summary,
-			Body:       params.body,
-			Priority:   params.priority,
-			Labels:     params.labels,
-			Components: params.components,
+			Project:        project,
+			IssueType:      params.issueType,
+			ParentIssueKey: params.parentIssueKey,
+			Summary:        params.summary,
+			Body:           params.body,
+			Priority:       params.priority,
+			Labels:         params.labels,
+			Components:     params.components,
 		}
 
 		resp, err := client.Create(&cr)
@@ -175,10 +187,6 @@ func (cc *createCmd) setIssueTypes() error {
 	}
 	for _, at := range availableTypes {
 		tp := at.(map[interface{}]interface{})
-		st := tp["subtask"].(bool)
-		if st {
-			continue
-		}
 		name := tp["name"].(string)
 		if name == jira.IssueTypeEpic {
 			continue
@@ -186,7 +194,7 @@ func (cc *createCmd) setIssueTypes() error {
 		issueTypes = append(issueTypes, &jira.IssueType{
 			ID:      tp["id"].(string),
 			Name:    name,
-			Subtask: st,
+			Subtask: tp["subtask"].(bool),
 		})
 	}
 	cc.issueTypes = issueTypes
@@ -194,8 +202,8 @@ func (cc *createCmd) setIssueTypes() error {
 	return nil
 }
 
-func (cc *createCmd) getQuestions() []*survey.Question {
-	var qs []*survey.Question
+func (cc *createCmd) getIssueType() *survey.Question {
+	var qs *survey.Question
 
 	if cc.params.issueType == "" {
 		var options []string
@@ -203,15 +211,34 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 			options = append(options, t.Name)
 		}
 
-		qs = append(qs, &survey.Question{
+		qs = &survey.Question{
 			Name: "issueType",
 			Prompt: &survey.Select{
 				Message: "Issue type:",
 				Options: options,
 			},
 			Validate: survey.Required,
-		})
+		}
 	}
+
+	return qs
+}
+
+func (cc *createCmd) getQuestions() []*survey.Question {
+	var qs []*survey.Question
+
+	if cc.params.parentIssueKey == "" {
+		for _, t := range cc.issueTypes {
+			if t.Name == cc.params.issueType && t.Subtask {
+				qs = append(qs, &survey.Question{
+					Name:     "parentIssueKey",
+					Prompt:   &survey.Input{Message: "Parent issue key"},
+					Validate: survey.Required,
+				})
+			}
+		}
+	}
+
 	if cc.params.summary == "" {
 		qs = append(qs, &survey.Question{
 			Name:     "summary",
@@ -264,20 +291,24 @@ func (cc *createCmd) isMandatoryParamsMissing() bool {
 }
 
 type createParams struct {
-	issueType  string
-	summary    string
-	body       string
-	priority   string
-	assignee   string
-	labels     []string
-	components []string
-	template   string
-	noInput    bool
-	debug      bool
+	issueType      string
+	parentIssueKey string
+	summary        string
+	body           string
+	priority       string
+	assignee       string
+	labels         []string
+	components     []string
+	template       string
+	noInput        bool
+	debug          bool
 }
 
 func parseFlags(flags query.FlagParser) *createParams {
 	issueType, err := flags.GetString("type")
+	cmdutil.ExitIfError(err)
+
+	parentIssueKey, err := flags.GetString("parent")
 	cmdutil.ExitIfError(err)
 
 	summary, err := flags.GetString("summary")
@@ -308,15 +339,16 @@ func parseFlags(flags query.FlagParser) *createParams {
 	cmdutil.ExitIfError(err)
 
 	return &createParams{
-		issueType:  issueType,
-		summary:    summary,
-		body:       body,
-		priority:   priority,
-		assignee:   assignee,
-		labels:     labels,
-		components: components,
-		template:   template,
-		noInput:    noInput,
-		debug:      debug,
+		issueType:      issueType,
+		parentIssueKey: parentIssueKey,
+		summary:        summary,
+		body:           body,
+		priority:       priority,
+		assignee:       assignee,
+		labels:         labels,
+		components:     components,
+		template:       template,
+		noInput:        noInput,
+		debug:          debug,
 	}
 }

@@ -16,14 +16,16 @@ type CreateResponse struct {
 
 // CreateRequest struct holds request data for create request.
 type CreateRequest struct {
-	Project    string
-	Name       string
-	IssueType  string
-	Summary    string
-	Body       string
-	Priority   string
-	Labels     []string
-	Components []string
+	Project   string
+	Name      string
+	IssueType string
+	// ParentIssueKey is required for sub-task.
+	ParentIssueKey string
+	Summary        string
+	Body           string
+	Priority       string
+	Labels         []string
+	Components     []string
 	// EpicFieldName is the dynamic epic field name
 	// that changes per jira installation.
 	EpicFieldName string
@@ -68,6 +70,9 @@ type createFields struct {
 	IssueType struct {
 		Name string `json:"name"`
 	} `json:"issuetype"`
+	Parent *struct {
+		Key string `json:"key"`
+	} `json:"parent"`
 	Name        string `json:"name,omitempty"`
 	Summary     string `json:"summary"`
 	Description string `json:"description,omitempty"`
@@ -132,6 +137,11 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 		}},
 	}
 
+	if req.ParentIssueKey != "" {
+		data.Fields.M.Parent = &struct {
+			Key string `json:"key"`
+		}{Key: req.ParentIssueKey}
+	}
 	if req.Priority != "" {
 		data.Fields.M.Priority = &struct {
 			Name string `json:"name,omitempty"`
