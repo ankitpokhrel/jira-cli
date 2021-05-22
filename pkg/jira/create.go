@@ -72,7 +72,7 @@ type createFields struct {
 	} `json:"issuetype"`
 	Parent *struct {
 		Key string `json:"key"`
-	} `json:"parent"`
+	} `json:"parent,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Summary     string `json:"summary"`
 	Description string `json:"description,omitempty"`

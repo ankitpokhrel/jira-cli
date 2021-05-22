@@ -66,6 +66,8 @@ func TestGetConfigHome(t *testing.T) {
 	userHome, err := homedir.Dir()
 	assert.NoError(t, err)
 
+	os.Clearenv()
+
 	configHome, err := GetConfigHome()
 	assert.NoError(t, err)
 	assert.Equal(t, userHome+"/.config", configHome)

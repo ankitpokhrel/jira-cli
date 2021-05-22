@@ -65,34 +65,7 @@ func create(cmd *cobra.Command, _ []string) {
 	}
 
 	cmdutil.ExitIfError(cc.setIssueTypes())
-
-	it := cc.getIssueType()
-	if it != nil {
-		ans := struct{ IssueType string }{}
-		err := survey.Ask([]*survey.Question{it}, &ans)
-		cmdutil.ExitIfError(err)
-
-		if params.issueType == "" {
-			params.issueType = ans.IssueType
-		}
-	}
-
-	qs := cc.getQuestions()
-	if len(qs) > 0 {
-		ans := struct{ ParentIssueKey, Summary, Body string }{}
-		err := survey.Ask(qs, &ans)
-		cmdutil.ExitIfError(err)
-
-		if params.parentIssueKey == "" {
-			params.parentIssueKey = ans.ParentIssueKey
-		}
-		if params.summary == "" {
-			params.summary = ans.Summary
-		}
-		if params.body == "" {
-			params.body = ans.Body
-		}
-	}
+	cmdutil.ExitIfError(cc.askQuestions())
 
 	if !params.noInput {
 		answer := struct{ Action string }{}
@@ -109,7 +82,7 @@ func create(cmd *cobra.Command, _ []string) {
 				cmdutil.ExitIfError(err)
 
 				if len(ans.Metadata) > 0 {
-					qs = cmdcommon.GetMetadataQuestions(ans.Metadata)
+					qs := cmdcommon.GetMetadataQuestions(ans.Metadata)
 					ans := struct {
 						Priority   string
 						Labels     string
@@ -224,7 +197,45 @@ func (cc *createCmd) getIssueType() *survey.Question {
 	return qs
 }
 
-func (cc *createCmd) getQuestions() []*survey.Question {
+func (cc *createCmd) askQuestions() error {
+	it := cc.getIssueType()
+	if it != nil {
+		ans := struct{ IssueType string }{}
+		err := survey.Ask([]*survey.Question{it}, &ans)
+		if err != nil {
+			return err
+		}
+
+		if cc.params.issueType == "" {
+			cc.params.issueType = ans.IssueType
+		}
+	}
+
+	qs := cc.getRemainingQuestions()
+	if len(qs) == 0 {
+		return nil
+	}
+
+	ans := struct{ ParentIssueKey, Summary, Body string }{}
+	err := survey.Ask(qs, &ans)
+	if err != nil {
+		return err
+	}
+
+	if cc.params.parentIssueKey == "" {
+		cc.params.parentIssueKey = ans.ParentIssueKey
+	}
+	if cc.params.summary == "" {
+		cc.params.summary = ans.Summary
+	}
+	if cc.params.body == "" {
+		cc.params.body = ans.Body
+	}
+
+	return nil
+}
+
+func (cc *createCmd) getRemainingQuestions() []*survey.Question {
 	var qs []*survey.Question
 
 	if cc.params.parentIssueKey == "" {
