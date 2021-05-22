@@ -9,3 +9,5 @@
 dist/
 coverage/
 vendor/
+tags
+tags.*
