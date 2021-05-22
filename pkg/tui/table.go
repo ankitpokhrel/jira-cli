@@ -158,7 +158,7 @@ func (t *Table) initFooter() {
 
 func (t *Table) initTable() {
 	t.view.SetSelectable(true, false).
-		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true).Reverse(true)).
+		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true)).
 		SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEsc {
 				t.screen.Stop()
@@ -227,7 +227,7 @@ func renderTableCell(t *Table, data [][]string) {
 
 	for r := 1; r < rows; r++ {
 		color := tcell.ColorBisque
-		if r%2 == 1 {
+		if r%2 == 0 {
 			color = tcell.ColorCornsilk
 		}
 		for c := 0; c < cols; c++ {
