@@ -16,7 +16,7 @@ type Text struct {
 
 // NewText constructs a new text view layout.
 func NewText() *Text {
-	tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault
+	tview.Styles.PrimitiveBackgroundColor = tcell.Color63
 
 	tv := Text{screen: NewScreen()}
 	tv.init()

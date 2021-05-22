@@ -199,7 +199,7 @@ func (pv *Preview) initSidebar() {
 func (pv *Preview) initContents() {
 	pv.contents.view.
 		SetBorder(true).
-		SetBorderColor(tcell.ColorDarkGray).
+		SetBorderColor(tcell.Color63).
 		SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
 			contents := func() interface{} {
 				sr, _ := pv.sidebar.GetSelection()

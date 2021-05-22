@@ -42,10 +42,7 @@ func (i Issue) String() string {
 	if as == "" {
 		as = "Unassigned"
 	}
-	st, sti := i.Data.Fields.Status.Name, ""
-	if st == "Done" {
-		sti = ""
-	}
+	st := i.Data.Fields.Status.Name
 	lbl := "None"
 	if len(i.Data.Fields.Labels) > 0 {
 		lbl = strings.Join(i.Data.Fields.Labels, ", ")
@@ -60,18 +57,16 @@ func (i Issue) String() string {
 	}
 	if len(i.Data.Fields.Labels) > 0 {
 	}
-	it, iti := i.Data.Fields.IssueType.Name, ""
-	if it == "Bug" {
-		iti = "ﴫ"
-	}
+	it := i.Data.Fields.IssueType.Name
 	desc := ""
 	if i.Data.Fields.Description != nil {
 		tr := adf.NewTranslator(i.Data.Fields.Description.(*adf.ADF), &adf.MarkdownTranslator{})
 		desc = tr.Translate()
 	}
+
 	return fmt.Sprintf(
-		"%s %s  %s %s  羽 %s   %s   %s\n# %s\n  %s   %s  異%s   %s    %s\n\n-----------\n%s",
-		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as, i.Data.Key,
+		"%s | %s | %s | %s | %s\n\n%s \n\n%s | %s | %s | %s | %s\n-----------------------------\n%s\n------------------------------\n",
+		it, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as, i.Data.Key,
 		i.Data.Fields.Summary,
 		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
 		i.Data.Fields.Priority.Name, cmpt, lbl,

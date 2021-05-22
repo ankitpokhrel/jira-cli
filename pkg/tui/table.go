@@ -158,7 +158,7 @@ func (t *Table) initFooter() {
 
 func (t *Table) initTable() {
 	t.view.SetSelectable(true, false).
-		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true)).
+		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true).Reverse(true)).
 		SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEsc {
 				t.screen.Stop()
@@ -207,10 +207,10 @@ func (t *Table) initTable() {
 }
 
 func renderTableHeader(t *Table, data []string) {
-	style := tcell.StyleDefault.Bold(true).Background(tcell.ColorDarkCyan)
+	style := tcell.StyleDefault.Bold(true).Background(tcell.Color235)
 
 	for c := 0; c < len(data); c++ {
-		text := " " + data[c]
+		text := "|" + data[c]
 
 		cell := tview.NewTableCell(text).
 			SetStyle(style).
@@ -226,10 +226,14 @@ func renderTableCell(t *Table, data [][]string) {
 	rows, cols := len(data), len(data[0])
 
 	for r := 1; r < rows; r++ {
+		color := tcell.ColorBisque
+		if r%2 == 1 {
+			color = tcell.ColorCornsilk
+		}
 		for c := 0; c < cols; c++ {
-			cell := tview.NewTableCell(pad(data[r][c], t.colPad)).
+			cell := tview.NewTableCell("|" + pad(data[r][c], t.colPad)).
 				SetMaxWidth(int(t.maxColWidth)).
-				SetTextColor(tcell.ColorDefault)
+				SetTextColor(color)
 
 			t.view.SetCell(r, c, cell)
 		}

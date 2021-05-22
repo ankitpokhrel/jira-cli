@@ -17,7 +17,7 @@
 </div>
 
 This tool mostly focuses on issue search and navigation at the moment. However, it also includes features like issue creation,
-updating a ticket status, and so on. 
+updating a ticket status, and so on.
 
 **Note**
 > The tool is only tested with the latest Jira cloud since that's what I usually work with. There is a plan to support local Jira instance in the future, however, it might not happen soon.
@@ -48,7 +48,7 @@ $ jira issue list -yHigh -s"To Do" --created month -lbackend -a$(jira me)
 ```
 
 ### Navigation
-The lists are displayed in an interactive UI by default. 
+The lists are displayed in an interactive UI by default.
 - Use arrow keys or `j, k, h, l` characters to navigate through the list.
 - Use `g` and `SHIFT+G` to quickly navigate to the top and bottom respectively.
 - Press `v` to view selected issue details.
@@ -75,7 +75,7 @@ $ jira issue list --created -7d
 # List issues in status "To Do"
 $ jira issue list -s"To Do"
 
-# List recent issues in plain mode 
+# List recent issues in plain mode
 $ jira issue list --plain
 ```
 
@@ -325,7 +325,7 @@ $ jira epic list KEY-1 -yHigh
 ```
 
 #### Create
-Creating an epic is same as creating the issue except you also need to provide an epic name. 
+Creating an epic is same as creating the issue except you also need to provide an epic name.
 
 ```sh
 # Create an issue using interactive prompt
@@ -385,7 +385,7 @@ $ jira sprint list --next
 # List future and active sprints
 $ jira sprint list --state future,active
 
-# List issues in a particular sprint. You can use all flags supported by issue list command here. 
+# List issues in a particular sprint. You can use all flags supported by issue list command here.
 # To get sprint id use `jira sprint list` or `jira sprint list --table`
 $ jira sprint list SPRINT_ID
 
@@ -422,7 +422,7 @@ $ jira board
 
 ## Scripts
 Often times, you may want to use the output of the command to do something cool. However, the default interactive UI might not allow you to do that.
-The tool comes with the `--plain` flag that displays results in a simple layout that can then be manipulated from the shell script.    
+The tool comes with the `--plain` flag that displays results in a simple layout that can then be manipulated from the shell script.
 
 Some example scripts are listed below.
 
@@ -499,7 +499,7 @@ Sprint 1:   3
    ```sh
    $ make deps
    $ make install
-   ```   
+   ```
 
 3. Run linter and tests before submitting a PR.
    ```sh
