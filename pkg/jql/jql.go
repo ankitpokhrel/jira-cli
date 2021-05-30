@@ -156,6 +156,15 @@ func (j *JQL) Or(fn GroupFunc) *JQL {
 	return j
 }
 
+// Raw sets the passed JQL query along with project context.
+func (j *JQL) Raw(q string) *JQL {
+	if q == "" {
+		return j
+	}
+	j.filters = append(j.filters, q)
+	return j
+}
+
 // String returns the constructed query.
 func (j *JQL) String() string {
 	return j.compile()

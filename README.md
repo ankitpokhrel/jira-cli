@@ -77,6 +77,11 @@ $ jira issue list -s"To Do"
 
 # List recent issues in plain mode 
 $ jira issue list --plain
+
+# You can execute raw JQL within a given project context using `--jql/-q` option.
+# For instance, the following command will list issues in current project whose
+# summary has a word cli.
+$ jira issue list -q "summary ~ cli"
 ```
 
 Check some more examples/use-cases below.

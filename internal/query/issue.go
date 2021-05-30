@@ -66,6 +66,9 @@ func (i *Issue) Get() string {
 	if i.params.debug {
 		fmt.Printf("JQL: %s\n", q.String())
 	}
+	if i.params.jql != "" {
+		q.And(func() { q.Raw(i.params.jql) })
+	}
 	return q.String()
 }
 
@@ -137,6 +140,7 @@ type IssueParams struct {
 	UpdatedAfter  string
 	CreatedBefore string
 	UpdatedBefore string
+	jql           string
 	Labels        []string
 	Reverse       bool
 	Limit         uint
@@ -150,6 +154,7 @@ func (ip *IssueParams) init(flags FlagParser) error {
 	stringParams := []string{
 		"resolution", "type", "status", "priority", "reporter", "assignee", "component",
 		"created", "created-after", "created-before", "updated", "updated-after", "updated-before",
+		"jql",
 	}
 
 	boolParamsMap := make(map[string]bool)
@@ -227,6 +232,8 @@ func (ip *IssueParams) setStringParams(paramsMap map[string]string) {
 			ip.UpdatedAfter = v
 		case "updated-before":
 			ip.UpdatedBefore = v
+		case "jql":
+			ip.jql = v
 		}
 	}
 }
