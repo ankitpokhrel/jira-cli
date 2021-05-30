@@ -140,6 +140,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().String("updated-after", "", "Filter by issues updated after certain date")
 	cmd.Flags().String("created-before", "", "Filter by issues created before certain date")
 	cmd.Flags().String("updated-before", "", "Filter by issues updated before certain date")
+	cmd.Flags().StringP("jql", "q", "", "Run a raw JQL query in a given project context")
 	cmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
 	cmd.Flags().Uint("limit", 100, "Number of results to return")
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")

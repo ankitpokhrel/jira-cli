@@ -31,6 +31,7 @@ type issueFlagParser struct {
 	createdBefore string
 	updatedAfter  string
 	updatedBefore string
+	jql           string
 }
 
 func (tfp issueFlagParser) GetBool(name string) (bool, error) {
@@ -52,6 +53,7 @@ func (tfp issueFlagParser) GetBool(name string) (bool, error) {
 	return true, nil
 }
 
+//nolint:gocyclo
 func (tfp issueFlagParser) GetString(name string) (string, error) {
 	if tfp.err.resolution && name == "resolution" {
 		return "", fmt.Errorf("oops! couldn't fetch resolution flag")
@@ -67,6 +69,9 @@ func (tfp issueFlagParser) GetString(name string) (string, error) {
 	}
 	if tfp.emptyType && name == "type" {
 		return "", nil
+	}
+	if name == "jql" {
+		return tfp.jql, nil
 	}
 	if strings.HasPrefix(name, "created") {
 		if tfp.withCreated {
@@ -375,6 +380,17 @@ func TestIssueGet(t *testing.T) {
 				`AND status="test" AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
 				`AND updatedDate>"2020-11-31" AND updatedDate<"2020-12-31" ` +
 				`ORDER BY updated ASC`,
+		},
+		{
+			name: "query with jql parameter",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{jql: "summary ~ cli OR x = y"})
+				assert.NoError(t, err)
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" ` +
+				`AND assignee="test" AND component="test" AND summary ~ cli OR x = y ORDER BY lastViewed ASC`,
 		},
 	}
 
