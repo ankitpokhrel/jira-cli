@@ -1,0 +1,28 @@
+{
+  "key": "TEST-1",
+  "fields": {
+    "issuetype": {
+      "name": "Bug"
+    },
+    "resolution": null,
+    "created": "2020-12-03T14:05:20.974+0100",
+    "priority": {
+      "name": "Medium"
+    },
+    "labels": [],
+    "assignee": null,
+    "updated": "2020-12-03T14:05:20.974+0100",
+    "status": {
+      "name": "To Do"
+    },
+    "summary": "Bug summary",
+    "description": "Test description",
+    "reporter": {
+      "displayName": "Person A"
+    },
+    "watches": {
+      "watchCount": 1,
+      "isWatching": true
+    }
+  }
+}

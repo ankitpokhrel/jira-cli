@@ -127,6 +127,11 @@ func (c *Client) Get(ctx context.Context, path string, headers Header) (*http.Re
 	return c.request(ctx, http.MethodGet, c.server+baseURLv3+path, nil, headers)
 }
 
+// GetV2 sends GET request to v2 version of the jira api.
+func (c *Client) GetV2(ctx context.Context, path string, headers Header) (*http.Response, error) {
+	return c.request(ctx, http.MethodGet, c.server+baseURLv2+path, nil, headers)
+}
+
 // GetV1 sends get request to v1 version of the jira api.
 func (c *Client) GetV1(ctx context.Context, path string, headers Header) (*http.Response, error) {
 	return c.request(ctx, http.MethodGet, c.server+baseURLv1+path, nil, headers)

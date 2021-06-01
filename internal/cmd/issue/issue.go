@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/assign"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/clone"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/comment"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/create"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/link"
@@ -30,7 +31,7 @@ func NewCmdIssue() *cobra.Command {
 
 	cmd.AddCommand(
 		lc, cc, move.NewCmdMove(), view.NewCmdView(), assign.NewCmdAssign(), link.NewCmdLink(),
-		comment.NewCmdComment(),
+		comment.NewCmdComment(), clone.NewCmdClone(),
 	)
 
 	list.SetFlags(lc)

@@ -275,6 +275,22 @@ $ jira issue link
 $ jira issue link ISSUE-1 ISSUE-2 Blocks
 ```
 
+#### Clone
+The `clone` command lets you clone an issue. You can update fields like summary, priority, assignee, labels and,
+components when cloning the issue. The command also allows you to replace a part of the string (case-sensitive)
+in summary and description using `--replace/-H` option.
+
+```sh
+# Clone an issue
+$ jira issue clone ISSUE-1
+
+# Clone issue and modify the summary, priority and assignee
+$ jira issue clone ISSUE-1 -s"Modified summary" -yHigh -a$(jira me)
+
+# Clone issue and replace text from summary and description
+$ jira issue clone ISSUE-1 -H"find me:replace me"
+```
+
 #### Comment
 The `comment` command provides a list of sub-commands to manage issue comments.
 
