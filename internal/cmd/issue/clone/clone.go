@@ -16,14 +16,14 @@ import (
 )
 
 const (
-	helpText = `Clone duplicates an issue.`
+	helpText = `Clone duplicates an issue and also allow you to override some of the metadata when doing so.`
 	examples = `$ jira issue clone ISSUE-1
 
 # Clone issue and modify the summary, priority and assignee
 $ jira issue clone ISSUE-1 -s"Modified summary" -yHigh -a$(jira me)
 
 # Clone issue and replace text from summary and description
-$ jira issue clone ISSUE-1 -H"find me:replace me"`
+$ jira issue clone ISSUE-1 -H"find me:replace with me"`
 )
 
 // NewCmdClone is a clone command.
@@ -187,7 +187,10 @@ func (cc *cloneCmd) getActualCreateParams(issue *jira.Issue) *createParams {
 	if cc.params.replace != "" {
 		pieces := strings.Split(cc.params.replace, ":")
 		if len(pieces) != 2 {
-			fmt.Fprintf(os.Stderr, "\u001B[0;31m✗\u001B[0m Invalid replace string. Skipping replacement...")
+			fmt.Fprintf(
+				os.Stderr,
+				"\u001B[0;31m✗\u001B[0m Invalid replace string, must be in format <find>:<replace>. Skipping replacement...",
+			)
 		} else {
 			from, to := pieces[0], pieces[1]
 
@@ -251,5 +254,5 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Issue labels")
 	cmd.Flags().StringArrayP("component", "C", []string{}, "Issue components")
 	cmd.Flags().StringP("replace", "H", "", "Replace strings in summary and body. Format <search>:<replace>, eg: \"find me:replace with me\"")
-	cmd.Flags().Bool("web", false, "Open in web browser after successful creation")
+	cmd.Flags().Bool("web", false, "Open in web browser after successful cloning")
 }
