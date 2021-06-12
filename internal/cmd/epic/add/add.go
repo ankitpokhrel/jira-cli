@@ -16,20 +16,20 @@ import (
 
 const (
 	helpText = `Add issues to an epic.`
-	examples = `$ jira epic add EPIC_KEY ISSUE_1 ISSUE_2`
+	examples = `$ jira epic add EPIC-KEY ISSUE-1 ISSUE-2`
 )
 
 // NewCmdAdd is an add command.
 func NewCmdAdd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "add EPIC_KEY ISSUE_1 [...ISSUE_N]",
+		Use:     "add EPIC-KEY ISSUE-1 [...ISSUE-N]",
 		Short:   "Add issues to an epic",
 		Long:    helpText,
 		Example: examples,
 		Aliases: []string{"assign"},
 		Annotations: map[string]string{
-			"help:args": "EPIC_KEY\t\tEpic to which you want to assign issues to, eg: EPIC-1\n" +
-				"ISSUE_1 [...ISSUE_N]\tKey of the issues to add to an epic (max 50 issues at once)",
+			"help:args": "EPIC-KEY\t\tEpic to which you want to assign issues to, eg: EPIC-1\n" +
+				"ISSUE-1 [...ISSUE-N]\tKey of the issues to add to an epic (max 50 issues at once)",
 		},
 		Run: add,
 	}
@@ -117,7 +117,7 @@ func getQuestions(params *addParams) []*survey.Question {
 			Name: "issues",
 			Prompt: &survey.Input{
 				Message: "Issues",
-				Help:    "Comma separated list of issues key to add. eg: ISSUE_1, ISSUE_2",
+				Help:    "Comma separated list of issues key to add. eg: ISSUE-1, ISSUE-2",
 			},
 			Validate: survey.Required,
 		})

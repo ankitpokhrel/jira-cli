@@ -43,13 +43,13 @@ $ jira epic list <KEY> --plain --columns type,key,summary`
 // NewCmdList is a list command.
 func NewCmdList() *cobra.Command {
 	return &cobra.Command{
-		Use:     "list [EPIC_KEY]",
+		Use:     "list [EPIC-KEY]",
 		Short:   "List lists issues in a project",
 		Long:    helpText,
 		Example: examples,
 		Aliases: []string{"lists", "ls"},
 		Annotations: map[string]string{
-			"help:args": "[EPIC_KEY]\tKey for the issue of type epic, eg: ISSUE-1",
+			"help:args": "[EPIC-KEY]\tKey for the issue of type epic, eg: ISSUE-1",
 		},
 		Args: cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {

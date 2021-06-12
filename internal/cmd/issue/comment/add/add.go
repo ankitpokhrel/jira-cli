@@ -30,12 +30,12 @@ $ jira issue comment add ISSUE-1 $'Supports\n\nNew line'
 // NewCmdCommentAdd is a comment add command.
 func NewCmdCommentAdd() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "add ISSUE_KEY COMMENT_BODY",
+		Use:     "add ISSUE-KEY COMMENT_BODY",
 		Short:   "Add adds comment to an issue",
 		Long:    helpText,
 		Example: examples,
 		Annotations: map[string]string{
-			"help:args": "ISSUE_KEY\tIssue key of the source issue, eg: ISSUE-1\n" +
+			"help:args": "ISSUE-KEY\tIssue key of the source issue, eg: ISSUE-1\n" +
 				"COMMENT_BODY\tBody of the comment you want to add",
 		},
 		Run: add,
@@ -62,7 +62,7 @@ func add(cmd *cobra.Command, args []string) {
 
 		if ac.isMandatoryParamsMissing() {
 			cmdutil.Errorf(
-				"\u001B[0;31m✗\u001B[0m `ISSUE_KEY` is mandatory when using a non-interactive mode",
+				"\u001B[0;31m✗\u001B[0m `ISSUE-KEY` is mandatory when using a non-interactive mode",
 			)
 		}
 	}
