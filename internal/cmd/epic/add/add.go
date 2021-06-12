@@ -37,7 +37,8 @@ func NewCmdAdd() *cobra.Command {
 
 func add(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
-	params := parseFlags(cmd.Flags(), args)
+	project := viper.GetString("project")
+	params := parseFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})
 
 	qs := getQuestions(params)
@@ -50,13 +51,13 @@ func add(cmd *cobra.Command, args []string) {
 		cmdutil.ExitIfError(err)
 
 		if params.epicKey == "" {
-			params.epicKey = ans.EpicKey
+			params.epicKey = cmdutil.GetJiraIssueKey(project, ans.EpicKey)
 		}
 
 		if len(params.issues) == 0 {
 			issues := strings.Split(ans.Issues, ",")
 			for i, iss := range issues {
-				issues[i] = strings.TrimSpace(iss)
+				issues[i] = cmdutil.GetJiraIssueKey(project, strings.TrimSpace(iss))
 			}
 			params.issues = issues
 		}
@@ -73,7 +74,7 @@ func add(cmd *cobra.Command, args []string) {
 	fmt.Printf("\033[0;32m✓\033[0m Issues added to the epic %s\n%s/browse/%s\n", params.epicKey, server, params.epicKey)
 }
 
-func parseFlags(flags query.FlagParser, args []string) *addParams {
+func parseFlags(flags query.FlagParser, args []string, project string) *addParams {
 	var (
 		epicKey string
 		issues  []string
@@ -81,10 +82,14 @@ func parseFlags(flags query.FlagParser, args []string) *addParams {
 
 	nArgs := len(args)
 	if nArgs > 0 {
-		epicKey = args[0]
+		epicKey = cmdutil.GetJiraIssueKey(project, args[0])
 	}
 	if nArgs > 1 {
-		issues = args[1:]
+		tickets := args[1:]
+		issues = make([]string, 0, len(tickets))
+		for _, iss := range tickets {
+			issues = append(issues, cmdutil.GetJiraIssueKey(project, iss))
+		}
 	}
 
 	debug, err := flags.GetBool("debug")

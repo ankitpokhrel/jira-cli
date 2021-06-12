@@ -56,7 +56,7 @@ func clone(cmd *cobra.Command, args []string) {
 		params: params,
 	}
 
-	key := args[0]
+	key := cmdutil.GetJiraIssueKey(project, args[0])
 	issue := func() *jira.Issue {
 		s := cmdutil.Info("Fetching issue details...")
 		defer s.Stop()
