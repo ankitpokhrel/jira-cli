@@ -44,7 +44,8 @@ STATE		State you want to transition the issue to`,
 }
 
 func move(cmd *cobra.Command, args []string) {
-	params := parseArgsAndFlags(args, cmd.Flags())
+	project := viper.GetString("project")
+	params := parseArgsAndFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})
 	mc := moveCmd{
 		client:      client,
@@ -52,7 +53,7 @@ func move(cmd *cobra.Command, args []string) {
 		params:      params,
 	}
 
-	cmdutil.ExitIfError(mc.setIssueKey())
+	cmdutil.ExitIfError(mc.setIssueKey(project))
 	cmdutil.ExitIfError(mc.setAvailableTransitions())
 	cmdutil.ExitIfError(mc.setDesiredState())
 
@@ -94,12 +95,12 @@ type moveParams struct {
 	debug bool
 }
 
-func parseArgsAndFlags(args []string, flags query.FlagParser) *moveParams {
+func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *moveParams {
 	var key, state string
 
 	nargs := len(args)
 	if nargs >= 1 {
-		key = strings.ToUpper(args[0])
+		key = cmdutil.GetJiraIssueKey(project, args[0])
 	}
 	if nargs >= 2 {
 		state = args[1]
@@ -121,7 +122,7 @@ type moveCmd struct {
 	params      *moveParams
 }
 
-func (mc *moveCmd) setIssueKey() error {
+func (mc *moveCmd) setIssueKey(project string) error {
 	if mc.params.key != "" {
 		return nil
 	}
@@ -136,7 +137,7 @@ func (mc *moveCmd) setIssueKey() error {
 	if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {
 		return err
 	}
-	mc.params.key = ans
+	mc.params.key = cmdutil.GetJiraIssueKey(project, ans)
 
 	return nil
 }

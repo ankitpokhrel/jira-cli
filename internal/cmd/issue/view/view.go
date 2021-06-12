@@ -2,6 +2,7 @@ package view
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
@@ -38,7 +39,7 @@ func view(cmd *cobra.Command, args []string) {
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
-	key := args[0]
+	key := cmdutil.GetJiraIssueKey(viper.GetString("project"), args[0])
 	issue := func() *jira.Issue {
 		s := cmdutil.Info("Fetching issue details...")
 		defer s.Stop()

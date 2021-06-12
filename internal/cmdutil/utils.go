@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -118,4 +120,15 @@ func ReadFile(filePath string) ([]byte, error) {
 		return b, err
 	}
 	return []byte(""), nil
+}
+
+// GetJiraIssueKey constructs actual issue key based on given key.
+func GetJiraIssueKey(project, key string) string {
+	if project == "" {
+		return key
+	}
+	if _, err := strconv.Atoi(key); err != nil {
+		return strings.ToUpper(key)
+	}
+	return fmt.Sprintf("%s-%s", project, key)
 }

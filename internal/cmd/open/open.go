@@ -34,13 +34,14 @@ func NewCmdOpen() *cobra.Command {
 
 func open(_ *cobra.Command, args []string) {
 	server := viper.GetString("server")
+	project := viper.GetString("project")
 
 	var url string
 
 	if len(args) == 0 {
-		url = fmt.Sprintf("%s/browse/%s", server, viper.GetString("project"))
+		url = fmt.Sprintf("%s/browse/%s", server, project)
 	} else {
-		url = fmt.Sprintf("%s/browse/%s", server, args[0])
+		url = fmt.Sprintf("%s/browse/%s", server, cmdutil.GetJiraIssueKey(project, args[0]))
 	}
 
 	cmdutil.ExitIfError(browser.OpenURL(url))

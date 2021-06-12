@@ -43,7 +43,8 @@ func NewCmdLink() *cobra.Command {
 }
 
 func link(cmd *cobra.Command, args []string) {
-	params := parseArgsAndFlags(args, cmd.Flags())
+	project := viper.GetString("project")
+	params := parseArgsAndFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})
 	lc := linkCmd{
 		client:    client,
@@ -51,8 +52,8 @@ func link(cmd *cobra.Command, args []string) {
 		params:    params,
 	}
 
-	cmdutil.ExitIfError(lc.setInwardIssueKey())
-	cmdutil.ExitIfError(lc.setOutwardIssueKey())
+	cmdutil.ExitIfError(lc.setInwardIssueKey(project))
+	cmdutil.ExitIfError(lc.setOutwardIssueKey(project))
 	cmdutil.ExitIfError(lc.setLinkTypes())
 	cmdutil.ExitIfError(lc.setDesiredLinkType())
 
@@ -93,15 +94,15 @@ type linkParams struct {
 	debug           bool
 }
 
-func parseArgsAndFlags(args []string, flags query.FlagParser) *linkParams {
+func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *linkParams {
 	var inwardIssueKey, outwardIssueKey, linkType string
 
 	nargs := len(args)
 	if nargs >= 1 {
-		inwardIssueKey = strings.ToUpper(args[0])
+		inwardIssueKey = cmdutil.GetJiraIssueKey(project, args[0])
 	}
 	if nargs >= 2 {
-		outwardIssueKey = args[1]
+		outwardIssueKey = cmdutil.GetJiraIssueKey(project, args[1])
 	}
 	if nargs >= 3 {
 		linkType = args[2]
@@ -124,7 +125,7 @@ type linkCmd struct {
 	params    *linkParams
 }
 
-func (lc *linkCmd) setInwardIssueKey() error {
+func (lc *linkCmd) setInwardIssueKey(project string) error {
 	if lc.params.inwardIssueKey != "" {
 		return nil
 	}
@@ -139,12 +140,12 @@ func (lc *linkCmd) setInwardIssueKey() error {
 	if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {
 		return err
 	}
-	lc.params.inwardIssueKey = ans
+	lc.params.inwardIssueKey = cmdutil.GetJiraIssueKey(project, ans)
 
 	return nil
 }
 
-func (lc *linkCmd) setOutwardIssueKey() error {
+func (lc *linkCmd) setOutwardIssueKey(project string) error {
 	if lc.params.outwardIssueKey != "" {
 		return nil
 	}
@@ -159,7 +160,7 @@ func (lc *linkCmd) setOutwardIssueKey() error {
 	if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {
 		return err
 	}
-	lc.params.outwardIssueKey = ans
+	lc.params.outwardIssueKey = cmdutil.GetJiraIssueKey(project, ans)
 
 	return nil
 }

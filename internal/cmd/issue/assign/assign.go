@@ -59,7 +59,8 @@ ASSIGNEE	Email or display name of the user to assign the issue to`,
 }
 
 func assign(cmd *cobra.Command, args []string) {
-	params := parseArgsAndFlags(args, cmd.Flags())
+	project := viper.GetString("project")
+	params := parseArgsAndFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})
 	ac := assignCmd{
 		client: client,
@@ -67,7 +68,7 @@ func assign(cmd *cobra.Command, args []string) {
 		params: params,
 	}
 
-	cmdutil.ExitIfError(ac.setIssueKey())
+	cmdutil.ExitIfError(ac.setIssueKey(project))
 	cmdutil.ExitIfError(ac.setAvailableUsers())
 	cmdutil.ExitIfError(ac.setAssignee())
 
@@ -120,12 +121,12 @@ type assignParams struct {
 	debug bool
 }
 
-func parseArgsAndFlags(args []string, flags query.FlagParser) *assignParams {
+func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *assignParams {
 	var key, user string
 
 	nargs := len(args)
 	if nargs >= 1 {
-		key = strings.ToUpper(args[0])
+		key = cmdutil.GetJiraIssueKey(project, args[0])
 	}
 	if nargs >= 2 {
 		user = args[1]
@@ -147,7 +148,7 @@ type assignCmd struct {
 	params *assignParams
 }
 
-func (ac *assignCmd) setIssueKey() error {
+func (ac *assignCmd) setIssueKey(project string) error {
 	if ac.params.key != "" {
 		return nil
 	}
@@ -162,7 +163,7 @@ func (ac *assignCmd) setIssueKey() error {
 	if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {
 		return err
 	}
-	ac.params.key = ans
+	ac.params.key = cmdutil.GetJiraIssueKey(project, ans)
 
 	return nil
 }

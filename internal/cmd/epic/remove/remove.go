@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
@@ -34,7 +35,8 @@ func NewCmdRemove() *cobra.Command {
 }
 
 func remove(cmd *cobra.Command, args []string) {
-	params := parseFlags(cmd.Flags(), args)
+	project := viper.GetString("project")
+	params := parseFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})
 
 	qs := getQuestions(params)
@@ -49,7 +51,7 @@ func remove(cmd *cobra.Command, args []string) {
 		if len(params.issues) == 0 {
 			issues := strings.Split(ans.Issues, ",")
 			for i, iss := range issues {
-				issues[i] = strings.TrimSpace(iss)
+				issues[i] = cmdutil.GetJiraIssueKey(project, strings.TrimSpace(iss))
 			}
 			params.issues = issues
 		}
@@ -66,8 +68,12 @@ func remove(cmd *cobra.Command, args []string) {
 	fmt.Printf("\033[0;32m✓\033[0m Epic unassigned from given issues\n")
 }
 
-func parseFlags(flags query.FlagParser, args []string) *removeParams {
-	issues := args[0:]
+func parseFlags(flags query.FlagParser, args []string, project string) *removeParams {
+	tickets := args[0:]
+	issues := make([]string, 0, len(tickets))
+	for _, iss := range tickets {
+		issues = append(issues, cmdutil.GetJiraIssueKey(project, iss))
+	}
 
 	debug, err := flags.GetBool("debug")
 	cmdutil.ExitIfError(err)
