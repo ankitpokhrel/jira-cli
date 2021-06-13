@@ -1,4 +1,9 @@
-<h1 align="center">JiraCLI</h1>
+<div align="center">
+    <a href="#">
+        <img alt="stargazers over time" src="https://stars.medv.io/ankitpokhrel/jira-cli.svg" />
+    </a>
+    <h1 align="center">JiraCLI</h1>
+</div>
 
 <div>
     <p align="center">
@@ -8,19 +13,34 @@
         <a href="https://goreportcard.com/report/github.com/ankitpokhrel/jira-cli">
             <img alt="GO Report-card" src="https://goreportcard.com/badge/github.com/ankitpokhrel/jira-cli?style=flat-square" />
         </a>
+        <a href="https://github.com/ankitpokhrel/jira-cli/blob/master/LICENSE">
+            <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square" />
+        </a>
+        <a href="#">
+            <img alt="Software License" src="https://img.shields.io/badge/status-WIP-yellow?style=flat-square&color=orange" />
+        </a>
     </p>
     <p align="center">
-        <i>Interactive Jira CLI</i>
+        <i>Feature-rich Interactive Jira Command Line</i>
     </p>
     <img align="center" alt="JiraCLI Demo" src=".github/assets/demo.gif" /><br/><br/>
     <p align="center">:construction: This project is still a work in progress :construction:</p><br/>
 </div>
 
-This tool mostly focuses on issue search and navigation at the moment. However, it also includes features like issue creation,
-updating a ticket status, and so on. 
+JiraCLI is a command line tool for Jira created with an idea to avoid the Jira UI as much as possible. The tool is not yet complete but has
+all necessary features required to improve your workflow with Jira. The tool mostly focuses on issue search and navigation at the moment.
+However, it also includes features like issue creation, cloning, linking, ticket transition, and so on.
 
-**Note**
-> The tool is only tested with the latest Jira cloud since that's what I usually work with. There is a plan to support local Jira instance in the future, however, it might not happen soon.
+> Your suggestions and feedbacks are highly appreciated. Feel free to [start a discussion](https://github.com/ankitpokhrel/jira-cli/discussions)
+or [create an issue](https://github.com/ankitpokhrel/jira-cli/issues/new) to share your experience about the tool or to discuss a feature/issue.
+If you think this project is cool and helpful, consider contributing by starring the repo, sharing with your friends or submitting a PR.
+
+## Supported platforms
+The tool is only tested with the latest Jira cloud since that's what I usually work with. There is a plan to support local Jira instances in the future, however, it might not happen anytime soon.
+
+| Platform | <a href="#"><img alt="Software License" src="https://img.shields.io/badge/linux-%E2%9C%93-dark--green?logo=linux&style=flat-square" /></a><a href="#"><img alt="Software License" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=macos&style=flat-square" /></a><a href="#"><img alt="Software License" src="https://img.shields.io/badge/windows-partial-yellow?logo=windows&style=flat-square" /></a> |
+| :------------- | :----------: |
+| **Jira**  | <a href="#"><img alt="Software License" src="https://img.shields.io/badge/jira cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Software License" src="https://img.shields.io/badge/jira server-✗-red?logo=jira&style=flat-square" /></a> |
 
 ## Installation
 Install the runnable binary to your `$GOPATH/bin`.
