@@ -68,7 +68,7 @@ $ jira issue list -yHigh -s"To Do" --created month -lbackend -a$(jira me)
 ```
 
 ### Navigation
-The lists are displayed in an interactive UI by default. 
+The lists are displayed in an interactive UI by default.
 - Use arrow keys or `j, k, h, l` characters to navigate through the list.
 - Use `g` and `SHIFT+G` to quickly navigate to the top and bottom respectively.
 - Press `v` to view selected issue details.
@@ -95,7 +95,7 @@ $ jira issue list --created -7d
 # List issues in status "To Do"
 $ jira issue list -s"To Do"
 
-# List recent issues in plain mode 
+# List recent issues in plain mode
 $ jira issue list --plain
 
 # You can execute raw JQL within a given project context using `--jql/-q` option.
@@ -366,7 +366,7 @@ $ jira epic list KEY-1 -yHigh
 ```
 
 #### Create
-Creating an epic is same as creating the issue except you also need to provide an epic name. 
+Creating an epic is same as creating the issue except you also need to provide an epic name.
 
 ```sh
 # Create an issue using interactive prompt
@@ -384,7 +384,7 @@ Add command allows you to add issues to the epic. You can add up to 50 issues to
 $ jira epic add
 
 # Pass required parameters to skip prompt
-$ jira epic add EPIC_KEY ISSUE_1 ISSUE_2
+$ jira epic add EPIC-KEY ISSUE-1 ISSUE-2
 ```
 
 #### Remove
@@ -395,7 +395,7 @@ The `remove` command allows you to remove issues from the epic. You can remove u
 $ jira epic remove
 
 # Pass required parameters to skip prompt
-$ jira epic remove ISSUE_1 ISSUE_N
+$ jira epic remove ISSUE-1 ISSUE-2
 ```
 
 ### Sprint
@@ -426,7 +426,7 @@ $ jira sprint list --next
 # List future and active sprints
 $ jira sprint list --state future,active
 
-# List issues in a particular sprint. You can use all flags supported by issue list command here. 
+# List issues in a particular sprint. You can use all flags supported by issue list command here.
 # To get sprint id use `jira sprint list` or `jira sprint list --table`
 $ jira sprint list SPRINT_ID
 
@@ -463,7 +463,7 @@ $ jira board
 
 ## Scripts
 Often times, you may want to use the output of the command to do something cool. However, the default interactive UI might not allow you to do that.
-The tool comes with the `--plain` flag that displays results in a simple layout that can then be manipulated from the shell script.    
+The tool comes with the `--plain` flag that displays results in a simple layout that can then be manipulated from the shell script.
 
 Some example scripts are listed below.
 
@@ -540,7 +540,7 @@ Sprint 1:   3
    ```sh
    $ make deps
    $ make install
-   ```   
+   ```
 
 3. Run linter and tests before submitting a PR.
    ```sh
