@@ -45,13 +45,13 @@ $ jira issue assign ISSUE-1 x`
 // NewCmdAssign is an assign command.
 func NewCmdAssign() *cobra.Command {
 	return &cobra.Command{
-		Use:     "assign ISSUE_KEY ASSIGNEE",
+		Use:     "assign ISSUE-KEY ASSIGNEE",
 		Short:   "Assign issue to a user",
 		Long:    helpText,
 		Example: examples,
 		Aliases: []string{"asg"},
 		Annotations: map[string]string{
-			"help:args": `ISSUE_KEY	Issue key, eg: ISSUE-1
+			"help:args": `ISSUE-KEY	Issue key, eg: ISSUE-1
 ASSIGNEE	Email or display name of the user to assign the issue to`,
 		},
 		Run: assign,

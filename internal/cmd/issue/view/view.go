@@ -18,13 +18,13 @@ const (
 // NewCmdView is a view command.
 func NewCmdView() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "view ISSUE_KEY",
+		Use:     "view ISSUE-KEY",
 		Short:   "View displays contents of an issue",
 		Long:    helpText,
 		Example: examples,
 		Aliases: []string{"show"},
 		Annotations: map[string]string{
-			"help:args": "ISSUE_KEY\tIssue key, eg: ISSUE-1",
+			"help:args": "ISSUE-KEY\tIssue key, eg: ISSUE-1",
 		},
 		Args: cobra.MinimumNArgs(1),
 		Run:  view,

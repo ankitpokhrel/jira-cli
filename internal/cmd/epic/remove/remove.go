@@ -16,19 +16,19 @@ import (
 
 const (
 	helpText = `Remove/unassign epic from issues.`
-	examples = `$ jira epic remove ISSUE_1 ISSUE_2`
+	examples = `$ jira epic remove ISSUE-1 ISSUE-2`
 )
 
 // NewCmdRemove is a remove command.
 func NewCmdRemove() *cobra.Command {
 	return &cobra.Command{
-		Use:     "remove ISSUE_1 [...ISSUE_N]",
+		Use:     "remove ISSUE-1 [...ISSUE-N]",
 		Short:   "Remove/unassign epic from issues",
 		Long:    helpText,
 		Example: examples,
 		Aliases: []string{"rm", "unassign"},
 		Annotations: map[string]string{
-			"help:args": "ISSUE_1 [...ISSUE_N]\tKey of the issues to remove assigned epic (max 50 issues at once)",
+			"help:args": "ISSUE-1 [...ISSUE-N]\tKey of the issues to remove assigned epic (max 50 issues at once)",
 		},
 		Run: remove,
 	}
@@ -92,7 +92,7 @@ func getQuestions(params *removeParams) []*survey.Question {
 			Name: "issues",
 			Prompt: &survey.Input{
 				Message: "Issues",
-				Help:    "Comma separated list of issues key to remove. eg: ISSUE_1, ISSUE_2",
+				Help:    "Comma separated list of issues key to remove. eg: ISSUE-1, ISSUE-2",
 			},
 			Validate: survey.Required,
 		})

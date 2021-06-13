@@ -26,13 +26,13 @@ $ jira issue move ISSUE-1 Done`
 // NewCmdMove is a move command.
 func NewCmdMove() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "move ISSUE_KEY STATE",
+		Use:     "move ISSUE-KEY STATE",
 		Short:   "Transition an issue to a given state",
 		Long:    helpText,
 		Example: examples,
 		Aliases: []string{"transition", "mv"},
 		Annotations: map[string]string{
-			"help:args": `ISSUE_KEY	Issue key, eg: ISSUE-1
+			"help:args": `ISSUE-KEY	Issue key, eg: ISSUE-1
 STATE		State you want to transition the issue to`,
 		},
 		Run: move,

@@ -29,12 +29,12 @@ $ jira issue clone ISSUE-1 -H"find me:replace with me"`
 // NewCmdClone is a clone command.
 func NewCmdClone() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "clone ISSUE_KEY",
+		Use:     "clone ISSUE-KEY",
 		Short:   "Clone duplicates an issue",
 		Long:    helpText,
 		Example: examples,
 		Annotations: map[string]string{
-			"help:args": "ISSUE_KEY\tKey of the issue to clone, eg: ISSUE-1",
+			"help:args": "ISSUE-KEY\tKey of the issue to clone, eg: ISSUE-1",
 		},
 		Args: cobra.MinimumNArgs(1),
 		Run:  clone,
