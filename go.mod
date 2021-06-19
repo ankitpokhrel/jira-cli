@@ -1,6 +1,6 @@
 module github.com/ankitpokhrel/jira-cli
 
-go 1.15
+go 1.16
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.12
