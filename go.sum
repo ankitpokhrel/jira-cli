@@ -242,6 +242,8 @@ github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 h1:Z9n2FFNU
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51/go.mod h1:CzGEWj7cYgsdH8dAjBGEr58BoE7ScuLd+fwFZ44+/x8=
 github.com/kentaro-m/blackfriday-confluence v0.0.0-20200514101926-773172e7101d h1:sPrh5gaD/VlNBr5yEbwhMxHOOcalHneN30tfXnHTYCs=
 github.com/kentaro-m/blackfriday-confluence v0.0.0-20200514101926-773172e7101d/go.mod h1:zjuRVWzEu6vFREk0vbFj6P1pKji/mU73UpQ0MA9BOSo=
+github.com/kentaro-m/blackfriday-confluence v0.0.0-20210619074151-1628b53c6f29 h1:WUOcyKBtYZrx8sKFUELbVlcvvMs6gqSoRxw5woPai4E=
+github.com/kentaro-m/blackfriday-confluence v0.0.0-20210619074151-1628b53c6f29/go.mod h1:zjuRVWzEu6vFREk0vbFj6P1pKji/mU73UpQ0MA9BOSo=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
