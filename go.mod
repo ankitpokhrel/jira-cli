@@ -12,7 +12,7 @@ require (
 	github.com/fatih/color v1.12.0
 	github.com/gdamore/tcell/v2 v2.2.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
-	github.com/kentaro-m/blackfriday-confluence v0.0.0-20200514101926-773172e7101d
+	github.com/kentaro-m/blackfriday-confluence v0.0.0-20210619074151-1628b53c6f29
 	github.com/kr/text v0.2.0
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
