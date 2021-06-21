@@ -7,5 +7,6 @@
 .idea/
 
 dist/
+bin/
 coverage/
 vendor/
