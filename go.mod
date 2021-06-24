@@ -6,7 +6,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.2.12
 	github.com/alecthomas/chroma v0.9.2 // indirect
 	github.com/atotto/clipboard v0.1.4
-	github.com/briandowns/spinner v1.13.0
+	github.com/briandowns/spinner v1.16.0
 	github.com/charmbracelet/glamour v0.3.0
 	github.com/cli/safeexec v1.0.0
 	github.com/fatih/color v1.12.0
