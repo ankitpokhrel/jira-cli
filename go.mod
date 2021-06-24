@@ -10,7 +10,7 @@ require (
 	github.com/charmbracelet/glamour v0.3.0
 	github.com/cli/safeexec v1.0.0
 	github.com/fatih/color v1.12.0
-	github.com/gdamore/tcell/v2 v2.2.0
+	github.com/gdamore/tcell/v2 v2.3.11
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/kentaro-m/blackfriday-confluence v0.0.0-20210619074151-1628b53c6f29
 	github.com/kr/text v0.2.0
