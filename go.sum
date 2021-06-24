@@ -69,8 +69,8 @@ github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+Ce
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
 github.com/bketelsen/crypt v0.0.3-0.20200106085610-5cbc8cc4026c/go.mod h1:MKsuJmJgSg28kpZDP6UIiPt0e0Oz0kqKNGyRaWEPv84=
 github.com/bketelsen/crypt v0.0.4/go.mod h1:aI6NrJ0pMGgvZKL1iVgXLnfIFJtfV+bKCoqOes/6LfM=
-github.com/briandowns/spinner v1.13.0 h1:q/Y9LtpwtvL0CRzXrAMj0keVXqNhBYUFg6tBOUiY8ek=
-github.com/briandowns/spinner v1.13.0/go.mod h1:QOuQk7x+EaDASo80FEXwlwiA+j/PPIcX3FScO+3/ZPQ=
+github.com/briandowns/spinner v1.16.0 h1:DFmp6hEaIx2QXXuqSJmtfSBSAjRmpGiKG6ip2Wm/yOs=
+github.com/briandowns/spinner v1.16.0/go.mod h1:QOuQk7x+EaDASo80FEXwlwiA+j/PPIcX3FScO+3/ZPQ=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/charmbracelet/glamour v0.3.0 h1:3H+ZrKlSg8s+WU6V7eF2eRVYt8lCueffbi7r2+ffGkc=
@@ -240,8 +240,6 @@ github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfV
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 h1:Z9n2FFNUXsshfwJMBgNA0RU6/i7WVaAegv3PtuIHPMs=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51/go.mod h1:CzGEWj7cYgsdH8dAjBGEr58BoE7ScuLd+fwFZ44+/x8=
-github.com/kentaro-m/blackfriday-confluence v0.0.0-20200514101926-773172e7101d h1:sPrh5gaD/VlNBr5yEbwhMxHOOcalHneN30tfXnHTYCs=
-github.com/kentaro-m/blackfriday-confluence v0.0.0-20200514101926-773172e7101d/go.mod h1:zjuRVWzEu6vFREk0vbFj6P1pKji/mU73UpQ0MA9BOSo=
 github.com/kentaro-m/blackfriday-confluence v0.0.0-20210619074151-1628b53c6f29 h1:WUOcyKBtYZrx8sKFUELbVlcvvMs6gqSoRxw5woPai4E=
 github.com/kentaro-m/blackfriday-confluence v0.0.0-20210619074151-1628b53c6f29/go.mod h1:zjuRVWzEu6vFREk0vbFj6P1pKji/mU73UpQ0MA9BOSo=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
