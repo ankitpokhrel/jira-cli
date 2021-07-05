@@ -126,7 +126,7 @@ func create(cmd *cobra.Command, _ []string) {
 		return resp.Key
 	}()
 
-	fmt.Printf("\033[0;32m✓\033[0m Issue created\n%s/browse/%s\n", server, key)
+	cmdutil.Success("Issue created\n%s/browse/%s", server, key)
 
 	if params.assignee != "" {
 		user, err := client.UserSearch(&jira.UserSearchOptions{

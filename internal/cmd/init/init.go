@@ -1,7 +1,6 @@
 package init
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -32,7 +31,7 @@ func initialize(*cobra.Command, []string) {
 		} else {
 			switch err {
 			case jiraConfig.ErrSkip:
-				fmt.Printf("\033[0;32m✓\033[0m Skipping config generation. Current config: %s\n", viper.ConfigFileUsed())
+				cmdutil.Success("Skipping config generation. Current config: %s", viper.ConfigFileUsed())
 			case jiraConfig.ErrUnexpectedResponseFormat:
 				cmdutil.Errorf("\n\033[0;31m✗\033[0m Got response in unexpected format when fetching metadata. Please try again.")
 			default:
@@ -42,5 +41,5 @@ func initialize(*cobra.Command, []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("\n\033[0;32m✓\033[0m Configuration generated: %s\n", viper.ConfigFileUsed())
+	cmdutil.Success("Configuration generated: %s", viper.ConfigFileUsed())
 }

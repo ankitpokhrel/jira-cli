@@ -1,7 +1,6 @@
 package add
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -71,7 +70,7 @@ func add(cmd *cobra.Command, args []string) {
 	}()
 	cmdutil.ExitIfError(err)
 
-	fmt.Printf("\033[0;32m✓\033[0m Issues added to the epic %s\n%s/browse/%s\n", params.epicKey, server, params.epicKey)
+	cmdutil.Success("Issues added to the epic %s\n%s/browse/%s", params.epicKey, server, params.epicKey)
 }
 
 func parseFlags(flags query.FlagParser, args []string, project string) *addParams {

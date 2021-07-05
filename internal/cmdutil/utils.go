@@ -69,6 +69,11 @@ func Info(msg string) *spinner.Spinner {
 	return s
 }
 
+// Success prints success message.
+func Success(msg string, args ...interface{}) {
+	fmt.Fprintf(os.Stdout, fmt.Sprintf("\n\u001B[0;32m✓\u001B[0m %s\n", msg), args...)
+}
+
 // Navigate navigates to jira issue.
 func Navigate(server, path string) error {
 	url := fmt.Sprintf("%s/browse/%s", server, path)

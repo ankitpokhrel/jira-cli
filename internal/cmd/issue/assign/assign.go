@@ -108,9 +108,9 @@ func assign(cmd *cobra.Command, args []string) {
 	}()
 
 	if uname == "unassigned" {
-		fmt.Printf("\u001B[0;32m✓\u001B[0m User unassigned from the issue \"%s\"\n", ac.params.key)
+		cmdutil.Success("User unassigned from the issue \"%s\"", ac.params.key)
 	} else {
-		fmt.Printf("\u001B[0;32m✓\u001B[0m User \"%s\" assigned to issue \"%s\"\n", uname, ac.params.key)
+		cmdutil.Success("User \"%s\" assigned to issue \"%s\"", uname, ac.params.key)
 	}
 	fmt.Printf("%s/browse/%s\n", viper.GetString("server"), ac.params.key)
 }

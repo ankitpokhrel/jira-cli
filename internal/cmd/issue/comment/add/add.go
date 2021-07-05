@@ -103,7 +103,7 @@ func add(cmd *cobra.Command, args []string) {
 
 	server := viper.GetString("server")
 
-	fmt.Printf("\u001B[0;32m✓\u001B[0m Comment added to issue \"%s\"\n", ac.params.issueKey)
+	cmdutil.Success("Comment added to issue \"%s\"", ac.params.issueKey)
 	fmt.Printf("%s/browse/%s\n", server, ac.params.issueKey)
 
 	if web, _ := cmd.Flags().GetBool("web"); web {

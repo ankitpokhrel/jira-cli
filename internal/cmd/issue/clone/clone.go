@@ -89,7 +89,7 @@ func clone(cmd *cobra.Command, args []string) {
 		return resp.Key
 	}()
 
-	fmt.Printf("\033[0;32m✓\033[0m Issue cloned\n%s/browse/%s\n", server, clonedIssueKey)
+	cmdutil.Success("Issue cloned\n%s/browse/%s", server, clonedIssueKey)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
