@@ -2,7 +2,6 @@ package clone
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 
@@ -98,7 +97,8 @@ func clone(cmd *cobra.Command, args []string) {
 		defer wg.Done()
 
 		if err := client.LinkIssue(key, clonedIssueKey, "Cloners"); err != nil {
-			cmdutil.Errorf("\n\033[0;31m✗\033[0m Unable to link cloned issue")
+			fmt.Println()
+			cmdutil.Failed("Unable to link cloned issue")
 		}
 	}()
 
@@ -112,10 +112,12 @@ func clone(cmd *cobra.Command, args []string) {
 				Query: cp.assignee,
 			})
 			if err != nil || len(user) == 0 {
-				cmdutil.Errorf("\n\033[0;31m✗\033[0m Unable to find assignee")
+				fmt.Println()
+				cmdutil.Failed("Unable to find assignee")
 			}
 			if err = client.AssignIssue(clonedIssueKey, user[0].AccountID); err != nil {
-				cmdutil.Errorf("\n\033[0;31m✗\033[0m Unable to set assignee: %s", err.Error())
+				fmt.Println()
+				cmdutil.Failed("Unable to set assignee: %s", err.Error())
 			}
 		}()
 	}
@@ -187,10 +189,8 @@ func (cc *cloneCmd) getActualCreateParams(issue *jira.Issue) *createParams {
 	if cc.params.replace != "" {
 		pieces := strings.Split(cc.params.replace, ":")
 		if len(pieces) != 2 {
-			fmt.Fprintf(
-				os.Stderr,
-				"\u001B[0;31m✗\u001B[0m Invalid replace string, must be in format <find>:<replace>. Skipping replacement...",
-			)
+			fmt.Println()
+			cmdutil.Fail("Invalid replace string, must be in format <find>:<replace>. Skipping replacement...")
 		} else {
 			from, to := pieces[0], pieces[1]
 

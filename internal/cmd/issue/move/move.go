@@ -58,13 +58,14 @@ func move(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(mc.setDesiredState())
 
 	if mc.params.state == optionCancel {
-		fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
+		cmdutil.Fail("Action aborted")
 		os.Exit(0)
 	}
 
 	tr, err := mc.verifyTransition()
 	if err != nil {
-		cmdutil.Errorf(err.Error())
+		fmt.Println()
+		cmdutil.Failed("Error: %s", err.Error())
 		return
 	}
 
@@ -202,13 +203,13 @@ func (mc *moveCmd) verifyTransition() (*jira.Transition, error) {
 
 	if tr == nil {
 		return nil, fmt.Errorf(
-			"\u001B[0;31m✗\u001B[0m Invalid transition state \"%s\"\nAvailable states for issue %s: %s",
+			"invalid transition state \"%s\"\nAvailable states for issue %s: %s",
 			mc.params.state, mc.params.key, strings.Join(all, ", "),
 		)
 	}
 	if !tr.IsAvailable {
 		return nil, fmt.Errorf(
-			"\u001B[0;31m✗\u001B[0m Transition state \"%s\" for issue \"%s\" is not available",
+			"transition state \"%s\" for issue \"%s\" is not available",
 			mc.params.state, mc.params.key,
 		)
 	}

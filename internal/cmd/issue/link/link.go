@@ -58,13 +58,14 @@ func link(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(lc.setDesiredLinkType())
 
 	if lc.params.linkType == optionCancel {
-		fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
+		cmdutil.Fail("Action aborted")
 		os.Exit(0)
 	}
 
 	lt, err := lc.verifyIssueLinkType()
 	if err != nil {
-		cmdutil.Errorf(err.Error())
+		fmt.Println()
+		cmdutil.Failed("Error: %s", err.Error())
 		return
 	}
 
@@ -221,7 +222,7 @@ func (lc *linkCmd) verifyIssueLinkType() (*jira.IssueLinkType, error) {
 
 	if lt == nil {
 		return nil, fmt.Errorf(
-			"\u001B[0;31m✗\u001B[0m Invalid issue link type \"%s\"\nAvailable issue link types are: %s",
+			"invalid issue link type \"%s\"\nAvailable issue link types are: %s",
 			lc.params.linkType, strings.Join(all, ", "),
 		)
 	}

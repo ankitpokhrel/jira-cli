@@ -74,7 +74,7 @@ func assign(cmd *cobra.Command, args []string) {
 
 	u, err := ac.verifyAssignee()
 	if err != nil {
-		cmdutil.Errorf(err.Error())
+		cmdutil.Failed("Error: %s", err.Error())
 		return
 	}
 
@@ -214,7 +214,7 @@ func (ac *assignCmd) setAssignee() error {
 			return err
 		}
 		if ans == optionCancel {
-			fmt.Print("\033[0;31m✗\033[0m Action aborted\n")
+			cmdutil.Fail("Action aborted")
 			os.Exit(0)
 		}
 		if ans != optionSearch {
@@ -322,10 +322,10 @@ func (ac *assignCmd) verifyAssignee() (*jira.User, error) {
 	}
 
 	if user == nil {
-		return nil, fmt.Errorf("\u001B[0;31m✗\u001B[0m Invalid assignee \"%s\"", ac.params.user)
+		return nil, fmt.Errorf("invalid assignee \"%s\"", ac.params.user)
 	}
 	if !user.Active {
-		return nil, fmt.Errorf("\u001B[0;31m✗\u001B[0m User \"%s\" is not active", user.Name)
+		return nil, fmt.Errorf("user \"%s\" is not active", user.Name)
 	}
 	return user, nil
 }
