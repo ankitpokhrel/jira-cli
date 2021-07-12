@@ -1,7 +1,6 @@
 package remove
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -65,7 +64,7 @@ func remove(cmd *cobra.Command, args []string) {
 	}()
 	cmdutil.ExitIfError(err)
 
-	fmt.Printf("\033[0;32m✓\033[0m Epic unassigned from given issues\n")
+	cmdutil.Success("Epic unassigned from given issues")
 }
 
 func parseFlags(flags query.FlagParser, args []string, project string) *removeParams {

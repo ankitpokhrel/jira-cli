@@ -1,7 +1,6 @@
 package create
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -58,8 +57,8 @@ func create(cmd *cobra.Command, _ []string) {
 		cc.params.noInput = true
 
 		if cc.isMandatoryParamsMissing() {
-			cmdutil.Errorf(
-				"\u001B[0;31m✗\u001B[0m Params `--summary` and `--name` is mandatory when using a non-interactive mode",
+			cmdutil.Failed(
+				"Params `--summary` and `--name` is mandatory when using a non-interactive mode",
 			)
 		}
 	}
@@ -90,7 +89,7 @@ func create(cmd *cobra.Command, _ []string) {
 
 			switch answer.Action {
 			case cmdcommon.ActionCancel:
-				cmdutil.Errorf("\033[0;31m✗\033[0m Action aborted")
+				cmdutil.Failed("Action aborted")
 			case cmdcommon.ActionMetadata:
 				ans := struct{ Metadata []string }{}
 				err := survey.Ask(cmdcommon.GetMetadata(), &ans)
@@ -140,17 +139,17 @@ func create(cmd *cobra.Command, _ []string) {
 		return resp.Key
 	}()
 
-	fmt.Printf("\033[0;32m✓\033[0m Epic created\n%s/browse/%s\n", server, key)
+	cmdutil.Success("Epic created\n%s/browse/%s", server, key)
 
 	if params.assignee != "" {
 		user, err := client.UserSearch(&jira.UserSearchOptions{
 			Query: params.assignee,
 		})
 		if err != nil || len(user) == 0 {
-			cmdutil.Errorf("\033[0;31m✗\033[0m Unable to find assignee")
+			cmdutil.Failed("Unable to find assignee")
 		}
 		if err = client.AssignIssue(key, user[0].AccountID); err != nil {
-			cmdutil.Errorf("\033[0;31m✗\033[0m Unable to set assignee: %s", err.Error())
+			cmdutil.Failed("Unable to set assignee: %s", err.Error())
 		}
 	}
 
@@ -183,7 +182,7 @@ func (cc *createCmd) getQuestions() []*survey.Question {
 	if cc.params.template != "" || cmdutil.StdinHasData() {
 		b, err := cmdutil.ReadFile(cc.params.template)
 		if err != nil {
-			cmdutil.Errorf(fmt.Sprintf("\u001B[0;31m✗\u001B[0m Error: %s", err))
+			cmdutil.Failed("Error: %s", err)
 		}
 		defaultBody = string(b)
 	}

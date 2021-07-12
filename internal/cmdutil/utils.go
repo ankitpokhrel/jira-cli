@@ -16,12 +16,6 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
-// Errorf prints formatted error in stderr and exits.
-func Errorf(msg string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, fmt.Sprintf("%s\n", msg), a...)
-	os.Exit(1)
-}
-
 // ExitIfError exists with error message if err is not nil.
 func ExitIfError(err error) {
 	if err == nil {
@@ -50,7 +44,8 @@ func ExitIfError(err error) {
 		}
 	}
 
-	Errorf("%s", msg)
+	fmt.Fprintf(os.Stderr, "%s\n", msg)
+	os.Exit(1)
 }
 
 // Info displays spinner.
@@ -67,6 +62,22 @@ func Info(msg string) *spinner.Spinner {
 	s.Start()
 
 	return s
+}
+
+// Success prints success message in stdout.
+func Success(msg string, args ...interface{}) {
+	fmt.Fprintf(os.Stdout, fmt.Sprintf("\n\u001B[0;32m✓\u001B[0m %s\n", msg), args...)
+}
+
+// Fail prints failure message in stderr.
+func Fail(msg string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, fmt.Sprintf("\u001B[0;31m✗\u001B[0m %s\n", msg), args...)
+}
+
+// Failed prints failure message in stderr and exits.
+func Failed(msg string, args ...interface{}) {
+	Fail(msg, args...)
+	os.Exit(1)
 }
 
 // Navigate navigates to jira issue.

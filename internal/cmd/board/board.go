@@ -40,7 +40,7 @@ func board(cmd *cobra.Command, _ []string) {
 		return resp.Boards, resp.Total
 	}()
 	if total == 0 {
-		cmdutil.Errorf("No boards found in project \"%s\"", project)
+		cmdutil.Failed("No boards found in project \"%s\"", project)
 		return
 	}
 
