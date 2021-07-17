@@ -24,7 +24,10 @@
         <i>Feature-rich Interactive Jira Command Line</i>
     </p>
     <img align="center" alt="JiraCLI Demo" src=".github/assets/demo.gif" /><br/><br/>
-    <p align="center">:construction: This project is still a work in progress :construction:</p><br/>
+    <p align="center">
+        :construction: This project is still a work in progress :construction:<br/>
+        <a href="https://opencollective.com/jira-cli#backers" target="_blank" align="center"><img src="https://opencollective.com/jira-cli/backers.svg"></a>
+    </p>
 </div>
 
 JiraCLI is a command line tool for Jira created with an idea to avoid the Jira UI as much as possible. The tool is not yet complete but has
@@ -46,7 +49,7 @@ The tool is only tested with the latest Jira cloud since that's what I usually w
 Install the runnable binary to your `$GOPATH/bin`.
 
 ```sh
-$ go get github.com/ankitpokhrel/jira-cli/cmd/jira
+go get github.com/ankitpokhrel/jira-cli/cmd/jira
 ```
 
 Releases and other installation options will be available later.
@@ -64,7 +67,7 @@ The tool currently comes with an issue, epic, and sprint explorer. The flags are
 You can combine available flags in any order to create a unique query. For example, the command below will give you high priority issues created this month
 with status `To Do` that are assigned to you and has a label `backend`.
 ```sh
-$ jira issue list -yHigh -s"To Do" --created month -lbackend -a$(jira me)
+jira issue list -yHigh -s"To Do" --created month -lbackend -a$(jira me)
 ```
 
 ### Navigation
@@ -109,42 +112,42 @@ Check some more examples/use-cases below.
 <details><summary>List issues that I am watching</summary>
 
 ```sh
-$ jira issue list -w
+jira issue list -w
 ```
 </details>
 
 <details><summary>List issues assigned to me</summary>
 
 ```sh
-$ jira issue list -a$(jira me)
+jira issue list -a$(jira me)
 ```
 </details>
 
 <details><summary>List issues assigned to a user and are reported by another user</summary>
 
 ```sh
-$ jira issue list -a"User A" -r"User B"
+jira issue list -a"User A" -r"User B"
 ```
 </details>
 
 <details><summary>List issues assigned to me is of high priority and is open</summary>
 
 ```sh
-$ jira issue list -a$(jira me) -yHigh -sopen
+jira issue list -a$(jira me) -yHigh -sopen
 ```
 </details>
 
 <details><summary>List issues assigned to no one and are created this week</summary>
 
 ```sh
-$ jira issue list -ax --created week
+jira issue list -ax --created week
 ```
 </details>
 
 <details><summary>List issues with resolution won't do</summary>
 
 ```sh
-$ jira issue list -R"Won't do"
+jira issue list -R"Won't do"
 ```
 </details>
 
@@ -152,56 +155,56 @@ $ jira issue list -R"Won't do"
 
 ```sh
 # Tilde (~) acts as a not operator
-$ jira issue list -s~Done --created-before -24w -a~x
+jira issue list -s~Done --created-before -24w -a~x
 ```
 </details>
 
 <details><summary>List issues created within an hour and updated in the last 30 minutes :stopwatch:</summary>
 
 ```sh
-$ jira issue list --created -1h --updated -30m
+jira issue list --created -1h --updated -30m
 ```
 </details>
 
 <details><summary>Give me issues that are of high priority, is in progress, was created this month, and has given labels :fire:</summary>
 
 ```sh
-$ jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high prio"
+jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high prio"
 ```
 </details>
 
 <details><summary>Wait, what was that ticket I opened earlier today? :tired_face:</summary>
 
  ```sh
- $ jira issue list --history
+ jira issue list --history
  ```
 </details>
 
 <details><summary>What was the first issue I ever reported on the current board? :thinking:</summary>
 
 ```sh
-$ jira issue list -r$(jira me) --reverse
+jira issue list -r$(jira me) --reverse
 ```
 </details>
 
 <details><summary>What was the first bug I ever fixed in the current board? :beetle:</summary>
 
 ```sh
-$ jira issue list -a$(jira me) -tBug sDone -rFixed --reverse
+jira issue list -a$(jira me) -tBug sDone -rFixed --reverse
 ```
 </details>
 
 <details><summary>What issues did I report this week? :man_shrugging:</summary>
 
 ```sh
-$ jira issue list -r$(jira me) --created week
+jira issue list -r$(jira me) --created week
 ```
 </details>
 
 <details><summary>Am I watching any tickets in project XYZ? :monocle_face:</summary>
 
 ```sh
-$ jira issue list -w -pXYZ
+jira issue list -w -pXYZ
 ```
 </details>
 
@@ -439,25 +442,28 @@ $ jira sprint list SPRINT_ID -yHigh -a$(jira me)
 <details><summary>Navigate to the project</summary>
 
 ```sh
-# Navigate to the project
-$ jira open
+jira open
+```
+</details>
 
-# Navigate to the issue
-$ jira open KEY-1
+<details><summary>Navigate to the issue</summary>
+
+```sh
+jira open KEY-1
 ```
 </details>
 
 <details><summary>List all projects you have access to</summary>
 
 ```sh
-$ jira project
+jira project
 ```
 </details>
 
 <details><summary>List all boards in a project</summary>
 
 ```sh
-$ jira board
+jira board
 ```
 </details>
 
@@ -533,16 +539,15 @@ Sprint 1:   3
 ## Development
 1. Clone the repo.
    ```sh
-   $ git clone git@github.com:ankitpokhrel/jira-cli.git
+   git clone git@github.com:ankitpokhrel/jira-cli.git
    ```
 
 2. Make changes, build the binary, and test your changes.
    ```sh
-   $ make deps
-   $ make install
+   make deps install
    ```
 
-3. Run linter and tests before submitting a PR.
+3. Run CI steps locally before submitting a PR.
    ```sh
-   $ make ci
+   make ci
    ```
