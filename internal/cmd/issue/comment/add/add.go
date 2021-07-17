@@ -61,9 +61,7 @@ func add(cmd *cobra.Command, args []string) {
 		ac.params.noInput = true
 
 		if ac.isMandatoryParamsMissing() {
-			cmdutil.Errorf(
-				"\u001B[0;31m✗\u001B[0m `ISSUE-KEY` is mandatory when using a non-interactive mode",
-			)
+			cmdutil.Failed("`ISSUE-KEY` is mandatory when using a non-interactive mode")
 		}
 	}
 
@@ -89,7 +87,7 @@ func add(cmd *cobra.Command, args []string) {
 		cmdutil.ExitIfError(err)
 
 		if answer.Action == cmdcommon.ActionCancel {
-			cmdutil.Errorf("\033[0;31m✗\033[0m Action aborted")
+			cmdutil.Failed("Action aborted")
 		}
 	}
 
@@ -103,7 +101,7 @@ func add(cmd *cobra.Command, args []string) {
 
 	server := viper.GetString("server")
 
-	fmt.Printf("\u001B[0;32m✓\u001B[0m Comment added to issue \"%s\"\n", ac.params.issueKey)
+	cmdutil.Success("Comment added to issue \"%s\"", ac.params.issueKey)
 	fmt.Printf("%s/browse/%s\n", server, ac.params.issueKey)
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
@@ -191,7 +189,7 @@ func (ac *addCmd) getQuestions() []*survey.Question {
 	if ac.params.template != "" || cmdutil.StdinHasData() {
 		b, err := cmdutil.ReadFile(ac.params.template)
 		if err != nil {
-			cmdutil.Errorf(fmt.Sprintf("\u001B[0;31m✗\u001B[0m Error: %s", err))
+			cmdutil.Failed("Error: %s", err)
 		}
 		defaultBody = string(b)
 	}

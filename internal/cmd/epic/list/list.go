@@ -1,6 +1,7 @@
 package list
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -107,7 +108,8 @@ func singleEpicView(flags query.FlagParser, key, project, server string, client 
 		return resp.Issues, resp.Total
 	}()
 	if total == 0 {
-		cmdutil.Errorf("No result found for given query in project \"%s\"", project)
+		fmt.Println()
+		cmdutil.Failed("No result found for given query in project \"%s\"", project)
 		return
 	}
 
@@ -158,7 +160,8 @@ func epicExplorerView(flags query.FlagParser, project, server string, client *ji
 		return resp.Issues, resp.Total
 	}()
 	if total == 0 {
-		cmdutil.Errorf("No result found for given query in project \"%s\"", project)
+		fmt.Println()
+		cmdutil.Failed("No result found for given query in project \"%s\"", project)
 		return
 	}
 

@@ -35,7 +35,7 @@ func init() {
 		} else {
 			home, err := cmdutil.GetConfigHome()
 			if err != nil {
-				cmdutil.Errorf("Error: %s", err)
+				cmdutil.Failed("Error: %s", err)
 				return
 			}
 
@@ -71,7 +71,7 @@ func NewCmdRoot() *cobra.Command {
 
 			configFile := viper.ConfigFileUsed()
 			if !jiraConfig.Exists(configFile) {
-				cmdutil.Errorf("Missing configuration file.\nRun 'jira init' to configure the tool.")
+				cmdutil.Failed("Missing configuration file.\nRun 'jira init' to configure the tool.")
 			}
 		},
 	}

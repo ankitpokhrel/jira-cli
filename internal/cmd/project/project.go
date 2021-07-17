@@ -35,7 +35,7 @@ func projects(cmd *cobra.Command, _ []string) {
 		return projects, len(projects)
 	}()
 	if total == 0 {
-		cmdutil.Errorf("No projects found.")
+		cmdutil.Failed("No projects found.")
 		return
 	}
 
