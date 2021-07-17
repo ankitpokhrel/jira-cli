@@ -26,7 +26,9 @@
     <img align="center" alt="JiraCLI Demo" src=".github/assets/demo.gif" /><br/><br/>
     <p align="center">
         :construction: This project is still a work in progress :construction:<br/>
-        <a href="https://opencollective.com/jira-cli#backers" target="_blank" align="center"><img src="https://opencollective.com/jira-cli/backers.svg"></a>
+        <a href="https://opencollective.com/jira-cli#backers" target="_blank">
+            <img src="https://opencollective.com/jira-cli/backers.svg" alt="jira-cli open collective badge">
+        </a>
     </p>
 </div>
 
