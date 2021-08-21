@@ -21,7 +21,7 @@ type MarkdownTranslator struct {
 	}
 }
 
-// NewMarkdownTranslator is a constructor for markdown translator.
+// NewMarkdownTranslator constructs markdown translator.
 func NewMarkdownTranslator() *MarkdownTranslator {
 	return &MarkdownTranslator{
 		list: struct {
