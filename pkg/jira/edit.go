@@ -12,7 +12,7 @@ type EditResponse struct {
 	Key string `json:"key"`
 }
 
-// EditRequest struct holds request data for create request.
+// EditRequest struct holds request data for edit request.
 // Setting an Assignee requires an account ID.
 type EditRequest struct {
 	IssueType  string

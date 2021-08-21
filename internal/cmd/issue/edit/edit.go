@@ -23,10 +23,10 @@ const (
 	examples = `$ jira issue edit ISSUE-1
 
 # Edit issue in the configured project
-$ jira issue edit ISSUE-1 -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
+$ jira issue edit ISSUE-1 -s"New Bug" -yHigh -lbug -lurgent -CBackend -b"Bug description"
 
-# Edit issue in another project
-$ jira issue edit ISSUE-1 -pPRJ -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'`
+# Use --no-input option to disable interactive prompt
+$ jira issue edit ISSUE-1 -s"New updated summary" --no-input`
 )
 
 // NewCmdEdit is an edit command.
@@ -300,8 +300,8 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("body", "b", "", "Edit description")
 	cmd.Flags().StringP("priority", "y", "", "Edit priority")
 	cmd.Flags().StringP("assignee", "a", "", "Edit assignee (email or display name)")
-	cmd.Flags().StringArrayP("label", "l", []string{}, "Edit labels")
-	cmd.Flags().StringArrayP("component", "C", []string{}, "Edit components")
+	cmd.Flags().StringArrayP("label", "l", []string{}, "Replace labels")
+	cmd.Flags().StringArrayP("component", "C", []string{}, "Replace components")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful update")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }

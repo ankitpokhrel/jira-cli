@@ -241,6 +241,19 @@ $ echo "Description from stdin" | jira issue create -s"Summary" -tTask
 ![Markdown render preview](.github/assets/markdown.jpg)
 > The preview above shows markdown template passed in Jira CLI and how it is rendered in the Jira UI.
 
+#### Edit
+The `edit` command lets you edit an issue.
+
+```sh
+$ jira issue edit ISSUE-1
+
+# Edit issue in the configured project
+$ jira issue edit ISSUE-1 -s"New Bug" -yHigh -lbug -lurgent -CBackend -b"Bug description"
+
+# Use --no-input option to disable interactive prompt
+$ jira issue edit ISSUE-1 -s"New updated summary" --no-input`
+```
+
 #### Assign
 The `assign` command lets you assign user to an issue.
 
