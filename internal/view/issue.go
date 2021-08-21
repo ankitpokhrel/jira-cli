@@ -66,7 +66,7 @@ func (i Issue) String() string {
 	}
 	desc := ""
 	if i.Data.Fields.Description != nil {
-		tr := adf.NewTranslator(i.Data.Fields.Description.(*adf.ADF), &adf.MarkdownTranslator{})
+		tr := adf.NewTranslator(i.Data.Fields.Description.(*adf.ADF), adf.NewMarkdownTranslator())
 		desc = tr.Translate()
 	}
 	return fmt.Sprintf(
