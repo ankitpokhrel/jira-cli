@@ -14,9 +14,26 @@ type MarkdownTranslator struct {
 		sep  bool
 	}
 	list struct {
-		ol, ul  bool
-		depth   int
-		counter int // each level has same numeric counter at the moment.
+		ol, ul  map[int]bool
+		depthO  int
+		depthU  int
+		counter map[int]int // each level starts with same numeric counter at the moment.
+	}
+}
+
+// NewMarkdownTranslator is a constructor for markdown translator.
+func NewMarkdownTranslator() *MarkdownTranslator {
+	return &MarkdownTranslator{
+		list: struct {
+			ol, ul  map[int]bool
+			depthO  int
+			depthU  int
+			counter map[int]int
+		}{
+			ol:      make(map[int]bool),
+			ul:      make(map[int]bool),
+			counter: make(map[int]int),
+		},
 	}
 }
 
@@ -53,21 +70,22 @@ func (tr *MarkdownTranslator) Open(n Connector, d int) string {
 	case NodeMedia:
 		tag.WriteString("\n[attachment]")
 	case NodeBulletList:
-		tr.list.ol = false
-		tr.list.ul = true
-		tr.list.depth = d
+		tr.list.depthU++
+		tr.list.ul[tr.list.depthU] = true
 	case NodeOrderedList:
-		tr.list.ol = true
-		tr.list.ul = false
-		tr.list.depth = d
+		tr.list.depthO++
+		tr.list.ol[tr.list.depthO] = true
 	case ChildNodeListItem:
-		for i := 0; i < tr.list.depth/2; i++ {
-			tag.WriteString("\t")
-		}
-		if tr.list.ol {
-			tr.list.counter++
-			tag.WriteString(fmt.Sprintf("%d. ", tr.list.counter))
+		if tr.list.ol[tr.list.depthO] {
+			for i := 0; i < tr.list.depthO-1; i++ {
+				tag.WriteString("\t")
+			}
+			tr.list.counter[tr.list.depthO]++
+			tag.WriteString(fmt.Sprintf("%d. ", tr.list.counter[tr.list.depthO]))
 		} else {
+			for i := 0; i < tr.list.depthU-1; i++ {
+				tag.WriteString("\t")
+			}
 			tag.WriteString("- ")
 		}
 	case ChildNodeTableHeader:
@@ -124,11 +142,15 @@ func (tr *MarkdownTranslator) Close(n Connector) string {
 	case NodeHeading:
 		tag.WriteString("\n")
 	case NodeBulletList:
-		fallthrough
+		tr.list.ul[tr.list.depthU] = false
+		tr.list.depthU--
 	case NodeOrderedList:
-		tr.list.depth = 0
+		tr.list.ol[tr.list.depthO] = false
+		tr.list.depthO--
 	case NodeParagraph:
-		if tr.table.rows == 0 {
+		if tr.list.ul[tr.list.depthU] || tr.list.ol[tr.list.depthO] {
+			tag.WriteString("\n")
+		} else if tr.table.rows == 0 {
 			tag.WriteString("\n\n")
 		}
 	case NodeTable:
