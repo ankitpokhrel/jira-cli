@@ -173,6 +173,15 @@ func (c *Client) Put(ctx context.Context, path string, body []byte, headers Head
 	return res, err
 }
 
+// PutV2 sends PUT request to v2 version of the jira api.
+func (c *Client) PutV2(ctx context.Context, path string, body []byte, headers Header) (*http.Response, error) {
+	res, err := c.request(ctx, http.MethodPut, c.server+baseURLv2+path, body, headers)
+	if err != nil {
+		return res, err
+	}
+	return res, err
+}
+
 func (c *Client) request(ctx context.Context, method, endpoint string, body []byte, headers Header) (*http.Response, error) {
 	var (
 		req *http.Request

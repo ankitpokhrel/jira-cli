@@ -241,6 +241,19 @@ $ echo "Description from stdin" | jira issue create -s"Summary" -tTask
 ![Markdown render preview](.github/assets/markdown.jpg)
 > The preview above shows markdown template passed in Jira CLI and how it is rendered in the Jira UI.
 
+#### Edit
+The `edit` command lets you edit an issue.
+
+```sh
+$ jira issue edit ISSUE-1
+
+# Edit issue in the configured project
+$ jira issue edit ISSUE-1 -s"New Bug" -yHigh -lbug -lurgent -CBackend -b"Bug description"
+
+# Use --no-input option to disable interactive prompt
+$ jira issue edit ISSUE-1 -s"New updated summary" --no-input`
+```
+
 #### Assign
 The `assign` command lets you assign user to an issue.
 
@@ -537,6 +550,11 @@ Sprint 2:   4
 Sprint 1:   3
 ```
 </details>
+
+## Known Issues
+
+1. [Panels](https://developer.atlassian.com/cloud/jira/platform/apis/document/nodes/panel/) are not properly translated
+   at the moment which can cause formatting issue when creating/editing/cloning issues with panels.
 
 ## Development
 1. Clone the repo.
