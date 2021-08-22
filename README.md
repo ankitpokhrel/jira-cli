@@ -551,6 +551,11 @@ Sprint 1:   3
 ```
 </details>
 
+## Known Issues
+
+1. [Panels](https://developer.atlassian.com/cloud/jira/platform/apis/document/nodes/panel/) are not properly translated
+   at the moment which can cause formatting issue when creating/editing/cloning issues with panels.
+
 ## Development
 1. Clone the repo.
    ```sh
