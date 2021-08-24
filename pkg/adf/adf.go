@@ -67,11 +67,31 @@ type ADF struct {
 	Content []*Node `json:"content"`
 }
 
+// ReplaceAll replaces all occurrences of an old string
+// in a text node with a new one.
+func (a *ADF) ReplaceAll(old, new string) {
+	if a == nil || len(a.Content) == 0 {
+		return
+	}
+	for _, parent := range a.Content {
+		a.replace(parent, old, new)
+	}
+}
+
+func (a *ADF) replace(n *Node, old, new string) {
+	for _, child := range n.Content {
+		a.replace(child, old, new)
+	}
+	if n.NodeType == ChildNodeText {
+		n.Text = strings.ReplaceAll(n.Text, old, new)
+	}
+}
+
 // Node is an ADF content node.
 type Node struct {
 	NodeType   string      `json:"type"`
-	Content    []*Node     `json:"content"`
-	Attributes interface{} `json:"attrs"`
+	Content    []*Node     `json:"content,omitempty"`
+	Attributes interface{} `json:"attrs,omitempty"`
 	NodeValue
 }
 
@@ -83,14 +103,14 @@ func (n Node) GetAttributes() interface{} { return n.Attributes }
 
 // NodeValue is an actual ADF node content.
 type NodeValue struct {
-	Text  string     `json:"text"`
-	Marks []MarkNode `json:"marks"`
+	Text  string     `json:"text,omitempty"`
+	Marks []MarkNode `json:"marks,omitempty"`
 }
 
 // MarkNode is a mark node type.
 type MarkNode struct {
-	MarkType   string      `json:"type"`
-	Attributes interface{} `json:"attrs"`
+	MarkType   string      `json:"type,omitempty"`
+	Attributes interface{} `json:"attrs,omitempty"`
 }
 
 // GetType gets node type.
