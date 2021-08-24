@@ -67,19 +67,20 @@ type ADF struct {
 	Content []*Node `json:"content"`
 }
 
-// ReplaceAll replaces all occurrences of an old string with a new.
+// ReplaceAll replaces all occurrences of an old string
+// in a text node with a new one.
 func (a *ADF) ReplaceAll(old, new string) {
 	if a == nil || len(a.Content) == 0 {
 		return
 	}
 	for _, parent := range a.Content {
-		a.replace(parent, 0, old, new)
+		a.replace(parent, old, new)
 	}
 }
 
-func (a *ADF) replace(n *Node, depth int, old, new string) {
+func (a *ADF) replace(n *Node, old, new string) {
 	for _, child := range n.Content {
-		a.replace(child, depth+1, old, new)
+		a.replace(child, old, new)
 	}
 	if n.NodeType == ChildNodeText {
 		n.Text = strings.ReplaceAll(n.Text, old, new)
