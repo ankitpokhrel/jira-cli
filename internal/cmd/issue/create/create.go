@@ -120,7 +120,7 @@ func create(cmd *cobra.Command, _ []string) {
 			Components:     params.components,
 		}
 
-		resp, err := client.Create(&cr)
+		resp, err := client.CreateV2(&cr)
 		cmdutil.ExitIfError(err)
 
 		return resp.Key

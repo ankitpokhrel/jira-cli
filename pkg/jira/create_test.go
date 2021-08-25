@@ -61,7 +61,7 @@ func TestCreate(t *testing.T) {
 		Labels:     []string{"test", "dev"},
 		Components: []string{"BE", "FE"},
 	}
-	actual, err := client.Create(&requestData)
+	actual, err := client.CreateV2(&requestData)
 	assert.NoError(t, err)
 
 	expected := &CreateResponse{
@@ -73,7 +73,7 @@ func TestCreate(t *testing.T) {
 
 	testServer.statusCode(400)
 
-	_, err = client.Create(&requestData)
+	_, err = client.CreateV2(&requestData)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
@@ -94,7 +94,7 @@ func TestCreateEpic(t *testing.T) {
 		Priority:      "Normal",
 		EpicFieldName: "customfield_10001",
 	}
-	actual, err := client.Create(&requestData)
+	actual, err := client.CreateV2(&requestData)
 	assert.NoError(t, err)
 
 	expected := &CreateResponse{
@@ -105,6 +105,6 @@ func TestCreateEpic(t *testing.T) {
 
 	testServer.statusCode(400)
 
-	_, err = client.Create(&requestData)
+	_, err = client.CreateV2(&requestData)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }

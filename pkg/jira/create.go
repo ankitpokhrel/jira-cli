@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 	"github.com/ankitpokhrel/jira-cli/pkg/md"
 )
 
@@ -22,7 +23,7 @@ type CreateRequest struct {
 	// ParentIssueKey is required for sub-task.
 	ParentIssueKey string
 	Summary        string
-	Body           string
+	Body           interface{} // string in v1/v2 and adf.ADF in v3
 	Priority       string
 	Labels         []string
 	Components     []string
@@ -31,8 +32,17 @@ type CreateRequest struct {
 	EpicFieldName string
 }
 
-// Create creates an issue using POST /issue endpoint.
+// Create creates an issue using v3 version of the POST /issue endpoint.
 func (c *Client) Create(req *CreateRequest) (*CreateResponse, error) {
+	return c.create(req, apiVersion3)
+}
+
+// CreateV2 creates an issue using v2 version of the POST /issue endpoint.
+func (c *Client) CreateV2(req *CreateRequest) (*CreateResponse, error) {
+	return c.create(req, apiVersion2)
+}
+
+func (c *Client) create(req *CreateRequest, ver string) (*CreateResponse, error) {
 	data := c.getRequestData(req)
 
 	body, err := json.Marshal(&data)
@@ -40,10 +50,20 @@ func (c *Client) Create(req *CreateRequest) (*CreateResponse, error) {
 		return nil, err
 	}
 
-	res, err := c.PostV2(context.Background(), "/issue", body, Header{
+	header := Header{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
-	})
+	}
+
+	var res *http.Response
+
+	switch ver {
+	case apiVersion2:
+		res, err = c.PostV2(context.Background(), "/issue", body, header)
+	default:
+		res, err = c.Post(context.Background(), "/issue", body, header)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -73,9 +93,9 @@ type createFields struct {
 	Parent *struct {
 		Key string `json:"key"`
 	} `json:"parent,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Summary     string `json:"summary"`
-	Description string `json:"description,omitempty"`
+	Name        string      `json:"name,omitempty"`
+	Summary     string      `json:"summary"`
+	Description interface{} `json:"description,omitempty"`
 	Priority    *struct {
 		Name string `json:"name,omitempty"`
 	} `json:"priority,omitempty"`
@@ -120,21 +140,29 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 		req.Labels = []string{}
 	}
 
+	cf := createFields{
+		Project: struct {
+			Key string `json:"key"`
+		}{Key: req.Project},
+		IssueType: struct {
+			Name string `json:"name"`
+		}{Name: req.IssueType},
+		Name:          req.Name,
+		Summary:       req.Summary,
+		Labels:        req.Labels,
+		epicFieldName: req.EpicFieldName,
+	}
+
+	switch v := req.Body.(type) {
+	case string:
+		cf.Description = md.JiraToGithubFlavored(v)
+	case *adf.ADF:
+		cf.Description = v
+	}
+
 	data := createRequest{
 		Update: struct{}{},
-		Fields: createFieldsMarshaler{createFields{
-			Project: struct {
-				Key string `json:"key"`
-			}{Key: req.Project},
-			IssueType: struct {
-				Name string `json:"name"`
-			}{Name: req.IssueType},
-			Name:          req.Name,
-			Summary:       req.Summary,
-			Labels:        req.Labels,
-			Description:   md.JiraToGithubFlavored(req.Body),
-			epicFieldName: req.EpicFieldName,
-		}},
+		Fields: createFieldsMarshaler{cf},
 	}
 
 	if req.ParentIssueKey != "" {

@@ -19,6 +19,9 @@ const (
 	baseURLv3 = "/rest/api/3"
 	baseURLv2 = "/rest/api/2"
 	baseURLv1 = "/rest/agile/1.0"
+
+	apiVersion2 = "v2"
+	apiVersion3 = "v3"
 )
 
 var (
