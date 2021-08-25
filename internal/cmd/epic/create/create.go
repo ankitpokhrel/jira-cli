@@ -123,7 +123,7 @@ func create(cmd *cobra.Command, _ []string) {
 		s := cmdutil.Info("Creating an epic...")
 		defer s.Stop()
 
-		resp, err := client.Create(&jira.CreateRequest{
+		resp, err := client.CreateV2(&jira.CreateRequest{
 			Project:       project,
 			IssueType:     jira.IssueTypeEpic,
 			Name:          params.name,

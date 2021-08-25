@@ -11,6 +11,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
+	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
@@ -60,7 +61,7 @@ func clone(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Fetching issue details...")
 		defer s.Stop()
 
-		issue, err := api.Client(jira.Config{Debug: cc.params.debug}).GetIssueV2(key)
+		issue, err := api.Client(jira.Config{Debug: cc.params.debug}).GetIssue(key)
 		cmdutil.ExitIfError(err)
 
 		return issue
@@ -135,7 +136,7 @@ func clone(cmd *cobra.Command, args []string) {
 
 type createParams struct {
 	summary    string
-	body       string
+	body       interface{}
 	priority   string
 	assignee   string
 	labels     []string
@@ -181,10 +182,7 @@ func (cc *cloneCmd) getActualCreateParams(issue *jira.Issue) *createParams {
 		cp.components = cc.params.components
 	}
 
-	var ok bool
-	if cp.body, ok = issue.Fields.Description.(string); !ok {
-		cp.body = ""
-	}
+	body := issue.Fields.Description.(*adf.ADF)
 
 	if cc.params.replace != "" {
 		pieces := strings.Split(cc.params.replace, ":")
@@ -195,9 +193,10 @@ func (cc *cloneCmd) getActualCreateParams(issue *jira.Issue) *createParams {
 			from, to := pieces[0], pieces[1]
 
 			cp.summary = strings.ReplaceAll(cp.summary, from, to)
-			cp.body = strings.ReplaceAll(cp.body, from, to)
+			body.ReplaceAll(from, to)
 		}
 	}
+	cp.body = body
 
 	return &cp
 }
