@@ -19,6 +19,7 @@ import (
 
 const (
 	wordWrap = 120
+	tabWidth = 8
 	helpText = `USAGE
 	-----
 	

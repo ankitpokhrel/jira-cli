@@ -38,7 +38,7 @@ type IssueList struct {
 // Render renders the view.
 func (l IssueList) Render() error {
 	if l.Display.Plain {
-		w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
+		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
 		return l.renderPlain(w)
 	}
 

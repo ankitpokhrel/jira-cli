@@ -223,8 +223,10 @@ func dump(req *http.Request, res *http.Response) {
 }
 
 func prettyPrintDump(heading string, data []byte) {
+	const separatorWidth = 60
+
 	fmt.Printf("\n\n%s", strings.ToUpper(heading))
-	fmt.Printf(fmt.Sprintf("\n%s\n\n", strings.Repeat("-", 60)))
+	fmt.Printf(fmt.Sprintf("\n%s\n\n", strings.Repeat("-", separatorWidth)))
 	fmt.Print(string(data))
 }
 
