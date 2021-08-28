@@ -25,7 +25,7 @@ func NewBoard(data []*jira.Board, opts ...BoardOption) *Board {
 		data: data,
 		buf:  new(bytes.Buffer),
 	}
-	b.writer = tabwriter.NewWriter(b.buf, 0, 8, 1, '\t', 0)
+	b.writer = tabwriter.NewWriter(b.buf, 0, tabWidth, 1, '\t', 0)
 
 	for _, opt := range opts {
 		opt(&b)

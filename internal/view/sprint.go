@@ -70,7 +70,7 @@ func (sl SprintList) Render() error {
 // RenderInTable renders the list in table view.
 func (sl SprintList) RenderInTable() error {
 	if sl.Display.Plain {
-		w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
+		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
 		return sl.renderPlain(w)
 	}
 

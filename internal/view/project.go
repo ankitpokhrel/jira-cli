@@ -25,7 +25,7 @@ func NewProject(data []*jira.Project, opts ...ProjectOption) *Project {
 		data: data,
 		buf:  new(bytes.Buffer),
 	}
-	p.writer = tabwriter.NewWriter(p.buf, 0, 8, 1, '\t', 0)
+	p.writer = tabwriter.NewWriter(p.buf, 0, tabWidth, 1, '\t', 0)
 
 	for _, opt := range opts {
 		opt(&p)

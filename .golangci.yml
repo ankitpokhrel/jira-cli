@@ -12,14 +12,13 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-    - golint
+    - revive
     - godot
     - gofumpt
     - gomnd
     - gosimple
     - govet
     - ineffassign
-    - interfacer
     - prealloc
     - unparam
     - varcheck

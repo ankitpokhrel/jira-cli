@@ -42,6 +42,8 @@ $ jira issue list -tEpic -sDone
 
 # List issues in status other than "Open" and is assigned to no one
 $ jira issue list -s~Open -ax`
+
+	defaultLimit = 100
 )
 
 // NewCmdList is a list command.
@@ -143,7 +145,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().String("updated-before", "", "Filter by issues updated before certain date")
 	cmd.Flags().StringP("jql", "q", "", "Run a raw JQL query in a given project context")
 	cmd.Flags().Bool("reverse", false, "Reverse the display order (default is DESC)")
-	cmd.Flags().Uint("limit", 100, "Number of results to return")
+	cmd.Flags().Uint("limit", defaultLimit, "Number of results to return")
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
