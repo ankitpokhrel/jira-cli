@@ -127,6 +127,11 @@ func edit(cmd *cobra.Command, args []string) {
 		}()
 	}
 
+	if params.isEmpty() {
+		fmt.Println()
+		cmdutil.Failed("Nothing to update")
+	}
+
 	func() {
 		s := cmdutil.Info("Updating an issue...")
 		defer s.Stop()
@@ -220,6 +225,11 @@ type editParams struct {
 	components []string
 	noInput    bool
 	debug      bool
+}
+
+func (ep editParams) isEmpty() bool {
+	return ep.summary == "" && ep.body == "" && ep.priority == "" &&
+		ep.assignee == "" && len(ep.labels) == 0 && len(ep.components) == 0
 }
 
 func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *editParams {
