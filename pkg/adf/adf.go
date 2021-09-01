@@ -4,38 +4,41 @@ import (
 	"strings"
 )
 
+// NodeType is a atlassian document node type.
+type NodeType string
+
 // Node types.
 const (
-	NodeTypeParent  = "parent"
-	NodeTypeChild   = "child"
-	NodeTypeUnknown = "unknown"
+	NodeTypeParent  = NodeType("parent")
+	NodeTypeChild   = NodeType("child")
+	NodeTypeUnknown = NodeType("unknown")
 
-	NodeBlockquote  = "blockquote"
-	NodeBulletList  = "bulletList"
-	NodeCodeBlock   = "codeBlock"
-	NodeHeading     = "heading"
-	NodeOrderedList = "orderedList"
-	NodePanel       = "panel"
-	NodeParagraph   = "paragraph"
-	NodeTable       = "table"
-	NodeMedia       = "media"
+	NodeBlockquote  = NodeType("blockquote")
+	NodeBulletList  = NodeType("bulletList")
+	NodeCodeBlock   = NodeType("codeBlock")
+	NodeHeading     = NodeType("heading")
+	NodeOrderedList = NodeType("orderedList")
+	NodePanel       = NodeType("panel")
+	NodeParagraph   = NodeType("paragraph")
+	NodeTable       = NodeType("table")
+	NodeMedia       = NodeType("media")
 
-	ChildNodeText        = "text"
-	ChildNodeListItem    = "listItem"
-	ChildNodeTableRow    = "tableRow"
-	ChildNodeTableHeader = "tableHeader"
-	ChildNodeTableCell   = "tableCell"
+	ChildNodeText        = NodeType("text")
+	ChildNodeListItem    = NodeType("listItem")
+	ChildNodeTableRow    = NodeType("tableRow")
+	ChildNodeTableHeader = NodeType("tableHeader")
+	ChildNodeTableCell   = NodeType("tableCell")
 
-	InlineNodeCard      = "inlineCard"
-	InlineNodeEmoji     = "emoji"
-	InlineNodeMention   = "mention"
-	InlineNodeHardBreak = "hardBreak"
+	InlineNodeCard      = NodeType("inlineCard")
+	InlineNodeEmoji     = NodeType("emoji")
+	InlineNodeMention   = NodeType("mention")
+	InlineNodeHardBreak = NodeType("hardBreak")
 
-	MarkEm     = "em"
-	MarkLink   = "link"
-	MarkCode   = "code"
-	MarkStrike = "strike"
-	MarkStrong = "strong"
+	MarkEm     = NodeType("em")
+	MarkLink   = NodeType("link")
+	MarkCode   = NodeType("code")
+	MarkStrike = NodeType("strike")
+	MarkStrong = NodeType("strong")
 )
 
 // TagOpener is a tag opener.
@@ -56,7 +59,7 @@ type TagOpenerCloser interface {
 
 // Connector is a connector interface.
 type Connector interface {
-	GetType() string
+	GetType() NodeType
 	GetAttributes() interface{}
 }
 
@@ -89,14 +92,14 @@ func (a *ADF) replace(n *Node, old, new string) {
 
 // Node is an ADF content node.
 type Node struct {
-	NodeType   string      `json:"type"`
+	NodeType   NodeType    `json:"type"`
 	Content    []*Node     `json:"content,omitempty"`
 	Attributes interface{} `json:"attrs,omitempty"`
 	NodeValue
 }
 
 // GetType gets node type.
-func (n Node) GetType() string { return n.NodeType }
+func (n Node) GetType() NodeType { return n.NodeType }
 
 // GetAttributes gets node attributes.
 func (n Node) GetAttributes() interface{} { return n.Attributes }
@@ -109,12 +112,12 @@ type NodeValue struct {
 
 // MarkNode is a mark node type.
 type MarkNode struct {
-	MarkType   string      `json:"type,omitempty"`
+	MarkType   NodeType    `json:"type,omitempty"`
 	Attributes interface{} `json:"attrs,omitempty"`
 }
 
 // GetType gets node type.
-func (n MarkNode) GetType() string { return n.MarkType }
+func (n MarkNode) GetType() NodeType { return n.MarkType }
 
 // GetAttributes gets node attributes.
 func (n MarkNode) GetAttributes() interface{} { return n.Attributes }
@@ -136,8 +139,8 @@ func NewTranslator(adf *ADF, tr TagOpenerCloser) *Translator {
 }
 
 // ParentNodes returns supported ADF parent nodes.
-func ParentNodes() []string {
-	return []string{
+func ParentNodes() []NodeType {
+	return []NodeType{
 		NodeBlockquote,
 		NodeBulletList,
 		NodeCodeBlock,
@@ -151,8 +154,8 @@ func ParentNodes() []string {
 }
 
 // ChildNodes returns supported ADF child nodes.
-func ChildNodes() []string {
-	return []string{
+func ChildNodes() []NodeType {
+	return []NodeType{
 		ChildNodeText,
 		ChildNodeListItem,
 		ChildNodeTableRow,
@@ -162,7 +165,7 @@ func ChildNodes() []string {
 }
 
 // IsParentNode checks if the node is a parent node.
-func IsParentNode(identifier string) bool {
+func IsParentNode(identifier NodeType) bool {
 	for _, n := range ParentNodes() {
 		if n == identifier {
 			return true
@@ -172,7 +175,7 @@ func IsParentNode(identifier string) bool {
 }
 
 // IsChildNode checks if the node is a child node.
-func IsChildNode(identifier string) bool {
+func IsChildNode(identifier NodeType) bool {
 	for _, n := range ChildNodes() {
 		if n == identifier {
 			return true
@@ -181,8 +184,8 @@ func IsChildNode(identifier string) bool {
 	return false
 }
 
-// NodeType returns the type of ADF node.
-func NodeType(identifier string) string {
+// GetADFNodeType returns the type of ADF node.
+func GetADFNodeType(identifier NodeType) NodeType {
 	if IsParentNode(identifier) {
 		return NodeTypeParent
 	}
@@ -214,7 +217,7 @@ func (a *Translator) visit(n *Node, depth int) {
 		a.visit(child, depth+1)
 	}
 
-	if NodeType(n.NodeType) == NodeTypeChild {
+	if GetADFNodeType(n.NodeType) == NodeTypeChild {
 		var tag strings.Builder
 
 		opened := make([]MarkNode, 0, len(n.Marks))
