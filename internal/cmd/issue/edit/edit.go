@@ -183,7 +183,10 @@ func (ec *editCmd) askQuestions(issue *jira.Issue) error {
 	if ec.params.body == "" {
 		body := ""
 		if issue.Fields.Description != "" {
-			body = adf.NewTranslator(issue.Fields.Description.(*adf.ADF), adf.NewMarkdownTranslator()).Translate()
+			body = adf.NewTranslator(
+				issue.Fields.Description.(*adf.ADF),
+				adf.NewJiraMarkdownTranslator(),
+			).Translate()
 		}
 		qs = append(qs, &survey.Question{
 			Name: "body",
