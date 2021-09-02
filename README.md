@@ -553,8 +553,8 @@ Sprint 1:   3
 
 ## Known Issues
 
-1. [Panels](https://developer.atlassian.com/cloud/jira/platform/apis/document/nodes/panel/) are not properly translated
-   at the moment which can cause formatting issue when creating/editing issues with panels.
+1. Not all [Atlassian nodes](https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/#nodes) are
+   translated properly at the moment which can cause formatting issue sometimes.
 
 ## Development
 1. Clone the repo.

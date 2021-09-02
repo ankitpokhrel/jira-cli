@@ -50,14 +50,14 @@ func NewMarkdownTranslator(opts ...MarkdownTranslatorOption) *MarkdownTranslator
 	return &tr
 }
 
-// WithMarkdownOpenHooks sets ignore nodes property of markdown translator.
+// WithMarkdownOpenHooks sets open hooks of a markdown translator.
 func WithMarkdownOpenHooks(hooks nodeTypeHook) MarkdownTranslatorOption {
 	return func(tr *MarkdownTranslator) {
 		tr.openHooks = hooks
 	}
 }
 
-// WithMarkdownCloseHooks sets ignore nodes property of markdown translator.
+// WithMarkdownCloseHooks sets close hooks of a markdown translator.
 func WithMarkdownCloseHooks(hooks nodeTypeHook) MarkdownTranslatorOption {
 	return func(tr *MarkdownTranslator) {
 		tr.closeHooks = hooks

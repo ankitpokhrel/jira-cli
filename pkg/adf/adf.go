@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-// NodeType is a atlassian document node type.
+// NodeType is an Atlassian document node type.
 type NodeType string
 
 // Node types.
