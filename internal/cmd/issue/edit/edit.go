@@ -70,7 +70,12 @@ func edit(cmd *cobra.Command, args []string) {
 		return issue
 	}()
 
-	cmdutil.ExitIfError(ec.askQuestions(issue))
+	originalBody := adf.NewTranslator(
+		issue.Fields.Description.(*adf.ADF),
+		adf.NewJiraMarkdownTranslator(),
+	).Translate()
+
+	cmdutil.ExitIfError(ec.askQuestions(issue, originalBody))
 
 	if !params.noInput {
 		answer := struct{ Action string }{}
@@ -132,6 +137,11 @@ func edit(cmd *cobra.Command, args []string) {
 		cmdutil.Failed("Nothing to update")
 	}
 
+	// Keep body as is if there were no changes.
+	if params.body != "" && params.body == originalBody {
+		params.body = ""
+	}
+
 	func() {
 		s := cmdutil.Info("Updating an issue...")
 		defer s.Stop()
@@ -162,7 +172,7 @@ type editCmd struct {
 	params *editParams
 }
 
-func (ec *editCmd) askQuestions(issue *jira.Issue) error {
+func (ec *editCmd) askQuestions(issue *jira.Issue, originalBody string) error {
 	if ec.params.noInput {
 		return nil
 	}
@@ -181,19 +191,12 @@ func (ec *editCmd) askQuestions(issue *jira.Issue) error {
 	}
 
 	if ec.params.body == "" {
-		body := ""
-		if issue.Fields.Description != "" {
-			body = adf.NewTranslator(
-				issue.Fields.Description.(*adf.ADF),
-				adf.NewJiraMarkdownTranslator(),
-			).Translate()
-		}
 		qs = append(qs, &survey.Question{
 			Name: "body",
 			Prompt: &surveyext.JiraEditor{
 				Editor: &survey.Editor{
 					Message:       "Description",
-					Default:       body,
+					Default:       originalBody,
 					HideDefault:   true,
 					AppendDefault: true,
 				},
