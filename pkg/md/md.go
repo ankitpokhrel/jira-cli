@@ -7,6 +7,10 @@ import (
 
 // JiraToGithubFlavored translates Jira flavored markdown to Github flavored markdown.
 func JiraToGithubFlavored(jfm string) string {
+	if jfm == "" {
+		return jfm
+	}
+
 	renderer := &cf.Renderer{Flags: cf.IgnoreMacroEscaping}
 	r := bf.New(bf.WithRenderer(renderer), bf.WithExtensions(bf.CommonExtensions))
 
