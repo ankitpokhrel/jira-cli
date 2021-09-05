@@ -2,7 +2,7 @@ project_name: jira
 
 release:
   prerelease: auto
-  name_template: "Jira CLI v{{.Version}}"
+  name_template: "v{{.Version}}"
 
 before:
   hooks:
@@ -35,7 +35,7 @@ builds:
 
 archives:
   - id: nix
-    builds: [macos, linux]
+    builds: [macOS, linux]
     <<: &archive_defaults
       name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     wrap_in_directory: true
