@@ -48,13 +48,24 @@ The tool is only tested with the latest Jira cloud since that's what I usually w
 | **Jira**  | <a href="#"><img alt="Software License" src="https://img.shields.io/badge/jira cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Software License" src="https://img.shields.io/badge/jira server-✗-red?logo=jira&style=flat-square" /></a> |
 
 ## Installation
-Install the runnable binary to your `$GOPATH/bin`.
+`jira-cli` is available as a downloadable binary for Linux, macOS, and Windows from the [releases page](https://github.com/ankitpokhrel/jira-cli/releases).
+
+#### Homebrew
+You can use Homebrew tap in macOS to install `jira-cli`.
+
+```sh
+brew tap ankitpokhrel/jira-cli
+brew install jira-cli
+```
+
+#### Manual
+You can also install the runnable binary to your `$GOPATH/bin`.
 
 ```sh
 go get github.com/ankitpokhrel/jira-cli/cmd/jira
 ```
 
-Releases and other installation options will be available later.
+See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more info. Other installation options will be available later.
 
 ## Getting started
 1. [Get a Jira API token](https://id.atlassian.com/manage-profile/security/api-tokens) and export it to your shell as a `JIRA_API_TOKEN` variable.
