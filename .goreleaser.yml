@@ -60,7 +60,7 @@ checksum:
   algorithm: sha256
 
 changelog:
-  skip: true
+  skip: false
   sort: desc
   filters:
     exclude:
