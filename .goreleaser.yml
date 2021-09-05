@@ -2,7 +2,7 @@ project_name: jira
 
 release:
   prerelease: auto
-  name_template: "Jira CLI {{.Version}}"
+  name_template: "Jira CLI v{{.Version}}"
 
 before:
   hooks:
@@ -13,12 +13,12 @@ builds:
       binary: bin/jira
       main: ./cmd/jira
       ldflags:
+        - -s -w
         - -X github.com/ankitpokhrel/jira-cli/internal/version.Version={{.Version}}
         - -X github.com/ankitpokhrel/jira-cli/internal/version.GitCommit={{.Commit}}
         - -X github.com/ankitpokhrel/jira-cli/internal/version.BuildDate={{time "2006-01-02"}}"
       env:
         - CGO_ENABLED=0
-        - GO111MODULE=on
     id: macOS
     goos: [darwin]
     goarch: [amd64, arm64]
@@ -31,7 +31,7 @@ builds:
   - <<: *build_defaults
     id: windows
     goos: [windows]
-    goarch: [386, amd64]
+    goarch: [amd64]
 
 archives:
   - id: nix
@@ -58,3 +58,13 @@ archives:
 checksum:
   name_template: 'checksums.txt'
   algorithm: sha256
+
+changelog:
+  skip: false
+  sort: desc
+  filters:
+    exclude:
+      - '^doc:'
+      - '^dev:'
+      - '^build:'
+      - '^ci:'
