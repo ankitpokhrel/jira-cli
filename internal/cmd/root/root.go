@@ -63,7 +63,7 @@ func NewCmdRoot() *cobra.Command {
 		},
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			subCmd := cmd.Name()
-			if subCmd == "init" || subCmd == "help" || subCmd == "jira" {
+			if !cmdRequireToken(subCmd) {
 				return
 			}
 
@@ -110,6 +110,24 @@ func addChildCommands(cmd *cobra.Command) {
 		completion.NewCmdCompletion(),
 		version.NewCmdVersion(),
 	)
+}
+
+func cmdRequireToken(cmd string) bool {
+	allowList := []string{
+		"init",
+		"help",
+		"jira",
+		"version",
+		"completion",
+	}
+
+	for _, item := range allowList {
+		if item == cmd {
+			return false
+		}
+	}
+
+	return true
 }
 
 func checkForJiraToken() {
