@@ -20,7 +20,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.14 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/pkg/browser v0.0.0-20210606212950-a7b7a6107d32
+	github.com/pkg/browser v0.0.0-20210904010418-6d279e18f982
 	github.com/rivo/tview v0.0.0-20210217110421-8a8f78a6dd01
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/spf13/cobra v1.1.3
