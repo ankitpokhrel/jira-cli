@@ -14,7 +14,7 @@ type Me struct {
 
 // Me fetches response from /myself endpoint.
 func (c *Client) Me() (*Me, error) {
-	res, err := c.Get(context.Background(), "/myself", nil)
+	res, err := c.GetV2(context.Background(), "/myself", nil)
 	if err != nil {
 		return nil, err
 	}

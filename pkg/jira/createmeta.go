@@ -39,7 +39,7 @@ func (c *Client) GetCreateMeta(req *CreateMetaRequest) (*CreateMetaResponse, err
 		path += fmt.Sprintf("&issuetypeNames=%s", req.IssueTypeNames)
 	}
 
-	res, err := c.Get(context.Background(), path, nil)
+	res, err := c.GetV2(context.Background(), path, nil)
 	if err != nil {
 		return nil, err
 	}

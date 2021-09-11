@@ -13,7 +13,7 @@ func TestMe(t *testing.T) {
 	var unexpectedStatusCode bool
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/rest/api/3/myself", r.URL.Path)
+		assert.Equal(t, "/rest/api/2/myself", r.URL.Path)
 
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
