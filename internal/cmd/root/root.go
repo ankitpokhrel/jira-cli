@@ -76,13 +76,21 @@ func NewCmdRoot() *cobra.Command {
 		},
 	}
 
+	configHome, err := cmdutil.GetConfigHome()
+	if err != nil {
+		cmdutil.Failed("Error: %s", err)
+	}
+
 	cmd.PersistentFlags().StringVarP(
 		&config, "config", "c", "",
-		fmt.Sprintf("Config file (default is $HOME/%s/%s.yml)", jiraConfig.Dir, jiraConfig.FileName),
+		fmt.Sprintf("Config file (default is %s/%s/%s.yml)", configHome, jiraConfig.Dir, jiraConfig.FileName),
 	)
 	cmd.PersistentFlags().StringP(
 		"project", "p", "",
-		fmt.Sprintf("Jira project to look into (defaults to value from $HOME/%s/%s.yml)", jiraConfig.Dir, jiraConfig.FileName),
+		fmt.Sprintf(
+			"Jira project to look into (defaults to %s/%s/%s.yml)",
+			configHome, jiraConfig.Dir, jiraConfig.FileName,
+		),
 	)
 	cmd.PersistentFlags().BoolVar(&debug, "debug", false, "Turn on debug output")
 
