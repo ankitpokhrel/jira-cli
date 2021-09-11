@@ -45,7 +45,7 @@ The tool is only tested with the latest Jira cloud since that's what I usually w
 
 | Platform | <a href="#"><img alt="Software License" src="https://img.shields.io/badge/linux-%E2%9C%93-dark--green?logo=linux&style=flat-square" /></a><a href="#"><img alt="Software License" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=macos&style=flat-square" /></a><a href="#"><img alt="Software License" src="https://img.shields.io/badge/windows-partial-yellow?logo=windows&style=flat-square" /></a> |
 | :------------- | :----------: |
-| **Jira**  | <a href="#"><img alt="Software License" src="https://img.shields.io/badge/jira cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Software License" src="https://img.shields.io/badge/jira server-✗-red?logo=jira&style=flat-square" /></a> |
+| **Jira**  | <a href="#"><img alt="Software License" src="https://img.shields.io/badge/jira cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Software License" src="https://img.shields.io/badge/jira%20server-WIP-orange?logo=jira&style=flat-square" /></a> |
 
 ## Installation
 `jira-cli` is available as a downloadable binary for Linux, macOS, and Windows from the [releases page](https://github.com/ankitpokhrel/jira-cli/releases).
@@ -68,9 +68,21 @@ go get github.com/ankitpokhrel/jira-cli/cmd/jira
 See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more info. Other installation options will be available later.
 
 ## Getting started
-1. [Get a Jira API token](https://id.atlassian.com/manage-profile/security/api-tokens) and export it to your shell as a `JIRA_API_TOKEN` variable.
-    Add it to your shell configuration file, for instance, `$HOME/.bashrc`, so that the variable is always available.
-2. Run `jira init` to generate a config file required for the tool.
+
+#### Cloud server
+
+1. [Get a Jira API token](https://id.atlassian.com/manage-profile/security/api-tokens) and export it to your shell as
+   a `JIRA_API_TOKEN` variable. Add it to your shell configuration file, for instance, `$HOME/.bashrc`, so that the
+   variable is always available.
+2. Run `jira init`, select installation type as `Cloud`, and provide required details to generate a config file required
+   for the tool.
+
+#### On-premise Installation
+
+1. Export the password you use to login to Jira as a `JIRA_API_TOKEN` variable. Add it to your shell configuration file,
+   for instance, `$HOME/.bashrc`, so that the variable is always available.
+2. Run `jira init`, select installation type as `Local`, and provide required details to generate a config file required
+   for the tool.
 
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.

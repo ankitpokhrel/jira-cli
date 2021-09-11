@@ -22,6 +22,11 @@ const (
 	FileName = ".config"
 	// FileExt is a jira-cli config file extension.
 	FileExt = "yml"
+
+	// InstallationTypeCloud represents Jira cloud server.
+	InstallationTypeCloud = "Cloud"
+	// InstallationTypeLocal represents on-premise Jira servers.
+	InstallationTypeLocal = "Local"
 )
 
 var (
@@ -34,12 +39,13 @@ var (
 // JiraCLIConfig is a Jira CLI config.
 type JiraCLIConfig struct {
 	value struct {
-		server     string
-		login      string
-		project    string
-		board      *jira.Board
-		epic       *jira.Epic
-		issueTypes []*jira.IssueType
+		installation string
+		server       string
+		login        string
+		project      string
+		board        *jira.Board
+		epic         *jira.Epic
+		issueTypes   []*jira.IssueType
 	}
 	jiraClient         *jira.Client
 	projectSuggestions []string
@@ -65,6 +71,9 @@ func (c *JiraCLIConfig) Generate() error {
 
 	if ce && !shallOverwrite() {
 		return ErrSkip
+	}
+	if err := c.configureInstallationType(); err != nil {
+		return err
 	}
 	if err := c.configureServerAndLoginDetails(); err != nil {
 		return err
@@ -93,6 +102,24 @@ func (c *JiraCLIConfig) Generate() error {
 	return c.write()
 }
 
+func (c *JiraCLIConfig) configureInstallationType() error {
+	qs := &survey.Select{
+		Message: "Installation type:",
+		Help:    "Is this a cloud installation or an on-premise (local) installation.",
+		Options: []string{"Cloud", "Local"},
+		Default: "Cloud",
+	}
+
+	var installation string
+	if err := survey.AskOne(qs, &installation); err != nil {
+		return err
+	}
+
+	c.value.installation = installation
+
+	return nil
+}
+
 func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
 	qs := []*survey.Question{
 		{
@@ -119,7 +146,10 @@ func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
 				return nil
 			},
 		},
-		{
+	}
+
+	if c.value.installation == InstallationTypeCloud {
+		qs = append(qs, &survey.Question{
 			Name: "login",
 			Prompt: &survey.Input{
 				Message: "Login email:",
@@ -146,7 +176,28 @@ func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
 
 				return nil
 			},
-		},
+		})
+	} else if c.value.installation == InstallationTypeLocal {
+		qs = append(qs, &survey.Question{
+			Name: "login",
+			Prompt: &survey.Input{
+				Message: "Login username:",
+				Help:    "This is the username you use to login to your jira account.",
+			},
+			Validate: func(val interface{}) error {
+				errInvalidUser := fmt.Errorf("not a valid user")
+
+				str, ok := val.(string)
+				if !ok {
+					return errInvalidUser
+				}
+				if len(str) < 3 || len(str) > 254 {
+					return errInvalidUser
+				}
+
+				return nil
+			},
+		})
 	}
 
 	ans := struct {
@@ -251,7 +302,11 @@ func (c *JiraCLIConfig) configureMetadata() error {
 		}
 		v := value.(map[string]interface{})
 		if v["name"].(string) == "Epic Name" {
-			epicKey = v["key"].(string)
+			if c.value.installation == InstallationTypeCloud {
+				epicKey = v["key"].(string)
+			} else if c.value.installation == InstallationTypeLocal {
+				epicKey = v["fieldId"].(string)
+			}
 			break
 		}
 	}
@@ -261,6 +316,7 @@ func (c *JiraCLIConfig) configureMetadata() error {
 }
 
 func (c *JiraCLIConfig) write() error {
+	viper.Set("installation", c.value.installation)
 	viper.Set("server", c.value.server)
 	viper.Set("login", c.value.login)
 	viper.Set("project", c.value.project)

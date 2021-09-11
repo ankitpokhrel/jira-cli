@@ -14,7 +14,7 @@ func TestProjects(t *testing.T) {
 	var unexpectedStatusCode bool
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/rest/api/3/project", r.URL.Path)
+		assert.Equal(t, "/rest/api/2/project", r.URL.Path)
 
 		qs := r.URL.Query()
 
