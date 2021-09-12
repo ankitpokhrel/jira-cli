@@ -224,7 +224,7 @@ func TestGetIssueLinkTypes(t *testing.T) {
 	var unexpectedStatusCode bool
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/rest/api/3/issueLinkType", r.URL.Path)
+		assert.Equal(t, "/rest/api/2/issueLinkType", r.URL.Path)
 
 		if unexpectedStatusCode {
 			w.WriteHeader(400)

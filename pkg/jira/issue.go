@@ -109,7 +109,7 @@ func (c *Client) AssignIssue(key, accountID string) error {
 
 // GetIssueLinkTypes fetches issue link types using GET /issueLinkType endpoint.
 func (c *Client) GetIssueLinkTypes() ([]*IssueLinkType, error) {
-	res, err := c.Get(context.Background(), "/issueLinkType", nil)
+	res, err := c.GetV2(context.Background(), "/issueLinkType", nil)
 	if err != nil {
 		return nil, err
 	}
