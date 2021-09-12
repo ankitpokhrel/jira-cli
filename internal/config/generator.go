@@ -22,11 +22,6 @@ const (
 	FileName = ".config"
 	// FileExt is a jira-cli config file extension.
 	FileExt = "yml"
-
-	// InstallationTypeCloud represents Jira cloud server.
-	InstallationTypeCloud = "Cloud"
-	// InstallationTypeLocal represents on-premise Jira servers.
-	InstallationTypeLocal = "Local"
 )
 
 var (
@@ -148,7 +143,7 @@ func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
 		},
 	}
 
-	if c.value.installation == InstallationTypeCloud {
+	if c.value.installation == jira.InstallationTypeCloud {
 		qs = append(qs, &survey.Question{
 			Name: "login",
 			Prompt: &survey.Input{
@@ -177,7 +172,7 @@ func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
 				return nil
 			},
 		})
-	} else if c.value.installation == InstallationTypeLocal {
+	} else if c.value.installation == jira.InstallationTypeLocal {
 		qs = append(qs, &survey.Question{
 			Name: "login",
 			Prompt: &survey.Input{
@@ -302,9 +297,9 @@ func (c *JiraCLIConfig) configureMetadata() error {
 		}
 		v := value.(map[string]interface{})
 		if v["name"].(string) == "Epic Name" {
-			if c.value.installation == InstallationTypeCloud {
+			if c.value.installation == jira.InstallationTypeCloud {
 				epicKey = v["key"].(string)
-			} else if c.value.installation == InstallationTypeLocal {
+			} else if c.value.installation == jira.InstallationTypeLocal {
 				epicKey = v["fieldId"].(string)
 			}
 			break

@@ -61,7 +61,7 @@ func clone(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Fetching issue details...")
 		defer s.Stop()
 
-		issue, err := api.Client(jira.Config{Debug: cc.params.debug}).GetIssue(key)
+		issue, err := api.ProxyGetIssue(client, key)
 		cmdutil.ExitIfError(err)
 
 		return issue
@@ -83,7 +83,7 @@ func clone(cmd *cobra.Command, args []string) {
 			Components: cp.components,
 		}
 
-		resp, err := client.Create(&cr)
+		resp, err := api.ProxyCreate(client, &cr)
 		cmdutil.ExitIfError(err)
 
 		return resp.Key
@@ -182,7 +182,12 @@ func (cc *cloneCmd) getActualCreateParams(issue *jira.Issue) *createParams {
 		cp.components = cc.params.components
 	}
 
-	body := issue.Fields.Description.(*adf.ADF)
+	var body interface{}
+
+	body, isADF := issue.Fields.Description.(*adf.ADF)
+	if !isADF {
+		body = issue.Fields.Description.(string)
+	}
 
 	if cc.params.replace != "" {
 		pieces := strings.Split(cc.params.replace, ":")
@@ -193,7 +198,12 @@ func (cc *cloneCmd) getActualCreateParams(issue *jira.Issue) *createParams {
 			from, to := pieces[0], pieces[1]
 
 			cp.summary = strings.ReplaceAll(cp.summary, from, to)
-			body.ReplaceAll(from, to)
+
+			if isADF {
+				body.(*adf.ADF).ReplaceAll(from, to)
+			} else {
+				body = strings.ReplaceAll(body.(string), from, to)
+			}
 		}
 	}
 	cp.body = body

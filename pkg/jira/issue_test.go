@@ -274,7 +274,7 @@ func TestLinkIssue(t *testing.T) {
 	var unexpectedStatusCode bool
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/rest/api/3/issueLink", r.URL.Path)
+		assert.Equal(t, "/rest/api/2/issueLink", r.URL.Path)
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
