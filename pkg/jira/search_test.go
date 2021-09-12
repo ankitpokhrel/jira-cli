@@ -13,12 +13,12 @@ import (
 
 func TestSearch(t *testing.T) {
 	var (
-		apiVersionV2         bool
+		apiVersion2          bool
 		unexpectedStatusCode bool
 	)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if apiVersionV2 {
+		if apiVersion2 {
 			assert.Equal(t, "/rest/api/2/search", r.URL.Path)
 		} else {
 			assert.Equal(t, "/rest/api/3/search", r.URL.Path)
@@ -139,7 +139,7 @@ func TestSearch(t *testing.T) {
 	}
 	assert.Equal(t, expected, actual)
 
-	apiVersionV2 = true
+	apiVersion2 = true
 	unexpectedStatusCode = true
 
 	_, err = client.SearchV2("project=TEST", 100)

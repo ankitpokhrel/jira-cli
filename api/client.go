@@ -73,8 +73,8 @@ func ProxyGetIssue(c *jira.Client, key string) (*jira.Issue, error) {
 	return issue, err
 }
 
-// ProxySearch uses either a v2 or v3 version of the Jira GET /search
-// endpoint to fetch the issue details based on configured installation type.
+// ProxySearch uses either a v2 or v3 version of the Jira GET /search endpoint
+// to search for the relevant issues based on configured installation type.
 // Defaults to v3 if installation type is not defined in the config.
 func ProxySearch(c *jira.Client, jql string, limit uint) (*jira.SearchResult, error) {
 	var (
