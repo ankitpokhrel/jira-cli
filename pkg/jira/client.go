@@ -16,6 +16,11 @@ const (
 	// RFC3339 is jira datetime format.
 	RFC3339 = "2006-01-02T15:04:05-0700"
 
+	// InstallationTypeCloud represents Jira cloud server.
+	InstallationTypeCloud = "Cloud"
+	// InstallationTypeLocal represents on-premise Jira servers.
+	InstallationTypeLocal = "Local"
+
 	baseURLv3 = "/rest/api/3"
 	baseURLv2 = "/rest/api/2"
 	baseURLv1 = "/rest/agile/1.0"

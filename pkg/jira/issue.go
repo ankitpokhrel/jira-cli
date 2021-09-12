@@ -162,7 +162,7 @@ func (c *Client) LinkIssue(inwardIssue, outwardIssue, linkType string) error {
 		return err
 	}
 
-	res, err := c.Post(context.Background(), "/issueLink", body, Header{
+	res, err := c.PostV2(context.Background(), "/issueLink", body, Header{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	})
