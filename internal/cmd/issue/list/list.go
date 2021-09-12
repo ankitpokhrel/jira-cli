@@ -73,7 +73,7 @@ func List(cmd *cobra.Command, _ []string) {
 		q, err := query.NewIssue(project, cmd.Flags())
 		cmdutil.ExitIfError(err)
 
-		resp, err := api.Client(jira.Config{Debug: debug}).Search(q.Get(), q.Params().Limit)
+		resp, err := api.ProxySearch(api.Client(jira.Config{Debug: debug}), q.Get(), q.Params().Limit)
 		cmdutil.ExitIfError(err)
 
 		return resp.Issues, resp.Total

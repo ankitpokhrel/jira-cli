@@ -154,7 +154,7 @@ func epicExplorerView(flags query.FlagParser, project, server string, client *ji
 		s := cmdutil.Info("Fetching epics...")
 		defer s.Stop()
 
-		resp, err := client.Search(q.Get(), q.Params().Limit)
+		resp, err := api.ProxySearch(client, q.Get(), q.Params().Limit)
 		cmdutil.ExitIfError(err)
 
 		return resp.Issues, resp.Total

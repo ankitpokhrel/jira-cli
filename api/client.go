@@ -72,3 +72,23 @@ func ProxyGetIssue(c *jira.Client, key string) (*jira.Issue, error) {
 
 	return issue, err
 }
+
+// ProxySearch uses either a v2 or v3 version of the Jira GET /search
+// endpoint to fetch the issue details based on configured installation type.
+// Defaults to v3 if installation type is not defined in the config.
+func ProxySearch(c *jira.Client, jql string, limit uint) (*jira.SearchResult, error) {
+	var (
+		issues *jira.SearchResult
+		err    error
+	)
+
+	it := viper.GetString("installation")
+
+	if it == jira.InstallationTypeLocal {
+		issues, err = c.SearchV2(jql, limit)
+	} else {
+		issues, err = c.Search(jql, limit)
+	}
+
+	return issues, err
+}

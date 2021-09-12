@@ -16,11 +16,31 @@ type SearchResult struct {
 	Issues     []*Issue `json:"issues"`
 }
 
-// Search fetches response from /search endpoint.
+// Search searches for issues using v3 version of the Jira GET /search endpoint.
 func (c *Client) Search(jql string, limit uint) (*SearchResult, error) {
+	return c.search(jql, limit, apiVersion3)
+}
+
+// SearchV2 searches an issues using v2 version of the Jira GET /search endpoint.
+func (c *Client) SearchV2(jql string, limit uint) (*SearchResult, error) {
+	return c.search(jql, limit, apiVersion2)
+}
+
+func (c *Client) search(jql string, limit uint, ver string) (*SearchResult, error) {
+	var (
+		res *http.Response
+		err error
+	)
+
 	path := fmt.Sprintf("/search?jql=%s&maxResults=%d", url.QueryEscape(jql), limit)
 
-	res, err := c.Get(context.Background(), path, nil)
+	switch ver {
+	case apiVersion2:
+		res, err = c.GetV2(context.Background(), path, nil)
+	default:
+		res, err = c.Get(context.Background(), path, nil)
+	}
+
 	if err != nil {
 		return nil, err
 	}
