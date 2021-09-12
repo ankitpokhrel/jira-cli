@@ -87,7 +87,8 @@ func epicList(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		epicExplorerView(cmd.Flags(), project, server, client)
 	} else {
-		singleEpicView(cmd.Flags(), args[0], project, server, client)
+		key := cmdutil.GetJiraIssueKey(project, args[0])
+		singleEpicView(cmd.Flags(), key, project, server, client)
 	}
 }
 
@@ -154,7 +155,7 @@ func epicExplorerView(flags query.FlagParser, project, server string, client *ji
 		s := cmdutil.Info("Fetching epics...")
 		defer s.Stop()
 
-		resp, err := client.Search(q.Get(), q.Params().Limit)
+		resp, err := api.ProxySearch(client, q.Get(), q.Params().Limit)
 		cmdutil.ExitIfError(err)
 
 		return resp.Issues, resp.Total
