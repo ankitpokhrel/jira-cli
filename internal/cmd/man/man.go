@@ -12,7 +12,7 @@ func NewCmdMan() *cobra.Command {
 		Use:   "man",
 		Short: "Help generate man(7) pages for Jira CLI.",
 		Long:  "Help generate man pages for Jira CLI compatible with UNIX style man pages.",
-		RunE:   man,
+		RunE:  man,
 	}
 
 	gm := generate.NewCmdGenerate()

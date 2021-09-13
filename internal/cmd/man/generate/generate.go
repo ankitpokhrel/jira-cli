@@ -16,12 +16,12 @@ const (
 $ jira man generate --create --output /this/path/does-not-exist`
 )
 
-// NewCmdGenerate is a list command.
+// NewCmdGenerate is a generate command.
 func NewCmdGenerate() *cobra.Command {
 	return &cobra.Command{
-		Use:   "generate",
-		Short: "Generate man(7) pages for Jira CLI.",
-		Long:  "Generate man(7) pages for the various commands used in Jira CLI compatible with UNIX man pages.",
+		Use:     "generate",
+		Short:   "Generate man(7) pages for Jira CLI.",
+		Long:    "Generate man(7) pages for the various commands used in Jira CLI compatible with UNIX man pages.",
 		Example: examples,
 		Aliases: []string{"gen"},
 		Run:     generateManPages,
@@ -54,7 +54,7 @@ func generateManPages(cmd *cobra.Command, _ []string) {
 	}
 
 	header := &doc.GenManHeader{
-		Title: "Jira CLI",
+		Title:   "Jira CLI",
 		Section: "7",
 	}
 
@@ -65,7 +65,7 @@ func generateManPages(cmd *cobra.Command, _ []string) {
 	}
 }
 
-// SetFlags sets flags supported by a list command.
+// SetFlags sets flags supported by a generate command.
 func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().SortFlags = false
 
