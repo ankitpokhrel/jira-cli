@@ -12,6 +12,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/epic"
 	initCmd "github.com/ankitpokhrel/jira-cli/internal/cmd/init"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/man"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/me"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/open"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/project"
@@ -117,6 +118,7 @@ func addChildCommands(cmd *cobra.Command) {
 		me.NewCmdMe(),
 		completion.NewCmdCompletion(),
 		version.NewCmdVersion(),
+		man.NewCmdMan(),
 	)
 }
 
