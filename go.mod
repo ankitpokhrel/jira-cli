@@ -9,6 +9,7 @@ require (
 	github.com/briandowns/spinner v1.16.0
 	github.com/charmbracelet/glamour v0.3.0
 	github.com/cli/safeexec v1.0.0
+	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/fatih/color v1.12.0
 	github.com/gdamore/tcell/v2 v2.3.11
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
