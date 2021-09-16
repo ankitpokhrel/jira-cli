@@ -129,6 +129,7 @@ func cmdRequireToken(cmd string) bool {
 		"jira",
 		"version",
 		"completion",
+		"man",
 	}
 
 	for _, item := range allowList {
