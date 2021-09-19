@@ -182,11 +182,18 @@ func (cc *cloneCmd) getActualCreateParams(issue *jira.Issue) *createParams {
 		cp.components = cc.params.components
 	}
 
-	var body interface{}
+	var (
+		body  interface{}
+		isADF bool
+	)
 
-	body, isADF := issue.Fields.Description.(*adf.ADF)
-	if !isADF {
-		body = issue.Fields.Description.(string)
+	if issue.Fields.Description != nil {
+		body, isADF = issue.Fields.Description.(*adf.ADF)
+		if !isADF {
+			body = issue.Fields.Description.(string)
+		}
+	} else {
+		body = ""
 	}
 
 	if cc.params.replace != "" {
