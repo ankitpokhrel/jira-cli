@@ -109,14 +109,15 @@ func clone(cmd *cobra.Command, args []string) {
 		go func() {
 			defer wg.Done()
 
-			user, err := client.UserSearch(&jira.UserSearchOptions{
-				Query: cp.assignee,
+			user, err := api.ProxyUserSearch(client, &jira.UserSearchOptions{
+				Query:   cp.assignee,
+				Project: project,
 			})
 			if err != nil || len(user) == 0 {
 				fmt.Println()
 				cmdutil.Failed("Unable to find assignee")
 			}
-			if err = client.AssignIssue(clonedIssueKey, user[0].AccountID); err != nil {
+			if err = api.ProxyAssignIssue(client, clonedIssueKey, user[0], jira.AssigneeDefault); err != nil {
 				fmt.Println()
 				cmdutil.Failed("Unable to set assignee: %s", err.Error())
 			}

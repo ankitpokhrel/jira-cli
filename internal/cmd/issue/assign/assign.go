@@ -67,10 +67,16 @@ func assign(cmd *cobra.Command, args []string) {
 		users:  nil,
 		params: params,
 	}
+	lu := strings.ToLower(ac.params.user)
 
 	cmdutil.ExitIfError(ac.setIssueKey(project))
-	cmdutil.ExitIfError(ac.setAvailableUsers())
-	cmdutil.ExitIfError(ac.setAssignee())
+
+	if lu != strings.ToLower(optionNone) && lu != "x" && lu != jira.AssigneeDefault {
+		cmdutil.ExitIfError(ac.setAvailableUsers(project))
+		cmdutil.ExitIfError(ac.setAssignee(project))
+
+		lu = strings.ToLower(ac.params.user)
+	}
 
 	u, err := ac.verifyAssignee()
 	if err != nil {
@@ -80,11 +86,8 @@ func assign(cmd *cobra.Command, args []string) {
 
 	var assignee, uname string
 
-	lu := strings.ToLower(ac.params.user)
-
 	switch {
 	case u != nil:
-		assignee = u.AccountID
 		uname = u.Name
 	case lu == strings.ToLower(optionNone) || lu == "x":
 		assignee = jira.AssigneeNone
@@ -103,7 +106,7 @@ func assign(cmd *cobra.Command, args []string) {
 		}
 		defer s.Stop()
 
-		err := client.AssignIssue(ac.params.key, assignee)
+		err = api.ProxyAssignIssue(client, ac.params.key, u, assignee)
 		cmdutil.ExitIfError(err)
 	}()
 
@@ -168,7 +171,7 @@ func (ac *assignCmd) setIssueKey(project string) error {
 	return nil
 }
 
-func (ac *assignCmd) setAssignee() error {
+func (ac *assignCmd) setAssignee(project string) error {
 	if ac.params.user != "" && len(ac.users) == 1 {
 		ac.params.user = ac.users[0].Name
 		return nil
@@ -223,6 +226,9 @@ func (ac *assignCmd) setAssignee() error {
 		if err := ac.getSearchKeyword(); err != nil {
 			return err
 		}
+		if err := ac.searchAndAssignUser(project); err != nil {
+			return err
+		}
 		last = true
 	}
 	ac.params.user = ans
@@ -275,19 +281,17 @@ func (ac *assignCmd) getSearchKeyword() error {
 			return nil
 		},
 	}
-	if err := survey.Ask([]*survey.Question{qs}, &ac.params.user); err != nil {
-		return err
-	}
-	return ac.searchAndAssignUser()
+	return survey.Ask([]*survey.Question{qs}, &ac.params.user)
 }
 
-func (ac *assignCmd) searchAndAssignUser() error {
+func (ac *assignCmd) searchAndAssignUser(project string) error {
 	q := ac.params.user
 	if q == "" {
 		q = "*"
 	}
-	u, err := ac.client.UserSearch(&jira.UserSearchOptions{
+	u, err := api.ProxyUserSearch(ac.client, &jira.UserSearchOptions{
 		Query:      q,
+		Project:    project,
 		MaxResults: maxResults,
 	})
 	if err != nil {
@@ -297,11 +301,11 @@ func (ac *assignCmd) searchAndAssignUser() error {
 	return nil
 }
 
-func (ac *assignCmd) setAvailableUsers() error {
+func (ac *assignCmd) setAvailableUsers(project string) error {
 	s := cmdutil.Info("Fetching available users. Please wait...")
 	defer s.Stop()
 
-	return ac.searchAndAssignUser()
+	return ac.searchAndAssignUser(project)
 }
 
 func (ac *assignCmd) verifyAssignee() (*jira.User, error) {

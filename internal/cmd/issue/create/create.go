@@ -129,13 +129,14 @@ func create(cmd *cobra.Command, _ []string) {
 	cmdutil.Success("Issue created\n%s/browse/%s", server, key)
 
 	if params.assignee != "" {
-		user, err := client.UserSearch(&jira.UserSearchOptions{
-			Query: params.assignee,
+		user, err := api.ProxyUserSearch(client, &jira.UserSearchOptions{
+			Query:   params.assignee,
+			Project: project,
 		})
 		if err != nil || len(user) == 0 {
 			cmdutil.Failed("Unable to find assignee")
 		}
-		if err = client.AssignIssue(key, user[0].AccountID); err != nil {
+		if err = api.ProxyAssignIssue(client, key, user[0], jira.AssigneeDefault); err != nil {
 			cmdutil.Failed("Unable to set assignee: %s", err.Error())
 		}
 	}

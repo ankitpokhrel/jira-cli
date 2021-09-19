@@ -14,6 +14,7 @@ var ErrInvalidSearchOption = fmt.Errorf("invalid search option")
 
 // UserSearchOptions holds options to search for user.
 type UserSearchOptions struct {
+	Project    string
 	Query      string
 	Username   string
 	AccountID  string
@@ -21,14 +22,30 @@ type UserSearchOptions struct {
 	MaxResults int
 }
 
-// UserSearch search for user details using GET /user/search endpoint.
+// UserSearch search for user details using v3 version of the GET /user/assignable/search endpoint.
 func (c *Client) UserSearch(opt *UserSearchOptions) ([]*User, error) {
+	return c.userSearch(opt, apiVersion3)
+}
+
+// UserSearchV2 search for user details using v2 version of the GET /user/assignable/search endpoint.
+func (c *Client) UserSearchV2(opt *UserSearchOptions) ([]*User, error) {
+	return c.userSearch(opt, apiVersion2)
+}
+
+func (c *Client) userSearch(opt *UserSearchOptions, ver string) ([]*User, error) {
 	if opt == nil {
 		return nil, ErrInvalidSearchOption
 	}
 
-	var opts []string
+	var (
+		opts []string
+		res  *http.Response
+		err  error
+	)
 
+	if opt.Project != "" {
+		opts = append(opts, fmt.Sprintf("project=%s", opt.Project))
+	}
 	if opt.Query != "" {
 		opts = append(opts, fmt.Sprintf("query=%s", url.QueryEscape(opt.Query)))
 	}
@@ -47,9 +64,16 @@ func (c *Client) UserSearch(opt *UserSearchOptions) ([]*User, error) {
 	if len(opts) == 0 {
 		return nil, ErrInvalidSearchOption
 	}
-	path := fmt.Sprintf("%s?%s", "/user/search", strings.Join(opts, "&"))
 
-	res, err := c.Get(context.Background(), path, nil)
+	path := fmt.Sprintf("%s?%s", "/user/assignable/search", strings.Join(opts, "&"))
+
+	switch ver {
+	case apiVersion2:
+		res, err = c.GetV2(context.Background(), path, nil)
+	default:
+		res, err = c.Get(context.Background(), path, nil)
+	}
+
 	if err != nil {
 		return nil, err
 	}

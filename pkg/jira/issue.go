@@ -11,15 +11,11 @@ import (
 )
 
 const (
-	// AssigneeNone is a empty assignee.
+	// AssigneeNone is an empty assignee.
 	AssigneeNone = "none"
 	// AssigneeDefault is a default assignee.
 	AssigneeDefault = "default"
 )
-
-type assignRequest struct {
-	AccountID *string `json:"accountId"`
-}
 
 // GetIssue fetches issue details using GET /issue/{key} endpoint.
 func (c *Client) GetIssue(key string) (*Issue, error) {
@@ -72,27 +68,64 @@ func (c *Client) GetIssueV2(key string) (*Issue, error) {
 	return &out, nil
 }
 
-// AssignIssue assigns issue to the user using PUT /issue/{key}/assignee endpoint.
-func (c *Client) AssignIssue(key, accountID string) error {
+// AssignIssue assigns issue to the user using v3 version of the PUT /issue/{key}/assignee endpoint.
+func (c *Client) AssignIssue(key, assignee string) error {
+	return c.assignIssue(key, assignee, apiVersion3)
+}
+
+// AssignIssueV2 assigns issue to the user using v2 version of the PUT /issue/{key}/assignee endpoint.
+func (c *Client) AssignIssueV2(key, assignee string) error {
+	return c.assignIssue(key, assignee, apiVersion2)
+}
+
+func (c *Client) assignIssue(key, assignee, ver string) error {
+	path := fmt.Sprintf("/issue/%s/assignee", key)
+
 	aid := new(string)
-	switch accountID {
+	switch assignee {
 	case AssigneeNone:
 		*aid = "-1"
 	case AssigneeDefault:
 		aid = nil
 	default:
-		*aid = accountID
-	}
-	body, err := json.Marshal(assignRequest{AccountID: aid})
-	if err != nil {
-		return err
+		*aid = assignee
 	}
 
-	path := fmt.Sprintf("/issue/%s/assignee", key)
-	res, err := c.Put(context.Background(), path, body, Header{
-		"Accept":       "application/json",
-		"Content-Type": "application/json",
-	})
+	var (
+		res  *http.Response
+		err  error
+		body []byte
+	)
+
+	switch ver {
+	case apiVersion2:
+		type assignRequest struct {
+			Name *string `json:"name"`
+		}
+
+		body, err = json.Marshal(assignRequest{Name: aid})
+		if err != nil {
+			return err
+		}
+		res, err = c.PutV2(context.Background(), path, body, Header{
+			"Accept":       "application/json",
+			"Content-Type": "application/json",
+		})
+	default:
+		type assignRequest struct {
+			AccountID *string `json:"accountId"`
+		}
+
+		body, err = json.Marshal(assignRequest{AccountID: aid})
+		if err != nil {
+			return err
+		}
+		res, err = c.Put(context.Background(), path, body, Header{
+			"Accept":       "application/json",
+			"Content-Type": "application/json",
+		})
+	}
+
 	if err != nil {
 		return err
 	}

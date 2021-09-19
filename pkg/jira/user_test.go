@@ -11,10 +11,17 @@ import (
 )
 
 func TestUserSearch(t *testing.T) {
-	var unexpectedStatusCode bool
+	var (
+		apiVersion2          bool
+		unexpectedStatusCode bool
+	)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/rest/api/3/user/search", r.URL.Path)
+		if apiVersion2 {
+			assert.Equal(t, "/rest/api/2/user/assignable/search", r.URL.Path)
+		} else {
+			assert.Equal(t, "/rest/api/3/user/assignable/search", r.URL.Path)
+		}
 
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
@@ -70,7 +77,9 @@ func TestUserSearch(t *testing.T) {
 	_, err = client.UserSearch(&UserSearchOptions{})
 	assert.Error(t, ErrInvalidSearchOption, err)
 
-	_, err = client.UserSearch(&UserSearchOptions{
+	apiVersion2 = true
+
+	_, err = client.UserSearchV2(&UserSearchOptions{
 		Username: "doe",
 	})
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
