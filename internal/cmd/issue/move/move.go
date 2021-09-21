@@ -45,6 +45,7 @@ STATE		State you want to transition the issue to`,
 
 func move(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project")
+	installation := viper.GetString("installation")
 	params := parseArgsAndFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})
 	mc := moveCmd{
@@ -55,14 +56,14 @@ func move(cmd *cobra.Command, args []string) {
 
 	cmdutil.ExitIfError(mc.setIssueKey(project))
 	cmdutil.ExitIfError(mc.setAvailableTransitions())
-	cmdutil.ExitIfError(mc.setDesiredState())
+	cmdutil.ExitIfError(mc.setDesiredState(installation))
 
 	if mc.params.state == optionCancel {
 		cmdutil.Fail("Action aborted")
 		os.Exit(0)
 	}
 
-	tr, err := mc.verifyTransition()
+	tr, err := mc.verifyTransition(installation)
 	if err != nil {
 		fmt.Println()
 		cmdutil.Failed("Error: %s", err.Error())
@@ -143,20 +144,21 @@ func (mc *moveCmd) setIssueKey(project string) error {
 	return nil
 }
 
-func (mc *moveCmd) setDesiredState() error {
+func (mc *moveCmd) setDesiredState(it string) error {
 	if mc.params.state != "" {
 		return nil
 	}
 
 	var (
-		options []string
+		options = make([]string, 0, len(mc.transitions))
 		ans     string
 	)
 
 	for _, t := range mc.transitions {
-		if t.IsAvailable {
-			options = append(options, t.Name)
+		if it == jira.InstallationTypeCloud && !t.IsAvailable {
+			continue
 		}
+		options = append(options, t.Name)
 	}
 	options = append(options, optionCancel)
 
@@ -180,7 +182,7 @@ func (mc *moveCmd) setAvailableTransitions() error {
 	s := cmdutil.Info("Fetching available transitions. Please wait...")
 	defer s.Stop()
 
-	t, err := mc.client.Transitions(mc.params.key)
+	t, err := api.ProxyTransitions(mc.client, mc.params.key)
 	if err != nil {
 		return err
 	}
@@ -189,7 +191,7 @@ func (mc *moveCmd) setAvailableTransitions() error {
 	return nil
 }
 
-func (mc *moveCmd) verifyTransition() (*jira.Transition, error) {
+func (mc *moveCmd) verifyTransition(it string) (*jira.Transition, error) {
 	var tr *jira.Transition
 
 	st := strings.ToLower(mc.params.state)
@@ -207,7 +209,10 @@ func (mc *moveCmd) verifyTransition() (*jira.Transition, error) {
 			mc.params.state, mc.params.key, strings.Join(all, ", "),
 		)
 	}
-	if !tr.IsAvailable {
+
+	// Jira API v2 doesn't seem to return "isAvailable" field even if the documentation says it does.
+	// So, we will only verify if the transition is available for the cloud installation.
+	if it == jira.InstallationTypeCloud && !tr.IsAvailable {
 		return nil, fmt.Errorf(
 			"transition state \"%s\" for issue \"%s\" is not available",
 			mc.params.state, mc.params.key,

@@ -23,11 +23,31 @@ type transitionResponse struct {
 	Transitions []*Transition `json:"transitions"`
 }
 
-// Transitions fetches valid transitions for an issue from GET /issue/{key}/transitions endpoint.
+// Transitions fetches valid transitions for an issue using v3 version of the GET /issue/{key}/transitions endpoint.
 func (c *Client) Transitions(key string) ([]*Transition, error) {
+	return c.transitions(key, apiVersion3)
+}
+
+// TransitionsV2 fetches valid transitions for an issue using v2 version of the GET /issue/{key}/transitions endpoint.
+func (c *Client) TransitionsV2(key string) ([]*Transition, error) {
+	return c.transitions(key, apiVersion2)
+}
+
+func (c *Client) transitions(key, ver string) ([]*Transition, error) {
 	path := fmt.Sprintf("/issue/%s/transitions", key)
 
-	res, err := c.Get(context.Background(), path, nil)
+	var (
+		res *http.Response
+		err error
+	)
+
+	switch ver {
+	case apiVersion2:
+		res, err = c.GetV2(context.Background(), path, nil)
+	default:
+		res, err = c.Get(context.Background(), path, nil)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +76,7 @@ func (c *Client) Transition(key string, data *TransitionRequest) (int, error) {
 
 	path := fmt.Sprintf("/issue/%s/transitions", key)
 
-	res, err := c.Post(context.Background(), path, body, Header{
+	res, err := c.PostV2(context.Background(), path, body, Header{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	})

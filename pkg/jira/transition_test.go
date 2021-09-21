@@ -12,10 +12,18 @@ import (
 )
 
 func TestTransitions(t *testing.T) {
-	var unexpectedStatusCode bool
+	var (
+		apiVersion2          bool
+		unexpectedStatusCode bool
+	)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/rest/api/3/issue/TEST/transitions", r.URL.Path)
+		if apiVersion2 {
+			assert.Equal(t, "/rest/api/2/issue/TEST/transitions", r.URL.Path)
+		} else {
+			assert.Equal(t, "/rest/api/3/issue/TEST/transitions", r.URL.Path)
+		}
+
 		assert.Equal(t, "GET", r.Method)
 
 		if unexpectedStatusCode {
@@ -55,9 +63,10 @@ func TestTransitions(t *testing.T) {
 	}
 	assert.Equal(t, expected, actual)
 
+	apiVersion2 = true
 	unexpectedStatusCode = true
 
-	_, err = client.Transitions("TEST")
+	_, err = client.TransitionsV2("TEST")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
@@ -65,7 +74,7 @@ func TestTransition(t *testing.T) {
 	var unexpectedStatusCode bool
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/rest/api/3/issue/TEST/transitions", r.URL.Path)
+		assert.Equal(t, "/rest/api/2/issue/TEST/transitions", r.URL.Path)
 		assert.Equal(t, "POST", r.Method)
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
