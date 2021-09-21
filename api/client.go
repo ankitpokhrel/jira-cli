@@ -92,3 +92,45 @@ func ProxySearch(c *jira.Client, jql string, limit uint) (*jira.SearchResult, er
 
 	return issues, err
 }
+
+// ProxyAssignIssue uses either a v2 or v3 version of the PUT /issue/{key}/assignee
+// endpoint to assign an issue to the user.
+// Defaults to v3 if installation type is not defined in the config.
+func ProxyAssignIssue(c *jira.Client, key string, user *jira.User, def string) error {
+	it := viper.GetString("installation")
+	assignee := def
+
+	if user != nil {
+		switch it {
+		case jira.InstallationTypeLocal:
+			assignee = user.Name
+		default:
+			assignee = user.AccountID
+		}
+	}
+
+	if it == jira.InstallationTypeLocal {
+		return c.AssignIssueV2(key, assignee)
+	}
+	return c.AssignIssue(key, assignee)
+}
+
+// ProxyUserSearch uses either v2 or v3 version of the GET /user/assignable/search
+// endpoint to search for the users assignable to the given issue.
+// Defaults to v3 if installation type is not defined in the config.
+func ProxyUserSearch(c *jira.Client, opts *jira.UserSearchOptions) ([]*jira.User, error) {
+	var (
+		users []*jira.User
+		err   error
+	)
+
+	it := viper.GetString("installation")
+
+	if it == jira.InstallationTypeLocal {
+		users, err = c.UserSearchV2(opts)
+	} else {
+		users, err = c.UserSearch(opts)
+	}
+
+	return users, err
+}

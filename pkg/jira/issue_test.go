@@ -189,13 +189,21 @@ func TestGetIssueV2(t *testing.T) {
 }
 
 func TestAssignIssue(t *testing.T) {
-	var unexpectedStatusCode bool
+	var (
+		apiVersion2          bool
+		unexpectedStatusCode bool
+	)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "PUT", r.Method)
-		assert.Equal(t, "/rest/api/3/issue/TEST-1/assignee", r.URL.Path)
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+		if apiVersion2 {
+			assert.Equal(t, "/rest/api/2/issue/TEST-1/assignee", r.URL.Path)
+		} else {
+			assert.Equal(t, "/rest/api/3/issue/TEST-1/assignee", r.URL.Path)
+		}
 
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
@@ -214,9 +222,10 @@ func TestAssignIssue(t *testing.T) {
 	err = client.AssignIssue("TEST-1", "none")
 	assert.NoError(t, err)
 
+	apiVersion2 = true
 	unexpectedStatusCode = true
 
-	err = client.AssignIssue("TEST-1", "default")
+	err = client.AssignIssueV2("TEST-1", "default")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
