@@ -66,8 +66,12 @@ func (i Issue) String() string {
 	}
 	desc := ""
 	if i.Data.Fields.Description != nil {
-		tr := adf.NewTranslator(i.Data.Fields.Description.(*adf.ADF), adf.NewMarkdownTranslator())
-		desc = tr.Translate()
+		if adfNode, ok := i.Data.Fields.Description.(*adf.ADF); ok {
+			desc = adf.NewTranslator(adfNode, adf.NewMarkdownTranslator()).Translate()
+		} else {
+			desc = i.Data.Fields.Description.(string)
+			desc = strings.ReplaceAll(desc, "\n", "\n\n")
+		}
 	}
 	return fmt.Sprintf(
 		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s\n\n-----------\n%s",
