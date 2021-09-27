@@ -44,7 +44,8 @@ func view(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Fetching issue details...")
 		defer s.Stop()
 
-		issue, err := api.Client(jira.Config{Debug: debug}).GetIssue(key)
+		client := api.Client(jira.Config{Debug: debug})
+		issue, err := api.ProxyGetIssue(client, key)
 		cmdutil.ExitIfError(err)
 
 		return issue

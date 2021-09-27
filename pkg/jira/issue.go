@@ -19,35 +19,29 @@ const (
 
 // GetIssue fetches issue details using GET /issue/{key} endpoint.
 func (c *Client) GetIssue(key string) (*Issue, error) {
-	path := fmt.Sprintf("/issue/%s", key)
-
-	res, err := c.Get(context.Background(), path, nil)
-	if err != nil {
-		return nil, err
-	}
-	if res == nil {
-		return nil, ErrEmptyResponse
-	}
-	defer func() { _ = res.Body.Close() }()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, formatUnexpectedResponse(res)
-	}
-
-	var out Issue
-	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
-		return nil, err
-	}
-	out.Fields.Description = ifaceToADF(out.Fields.Description)
-
-	return &out, nil
+	return c.getIssue(key, apiVersion3)
 }
 
 // GetIssueV2 fetches issue details using v2 version of Jira GET /issue/{key} endpoint.
 func (c *Client) GetIssueV2(key string) (*Issue, error) {
+	return c.getIssue(key, apiVersion2)
+}
+
+func (c *Client) getIssue(key, ver string) (*Issue, error) {
 	path := fmt.Sprintf("/issue/%s", key)
 
-	res, err := c.GetV2(context.Background(), path, nil)
+	var (
+		res *http.Response
+		err error
+	)
+
+	switch ver {
+	case apiVersion2:
+		res, err = c.GetV2(context.Background(), path, nil)
+	default:
+		res, err = c.Get(context.Background(), path, nil)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +57,10 @@ func (c *Client) GetIssueV2(key string) (*Issue, error) {
 	var out Issue
 	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
 		return nil, err
+	}
+
+	if ver == apiVersion3 {
+		out.Fields.Description = ifaceToADF(out.Fields.Description)
 	}
 
 	return &out, nil
