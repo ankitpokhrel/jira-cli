@@ -6,10 +6,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 	"github.com/charmbracelet/glamour"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
+	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
