@@ -64,16 +64,25 @@ func edit(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info(fmt.Sprintf("Fetching issue %s...", params.issueKey))
 		defer s.Stop()
 
-		issue, err := client.GetIssue(params.issueKey)
+		issue, err := api.ProxyGetIssue(client, params.issueKey)
 		cmdutil.ExitIfError(err)
 
 		return issue
 	}()
 
-	originalBody := adf.NewTranslator(
-		issue.Fields.Description.(*adf.ADF),
-		adf.NewJiraMarkdownTranslator(),
-	).Translate()
+	var (
+		isADF        bool
+		originalBody string
+	)
+
+	if issue.Fields.Description != nil {
+		if adfBody, ok := issue.Fields.Description.(*adf.ADF); ok {
+			isADF = true
+			originalBody = adf.NewTranslator(adfBody, adf.NewJiraMarkdownTranslator()).Translate()
+		} else {
+			originalBody = issue.Fields.Description.(string)
+		}
+	}
 
 	cmdutil.ExitIfError(ec.askQuestions(issue, originalBody))
 
@@ -146,9 +155,14 @@ func edit(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Updating an issue...")
 		defer s.Stop()
 
+		body := params.body
+		if isADF {
+			body = md.JiraToGithubFlavored(body)
+		}
+
 		er := jira.EditRequest{
 			Summary:    params.summary,
-			Body:       md.JiraToGithubFlavored(params.body),
+			Body:       body,
 			Assignee:   userAccountID,
 			Priority:   params.priority,
 			Labels:     params.labels,
