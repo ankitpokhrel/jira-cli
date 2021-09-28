@@ -174,6 +174,7 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 		return client.SprintsInBoards([]int{boardID}, q.Get(), numSprints)
 	}()
 	if len(sprints) == 0 {
+		fmt.Println()
 		cmdutil.Failed("No result found for given query in project \"%s\"", project)
 		return
 	}
