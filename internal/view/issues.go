@@ -59,7 +59,7 @@ func (l IssueList) Render() error {
 		tui.WithSelectedFunc(navigate(l.Server)),
 		tui.WithViewModeFunc(func(r, c int, _ interface{}) (func() interface{}, func(interface{}) error) {
 			dataFn := func() interface{} {
-				issue, _ := api.Client(jira.Config{Debug: true}).GetIssue(data[r][1])
+				issue, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data[r][1])
 				return issue
 			}
 			renderFn := func(i interface{}) error {

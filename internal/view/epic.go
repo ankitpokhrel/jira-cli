@@ -36,7 +36,7 @@ func (el EpicList) Render() error {
 			tui.WithSelectedFunc(navigate(el.Server)),
 			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) error) {
 				dataFn := func() interface{} {
-					issue, _ := api.Client(jira.Config{Debug: true}).GetIssue(d.(tui.TableData)[r][1])
+					issue, _ := api.ProxyGetIssue(api.Client(jira.Config{}), d.(tui.TableData)[r][1])
 					return issue
 				}
 				renderFn := func(i interface{}) error {
