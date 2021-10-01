@@ -242,6 +242,9 @@ $ jira issue create
 
 # Pass required parameters to skip prompt or use --no-input option
 $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
+
+# Create an issue using interactive prompt (using vim to edit description)
+$ VISUAL=vim jira issue create
 ```
 
 ![Create an issue](.github/assets/create.gif)
