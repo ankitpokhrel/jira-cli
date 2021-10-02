@@ -157,7 +157,7 @@ func edit(cmd *cobra.Command, args []string) {
 
 		body := params.body
 		if isADF {
-			body = md.JiraToGithubFlavored(body)
+			body = md.ToJiraMD(body)
 		}
 
 		er := jira.EditRequest{

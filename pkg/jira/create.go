@@ -155,7 +155,7 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 
 	switch v := req.Body.(type) {
 	case string:
-		cf.Description = md.JiraToGithubFlavored(v)
+		cf.Description = md.ToJiraMD(v)
 	case *adf.ADF:
 		cf.Description = v
 	}
