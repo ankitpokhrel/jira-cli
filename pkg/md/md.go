@@ -5,8 +5,8 @@ import (
 	bf "github.com/russross/blackfriday/v2"
 )
 
-// JiraToGithubFlavored translates Jira flavored markdown to Github flavored markdown.
-func JiraToGithubFlavored(jfm string) string {
+// ToJiraMD translates CommonMark to Jira flavored markdown.
+func ToJiraMD(jfm string) string {
 	if jfm == "" {
 		return jfm
 	}

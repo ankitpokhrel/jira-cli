@@ -218,7 +218,7 @@ type issueCommentRequest struct {
 // AddIssueComment adds comment to an issue using POST /issue/{key}/comment endpoint.
 // It only supports plain text comments at the moment.
 func (c *Client) AddIssueComment(key, comment string) error {
-	body, err := json.Marshal(&issueCommentRequest{Body: md.JiraToGithubFlavored(comment)})
+	body, err := json.Marshal(&issueCommentRequest{Body: md.ToJiraMD(comment)})
 	if err != nil {
 		return err
 	}

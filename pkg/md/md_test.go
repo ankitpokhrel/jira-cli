@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestJiraToGithubFlavored(t *testing.T) {
+func TestToJiraMD(t *testing.T) {
 	jfm := `# H1
 Some _Markdown_ text.
 
@@ -105,5 +105,5 @@ func main\(\) {
     fmt.Println\("hello world"\)
 }` + "```\n\n"
 
-	assert.Equal(t, expected, JiraToGithubFlavored(jfm))
+	assert.Equal(t, expected, ToJiraMD(jfm))
 }
