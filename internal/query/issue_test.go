@@ -100,7 +100,6 @@ func (tfp issueFlagParser) GetString(name string) (string, error) {
 }
 
 func (tfp issueFlagParser) GetStringArray(name string) ([]string, error) {
-
 	switch name {
 
 	case "label":
@@ -111,7 +110,6 @@ func (tfp issueFlagParser) GetStringArray(name string) ([]string, error) {
 	default:
 		return []string{}, fmt.Errorf("oops! couldn't fetch flag")
 	}
-
 }
 
 func (tfp issueFlagParser) GetUint(string) (uint, error) { return 100, nil }
