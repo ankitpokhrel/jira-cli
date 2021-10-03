@@ -15,14 +15,14 @@ func TestJQL(t *testing.T) {
 		{
 			name: "filter is initialized",
 			initialize: func() *JQL {
-				return NewJQL("TEST")
+				return NewJQL([]string{"TEST"})
 			},
 			expected: "project=\"TEST\"",
 		},
 		{
 			name: "it sets order by",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.OrderBy("updated", "DESC")
 				return jql
 			},
@@ -31,7 +31,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries history",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.History()
 				return jql
 			},
@@ -40,7 +40,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries watched issues",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.Watching()
 				return jql
 			},
@@ -49,7 +49,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries history and watched issues in order",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.And(func() {
 					jql.Watching().History()
 				})
@@ -60,7 +60,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries with single field filters",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.And(func() {
 					jql.FilterBy("type", "Story")
 				})
@@ -71,7 +71,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries with multiple field filters",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.And(func() {
 					jql.FilterBy("type", "Story").
 						FilterBy("resolution", "Done").
@@ -84,7 +84,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries with not filter",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.And(func() {
 					jql.FilterBy("type", "~Story").
 						FilterBy("assignee", "~x")
@@ -96,7 +96,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries for unassigned issues",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.And(func() {
 					jql.FilterBy("type", "Story").
 						FilterBy("resolution", "Done").
@@ -109,7 +109,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries with function and field filters grouped in AND operator",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.And(func() {
 					jql.History().
 						Watching().
@@ -125,7 +125,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries with function and field filters grouped in OR operator",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.Or(func() {
 					jql.History().
 						Watching().
@@ -141,7 +141,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries with greater than filter",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.And(func() {
 					jql.
 						FilterBy("type", "Story").
@@ -157,7 +157,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries with greater than or equals filter",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.And(func() {
 					jql.
 						FilterBy("type", "Story").
@@ -173,7 +173,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries with less than filter",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.And(func() {
 					jql.
 						FilterBy("type", "Story").
@@ -189,7 +189,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries with IN and a single label",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.FilterBy("type", "Story")
 				jql.And(func() {
 					jql.In("labels", "first")
@@ -201,7 +201,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries with IN and multiple labels",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.Or(func() {
 					jql.FilterBy("type", "Story").
 						In("labels", "first", "second", "third")
@@ -213,7 +213,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries with raw jql",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.And(func() {
 					jql.
 						FilterBy("type", "Story").
@@ -227,7 +227,7 @@ func TestJQL(t *testing.T) {
 		{
 			name: "it queries with raw jql and or filter",
 			initialize: func() *JQL {
-				jql := NewJQL("TEST")
+				jql := NewJQL([]string{"TEST"})
 				jql.Or(func() {
 					jql.FilterBy("type", "Story").
 						Raw("summary ~ cli")
