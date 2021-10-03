@@ -30,11 +30,10 @@ func NewIssue(project string, flags FlagParser) (*Issue, error) {
 // Get returns constructed jql query.
 func (i *Issue) Get() string {
 
-	var projectsToProcess []string
-	projectsToProcess = append(projectsToProcess, i.Project)
-	projectsToProcess = append(projectsToProcess, i.params.Projects...)
+	projects := []string{i.Project}
+	projects = append(projects, i.params.Projects...)
 
-	q, obf := jql.NewJQL(projectsToProcess), "created"
+	q, obf := jql.NewJQL(projects), "created"
 	if (i.params.Updated != "" || i.params.UpdatedBefore != "" || i.params.UpdatedAfter != "") &&
 		(i.params.Created == "" && i.params.CreatedBefore == "" && i.params.CreatedAfter == "") {
 		obf = "updated"

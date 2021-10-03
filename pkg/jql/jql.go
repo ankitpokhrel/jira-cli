@@ -24,8 +24,6 @@ type JQL struct {
 
 // NewJQL initializes jql query builder.
 func NewJQL(projects []string) *JQL {
-
-	//check if the jql context required to be expected
 	jql := &JQL{}
 
 	switch totalOfProjects := len(projects); {
