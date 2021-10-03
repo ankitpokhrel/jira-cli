@@ -29,7 +29,6 @@ func NewIssue(project string, flags FlagParser) (*Issue, error) {
 
 // Get returns constructed jql query.
 func (i *Issue) Get() string {
-
 	projects := []string{i.Project}
 	projects = append(projects, i.params.Projects...)
 
