@@ -23,11 +23,23 @@ type JQL struct {
 }
 
 // NewJQL initializes jql query builder.
-func NewJQL(project string) *JQL {
-	return &JQL{
-		project: project,
-		filters: []string{fmt.Sprintf("project=\"%s\"", project)},
+func NewJQL(projects []string) *JQL {
+
+	//check if the jql context required to be expected
+	jql := &JQL{}
+
+	switch totalOfProjects := len(projects); {
+
+	case totalOfProjects > 1:
+		jql.project = projects[0]
+		jql.filters = []string{fmt.Sprintf("project in (%v)", strings.Join(projects, ","))}
+
+	default:
+		jql.project = projects[0]
+		jql.filters = []string{fmt.Sprintf("project=\"%s\"", projects[0])}
 	}
+
+	return jql
 }
 
 // History search through user issue history.

@@ -150,6 +150,8 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
 
+	cmd.Flags().StringArrayP("projects", "d", nil, "Add more projects into the issue list context.")
+
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {
 		cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
 			fmt.Sprintf("Accepts: %s", strings.Join(view.ValidIssueColumns(), ", ")))

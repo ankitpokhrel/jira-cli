@@ -29,7 +29,12 @@ func NewIssue(project string, flags FlagParser) (*Issue, error) {
 
 // Get returns constructed jql query.
 func (i *Issue) Get() string {
-	q, obf := jql.NewJQL(i.Project), "created"
+
+	var projectsToProcess []string
+	projectsToProcess = append(projectsToProcess, i.Project)
+	projectsToProcess = append(projectsToProcess, i.params.Projects...)
+
+	q, obf := jql.NewJQL(projectsToProcess), "created"
 	if (i.params.Updated != "" || i.params.UpdatedBefore != "" || i.params.UpdatedAfter != "") &&
 		(i.params.Created == "" && i.params.CreatedBefore == "" && i.params.CreatedAfter == "") {
 		obf = "updated"
@@ -69,6 +74,7 @@ func (i *Issue) Get() string {
 	if i.params.jql != "" {
 		q.And(func() { q.Raw(i.params.jql) })
 	}
+
 	return q.String()
 }
 
@@ -142,6 +148,7 @@ type IssueParams struct {
 	UpdatedBefore string
 	jql           string
 	Labels        []string
+	Projects      []string
 	Reverse       bool
 	Limit         uint
 	debug         bool
@@ -179,11 +186,16 @@ func (ip *IssueParams) init(flags FlagParser) error {
 	if err != nil {
 		return err
 	}
+	projects, err := flags.GetStringArray("projects")
+	if err != nil {
+		return err
+	}
 
 	ip.setBoolParams(boolParamsMap)
 	ip.setStringParams(stringParamsMap)
 	ip.Labels = labels
 	ip.Limit = limit
+	ip.Projects = projects
 
 	return nil
 }
