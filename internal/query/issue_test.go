@@ -23,6 +23,7 @@ type issueFlagParser struct {
 	orderDesc     bool
 	emptyType     bool
 	labels        []string
+	projects      []string
 	withCreated   bool
 	withUpdated   bool
 	created       string
@@ -99,10 +100,18 @@ func (tfp issueFlagParser) GetString(name string) (string, error) {
 }
 
 func (tfp issueFlagParser) GetStringArray(name string) ([]string, error) {
-	if tfp.err.labels && name == "label" {
-		return []string{}, fmt.Errorf("oops! couldn't fetch label flag")
+
+	switch name {
+
+	case "label":
+		return tfp.labels, nil
+	case "projects":
+		return tfp.projects, nil
+
+	default:
+		return []string{}, fmt.Errorf("oops! couldn't fetch flag")
 	}
-	return tfp.labels, nil
+
 }
 
 func (tfp issueFlagParser) GetUint(string) (uint, error) { return 100, nil }
