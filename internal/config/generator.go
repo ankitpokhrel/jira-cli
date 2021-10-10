@@ -378,7 +378,7 @@ func shallOverwrite() bool {
 }
 
 func create(path, name string) error {
-	const perm = 0700
+	const perm = 0o700
 
 	if !Exists(path) {
 		if err := os.MkdirAll(path, perm); err != nil {
