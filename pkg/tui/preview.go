@@ -180,6 +180,10 @@ func (pv *Preview) initSidebar() {
 	pv.sidebar.
 		SetSelectable(true, false).
 		SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
+			if ev.Key() == tcell.KeyTab {
+				pv.screen.SetFocus(pv.contents.view)
+				pv.contents.view.SetSelectable(true, false).Select(1, 0)
+			}
 			if ev.Key() == tcell.KeyRune {
 				switch ev.Rune() {
 				case 'q':
@@ -211,6 +215,10 @@ func (pv *Preview) initContents() {
 				}
 				r, c := pv.contents.view.GetSelection()
 				pv.contents.copyKeyFunc(r, c, contents())
+			}
+			if ev.Key() == tcell.KeyTab {
+				pv.screen.SetFocus(pv.sidebar)
+				pv.contents.view.SetSelectable(false, false)
 			}
 			if ev.Key() == tcell.KeyRune {
 				switch ev.Rune() {
