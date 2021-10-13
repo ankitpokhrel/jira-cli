@@ -26,7 +26,7 @@ const (
 	The layout contains 2 sections, viz: Sidebar and Contents screen.  
 	
 	You can use up and down arrow keys or 'j' and 'k' letters to navigate through the sidebar.
-	Press 'w' to toggle focus between the sidebar and the contents screen. 
+	Press 'w' or Tab to toggle focus between the sidebar and the contents screen.
 	
 	On contents screen:
 	  - Use arrow keys or 'j', 'k', 'h', and 'l' letters to navigate through the issue list.
