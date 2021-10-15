@@ -42,6 +42,8 @@ func SetFlags(cmd *cobra.Command) {
 	cmdcommon.SetCreateFlags(cmd, "Epic")
 }
 
+//nolint:gocyclo
+// TODO: Reduce cyclomatic complexity.
 func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project")
@@ -119,7 +121,7 @@ func create(cmd *cobra.Command, _ []string) {
 		}
 	}
 
-	key := func() string {
+	key, err := func() (string, error) {
 		s := cmdutil.Info("Creating an epic...")
 		defer s.Stop()
 
@@ -134,10 +136,12 @@ func create(cmd *cobra.Command, _ []string) {
 			Components:    params.components,
 			EpicFieldName: viper.GetString("epic.field"),
 		})
-		cmdutil.ExitIfError(err)
-
-		return resp.Key
+		if err != nil {
+			return "", err
+		}
+		return resp.Key, nil
 	}()
+	cmdutil.ExitIfError(err)
 
 	cmdutil.Success("Epic created\n%s/browse/%s", server, key)
 

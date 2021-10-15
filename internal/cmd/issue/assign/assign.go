@@ -97,7 +97,7 @@ func assign(cmd *cobra.Command, args []string) {
 		uname = assignee
 	}
 
-	func() {
+	err = func() error {
 		var s *spinner.Spinner
 		if uname == "unassigned" {
 			s = cmdutil.Info(fmt.Sprintf("Unassigning user from issue \"%s\"...", ac.params.key))
@@ -106,9 +106,9 @@ func assign(cmd *cobra.Command, args []string) {
 		}
 		defer s.Stop()
 
-		err = api.ProxyAssignIssue(client, ac.params.key, u, assignee)
-		cmdutil.ExitIfError(err)
+		return api.ProxyAssignIssue(client, ac.params.key, u, assignee)
 	}()
+	cmdutil.ExitIfError(err)
 
 	if uname == "unassigned" {
 		cmdutil.Success("User unassigned from the issue \"%s\"", ac.params.key)

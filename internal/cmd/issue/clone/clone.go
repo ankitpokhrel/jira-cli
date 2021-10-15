@@ -57,19 +57,21 @@ func clone(cmd *cobra.Command, args []string) {
 	}
 
 	key := cmdutil.GetJiraIssueKey(project, args[0])
-	issue := func() *jira.Issue {
+	issue, err := func() (*jira.Issue, error) {
 		s := cmdutil.Info("Fetching issue details...")
 		defer s.Stop()
 
 		issue, err := api.ProxyGetIssue(client, key)
-		cmdutil.ExitIfError(err)
-
-		return issue
+		if err != nil {
+			return nil, err
+		}
+		return issue, nil
 	}()
+	cmdutil.ExitIfError(err)
 
 	cp := cc.getActualCreateParams(issue)
 
-	clonedIssueKey := func() string {
+	clonedIssueKey, err := func() (string, error) {
 		s := cmdutil.Info(fmt.Sprintf("Cloning %s...", key))
 		defer s.Stop()
 
@@ -84,10 +86,12 @@ func clone(cmd *cobra.Command, args []string) {
 		}
 
 		resp, err := api.ProxyCreate(client, &cr)
-		cmdutil.ExitIfError(err)
-
-		return resp.Key
+		if err != nil {
+			return "", err
+		}
+		return resp.Key, nil
 	}()
+	cmdutil.ExitIfError(err)
 
 	cmdutil.Success("Issue cloned\n%s/browse/%s", server, clonedIssueKey)
 
@@ -129,7 +133,7 @@ func clone(cmd *cobra.Command, args []string) {
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, clonedIssueKey)
-		cmdutil.ExitIfError(err)
+		cmdutil.Fail(err.Error())
 	}
 
 	wg.Wait()

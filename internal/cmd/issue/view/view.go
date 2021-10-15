@@ -40,16 +40,14 @@ func view(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	key := cmdutil.GetJiraIssueKey(viper.GetString("project"), args[0])
-	issue := func() *jira.Issue {
+	issue, err := func() (*jira.Issue, error) {
 		s := cmdutil.Info("Fetching issue details...")
 		defer s.Stop()
 
 		client := api.Client(jira.Config{Debug: debug})
-		issue, err := api.ProxyGetIssue(client, key)
-		cmdutil.ExitIfError(err)
-
-		return issue
+		return api.ProxyGetIssue(client, key)
 	}()
+	cmdutil.ExitIfError(err)
 
 	plain, err := cmd.Flags().GetBool("plain")
 	cmdutil.ExitIfError(err)

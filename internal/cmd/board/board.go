@@ -30,15 +30,18 @@ func board(cmd *cobra.Command, _ []string) {
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
-	boards, total := func() ([]*jira.Board, int) {
+	boards, total, err := func() ([]*jira.Board, int, error) {
 		s := cmdutil.Info(fmt.Sprintf("Fetching boards in project %s...", project))
 		defer s.Stop()
 
 		resp, err := api.Client(jira.Config{Debug: debug}).Boards(project, jira.BoardTypeAll)
-		cmdutil.ExitIfError(err)
-
-		return resp.Boards, resp.Total
+		if err != nil {
+			return nil, 0, err
+		}
+		return resp.Boards, resp.Total, nil
 	}()
+	cmdutil.ExitIfError(err)
+
 	if total == 0 {
 		cmdutil.Failed("No boards found in project \"%s\"", project)
 		return

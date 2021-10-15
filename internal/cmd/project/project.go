@@ -25,15 +25,18 @@ func projects(cmd *cobra.Command, _ []string) {
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
-	projects, total := func() ([]*jira.Project, int) {
+	projects, total, err := func() ([]*jira.Project, int, error) {
 		s := cmdutil.Info("Fetching projects...")
 		defer s.Stop()
 
 		projects, err := api.Client(jira.Config{Debug: debug}).Project()
-		cmdutil.ExitIfError(err)
-
-		return projects, len(projects)
+		if err != nil {
+			return nil, 0, err
+		}
+		return projects, len(projects), nil
 	}()
+	cmdutil.ExitIfError(err)
+
 	if total == 0 {
 		cmdutil.Failed("No projects found.")
 		return

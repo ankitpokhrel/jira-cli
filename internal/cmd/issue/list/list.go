@@ -66,18 +66,24 @@ func List(cmd *cobra.Command, _ []string) {
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
-	issues, total := func() ([]*jira.Issue, int) {
+	issues, total, err := func() ([]*jira.Issue, int, error) {
 		s := cmdutil.Info("Fetching issues...")
 		defer s.Stop()
 
 		q, err := query.NewIssue(project, cmd.Flags())
-		cmdutil.ExitIfError(err)
+		if err != nil {
+			return nil, 0, err
+		}
 
 		resp, err := api.ProxySearch(api.Client(jira.Config{Debug: debug}), q.Get(), q.Params().Limit)
-		cmdutil.ExitIfError(err)
+		if err != nil {
+			return nil, 0, err
+		}
 
-		return resp.Issues, resp.Total
+		return resp.Issues, resp.Total, nil
 	}()
+	cmdutil.ExitIfError(err)
+
 	if total == 0 {
 		fmt.Println()
 		cmdutil.Failed("No result found for given query in project \"%s\"", project)
