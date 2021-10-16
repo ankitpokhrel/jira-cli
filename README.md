@@ -585,12 +585,27 @@ Sprint 1:   3
    git clone git@github.com:ankitpokhrel/jira-cli.git
    ```
 
-2. Make changes, build the binary, and test your changes.
+2. [Optional] If you want to run a Jira instance locally, you can use the following make recipe. 
+   The license key can be generated from the [atlassian admin](https://my.atlassian.com).
+   ```sh
+   make jira.server
+   ```
+
+3. Make changes, build the binary, and test your changes.
    ```sh
    make deps install
    ```
 
-3. Run CI steps locally before submitting a PR.
+4. Run CI steps locally before submitting a PR.
    ```sh
    make ci
    ```
+
+## Support the project
+If you think this tool is useful, saves you a lot of work, and lets you sleep much better, then consider
+supporting the project by:
+
+- [Starring the repo](https://github.com/ankitpokhrel/jira-cli/stargazers).
+- Spreading the word by sharing the project on social media or with friends.
+- [Reporting bugs](https://github.com/ankitpokhrel/jira-cli/issues/new/choose) or [proposing solutions](https://github.com/ankitpokhrel/jira-cli/issues).
+- [Donating a small amount](https://opencollective.com/jira-cli#backers).

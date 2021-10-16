@@ -1,5 +1,5 @@
 .ONESHELL:
-.PHONY: all deps build install lint test ci
+.PHONY: all deps build install lint test ci jira.server
 
 # Build vars
 git_commit  = $(shell git rev-parse HEAD)
@@ -33,3 +33,6 @@ test:
 	go test -race $(shell go list ./...)
 
 ci: lint test
+
+jira.server:
+	docker compose up -d
