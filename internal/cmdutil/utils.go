@@ -26,14 +26,14 @@ func ExitIfError(err error) {
 
 	if e, ok := err.(*jira.ErrUnexpectedResponse); ok {
 		dm := fmt.Sprintf(
-			"jira: Received unexpected response '%s'.\nPlease check the parameters you supplied and try again.",
+			"\njira: Received unexpected response '%s'.\nPlease check the parameters you supplied and try again.",
 			e.Status,
 		)
 		bd := e.Error()
 
 		msg = dm
 		if len(bd) > 0 {
-			msg = fmt.Sprintf("%s\n%s", bd, dm)
+			msg = fmt.Sprintf("%s%s", bd, dm)
 		}
 	} else {
 		switch err {

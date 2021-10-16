@@ -70,15 +70,16 @@ func move(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	func() {
+	err = func() error {
 		s := cmdutil.Info(fmt.Sprintf("Transitioning issue to \"%s\"...", tr.Name))
 		defer s.Stop()
 
 		_, err := client.Transition(mc.params.key, &jira.TransitionRequest{
 			Transition: &jira.TransitionRequestData{ID: tr.ID.String(), Name: tr.Name},
 		})
-		cmdutil.ExitIfError(err)
+		return err
 	}()
+	cmdutil.ExitIfError(err)
 
 	server := viper.GetString("server")
 

@@ -105,7 +105,7 @@ func create(cmd *cobra.Command, _ []string) {
 		}
 	}
 
-	key := func() string {
+	key, err := func() (string, error) {
 		s := cmdutil.Info("Creating an issue...")
 		defer s.Stop()
 
@@ -121,10 +121,12 @@ func create(cmd *cobra.Command, _ []string) {
 		}
 
 		resp, err := client.CreateV2(&cr)
-		cmdutil.ExitIfError(err)
-
-		return resp.Key
+		if err != nil {
+			return "", err
+		}
+		return resp.Key, nil
 	}()
+	cmdutil.ExitIfError(err)
 
 	cmdutil.Success("Issue created\n%s/browse/%s", server, key)
 

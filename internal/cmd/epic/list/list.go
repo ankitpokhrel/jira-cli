@@ -96,18 +96,23 @@ func singleEpicView(flags query.FlagParser, key, project, server string, client 
 	err := flags.Set("type", "") // Unset issue type.
 	cmdutil.ExitIfError(err)
 
-	issues, total := func() ([]*jira.Issue, int) {
+	issues, total, err := func() ([]*jira.Issue, int, error) {
 		s := cmdutil.Info("Fetching epic issues...")
 		defer s.Stop()
 
 		q, err := query.NewIssue(project, flags)
-		cmdutil.ExitIfError(err)
+		if err != nil {
+			return nil, 0, err
+		}
 
 		resp, err := client.EpicIssues(key, q.Get(), q.Params().Limit)
-		cmdutil.ExitIfError(err)
-
-		return resp.Issues, resp.Total
+		if err != nil {
+			return nil, 0, err
+		}
+		return resp.Issues, resp.Total, nil
 	}()
+	cmdutil.ExitIfError(err)
+
 	if total == 0 {
 		fmt.Println()
 		cmdutil.Failed("No result found for given query in project \"%s\"", project)
@@ -151,15 +156,18 @@ func epicExplorerView(flags query.FlagParser, project, server string, client *ji
 	q, err := query.NewIssue(project, flags)
 	cmdutil.ExitIfError(err)
 
-	epics, total := func() ([]*jira.Issue, int) {
+	epics, total, err := func() ([]*jira.Issue, int, error) {
 		s := cmdutil.Info("Fetching epics...")
 		defer s.Stop()
 
 		resp, err := api.ProxySearch(client, q.Get(), q.Params().Limit)
-		cmdutil.ExitIfError(err)
-
-		return resp.Issues, resp.Total
+		if err != nil {
+			return nil, 0, err
+		}
+		return resp.Issues, resp.Total, nil
 	}()
+	cmdutil.ExitIfError(err)
+
 	if total == 0 {
 		fmt.Println()
 		cmdutil.Failed("No result found for given query in project \"%s\"", project)

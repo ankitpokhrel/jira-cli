@@ -91,13 +91,13 @@ func add(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	func() {
+	err := func() error {
 		s := cmdutil.Info("Adding comment")
 		defer s.Stop()
 
-		err := client.AddIssueComment(ac.params.issueKey, ac.params.body)
-		cmdutil.ExitIfError(err)
+		return client.AddIssueComment(ac.params.issueKey, ac.params.body)
 	}()
+	cmdutil.ExitIfError(err)
 
 	server := viper.GetString("server")
 

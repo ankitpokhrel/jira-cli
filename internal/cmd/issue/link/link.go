@@ -69,13 +69,13 @@ func link(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	func() {
+	err = func() error {
 		s := cmdutil.Info("Linking issues")
 		defer s.Stop()
 
-		err := client.LinkIssue(lc.params.inwardIssueKey, lc.params.outwardIssueKey, lt.Name)
-		cmdutil.ExitIfError(err)
+		return client.LinkIssue(lc.params.inwardIssueKey, lc.params.outwardIssueKey, lt.Name)
 	}()
+	cmdutil.ExitIfError(err)
 
 	server := viper.GetString("server")
 

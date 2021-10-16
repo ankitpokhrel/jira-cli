@@ -1,6 +1,7 @@
 package edit
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -60,15 +61,18 @@ func edit(cmd *cobra.Command, args []string) {
 		params: params,
 	}
 
-	issue := func() *jira.Issue {
+	issue, err := func() (*jira.Issue, error) {
 		s := cmdutil.Info(fmt.Sprintf("Fetching issue %s...", params.issueKey))
 		defer s.Stop()
 
 		issue, err := api.ProxyGetIssue(client, params.issueKey)
-		cmdutil.ExitIfError(err)
+		if err != nil {
+			return nil, err
+		}
 
-		return issue
+		return issue, nil
 	}()
+	cmdutil.ExitIfError(err)
 
 	var (
 		isADF        bool
@@ -127,18 +131,25 @@ func edit(cmd *cobra.Command, args []string) {
 	var userAccountID string
 
 	if params.assignee != "" {
-		func() {
+		err := func() error {
 			s := cmdutil.Info("Looking for assignee...")
 			defer s.Stop()
 
 			user, err := client.UserSearch(&jira.UserSearchOptions{
 				Query: params.assignee,
 			})
-			if err != nil || len(user) == 0 {
-				cmdutil.Failed("Unable to find assignee")
+			if err != nil {
+				return err
 			}
+			if len(user) == 0 {
+				return errors.New("unable to find assignee")
+			}
+
 			userAccountID = user[0].AccountID
+
+			return nil
 		}()
+		cmdutil.ExitIfError(err)
 	}
 
 	if params.isEmpty() {
@@ -151,7 +162,7 @@ func edit(cmd *cobra.Command, args []string) {
 		params.body = ""
 	}
 
-	func() {
+	err = func() error {
 		s := cmdutil.Info("Updating an issue...")
 		defer s.Stop()
 
@@ -160,7 +171,7 @@ func edit(cmd *cobra.Command, args []string) {
 			body = md.ToJiraMD(body)
 		}
 
-		er := jira.EditRequest{
+		edr := jira.EditRequest{
 			Summary:    params.summary,
 			Body:       body,
 			Assignee:   userAccountID,
@@ -169,9 +180,9 @@ func edit(cmd *cobra.Command, args []string) {
 			Components: params.components,
 		}
 
-		err := client.Edit(params.issueKey, &er)
-		cmdutil.ExitIfError(err)
+		return client.Edit(params.issueKey, &edr)
 	}()
+	cmdutil.ExitIfError(err)
 
 	cmdutil.Success("Issue updated\n%s/browse/%s", server, params.issueKey)
 

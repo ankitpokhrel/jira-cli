@@ -89,18 +89,23 @@ func sprintList(cmd *cobra.Command, args []string) {
 }
 
 func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, server string, client *jira.Client, sprint *jira.Sprint) {
-	issues, total := func() ([]*jira.Issue, int) {
+	issues, total, err := func() ([]*jira.Issue, int, error) {
 		s := cmdutil.Info("Fetching sprint issues...")
 		defer s.Stop()
 
 		q, err := query.NewIssue(project, flags)
-		cmdutil.ExitIfError(err)
+		if err != nil {
+			return nil, 0, err
+		}
 
 		resp, err := client.SprintIssues(boardID, sprintID, q.Get(), q.Params().Limit)
-		cmdutil.ExitIfError(err)
-
-		return resp.Issues, resp.Total
+		if err != nil {
+			return nil, 0, err
+		}
+		return resp.Issues, resp.Total, nil
 	}()
+	cmdutil.ExitIfError(err)
+
 	if total == 0 {
 		fmt.Println()
 		cmdutil.Failed("No result found for given query in project \"%s\"", project)
