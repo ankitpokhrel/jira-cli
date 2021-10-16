@@ -585,8 +585,8 @@ Sprint 1:   3
    git clone git@github.com:ankitpokhrel/jira-cli.git
    ```
 
-2. [Optional] If you want to run a Jira instance locally, you can use the following make recipe. 
-   The license key can be generated from the [atlassian admin](https://my.atlassian.com).
+2. Optional: If you want to run a Jira instance locally, you can use the following make recipe. 
+   The trial license key can be generated from "Licenses" section in the [atlassian admin](https://my.atlassian.com).
    ```sh
    make jira.server
    ```
