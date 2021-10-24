@@ -1,6 +1,7 @@
 package md
 
 import (
+	"github.com/ankitpokhrel/jira-cli/pkg/md/jirawiki"
 	cf "github.com/kentaro-m/blackfriday-confluence"
 	bf "github.com/russross/blackfriday/v2"
 )
@@ -19,5 +20,7 @@ func ToJiraMD(md string) string {
 
 // FromJiraMD translates Jira flavored markdown to CommonMark.
 func FromJiraMD(jfm string) string {
-	return jfm
+	out := jirawiki.Parse(jfm)
+
+	return out
 }

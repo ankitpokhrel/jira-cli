@@ -1,0 +1,415 @@
+package jirawiki
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestParseHeadingTags(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "h1",
+			input:    "h1. Heading 1",
+			expected: "# Heading 1\n",
+		},
+		{
+			name:     "h2",
+			input:    "h2. Heading 2",
+			expected: "## Heading 2\n",
+		},
+		{
+			name:     "h3",
+			input:    "h3. Heading 3",
+			expected: "### Heading 3\n",
+		},
+		{
+			name:     "h4",
+			input:    "h4. Heading 4",
+			expected: "#### Heading 4\n",
+		},
+		{
+			name:     "h5",
+			input:    "h5. Heading 5",
+			expected: "##### Heading 5\n",
+		},
+		{
+			name:     "h6",
+			input:    "h6. Heading 6",
+			expected: "###### Heading 6\n",
+		},
+		{
+			name: "all headings",
+			input: `h1. Heading 1
+h2. Heading 2
+h3. Heading 3
+h4. Heading 4
+h5. Heading 5
+h6. Heading 6`,
+			expected: `# Heading 1
+## Heading 2
+### Heading 3
+#### Heading 4
+##### Heading 5
+###### Heading 6
+`,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, Parse(tc.input))
+		})
+	}
+}
+
+func TestParseInlineTags(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "bold",
+			input:    "*bold*",
+			expected: "**bold**\n",
+		},
+		{
+			name:     "italic",
+			input:    "_italic_",
+			expected: "__italic__\n",
+		},
+		{
+			name:     "bold and italic",
+			input:    "Line with *bold* and _italic_ text.",
+			expected: "Line with **bold** and __italic__ text.\n",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, Parse(tc.input))
+		})
+	}
+}
+
+func TestParseListTags(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name: "unordered list",
+			input: `* Item 1
+ * Item 2
+ ** Subitem 1
+ ** Subitem 2
+ *** Subitem 2 item 1
+ * Item 3
+ * Item 4`,
+			expected: `- Item 1
+- Item 2
+	- Subitem 1
+	- Subitem 2
+		- Subitem 2 item 1
+- Item 3
+- Item 4
+`,
+		},
+		{
+			name: "ordered list",
+			input: `# Ordered list item 1
+ ## Ordered list subitem 1
+ ## Ordered list subitem 2
+ ### Ordered list subitem 2 item 1`,
+			expected: `- Ordered list item 1
+	- Ordered list subitem 1
+	- Ordered list subitem 2
+		- Ordered list subitem 2 item 1
+`,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, Parse(tc.input))
+		})
+	}
+}
+
+func TestParseReferenceLinks(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "valid link with title",
+			input:    "[title|https://ankit.pl]",
+			expected: "[title](https://ankit.pl)\n",
+		},
+		{
+			name:     "valid link without title",
+			input:    "[https://ankit.pl]",
+			expected: "[](https://ankit.pl)\n",
+		},
+		{
+			name:     "valid link without title",
+			input:    "[https://ankit.pl]",
+			expected: "[](https://ankit.pl)\n",
+		},
+		{
+			name:     "valid link wrapped around texts",
+			input:    "A text with [a link|https://ankit.pl] in between.",
+			expected: "A text with [a link](https://ankit.pl) in between.\n",
+		},
+		{
+			name:     "valid link mixed with bold and italic text",
+			input:    "A *bold* and _italic_ text with [a link|https://ankit.pl] in between.",
+			expected: "A **bold** and __italic__ text with [a link](https://ankit.pl) in between.\n",
+		},
+		{
+			name:     "invalid link",
+			input:    "This is a [Link|https://ankit.pl, and some texts.",
+			expected: "This is a [Link|https://ankit.pl, and some texts.",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, Parse(tc.input))
+		})
+	}
+}
+
+func TestParseBlockQuote(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name: "blockquote",
+			input: `{quote}Blockquote
+{quote}`,
+			expected: "\n> Blockquote\n\n",
+		},
+		{
+			name:     "one line blockquote",
+			input:    "{quote}Blockquote {without} ending new line{quote}",
+			expected: "\n> Blockquote {without} ending new line\n",
+		},
+		{
+			name:     "inline blockquote",
+			input:    "bq. Inline blockquote",
+			expected: "\n> Inline blockquote\n",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, Parse(tc.input))
+		})
+	}
+}
+
+func TestParsePanels(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name: "panel",
+			input: `{panel}
+Panel description.
+{panel}
+`,
+			expected: `
+---
+Panel description.
+---
+`,
+		},
+		{
+			name: "panel with attributes",
+			input: `{panel:title=Panel Title|bgColor=#fff}
+Panel description.
+{panel}
+`,
+			expected: `
+---
+**Panel Title**
+
+Panel description.
+---
+`,
+		},
+		{
+			name: "panel with alternate syntax",
+			input: `{panel:Panel Title}
+Panel description.
+{panel}
+`,
+			expected: `
+---
+**Panel Title**
+
+Panel description.
+---
+`,
+		},
+		{
+			name: "panel with inline syntax",
+			input: `{panel}Panel description.{panel}
+`,
+			expected: `
+---
+Panel description.
+---
+`,
+		},
+		{
+			name: "panel with inline syntax and title",
+			input: `{panel:title=Panel Title}Panel description.{panel}
+`,
+			expected: `
+---
+**Panel Title**
+
+Panel description.
+---
+`,
+		},
+		{
+			name: "panel with invalid syntax",
+			input: `{panel
+Panel description.
+{panel}
+`,
+			expected: `{panelPanel description.
+---
+`,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, Parse(tc.input))
+		})
+	}
+}
+
+func TestParseFencedCodeBlocks(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name: "preformatted block",
+			input: `{noformat}
+This text *should* be displayed as is.
+{noformat}`,
+			expected: "\n```\nThis text *should* be displayed as is.\n```\n",
+		},
+		{
+			name: "code block",
+			input: `{code}
+<html>HTML</html>
+{code}`,
+			expected: "\n```\n<html>HTML</html>\n```\n",
+		},
+		{
+			name: "code block with language",
+			input: `{code:go}
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, world!")
+}
+{code}`,
+			expected: "\n```go" + `
+package main
+import "fmt"
+func main() {
+	fmt.Println("Hello, world!")
+}
+` + "```\n",
+		},
+		{
+			name: "code block with language in title",
+			input: `{code:title=hello.go}
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, world!")
+}
+{code}`,
+			expected: "\n```go" + `
+package main
+import "fmt"
+func main() {
+	fmt.Println("Hello, world!")
+}
+` + "```\n",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, Parse(tc.input))
+		})
+	}
+}
