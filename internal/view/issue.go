@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ankitpokhrel/jira-cli/pkg/md"
 	"github.com/charmbracelet/glamour"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
@@ -68,7 +69,7 @@ func (i Issue) String() string {
 			desc = adf.NewTranslator(adfNode, adf.NewMarkdownTranslator()).Translate()
 		} else {
 			desc = i.Data.Fields.Description.(string)
-			desc = strings.ReplaceAll(desc, "\n", "\n\n")
+			desc = md.FromJiraMD(desc)
 		}
 	}
 	return fmt.Sprintf(
