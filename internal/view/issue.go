@@ -58,8 +58,6 @@ func (i Issue) String() string {
 	if len(components) > 0 {
 		cmpt = strings.Join(components, ", ")
 	}
-	if len(i.Data.Fields.Labels) > 0 {
-	}
 	it, iti := i.Data.Fields.IssueType.Name, "⭐"
 	if it == "Bug" {
 		iti = "🐞"
