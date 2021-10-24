@@ -73,7 +73,7 @@ h6. Heading 6`,
 	}
 }
 
-func TestParseInlineTags(t *testing.T) {
+func TestParseTextEffectTags(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
@@ -84,17 +84,12 @@ func TestParseInlineTags(t *testing.T) {
 		{
 			name:     "bold",
 			input:    "*bold*",
-			expected: "**bold**\n",
-		},
-		{
-			name:     "italic",
-			input:    "_italic_",
-			expected: "__italic__\n",
+			expected: "**bold**\n\n",
 		},
 		{
 			name:     "bold and italic",
-			input:    "Line with *bold* and _italic_ text.",
-			expected: "Line with **bold** and __italic__ text.\n",
+			input:    "Line with *bold*, _italic_ and -strikethrought- text.",
+			expected: "Line with **bold**, _italic_ and -strikethrought- text.\n",
 		},
 	}
 
@@ -189,9 +184,9 @@ func TestParseReferenceLinks(t *testing.T) {
 			expected: "A text with [a link](https://ankit.pl) in between.\n",
 		},
 		{
-			name:     "valid link mixed with bold and italic text",
-			input:    "A *bold* and _italic_ text with [a link|https://ankit.pl] in between.",
-			expected: "A **bold** and __italic__ text with [a link](https://ankit.pl) in between.\n",
+			name:     "valid link mixed with bold, italic and strikethrough text",
+			input:    "A *bold*, _italic_ and -strikethrough- text with [a link|https://ankit.pl] in between.",
+			expected: "A **bold**, _italic_ and -strikethrough- text with [a link](https://ankit.pl) in between.\n",
 		},
 		{
 			name:     "invalid link",
@@ -259,12 +254,14 @@ func TestParsePanels(t *testing.T) {
 		{
 			name: "panel",
 			input: `{panel}
-Panel description.
+This is a panel description.
+And, a new line.
 {panel}
 `,
 			expected: `
 ---
-Panel description.
+This is a panel description.
+And, a new line.
 ---
 `,
 		},
@@ -324,7 +321,8 @@ Panel description.
 Panel description.
 {panel}
 `,
-			expected: `{panelPanel description.
+			expected: `{panel
+Panel description.
 ---
 `,
 		},

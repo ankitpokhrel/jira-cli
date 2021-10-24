@@ -1,7 +1,6 @@
 package jirawiki
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 )
@@ -29,8 +28,6 @@ const (
 	TagOrderedList   = "#"
 	TagUnorderedList = "*" // '*' can be either be bold or an unordered list 🤦.
 	TagBold          = "*"
-	TagItalic        = "_"
-	TagUnderline     = "+"
 
 	// Let's group tags based on their behavior.
 	typeTagTextEffect      = "text-effect"
@@ -65,8 +62,6 @@ var validTags = []string{
 	TagOrderedList,
 	TagUnorderedList,
 	TagBold,
-	TagItalic,
-	TagUnderline,
 }
 
 var replacements = map[string]string{
@@ -83,8 +78,6 @@ var replacements = map[string]string{
 	TagNoFormat:    "```",
 	TagOrderedList: "-",
 	TagBold:        "**",
-	TagItalic:      "__",
-	TagUnderline:   "~",
 }
 
 // Parse converts input string to Jira markdown.
@@ -94,7 +87,7 @@ func Parse(input string) string {
 
 /*
 	First pass:
-		- Fetch lines from the input while ignoring additional carriage return or new line.
+		- Fetch all lines from the input.
 */
 func firstPass(input string) []string {
 	var (
@@ -123,7 +116,7 @@ func firstPass(input string) []string {
 */
 func secondPass(lines []string) string {
 	var (
-		out     bytes.Buffer
+		out     strings.Builder
 		lineNum int
 	)
 
@@ -133,7 +126,11 @@ func secondPass(lines []string) string {
 
 		if len(tokens) == 0 {
 			out.WriteString(line)
+
 			lineNum++
+			if lineNum < len(lines)-1 {
+				out.WriteRune(newLine)
+			}
 			continue
 		}
 
@@ -196,8 +193,7 @@ func secondPass(lines []string) string {
 	return out.String()
 }
 
-// Parse the line and convert to commonmark markdown.
-// We are not expecting any line feeds at this point.
+// Mark tokens in a given string.
 func tokenize(line string) []*Token { //nolint:gocyclo
 	line = strings.TrimSpace(line)
 
@@ -274,11 +270,11 @@ out:
 			})
 		default:
 			end = beg + 1
-			for end < size && line[end] != '*' && line[end] != '_' && line[end] != '{' && line[end] != '}' && line[end] != '[' && line[end] != ']' {
+			for end < size && line[end] != '*' && line[end] != '{' && line[end] != '}' && line[end] != '[' && line[end] != ']' {
 				end++
 			}
 
-			if end != size && line[end] != '*' && line[end] != '_' && line[end] != '{' && line[end] != '[' {
+			if end != size && line[end] != '*' && line[end] != '{' && line[end] != '[' {
 				end++
 			}
 
@@ -347,17 +343,21 @@ type Token struct {
 	endIdx   int
 }
 
-func (t *Token) handleTextEffects(line string, out *bytes.Buffer) int {
+func (t *Token) handleTextEffects(line string, out *strings.Builder) int {
 	word := line[t.startIdx+1 : t.endIdx]
 
 	out.WriteString(replacements[string(line[t.startIdx])])
 	out.WriteString(word)
 	out.WriteString(replacements[string(line[t.startIdx])])
 
+	if t.endIdx == len(line)-1 {
+		out.WriteRune(newLine)
+	}
+
 	return t.endIdx
 }
 
-func (t *Token) handleHeadings(line string, out *bytes.Buffer) int {
+func (t *Token) handleHeadings(line string, out *strings.Builder) int {
 	word := line[t.endIdx+1:]
 
 	out.WriteString(replacements[t.tag])
@@ -366,7 +366,7 @@ func (t *Token) handleHeadings(line string, out *bytes.Buffer) int {
 	return t.endIdx + len(word)
 }
 
-func (t *Token) handleInlineBlockQuote(line string, out *bytes.Buffer) int {
+func (t *Token) handleInlineBlockQuote(line string, out *strings.Builder) int {
 	word := line[t.endIdx+1:]
 
 	out.WriteString(fmt.Sprintf("\n%s", replacements[t.tag]))
@@ -375,7 +375,7 @@ func (t *Token) handleInlineBlockQuote(line string, out *bytes.Buffer) int {
 	return t.endIdx + len(word)
 }
 
-func (t *Token) handleList(line string, out *bytes.Buffer) int {
+func (t *Token) handleList(line string, out *strings.Builder) int {
 	end := t.endIdx + 1
 
 	for i := t.startIdx; i < t.endIdx-1; i++ {
@@ -390,7 +390,7 @@ func (t *Token) handleList(line string, out *bytes.Buffer) int {
 	return end
 }
 
-func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *bytes.Buffer) int {
+func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Builder) int {
 	if idx == len(lines)-1 {
 		return t.endIdx
 	}
@@ -426,7 +426,7 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *bytes.Buffer
 	return i + 1
 }
 
-func (t *Token) handleReferenceLink(line string, out *bytes.Buffer) int {
+func (t *Token) handleReferenceLink(line string, out *strings.Builder) int {
 	if len(line) < 2 {
 		return t.endIdx
 	}
@@ -466,7 +466,7 @@ func tokenStarts(idx int, tokens []*Token) (*Token, bool) {
 }
 
 func getTagType(line string, beg int) string {
-	if isInlineTag(line[beg], line[beg+1]) {
+	if isTextEffectTag(line[beg], line[beg+1]) {
 		return typeTagTextEffect
 	}
 	if isListTag(line[beg], line[beg+1]) {
@@ -484,9 +484,9 @@ func getTagType(line string, beg int) string {
 	return typeTagOther
 }
 
-func isInlineTag(beg, next uint8) bool {
+func isTextEffectTag(beg, next uint8) bool {
 	s := string(beg)
-	return (s == TagBold || s == TagItalic || s == TagUnderline) && (next != ' ' && next != beg)
+	return s == TagBold && (next != ' ' && next != beg)
 }
 
 func isListTag(beg, next uint8) bool {
