@@ -60,6 +60,11 @@ h6. Heading 6`,
 ###### Heading 6
 `,
 		},
+		{
+			name:     "empty heading",
+			input:    "h3.",
+			expected: "###\n",
+		},
 	}
 
 	for _, tc := range cases {
@@ -90,6 +95,21 @@ func TestParseTextEffectTags(t *testing.T) {
 			name:     "bold, italic and strikethrough",
 			input:    "Line with *bold*, _italic_ and -strikethrough- text. And _italics with *bold* text in it_.",
 			expected: "Line with **bold**, _italic_ and -strikethrough- text. And _italics with **bold** text in it_.\n",
+		},
+		{
+			name:     "bold",
+			input:    "*bold",
+			expected: "**bold**\n",
+		},
+		{
+			name:     "partially closed bold tag in a sentence",
+			input:    "Line with *bold and _italic_ text.",
+			expected: "Line with **bold and _italic_ text.**\n",
+		},
+		{
+			name:     "partially closed bold and italic in a sentence",
+			input:    "Line with *bold and _italic text.",
+			expected: "Line with **bold and _italic text.**\n",
 		},
 	}
 
@@ -140,6 +160,16 @@ func TestParseListTags(t *testing.T) {
 	- Ordered list subitem 1
 	- Ordered list subitem 2
 		- Ordered list subitem 2 item 1
+`,
+		},
+		{
+			name: "empty list",
+			input: `* Item 1
+ ** Subitem 1
+ **`,
+			expected: `- Item 1
+	- Subitem 1
+	- 
 `,
 		},
 	}
@@ -193,6 +223,11 @@ func TestParseReferenceLinks(t *testing.T) {
 			input:    "This is a [Link|https://ankit.pl, and some texts.",
 			expected: "This is a [Link|https://ankit.pl, and some texts.",
 		},
+		{
+			name:     "empty link",
+			input:    "This link is empty []",
+			expected: "This link is empty []()\n",
+		},
 	}
 
 	for _, tc := range cases {
@@ -226,9 +261,19 @@ func TestParseBlockQuote(t *testing.T) {
 			expected: "\n> Blockquote {without} ending new line\n",
 		},
 		{
+			name:     "unclosed blockquote",
+			input:    "{quote}Blockquote {without} closing and a *bold* text",
+			expected: "\n> Blockquote {without} closing and a **bold** text\n",
+		},
+		{
 			name:     "inline blockquote",
 			input:    "bq. Inline blockquote",
 			expected: "\n> Inline blockquote\n",
+		},
+		{
+			name:     "empty inline blockquote",
+			input:    "bq.",
+			expected: "\n>\n",
 		},
 	}
 

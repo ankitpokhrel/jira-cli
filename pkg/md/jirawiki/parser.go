@@ -25,14 +25,14 @@ const (
 	TagTable         = "||"
 
 	// Let's group tags based on their behavior.
-	typeTagTextEffect      = "text-effect"
-	typeTagList            = "list"
-	typeTagHeading         = "heading"
-	typeTagTextEffectQuote = "inline-quote"
-	typeTagReferenceLink   = "link"
-	typeTagFencedCode      = "code"
-	typeTagTable           = "table"
-	typeTagOther           = "other"
+	typeTagTextEffect    = "text-effect"
+	typeTagList          = "list"
+	typeTagHeading       = "heading"
+	typeTagInlineQuote   = "inline-quote"
+	typeTagReferenceLink = "link"
+	typeTagFencedCode    = "code"
+	typeTagTable         = "table"
+	typeTagOther         = "other"
 
 	// Supported attributes.
 	attrTitle = "title"
@@ -148,7 +148,7 @@ func secondPass(lines []string) string {
 					end = token.handleTextEffects(line, &out)
 				case typeTagHeading:
 					end = token.handleHeadings(line, &out)
-				case typeTagTextEffectQuote:
+				case typeTagInlineQuote:
 					end = token.handleInlineBlockQuote(line, &out)
 				case typeTagList:
 					end = token.handleList(line, &out)
@@ -220,7 +220,13 @@ out:
 			for end < len(line) && line[end] != line[beg] {
 				end++
 			}
-			word := line[beg : end+1]
+
+			var word string
+			if end < size-1 {
+				word = line[beg : end+1]
+			} else {
+				word = line[beg:end]
+			}
 
 			tokens = append(tokens, &Token{
 				tag:      word,
@@ -231,7 +237,7 @@ out:
 			end++
 		case typeTagHeading:
 			fallthrough
-		case typeTagTextEffectQuote:
+		case typeTagInlineQuote:
 			end = beg + 1
 			for end < len(line) && line[end] != '.' {
 				end++
@@ -510,7 +516,7 @@ func getTagType(line string, beg int) string {
 		return typeTagHeading
 	}
 	if isInlineBlockQuote(beg, line) {
-		return typeTagTextEffectQuote
+		return typeTagInlineQuote
 	}
 	if isReferenceLink(beg, line) {
 		return typeTagReferenceLink
