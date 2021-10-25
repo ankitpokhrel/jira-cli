@@ -5,12 +5,6 @@ import (
 	"strings"
 )
 
-/*
-	TODO:
-		- Tables
-		- Colors (?)
-*/
-
 // Supported Jira wiki tags.
 const (
 	TagHeading1      = "h1."
@@ -28,6 +22,7 @@ const (
 	TagOrderedList   = "#"
 	TagUnorderedList = "*" // '*' can be either be bold or an unordered list 🤦.
 	TagBold          = "*"
+	TagTable         = "||"
 
 	// Let's group tags based on their behavior.
 	typeTagTextEffect      = "text-effect"
@@ -36,6 +31,7 @@ const (
 	typeTagTextEffectQuote = "inline-quote"
 	typeTagReferenceLink   = "link"
 	typeTagFencedCode      = "code"
+	typeTagTable           = "table"
 	typeTagOther           = "other"
 
 	// Supported attributes.
@@ -62,6 +58,7 @@ var validTags = []string{
 	TagOrderedList,
 	TagUnorderedList,
 	TagBold,
+	TagTable,
 }
 
 var replacements = map[string]string{
@@ -78,6 +75,7 @@ var replacements = map[string]string{
 	TagNoFormat:    "```",
 	TagOrderedList: "-",
 	TagBold:        "**",
+	TagTable:       "|",
 }
 
 // Parse converts input string to Jira markdown.
@@ -87,7 +85,7 @@ func Parse(input string) string {
 
 /*
 	First pass:
-		- Fetch all lines from the input.
+		- Fetch all lines from the input while skipping unnecessary line feeds.
 */
 func firstPass(input string) []string {
 	var (
@@ -98,10 +96,14 @@ func firstPass(input string) []string {
 
 	for beg < size {
 		end := beg
-		for end < size && input[end] != newLine && input[end] != carriageReturn {
+		for end < size && input[end] != carriageReturn && input[end] != newLine {
 			end++
 		}
 		lines = append(lines, input[beg:end])
+
+		for end < size && input[end] == carriageReturn {
+			end++
+		}
 
 		beg = end + 1
 	}
@@ -155,6 +157,8 @@ func secondPass(lines []string) string {
 					break out
 				case typeTagReferenceLink:
 					end = token.handleReferenceLink(line, &out)
+				case typeTagTable:
+					end = token.handleTable(line, &out)
 				case typeTagOther:
 					if token.tag == TagQuote {
 						// If end is same as size of the input, it implies that
@@ -265,6 +269,15 @@ out:
 			tokens = append(tokens, &Token{
 				tag:      word,
 				family:   typeTagReferenceLink,
+				startIdx: beg,
+				endIdx:   end,
+			})
+		case typeTagTable:
+			end = len(line) - 1
+
+			tokens = append(tokens, &Token{
+				tag:      line,
+				family:   typeTagTable,
 				startIdx: beg,
 				endIdx:   end,
 			})
@@ -447,6 +460,27 @@ func (t *Token) handleReferenceLink(line string, out *strings.Builder) int {
 	return t.endIdx
 }
 
+func (t *Token) handleTable(line string, out *strings.Builder) int {
+	if line[1] != '|' {
+		out.WriteString(line)
+		return t.endIdx
+	}
+
+	headers := strings.ReplaceAll(line, TagTable, replacements[TagTable])
+	cols := strings.Split(headers, "|")
+
+	var sep strings.Builder
+	for i := 0; i < len(cols)-2; i++ {
+		sep.WriteString("|---")
+	}
+
+	row := fmt.Sprintf("%s\n%s|", headers, sep.String())
+
+	out.WriteString(row)
+
+	return t.endIdx
+}
+
 func isToken(inp string) bool {
 	for _, tag := range validTags {
 		if inp == tag {
@@ -466,7 +500,7 @@ func tokenStarts(idx int, tokens []*Token) (*Token, bool) {
 }
 
 func getTagType(line string, beg int) string {
-	if isTextEffectTag(line[beg], line[beg+1]) {
+	if isTextEffect(line[beg], line[beg+1]) {
 		return typeTagTextEffect
 	}
 	if isListTag(line[beg], line[beg+1]) {
@@ -481,10 +515,13 @@ func getTagType(line string, beg int) string {
 	if isReferenceLink(beg, line) {
 		return typeTagReferenceLink
 	}
+	if isTable(beg, line) {
+		return typeTagTable
+	}
 	return typeTagOther
 }
 
-func isTextEffectTag(beg, next uint8) bool {
+func isTextEffect(beg, next uint8) bool {
 	s := string(beg)
 	return s == TagBold && (next != ' ' && next != beg)
 }
@@ -526,4 +563,9 @@ func isReferenceLink(beg int, line string) bool {
 	}
 
 	return end < len(line) && line[end] == ']'
+}
+
+func isTable(beg int, line string) bool {
+	end := len(line) - 1
+	return end != beg && line[beg] == '|' && line[end] == '|'
 }

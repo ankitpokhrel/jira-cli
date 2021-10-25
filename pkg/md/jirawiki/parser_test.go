@@ -87,9 +87,9 @@ func TestParseTextEffectTags(t *testing.T) {
 			expected: "**bold**\n\n",
 		},
 		{
-			name:     "bold and italic",
-			input:    "Line with *bold*, _italic_ and -strikethrought- text.",
-			expected: "Line with **bold**, _italic_ and -strikethrought- text.\n",
+			name:     "bold, italic and strikethrough",
+			input:    "Line with *bold*, _italic_ and -strikethrough- text. And _italics with *bold* text in it_.",
+			expected: "Line with **bold**, _italic_ and -strikethrough- text. And _italics with **bold** text in it_.\n",
 		},
 	}
 
@@ -398,6 +398,62 @@ func main() {
 	fmt.Println("Hello, world!")
 }
 ` + "```\n",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, Parse(tc.input))
+		})
+	}
+}
+
+func TestTables(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name: "valid table",
+			input: `||heading 1||heading 2||heading 3||
+|col A1|col A2|col A3|
+|col B1|col B2|col B3|`,
+			expected: `|heading 1|heading 2|heading 3|
+|---|---|---|
+|col A1|col A2|col A3|
+|col B1|col B2|col B3|
+`,
+		},
+		{
+			name:  "valid table with no rows",
+			input: `||heading 1||heading 2||heading 3||`,
+			expected: `|heading 1|heading 2|heading 3|
+|---|---|---|
+`,
+		},
+		{
+			name: "valid table with no headers",
+			input: `||||
+|col A1|
+|col B1|`,
+			expected: `||
+|---|
+|col A1|
+|col B1|
+`,
+		},
+		{
+			name: "invalid table",
+			input: `||heading 1||heading 2||heading 3
+|col A1|col A2|col A3|`,
+			expected: "||heading 1||heading 2||heading 3|col A1|col A2|col A3|\n",
 		},
 	}
 
