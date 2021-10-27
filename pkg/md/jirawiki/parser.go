@@ -434,11 +434,7 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 
 		// Write everything as is.
 		out.WriteString(lines[i])
-
-		// Add a blank line if this is already not an empty line.
-		if len(line) > 0 {
-			out.WriteRune(newLine)
-		}
+		out.WriteRune(newLine)
 	}
 	out.WriteString(replacements[t.tag])
 
