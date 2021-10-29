@@ -20,7 +20,5 @@ func ToJiraMD(md string) string {
 
 // FromJiraMD translates Jira flavored markdown to CommonMark.
 func FromJiraMD(jfm string) string {
-	out := jirawiki.Parse(jfm)
-
-	return out
+	return jirawiki.Parse(jfm)
 }

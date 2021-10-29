@@ -209,6 +209,16 @@ func TestParseReferenceLinks(t *testing.T) {
 			expected: "[](https://ankit.pl)\n",
 		},
 		{
+			name:     "mailto link",
+			input:    "[mailto:hi@ankit.pl]",
+			expected: "[](mailto:hi@ankit.pl)\n",
+		},
+		{
+			name:     "anchor link",
+			input:    "[#somewhere]",
+			expected: "[](#somewhere)\n",
+		},
+		{
 			name:     "valid link wrapped around texts",
 			input:    "A text with [a link|https://ankit.pl] in between.",
 			expected: "A text with [a link](https://ankit.pl) in between.\n",

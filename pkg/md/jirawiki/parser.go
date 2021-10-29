@@ -415,6 +415,7 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 	}
 
 	out.WriteString(fmt.Sprintf("\n%s", replacements[t.tag]))
+
 	if t, ok := t.attrs[attrTitle]; ok {
 		pieces := strings.Split(t, ".")
 		if len(pieces) == 2 {
@@ -423,6 +424,7 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 			out.WriteString(t)
 		}
 	}
+
 	out.WriteRune(newLine)
 
 	i := idx + 1
