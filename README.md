@@ -32,20 +32,20 @@
     </p>
 </div>
 
-JiraCLI is a command line tool for Jira created with an idea to avoid the Jira UI as much as possible. The tool is not yet complete but has
-all necessary features required to improve your workflow with Jira. The tool mostly focuses on issue search and navigation at the moment.
-However, it also includes features like issue creation, cloning, linking, ticket transition, and so on.
+JiraCLI is an interactive command line tool for Atlassian Jira that will help you avoid Jira UI to some extent. This
+tool is not yet considered complete but has all the essential features required to improve your workflow with Jira.
 
-> Your suggestions and feedbacks are highly appreciated. Feel free to [start a discussion](https://github.com/ankitpokhrel/jira-cli/discussions)
-or [create an issue](https://github.com/ankitpokhrel/jira-cli/issues/new) to share your experience about the tool or to discuss a feature/issue.
-If you think this project is cool and helpful, consider contributing by starring the repo, sharing with your friends or submitting a PR.
+The tool started with the idea of making issue search and navigation as straightforward as possible. However, with the
+help of [outstanding supporters like you](#support-the-project), we evolved, and the tool now includes all necessary
+features like issue creation, cloning, linking, ticket transition, and much more.
 
 ## Supported platforms
-The tool is only tested with the latest Jira cloud since that's what I usually work with. There is a plan to support local Jira instances in the future, however, it might not happen anytime soon.
+Note that some features might work slightly differently in cloud installation versus on-premise installation due to the
+nature of the data. Yet, we've attempted to make the experience as similar as possible.
 
-| Platform | <a href="#"><img alt="Software License" src="https://img.shields.io/badge/linux-%E2%9C%93-dark--green?logo=linux&style=flat-square" /></a><a href="#"><img alt="Software License" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=macos&style=flat-square" /></a><a href="#"><img alt="Software License" src="https://img.shields.io/badge/windows-partial-yellow?logo=windows&style=flat-square" /></a> |
+| Platform | <a href="#"><img alt="Linux" src="https://img.shields.io/badge/linux-%E2%9C%93-dark--green?logo=linux&style=flat-square" /></a><a href="#"><img alt="macOS" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=macos&style=flat-square" /></a><a href="#"><img alt="Windows" src="https://img.shields.io/badge/windows-partial-yellow?logo=windows&style=flat-square" /></a> |
 | :------------- | :----------: |
-| **Jira**  | <a href="#"><img alt="Software License" src="https://img.shields.io/badge/jira cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Software License" src="https://img.shields.io/badge/jira%20server-WIP-orange?logo=jira&style=flat-square" /></a> |
+| **Jira**  | <a href="#"><img alt="Jira Cloud" src="https://img.shields.io/badge/jira cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Jira Server" src="https://img.shields.io/badge/jira server-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a> |
 
 ## Installation
 `jira-cli` is available as a downloadable binary for Linux, macOS, and Windows from the [releases page](https://github.com/ankitpokhrel/jira-cli/releases).
@@ -155,7 +155,7 @@ jira issue list -a"User A" -r"User B"
 ```
 </details>
 
-<details><summary>List issues assigned to me is of high priority and is open</summary>
+<details><summary>List issues assigned to me, is of high priority and is open</summary>
 
 ```sh
 jira issue list -a$(jira me) -yHigh -sopen
@@ -602,10 +602,23 @@ Sprint 1:   3
    ```
 
 ## Support the project
-If you think this tool is useful, saves you a lot of work, and lets you sleep much better, then consider
-supporting the project by:
+Your suggestions and feedbacks are highly appreciated. Feel free
+to [start a discussion](https://github.com/ankitpokhrel/jira-cli/discussions)
+or [create an issue](https://github.com/ankitpokhrel/jira-cli/issues/new) to share your experience about the tool or to
+discuss a feature/issue.
 
-- [Starring the repo](https://github.com/ankitpokhrel/jira-cli/stargazers).
-- Spreading the word by sharing the project on social media or with friends.
-- [Reporting bugs](https://github.com/ankitpokhrel/jira-cli/issues/new/choose) or [proposing solutions](https://github.com/ankitpokhrel/jira-cli/issues).
-- [Donating a small amount](https://opencollective.com/jira-cli#backers).
+If you think this tool is useful, saves you a lot of work, and lets you sleep much better, then consider supporting the
+project by any of the following means:
+
+- [Star the repo](https://github.com/ankitpokhrel/jira-cli/stargazers).
+- Spread the word by sharing the project on social media or with friends.
+- [Report bugs](https://github.com/ankitpokhrel/jira-cli/issues/new/choose)
+  or [propose solutions](https://github.com/ankitpokhrel/jira-cli/issues).
+- [Donate a small amount](https://opencollective.com/jira-cli#backers).
+
+<div>
+   <br/>
+   <p align="center">
+      <sub>Made with 💚</sub>
+   </p>
+</div>
