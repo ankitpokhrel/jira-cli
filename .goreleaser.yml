@@ -59,6 +59,50 @@ checksum:
   name_template: 'checksums.txt'
   algorithm: sha256
 
+brews:
+  - name: jira-cli
+    homepage: "https://github.com/ankitpokhrel/jira-cli"
+    description: "🔥 Feature-rich interactive Jira command-line"
+    license: "MIT"
+
+    ids:
+      - nix
+
+    # GOARM to specify which 32-bit arm version to use if there are multiple versions
+    # from the build section. Brew formulas support only one 32-bit version atm.
+    goarm: 6
+
+    tap:
+      owner: ankitpokhrel
+      name: homebrew-jira-cli
+
+    test: |
+      system "#{bin}/jira --help"
+      assert_includes help_text, "Usage:"
+
+    install: |
+      system "make install" if build.head?
+      bin.install File.exist?("bin/jira") ? "bin/jira" : "jira"
+
+    custom_block: |
+      head do
+        url "https://github.com/ankitpokhrel/jira-cli.git", branch: "main"
+        depends_on "go"
+      end
+
+    commit_author:
+      name: ankitpokhrel
+      email: hello@ankit.pl
+
+    commit_msg_template: "Formula update for version {{ .Tag }}"
+
+    # Folder inside the repository to put the formula to.
+    folder: Formula
+
+    # This will prevent goreleaser to actually try to commit the updated
+    # formula - leaving the responsibility of publishing it to the user.
+    skip_upload: true
+
 changelog:
   skip: true
   sort: desc
