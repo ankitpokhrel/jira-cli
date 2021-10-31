@@ -68,27 +68,27 @@ brews:
     ids:
       - nix
 
-    # GOARM to specify which 32-bit arm version to use if there are multiple versions
-    # from the build section. Brew formulas support only one 32-bit version atm.
-    goarm: 6
-
     tap:
       owner: ankitpokhrel
       name: homebrew-jira-cli
-
-    test: |
-      system "#{bin}/jira --help"
-      assert_includes help_text, "Usage:"
-
-    install: |
-      system "make install" if build.head?
-      bin.install File.exist?("bin/jira") ? "bin/jira" : "jira"
 
     custom_block: |
       head do
         url "https://github.com/ankitpokhrel/jira-cli.git", branch: "main"
         depends_on "go"
       end
+
+    install: |
+      if build.head?
+        system "make", "install"
+        bin.install ENV["GOPATH"] + "/bin/jira"
+      else
+        bin.install File.exist?("bin/jira") ? "bin/jira" : "jira"
+      end
+
+    test: |
+      help_text = shell_output("#{bin}/jira version")
+      assert_includes help_text, "Version=\"#{version}\""
 
     commit_author:
       name: ankitpokhrel
