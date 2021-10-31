@@ -121,7 +121,7 @@ func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
 			Name: "server",
 			Prompt: &survey.Input{
 				Message: "Link to Jira server:",
-				Help:    "This is a link to your jira server, eg: https://company.atlassasian.net",
+				Help:    "This is a link to your jira server, eg: https://company.atlassian.net",
 			},
 			Validate: func(val interface{}) error {
 				errInvalidURL := fmt.Errorf("not a valid URL")
