@@ -275,10 +275,10 @@ func (c *JiraCLIConfig) configureMetadata() error {
 	}
 
 	var (
-		epicMeta map[string]interface{}
-		epicKey  string
+		epicMeta   map[string]interface{}
+		issueTypes = make([]*jira.IssueType, 0, len(meta.Projects[0].IssueTypes))
 	)
-	issueTypes := make([]*jira.IssueType, 0, len(meta.Projects[0].IssueTypes))
+
 	for _, it := range meta.Projects[0].IssueTypes {
 		if it.Name == jira.IssueTypeEpic {
 			epicMeta = it.Fields
@@ -289,25 +289,39 @@ func (c *JiraCLIConfig) configureMetadata() error {
 			Subtask: it.Subtask,
 		})
 	}
+
 	c.value.issueTypes = issueTypes
+	c.value.epic = &jira.Epic{Field: c.decipherEpicField(epicMeta)}
+
+	return nil
+}
+
+func (c *JiraCLIConfig) decipherEpicField(epicMeta map[string]interface{}) string {
+	var epicKey string
 
 	for field, value := range epicMeta {
 		if !strings.Contains(field, "customfield") {
 			continue
 		}
 		v := value.(map[string]interface{})
-		if v["name"].(string) == "Epic Name" {
-			if c.value.installation == jira.InstallationTypeCloud {
-				epicKey = v["key"].(string)
-			} else if c.value.installation == jira.InstallationTypeLocal {
+
+		if v["name"].(string) != "Epic Name" {
+			continue
+		}
+
+		switch c.value.installation {
+		case jira.InstallationTypeCloud:
+			epicKey = v["key"].(string)
+		case jira.InstallationTypeLocal:
+			if _, ok := v["fieldId"]; ok {
 				epicKey = v["fieldId"].(string)
+			} else {
+				epicKey = field
 			}
-			break
 		}
 	}
-	c.value.epic = &jira.Epic{Field: epicKey}
 
-	return nil
+	return epicKey
 }
 
 func (c *JiraCLIConfig) write() error {
