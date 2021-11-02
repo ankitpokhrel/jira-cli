@@ -297,11 +297,6 @@ func (c *JiraCLIConfig) configureMetadata() error {
 }
 
 func (c *JiraCLIConfig) decipherEpicField(epicMeta map[string]interface{}) string {
-	const (
-		nameField = "Epic Name"
-		linkField = "Epic Link"
-	)
-
 	var epicKey string
 
 	for field, value := range epicMeta {
@@ -309,22 +304,19 @@ func (c *JiraCLIConfig) decipherEpicField(epicMeta map[string]interface{}) strin
 			continue
 		}
 		v := value.(map[string]interface{})
-		name := v["name"].(string)
+
+		if v["name"].(string) != "Epic Name" {
+			continue
+		}
 
 		switch c.value.installation {
 		case jira.InstallationTypeCloud:
-			if name == nameField {
-				epicKey = v["key"].(string)
-			}
+			epicKey = v["key"].(string)
 		case jira.InstallationTypeLocal:
-			if name == linkField {
-				if _, ok := v["fieldId"]; !ok {
-					epicKey = field
-				}
-			} else if name == nameField {
-				if _, ok := v["fieldId"]; ok {
-					epicKey = v["fieldId"].(string)
-				}
+			if _, ok := v["fieldId"]; ok {
+				epicKey = v["fieldId"].(string)
+			} else {
+				epicKey = field
 			}
 		}
 	}
