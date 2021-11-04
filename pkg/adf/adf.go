@@ -122,22 +122,6 @@ func (n MarkNode) GetType() NodeType { return n.MarkType }
 // GetAttributes gets node attributes.
 func (n MarkNode) GetAttributes() interface{} { return n.Attributes }
 
-// Translator transforms ADF to a new format.
-type Translator struct {
-	doc *ADF
-	tsl TagOpenerCloser
-	buf *strings.Builder
-}
-
-// NewTranslator constructs an ADF translator.
-func NewTranslator(adf *ADF, tr TagOpenerCloser) *Translator {
-	return &Translator{
-		doc: adf,
-		tsl: tr,
-		buf: new(strings.Builder),
-	}
-}
-
 // ParentNodes returns supported ADF parent nodes.
 func ParentNodes() []NodeType {
 	return []NodeType{
@@ -193,6 +177,22 @@ func GetADFNodeType(identifier NodeType) NodeType {
 		return NodeTypeChild
 	}
 	return NodeTypeUnknown
+}
+
+// Translator transforms ADF to a new format.
+type Translator struct {
+	doc *ADF
+	tsl TagOpenerCloser
+	buf *strings.Builder
+}
+
+// NewTranslator constructs an ADF translator.
+func NewTranslator(adf *ADF, tr TagOpenerCloser) *Translator {
+	return &Translator{
+		doc: adf,
+		tsl: tr,
+		buf: new(strings.Builder),
+	}
 }
 
 // Translate translates ADF to a new format.

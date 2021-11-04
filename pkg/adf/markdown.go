@@ -266,13 +266,16 @@ func (tr *MarkdownTranslator) setCloseTagAttributes(a interface{}) string {
 	if a == nil {
 		return ""
 	}
+
 	var tag strings.Builder
+
 	attrs := a.(map[string]interface{})
 	if h, ok := attrs["href"]; ok {
 		tag.WriteString(fmt.Sprintf("(%s) ", h))
 	} else if h, ok := attrs["url"]; ok {
 		tag.WriteString(fmt.Sprintf("%s ", h))
 	}
+
 	return tag.String()
 }
 

@@ -133,9 +133,6 @@ func issueKeyFromTuiData(r int, d interface{}) string {
 		path = data.Key
 	}
 
-	if path == "" {
-		return ""
-	}
 	return path
 }
 
