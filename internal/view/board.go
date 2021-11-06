@@ -7,6 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
 // BoardOption is a functional option to wrap board properties.
@@ -54,7 +55,7 @@ func (b Board) Render() error {
 		}
 	}
 
-	return PagerOut(b.buf.String())
+	return tui.PagerOut(b.buf.String())
 }
 
 func (b Board) header() []string {

@@ -242,17 +242,24 @@ func (pv *Preview) initContents() {
 					r, c := pv.contents.view.GetSelection()
 
 					go func() {
-						pv.painter.ShowPage("secondary")
-						defer func() {
-							pv.painter.HidePage("secondary")
-							pv.screen.SetFocus(pv.contents.view)
+						func() {
+							pv.painter.ShowPage("secondary")
+							defer func() {
+								pv.painter.HidePage("secondary")
+								pv.screen.SetFocus(pv.contents.view)
+							}()
+
+							contents := pv.contentsCache[pv.data[sr].Key]
+							dataFn, renderFn := pv.contents.viewModeFunc(r, c, contents)
+
+							out, err := renderFn(dataFn())
+							if err == nil {
+								pv.screen.Suspend(func() { _ = PagerOut(out) })
+							}
 						}()
 
-						contents := pv.contentsCache[pv.data[sr].Key]
-						dataFn, renderFn := pv.contents.viewModeFunc(r, c, contents)
-						data := dataFn()
-
-						pv.screen.Suspend(func() { _ = renderFn(data) })
+						// Refresh the screen.
+						pv.screen.Draw()
 					}()
 				}
 			}

@@ -11,7 +11,7 @@ require (
 	github.com/cli/safeexec v1.0.0
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/fatih/color v1.12.0
-	github.com/gdamore/tcell/v2 v2.3.11
+	github.com/gdamore/tcell/v2 v2.4.1-0.20210905002822-f057f0a857a1
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/kentaro-m/blackfriday-confluence v0.0.0-20210619074151-1628b53c6f29
 	github.com/kr/text v0.2.0
@@ -22,7 +22,7 @@ require (
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.9.0 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/rivo/tview v0.0.0-20210217110421-8a8f78a6dd01
+	github.com/rivo/tview v0.0.0-20211029142923-a4acb08f513e
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.8.0
@@ -30,6 +30,7 @@ require (
 	github.com/yuin/goldmark v1.4.2 // indirect
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
 	golang.org/x/net v0.0.0-20211029160332-540bb53d3b2e // indirect
-	golang.org/x/sys v0.0.0-20211029165221-6e7872819dc8 // indirect
-	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
+	golang.org/x/sys v0.0.0-20211105183446-c75c47738b0c // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
+	golang.org/x/text v0.3.7 // indirect
 )

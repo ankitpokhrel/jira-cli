@@ -35,7 +35,7 @@ func (i Issue) Render() error {
 	if err != nil {
 		return err
 	}
-	return PagerOut(out)
+	return tui.PagerOut(out)
 }
 
 func (i Issue) String() string {

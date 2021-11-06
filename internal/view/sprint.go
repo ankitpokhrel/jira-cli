@@ -45,17 +45,17 @@ func (sl SprintList) Render() error {
 		tui.WithInitialText(helpText),
 		tui.WithContentTableOpts(
 			tui.WithSelectedFunc(navigate(sl.Server)),
-			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) error) {
+			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) (string, error)) {
 				dataFn := func() interface{} {
 					issue, _ := api.ProxyGetIssue(api.Client(jira.Config{}), d.(tui.TableData)[r][1])
 					return issue
 				}
-				renderFn := func(i interface{}) error {
+				renderFn := func(i interface{}) (string, error) {
 					out, err := renderer.Render(Issue{Data: i.(*jira.Issue)}.String())
 					if err != nil {
-						return err
+						return "", err
 					}
-					return PagerOut(out)
+					return out, nil
 				}
 				return dataFn, renderFn
 			}),

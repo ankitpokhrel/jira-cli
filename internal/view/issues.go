@@ -57,17 +57,17 @@ func (l IssueList) Render() error {
 		tui.WithMaxColWidth(maxColWidth),
 		tui.WithTableFooterText(l.FooterText),
 		tui.WithSelectedFunc(navigate(l.Server)),
-		tui.WithViewModeFunc(func(r, c int, _ interface{}) (func() interface{}, func(interface{}) error) {
+		tui.WithViewModeFunc(func(r, c int, _ interface{}) (func() interface{}, func(interface{}) (string, error)) {
 			dataFn := func() interface{} {
 				issue, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data[r][1])
 				return issue
 			}
-			renderFn := func(i interface{}) error {
+			renderFn := func(i interface{}) (string, error) {
 				out, err := renderer.Render(Issue{Data: i.(*jira.Issue)}.String())
 				if err != nil {
-					return err
+					return "", err
 				}
-				return PagerOut(out)
+				return out, nil
 			}
 			return dataFn, renderFn
 		}),

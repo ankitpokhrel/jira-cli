@@ -19,7 +19,7 @@ var errNoData = fmt.Errorf("no data")
 type SelectedFunc func(row, column int, data interface{})
 
 // ViewModeFunc sets view mode handler func which gets triggered when a user press 'v'.
-type ViewModeFunc func(row, col int, data interface{}) (func() interface{}, func(data interface{}) error)
+type ViewModeFunc func(row, col int, data interface{}) (func() interface{}, func(data interface{}) (string, error))
 
 // CopyFunc is fired when a user press 'c' character in the table cell.
 type CopyFunc func(row, column int, data interface{})
@@ -190,13 +190,20 @@ func (t *Table) initTable() {
 					r, c := t.view.GetSelection()
 
 					go func() {
-						t.painter.ShowPage("secondary")
-						defer t.painter.HidePage("secondary")
+						func() {
+							t.painter.ShowPage("secondary")
+							defer t.painter.HidePage("secondary")
 
-						dataFn, renderFn := t.viewModeFunc(r, c, t.data)
-						data := dataFn()
+							dataFn, renderFn := t.viewModeFunc(r, c, t.data)
 
-						t.screen.Suspend(func() { _ = renderFn(data) })
+							out, err := renderFn(dataFn())
+							if err == nil {
+								t.screen.Suspend(func() { _ = PagerOut(out) })
+							}
+						}()
+
+						// Refresh the screen.
+						t.screen.Draw()
 					}()
 				}
 			}
@@ -207,7 +214,7 @@ func (t *Table) initTable() {
 }
 
 func renderTableHeader(t *Table, data []string) {
-	style := tcell.StyleDefault.Bold(true).Background(tcell.ColorDarkCyan)
+	style := tcell.StyleDefault.Bold(true)
 
 	for c := 0; c < len(data); c++ {
 		text := " " + data[c]
@@ -216,7 +223,8 @@ func renderTableHeader(t *Table, data []string) {
 			SetStyle(style).
 			SetSelectable(false).
 			SetMaxWidth(int(t.maxColWidth)).
-			SetTextColor(tcell.ColorSnow)
+			SetTextColor(tcell.ColorSnow).
+			SetBackgroundColor(tcell.ColorDarkCyan)
 
 		t.view.SetCell(0, c, cell)
 	}
