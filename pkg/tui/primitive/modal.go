@@ -8,6 +8,7 @@ import (
 // Modal is a centered message window used to inform the user.
 //
 // This primitive is based on https://github.com/rivo/tview/wiki/Modal.
+// To see what we extended, search through for EXTENDED comments.
 type Modal struct {
 	*tview.Box
 
@@ -59,6 +60,7 @@ func (m *Modal) SetBorder(show bool) *Modal {
 }
 
 // SetBorderColor sets the frame's border color.
+// EXTENDED.
 func (m *Modal) SetBorderColor(color tcell.Color) *Modal {
 	m.frame.SetBorderColor(color)
 	return m
