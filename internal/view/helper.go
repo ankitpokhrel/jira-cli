@@ -3,9 +3,6 @@ package view
 import (
 	"fmt"
 	"io"
-	"os"
-	"os/exec"
-	"runtime"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -65,32 +62,6 @@ func ValidSprintColumns() []string {
 		fieldCompleteDate,
 		fieldState,
 	}
-}
-
-// GetPager returns configured pager.
-func GetPager() string {
-	if runtime.GOOS == "windows" {
-		return ""
-	}
-	pager := os.Getenv("PAGER")
-	if pager == "" && cmdExists("less") {
-		pager = "less -r"
-	}
-	return pager
-}
-
-// PagerOut outputs to configured pager if possible.
-func PagerOut(out string) error {
-	pager := GetPager()
-	if pager == "" {
-		_, err := fmt.Print(out)
-		return err
-	}
-	pa := strings.Split(pager, " ")
-	cmd := exec.Command(pa[0], pa[1:]...)
-	cmd.Stdin = strings.NewReader(out)
-	cmd.Stdout = os.Stdout
-	return cmd.Run()
 }
 
 // MDRenderer constructs markdown renderer.
@@ -174,9 +145,4 @@ func renderPlain(w io.Writer, data tui.TableData) error {
 		return w.(*tabwriter.Writer).Flush()
 	}
 	return nil
-}
-
-func cmdExists(cmd string) bool {
-	_, err := exec.LookPath(cmd)
-	return err == nil
 }

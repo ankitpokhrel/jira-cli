@@ -251,9 +251,11 @@ func (pv *Preview) initContents() {
 
 							contents := pv.contentsCache[pv.data[sr].Key]
 							dataFn, renderFn := pv.contents.viewModeFunc(r, c, contents)
-							data := dataFn()
 
-							pv.screen.Suspend(func() { _ = renderFn(data) })
+							out, err := renderFn(dataFn())
+							if err == nil {
+								pv.screen.Suspend(func() { _ = PagerOut(out) })
+							}
 						}()
 						pv.screen.ForceDraw()
 					}()

@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -83,4 +84,18 @@ func TestSplitText(t *testing.T) {
 			assert.Equal(t, tc.expected, splitText(tc.input))
 		})
 	}
+}
+
+func TestGetPager(t *testing.T) {
+	t.Parallel()
+
+	pager := os.Getenv("PAGER")
+
+	_ = os.Setenv("PAGER", "")
+	assert.Equal(t, "less -r", GetPager())
+
+	_ = os.Setenv("PAGER", "more")
+	assert.Equal(t, "more", GetPager())
+
+	_ = os.Setenv("PAGER", pager)
 }

@@ -19,7 +19,7 @@ var errNoData = fmt.Errorf("no data")
 type SelectedFunc func(row, column int, data interface{})
 
 // ViewModeFunc sets view mode handler func which gets triggered when a user press 'v'.
-type ViewModeFunc func(row, col int, data interface{}) (func() interface{}, func(data interface{}) error)
+type ViewModeFunc func(row, col int, data interface{}) (func() interface{}, func(data interface{}) (string, error))
 
 // CopyFunc is fired when a user press 'c' character in the table cell.
 type CopyFunc func(row, column int, data interface{})
@@ -195,9 +195,11 @@ func (t *Table) initTable() {
 							defer t.painter.HidePage("secondary")
 
 							dataFn, renderFn := t.viewModeFunc(r, c, t.data)
-							data := dataFn()
 
-							t.screen.Suspend(func() { _ = renderFn(data) })
+							out, err := renderFn(dataFn())
+							if err == nil {
+								t.screen.Suspend(func() { _ = PagerOut(out) })
+							}
 						}()
 						t.screen.ForceDraw()
 					}()
