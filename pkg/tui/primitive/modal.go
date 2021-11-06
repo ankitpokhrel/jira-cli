@@ -60,7 +60,7 @@ func (m *Modal) SetBorder(show bool) *Modal {
 }
 
 // SetBorderColor sets the frame's border color.
-// EXTENDED
+// EXTENDED.
 func (m *Modal) SetBorderColor(color tcell.Color) *Modal {
 	m.frame.SetBorderColor(color)
 	return m
