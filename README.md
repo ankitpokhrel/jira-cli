@@ -579,6 +579,16 @@ Sprint 1:   3
 1. Not all [Atlassian nodes](https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/#nodes) are
    translated properly at the moment which can cause formatting issue sometimes.
 
+## Feature requests
+
+Please [open a discussion](https://github.com/ankitpokhrel/jira-cli/discussions/categories/ideas) in `ideas` category for the proposed feature.
+
+##### How these requests are usually prioritized?
+
+- The feature that is straightforward to implement, doesn't require too much mental power, and can be done even I am lazy will be picked first.
+- If the feature is something that I am missing in my day-to-day work, it might be done first.
+- Rest of the features will be picked based on the [number of votes](https://github.com/ankitpokhrel/jira-cli/discussions/categories/ideas) on the particular feature.
+
 ## Development
 1. Clone the repo.
    ```sh
