@@ -4,7 +4,7 @@ about: Suggest an idea for this project
 
 ---
 
-> Please consider [opening a discussion](https://github.com/ankitpokhrel/jira-cli/discussions/categories/ideas) in `idea` category for the proposed feature if applicable. 
+> Please consider [opening a discussion](https://github.com/ankitpokhrel/jira-cli/discussions/categories/ideas) in `ideas` category if applicable. Your feature will be prioritized on based on the number of votes.  
 
 **Is your feature request related to a problem? Please describe.**
 <!--- A clear and concise description of what the problem is. --->
