@@ -201,7 +201,9 @@ func (t *Table) initTable() {
 								t.screen.Suspend(func() { _ = PagerOut(out) })
 							}
 						}()
-						t.screen.ForceDraw()
+
+						// Refresh the screen.
+						t.screen.Draw()
 					}()
 				}
 			}

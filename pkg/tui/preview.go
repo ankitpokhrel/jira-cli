@@ -257,7 +257,9 @@ func (pv *Preview) initContents() {
 								pv.screen.Suspend(func() { _ = PagerOut(out) })
 							}
 						}()
-						pv.screen.ForceDraw()
+
+						// Refresh the screen.
+						pv.screen.Draw()
 					}()
 				}
 			}
