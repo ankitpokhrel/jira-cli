@@ -11,6 +11,8 @@ import (
 )
 
 const (
+	// IssueTypeEpic is an epic issue type.
+	IssueTypeEpic = "Epic"
 	// AssigneeNone is an empty assignee.
 	AssigneeNone = "none"
 	// AssigneeDefault is a default assignee.

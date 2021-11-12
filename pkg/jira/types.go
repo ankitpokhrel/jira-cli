@@ -4,15 +4,6 @@ import (
 	"encoding/json"
 )
 
-const (
-	// IssueTypeEpic is an epic issue type.
-	IssueTypeEpic = "Epic"
-	// ProjectTypeClassic is a classic project type.
-	ProjectTypeClassic = "classic"
-	// ProjectTypeNextGen is a next gen project type.
-	ProjectTypeNextGen = "next-gen"
-)
-
 // Project holds project info.
 type Project struct {
 	Key  string `json:"key"`
