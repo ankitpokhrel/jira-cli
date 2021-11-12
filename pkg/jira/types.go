@@ -14,6 +14,7 @@ type Project struct {
 	Lead struct {
 		Name string `json:"displayName"`
 	} `json:"lead"`
+	Type string `json:"style"`
 }
 
 // Board holds board info.
