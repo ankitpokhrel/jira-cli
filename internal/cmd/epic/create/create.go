@@ -47,6 +47,7 @@ func SetFlags(cmd *cobra.Command) {
 func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
+	projectType := viper.GetString("project.type")
 
 	params := parseFlags(cmd.Flags())
 	client := api.Client(jira.Config{Debug: params.debug})
@@ -65,7 +66,7 @@ func create(cmd *cobra.Command, _ []string) {
 		}
 	}
 
-	qs := cc.getQuestions()
+	qs := cc.getQuestions(projectType)
 	if len(qs) > 0 {
 		ans := struct{ Name, Summary, Body, Action string }{}
 		err := survey.Ask(qs, &ans)
@@ -125,17 +126,21 @@ func create(cmd *cobra.Command, _ []string) {
 		s := cmdutil.Info("Creating an epic...")
 		defer s.Stop()
 
-		resp, err := client.CreateV2(&jira.CreateRequest{
+		cr := jira.CreateRequest{
 			Project:       project,
 			IssueType:     jira.IssueTypeEpic,
-			Name:          params.name,
 			Summary:       params.summary,
 			Body:          params.body,
 			Priority:      params.priority,
 			Labels:        params.labels,
 			Components:    params.components,
 			EpicFieldName: viper.GetString("epic.field"),
-		})
+		}
+		if projectType != jira.ProjectTypeNextGen {
+			cr.Name = params.name
+		}
+
+		resp, err := client.CreateV2(&cr)
 		if err != nil {
 			return "", err
 		}
@@ -164,10 +169,10 @@ func create(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func (cc *createCmd) getQuestions() []*survey.Question {
+func (cc *createCmd) getQuestions(projectType string) []*survey.Question {
 	var qs []*survey.Question
 
-	if cc.params.name == "" {
+	if cc.params.name == "" && projectType != jira.ProjectTypeNextGen {
 		qs = append(qs, &survey.Question{
 			Name:     "name",
 			Prompt:   &survey.Input{Message: "Epic name"},
