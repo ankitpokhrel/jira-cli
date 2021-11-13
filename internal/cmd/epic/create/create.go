@@ -46,7 +46,7 @@ func SetFlags(cmd *cobra.Command) {
 // TODO: Reduce cyclomatic complexity.
 func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
-	project := viper.GetString("project")
+	project := viper.GetString("project.key")
 
 	params := parseFlags(cmd.Flags())
 	client := api.Client(jira.Config{Debug: params.debug})

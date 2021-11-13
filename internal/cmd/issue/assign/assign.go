@@ -59,7 +59,7 @@ ASSIGNEE	Email or display name of the user to assign the issue to`,
 }
 
 func assign(cmd *cobra.Command, args []string) {
-	project := viper.GetString("project")
+	project := viper.GetString("project.key")
 	params := parseArgsAndFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})
 	ac := assignCmd{

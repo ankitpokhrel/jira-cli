@@ -36,7 +36,7 @@ func NewCmdAdd() *cobra.Command {
 
 func add(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
-	project := viper.GetString("project")
+	project := viper.GetString("project.key")
 	params := parseFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})
 

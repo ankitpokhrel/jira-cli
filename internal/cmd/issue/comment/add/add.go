@@ -123,7 +123,7 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 
 	nargs := len(args)
 	if nargs >= 1 {
-		issueKey = cmdutil.GetJiraIssueKey(viper.GetString("project"), args[0])
+		issueKey = cmdutil.GetJiraIssueKey(viper.GetString("project.key"), args[0])
 	}
 	if nargs >= 2 {
 		body = args[1]
@@ -168,7 +168,7 @@ func (ac *addCmd) setIssueKey() error {
 	if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {
 		return err
 	}
-	ac.params.issueKey = cmdutil.GetJiraIssueKey(viper.GetString("project"), ans)
+	ac.params.issueKey = cmdutil.GetJiraIssueKey(viper.GetString("project.key"), ans)
 
 	return nil
 }

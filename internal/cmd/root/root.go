@@ -98,7 +98,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.SetHelpFunc(helpFunc)
 
 	_ = viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config"))
-	_ = viper.BindPFlag("project", cmd.PersistentFlags().Lookup("project"))
+	_ = viper.BindPFlag("project.key", cmd.PersistentFlags().Lookup("project"))
 	_ = viper.BindPFlag("debug", cmd.PersistentFlags().Lookup("debug"))
 
 	addChildCommands(&cmd)

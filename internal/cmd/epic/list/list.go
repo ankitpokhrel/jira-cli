@@ -77,7 +77,7 @@ func SetFlags(cmd *cobra.Command) {
 
 func epicList(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
-	project := viper.GetString("project")
+	project := viper.GetString("project.key")
 
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
