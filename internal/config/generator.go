@@ -31,13 +31,19 @@ var (
 	ErrUnexpectedResponseFormat = fmt.Errorf("unexpected response format")
 )
 
+// projectConf is a trimmed down version of jira.Project.
+type projectConf struct {
+	Key  string `json:"key"`
+	Type string `json:"type"`
+}
+
 // JiraCLIConfig is a Jira CLI config.
 type JiraCLIConfig struct {
 	value struct {
 		installation string
 		server       string
 		login        string
-		project      string
+		project      *projectConf
 		board        *jira.Board
 		epic         *jira.Epic
 		issueTypes   []*jira.IssueType
@@ -45,13 +51,15 @@ type JiraCLIConfig struct {
 	jiraClient         *jira.Client
 	projectSuggestions []string
 	boardSuggestions   []string
+	projectsMap        map[string]*projectConf
 	boardsMap          map[string]*jira.Board
 }
 
 // NewJiraCLIConfig creates a new Jira CLI config.
 func NewJiraCLIConfig() *JiraCLIConfig {
 	return &JiraCLIConfig{
-		boardsMap: make(map[string]*jira.Board),
+		projectsMap: make(map[string]*projectConf),
+		boardsMap:   make(map[string]*jira.Board),
 	}
 }
 
@@ -253,7 +261,7 @@ func (c *JiraCLIConfig) configureProjectAndBoardDetails() error {
 		return err
 	}
 
-	c.value.project = project
+	c.value.project = c.projectsMap[project]
 	c.value.board = c.boardsMap[board]
 
 	return nil
@@ -264,7 +272,7 @@ func (c *JiraCLIConfig) configureMetadata() error {
 	defer s.Stop()
 
 	meta, err := c.jiraClient.GetCreateMeta(&jira.CreateMetaRequest{
-		Projects: c.value.project,
+		Projects: c.value.project.Key,
 		Expand:   "projects.issuetypes.fields",
 	})
 	if err != nil {
@@ -345,6 +353,10 @@ func (c *JiraCLIConfig) getProjectSuggestions() error {
 		return err
 	}
 	for _, project := range projects {
+		c.projectsMap[project.Key] = &projectConf{
+			Key:  project.Key,
+			Type: project.Type,
+		}
 		c.projectSuggestions = append(c.projectSuggestions, project.Key)
 	}
 
