@@ -44,7 +44,7 @@ STATE		State you want to transition the issue to`,
 }
 
 func move(cmd *cobra.Command, args []string) {
-	project := viper.GetString("project")
+	project := viper.GetString("project.key")
 	installation := viper.GetString("installation")
 	params := parseArgsAndFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})

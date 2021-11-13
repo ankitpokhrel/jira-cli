@@ -52,7 +52,7 @@ func NewCmdEdit() *cobra.Command {
 
 func edit(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
-	project := viper.GetString("project")
+	project := viper.GetString("project.key")
 
 	params := parseArgsAndFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})

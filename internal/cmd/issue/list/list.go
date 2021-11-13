@@ -61,7 +61,7 @@ func NewCmdList() *cobra.Command {
 // List displays a list view.
 func List(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
-	project := viper.GetString("project")
+	project := viper.GetString("project.key")
 
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)

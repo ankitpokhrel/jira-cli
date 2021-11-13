@@ -43,7 +43,7 @@ func NewCmdLink() *cobra.Command {
 }
 
 func link(cmd *cobra.Command, args []string) {
-	project := viper.GetString("project")
+	project := viper.GetString("project.key")
 	params := parseArgsAndFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})
 	lc := linkCmd{

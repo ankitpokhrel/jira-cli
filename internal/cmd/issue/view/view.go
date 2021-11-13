@@ -39,7 +39,7 @@ func view(cmd *cobra.Command, args []string) {
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
-	key := cmdutil.GetJiraIssueKey(viper.GetString("project"), args[0])
+	key := cmdutil.GetJiraIssueKey(viper.GetString("project.key"), args[0])
 	issue, err := func() (*jira.Issue, error) {
 		s := cmdutil.Info("Fetching issue details...")
 		defer s.Stop()

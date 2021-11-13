@@ -34,7 +34,7 @@ func NewCmdRemove() *cobra.Command {
 }
 
 func remove(cmd *cobra.Command, args []string) {
-	project := viper.GetString("project")
+	project := viper.GetString("project.key")
 	params := parseFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})
 

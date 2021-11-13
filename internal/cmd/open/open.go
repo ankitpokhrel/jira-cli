@@ -34,7 +34,7 @@ func NewCmdOpen() *cobra.Command {
 
 func open(_ *cobra.Command, args []string) {
 	server := viper.GetString("server")
-	project := viper.GetString("project")
+	project := viper.GetString("project.key")
 
 	var url string
 

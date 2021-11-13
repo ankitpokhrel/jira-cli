@@ -70,7 +70,7 @@ func SetFlags(cmd *cobra.Command) {
 
 func sprintList(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
-	project := viper.GetString("project")
+	project := viper.GetString("project.key")
 	boardID := viper.GetInt("board.id")
 
 	debug, err := cmd.Flags().GetBool("debug")

@@ -25,7 +25,7 @@ func NewCmdBoard() *cobra.Command {
 }
 
 func board(cmd *cobra.Command, _ []string) {
-	project := viper.GetString("project")
+	project := viper.GetString("project.key")
 
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
