@@ -17,17 +17,17 @@ func TestProjectRender(t *testing.T) {
 	}
 
 	data := []*jira.Project{
-		{Key: "FRST", Name: "First", Lead: lead{Name: "Person A"}},
-		{Key: "SCND", Name: "[2] Second", Lead: lead{Name: "Person B"}},
-		{Key: "THIRD", Name: "Third", Lead: lead{Name: "Person C"}},
+		{Key: "FRST", Name: "First", Lead: lead{Name: "Person A"}, Type: jira.ProjectTypeClassic},
+		{Key: "SCND", Name: "[2] Second", Lead: lead{Name: "Person B"}, Type: jira.ProjectTypeNextGen},
+		{Key: "THIRD", Name: "Third", Lead: lead{Name: "Person C"}, Type: jira.ProjectTypeClassic},
 	}
 	board := NewProject(data, WithProjectWriter(&b))
 	assert.NoError(t, board.Render())
 
-	expected := `KEY	NAME	LEAD
-FRST	First	Person A
-SCND	⦗2⦘ Second	Person B
-THIRD	Third	Person C
+	expected := `KEY	NAME	TYPE	LEAD
+FRST	First	classic	Person A
+SCND	⦗2⦘ Second	next-gen	Person B
+THIRD	Third	classic	Person C
 `
 	assert.Equal(t, expected, b.String())
 }

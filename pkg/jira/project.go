@@ -6,6 +6,13 @@ import (
 	"net/http"
 )
 
+const (
+	// ProjectTypeClassic is a classic project type.
+	ProjectTypeClassic = "classic"
+	// ProjectTypeNextGen is a next gen project type.
+	ProjectTypeNextGen = "next-gen"
+)
+
 // Project fetches response from /project endpoint.
 func (c *Client) Project() ([]*Project, error) {
 	res, err := c.GetV2(context.Background(), "/project?expand=lead", nil)

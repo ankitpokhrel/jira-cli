@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 )
 
-// IssueTypeEpic is an epic issue type.
-const IssueTypeEpic = "Epic"
-
 // Project holds project info.
 type Project struct {
 	Key  string `json:"key"`
@@ -14,6 +11,7 @@ type Project struct {
 	Lead struct {
 		Name string `json:"displayName"`
 	} `json:"lead"`
+	Type string `json:"style"`
 }
 
 // Board holds board info.
