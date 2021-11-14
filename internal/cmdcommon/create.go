@@ -22,7 +22,8 @@ func SetCreateFlags(cmd *cobra.Command, prefix string) {
 		cmd.Flags().StringP("name", "n", "", "Epic name")
 	} else {
 		cmd.Flags().StringP("type", "t", "", "Issue type")
-		cmd.Flags().StringP("parent", "P", "", "Parent issue key (Valid only if issue type is sub-task)")
+		cmd.Flags().StringP("parent", "P", "", `Parent issue key can be used to attach epic to an issue.
+And, this field is mandatory when creating a sub-task.`)
 	}
 	cmd.Flags().StringP("summary", "s", "", prefix+" summary or title")
 	cmd.Flags().StringP("body", "b", "", prefix+" description")
