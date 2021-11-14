@@ -244,6 +244,14 @@ $ jira issue create
 $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 ```
 
+To attach epic to an issue on creation, you can use `-P/--parent` field. We call it parent because the semantics of epic
+has been changed in `next-gen` project.
+
+```sh
+# Create an issue of type Story and attach it to epic with key EPIC-42
+$  jira issue create -tStory -s"Epic during creation" -PEPIC-42
+```
+
 ![Create an issue](.github/assets/create.gif)
 
 The command supports both [Github-flavored](https://github.github.com/gfm/)

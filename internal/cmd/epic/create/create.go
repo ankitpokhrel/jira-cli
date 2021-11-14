@@ -127,14 +127,14 @@ func create(cmd *cobra.Command, _ []string) {
 		defer s.Stop()
 
 		cr := jira.CreateRequest{
-			Project:       project,
-			IssueType:     jira.IssueTypeEpic,
-			Summary:       params.summary,
-			Body:          params.body,
-			Priority:      params.priority,
-			Labels:        params.labels,
-			Components:    params.components,
-			EpicFieldName: viper.GetString("epic.name"),
+			Project:    project,
+			IssueType:  jira.IssueTypeEpic,
+			Summary:    params.summary,
+			Body:       params.body,
+			Priority:   params.priority,
+			Labels:     params.labels,
+			Components: params.components,
+			EpicField:  viper.GetString("epic.name"),
 		}
 		if projectType != jira.ProjectTypeNextGen {
 			cr.Name = params.name

@@ -46,6 +46,7 @@ func SetFlags(cmd *cobra.Command) {
 func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
+	projectType := viper.GetString("project.type")
 
 	params := parseFlags(cmd.Flags())
 	client := api.Client(jira.Config{Debug: params.debug})
@@ -118,7 +119,9 @@ func create(cmd *cobra.Command, _ []string) {
 			Priority:       params.priority,
 			Labels:         params.labels,
 			Components:     params.components,
+			EpicField:      viper.GetString("epic.link"),
 		}
+		cr.ForProjectType(projectType)
 
 		resp, err := client.CreateV2(&cr)
 		if err != nil {
@@ -225,9 +228,14 @@ func (cc *createCmd) askQuestions() error {
 		return err
 	}
 
+	project := viper.GetString("project.key")
+
 	if cc.params.parentIssueKey == "" {
-		cc.params.parentIssueKey = ans.ParentIssueKey
+		cc.params.parentIssueKey = cmdutil.GetJiraIssueKey(project, ans.ParentIssueKey)
+	} else {
+		cc.params.parentIssueKey = cmdutil.GetJiraIssueKey(project, cc.params.parentIssueKey)
 	}
+
 	if cc.params.summary == "" {
 		cc.params.summary = ans.Summary
 	}

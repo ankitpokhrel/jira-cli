@@ -20,16 +20,24 @@ type CreateRequest struct {
 	Project   string
 	Name      string
 	IssueType string
-	// ParentIssueKey is required for sub-task.
+	// ParentIssueKey is required when creating a sub-task for classic project.
+	// This can also be used to attach epic for next-gen project.
 	ParentIssueKey string
 	Summary        string
 	Body           interface{} // string in v1/v2 and adf.ADF in v3
 	Priority       string
 	Labels         []string
 	Components     []string
-	// EpicFieldName is the dynamic epic field name
+	// EpicField is the dynamic epic field name
 	// that changes per jira installation.
-	EpicFieldName string
+	EpicField string
+
+	projectType string
+}
+
+// ForProjectType set jira project type.
+func (cr *CreateRequest) ForProjectType(pt string) {
+	cr.projectType = pt
 }
 
 // Create creates an issue using v3 version of the POST /issue endpoint.
@@ -104,7 +112,7 @@ type createFields struct {
 		Name string `json:"name,omitempty"`
 	} `json:"components,omitempty"`
 
-	epicFieldName string
+	epicField string
 }
 
 type createFieldsMarshaler struct {
@@ -114,7 +122,7 @@ type createFieldsMarshaler struct {
 // MarshalJSON is a custom marshaler to handle dynamic field.
 func (cfm createFieldsMarshaler) MarshalJSON() ([]byte, error) {
 	m, err := json.Marshal(cfm.M)
-	if err != nil || cfm.M.Name == "" || cfm.M.epicFieldName == "" {
+	if err != nil {
 		return m, err
 	}
 
@@ -124,7 +132,9 @@ func (cfm createFieldsMarshaler) MarshalJSON() ([]byte, error) {
 	}
 	dm := temp.(map[string]interface{})
 
-	dm[cfm.M.epicFieldName] = dm["name"]
+	if cfm.M.epicField != "" {
+		dm[cfm.M.epicField] = dm["name"]
+	}
 	delete(dm, "name")
 
 	return json.Marshal(dm)
@@ -147,10 +157,10 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 		IssueType: struct {
 			Name string `json:"name"`
 		}{Name: req.IssueType},
-		Name:          req.Name,
-		Summary:       req.Summary,
-		Labels:        req.Labels,
-		epicFieldName: req.EpicFieldName,
+		Name:      req.Name,
+		Summary:   req.Summary,
+		Labels:    req.Labels,
+		epicField: req.EpicField,
 	}
 
 	switch v := req.Body.(type) {
@@ -166,9 +176,13 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 	}
 
 	if req.ParentIssueKey != "" {
-		data.Fields.M.Parent = &struct {
-			Key string `json:"key"`
-		}{Key: req.ParentIssueKey}
+		if req.projectType == ProjectTypeNextGen || data.Fields.M.IssueType.Name == IssueTypeSubTask {
+			data.Fields.M.Parent = &struct {
+				Key string `json:"key"`
+			}{Key: req.ParentIssueKey}
+		} else {
+			data.Fields.M.Name = req.ParentIssueKey
+		}
 	}
 	if req.Priority != "" {
 		data.Fields.M.Priority = &struct {

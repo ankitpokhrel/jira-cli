@@ -23,7 +23,7 @@ func (c createTestServer) serve(t *testing.T, expectedBody string) *httptest.Ser
 		actualBody := new(strings.Builder)
 		_, _ = io.Copy(actualBody, r.Body)
 
-		assert.Equal(t, expectedBody, actualBody.String())
+		assert.JSONEq(t, expectedBody, actualBody.String())
 
 		if c.code == 201 {
 			resp, err := ioutil.ReadFile("./testdata/create.json")
@@ -77,6 +77,38 @@ func TestCreate(t *testing.T) {
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
+func TestCreateSubtask(t *testing.T) {
+	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Sub-task"},` +
+		`"parent":{"key":"TEST-123"},"summary":"Test sub-task","description":"Test description"}}`
+	testServer := createTestServer{code: 201}
+	server := testServer.serve(t, expectedBody)
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+
+	requestData := CreateRequest{
+		Project:        "TEST",
+		IssueType:      "Sub-task",
+		Summary:        "Test sub-task",
+		Body:           "Test description",
+		ParentIssueKey: "TEST-123",
+	}
+	actual, err := client.CreateV2(&requestData)
+	assert.NoError(t, err)
+
+	expected := &CreateResponse{
+		ID:  "10057",
+		Key: "TEST-3",
+	}
+
+	assert.Equal(t, expected, actual)
+
+	testServer.statusCode(500)
+
+	_, err = client.CreateV2(&requestData)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
 func TestCreateEpic(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"customfield_10001":"CLI","description":"Test description","issuetype":{"name":` +
 		`"Bug"},"priority":{"name":"Normal"},"project":{"key":"TEST"},"summary":"Test bug"}}`
@@ -86,13 +118,13 @@ func TestCreateEpic(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
 	requestData := CreateRequest{
-		Project:       "TEST",
-		IssueType:     "Bug",
-		Name:          "CLI",
-		Summary:       "Test bug",
-		Body:          "Test description",
-		Priority:      "Normal",
-		EpicFieldName: "customfield_10001",
+		Project:   "TEST",
+		IssueType: "Bug",
+		Name:      "CLI",
+		Summary:   "Test bug",
+		Body:      "Test description",
+		Priority:  "Normal",
+		EpicField: "customfield_10001",
 	}
 	actual, err := client.CreateV2(&requestData)
 	assert.NoError(t, err)
@@ -104,6 +136,39 @@ func TestCreateEpic(t *testing.T) {
 	assert.Equal(t, expected, actual)
 
 	testServer.statusCode(400)
+
+	_, err = client.CreateV2(&requestData)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
+func TestCreateEpicNextGen(t *testing.T) {
+	expectedBody := `{"update":{},"fields":{"description":"Test description","issuetype":{"name":"Bug"},` +
+		`"parent":{"key":"TEST-123"},"project":{"key":"TEST"},"summary":"Test bug"}}`
+	testServer := createTestServer{code: 201}
+	server := testServer.serve(t, expectedBody)
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	requestData := CreateRequest{
+		Project:        "TEST",
+		IssueType:      "Bug",
+		Name:           "CLI",
+		Summary:        "Test bug",
+		Body:           "Test description",
+		ParentIssueKey: "TEST-123",
+	}
+	requestData.ForProjectType(ProjectTypeNextGen)
+
+	actual, err := client.CreateV2(&requestData)
+	assert.NoError(t, err)
+
+	expected := &CreateResponse{
+		ID:  "10057",
+		Key: "TEST-3",
+	}
+	assert.Equal(t, expected, actual)
+
+	testServer.statusCode(401)
 
 	_, err = client.CreateV2(&requestData)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
