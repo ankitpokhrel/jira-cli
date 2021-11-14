@@ -134,7 +134,7 @@ func create(cmd *cobra.Command, _ []string) {
 			Priority:      params.priority,
 			Labels:        params.labels,
 			Components:    params.components,
-			EpicFieldName: viper.GetString("epic.field"),
+			EpicFieldName: viper.GetString("epic.name"),
 		}
 		if projectType != jira.ProjectTypeNextGen {
 			cr.Name = params.name

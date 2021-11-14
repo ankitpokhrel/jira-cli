@@ -23,7 +23,8 @@ type Board struct {
 
 // Epic holds epic info.
 type Epic struct {
-	Field string `json:"field"`
+	Name string `json:"name"`
+	Link string `json:"link"`
 }
 
 // Issue holds issue info.

@@ -8,6 +8,13 @@ import (
 	"net/url"
 )
 
+const (
+	// EpicFieldName represents epic name field in create metadata.
+	EpicFieldName = "Epic Name"
+	// EpicFieldLink represents epic link field in create metadata.
+	EpicFieldLink = "Epic Link"
+)
+
 // Epic fetches epics using the /search endpoint.
 func (c *Client) Epic(jql string) (*SearchResult, error) {
 	res, err := c.Get(context.Background(), "/search?jql="+url.QueryEscape(jql), nil)
