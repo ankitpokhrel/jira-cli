@@ -436,10 +436,6 @@ $ jira epic add
 $ jira epic add EPIC-KEY ISSUE-1 ISSUE-2
 ```
 
-For a project of type `next-gen`, Jira API reports success if the issue is already assigned to another epic. But it
-doesn't replace the epic with the one we are trying to add it to. This behavior is a bit different than a `classic`
-project.
-
 #### Remove
 The `remove` command allows you to remove issues from the epic. You can remove up to 50 issues from the epic at once.
 

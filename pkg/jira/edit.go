@@ -54,9 +54,6 @@ func (c *Client) Edit(key string, req *EditRequest) error {
 }
 
 type editFields struct {
-	Parent *struct {
-		Key string `json:"key"`
-	} `json:"parent,omitempty"`
 	Summary []struct {
 		Set string `json:"set,omitempty"`
 	} `json:"summary,omitempty"`
@@ -113,7 +110,11 @@ func (cfm editFieldsMarshaler) MarshalJSON() ([]byte, error) {
 
 type editRequest struct {
 	Update editFieldsMarshaler `json:"update"`
-	Fields struct{}            `json:"fields"`
+	Fields struct {
+		Parent *struct {
+			Key string `json:"key"`
+		} `json:"parent,omitempty"`
+	} `json:"fields"`
 }
 
 func (c *Client) getRequestDataForEdit(req *EditRequest) *editRequest {
@@ -121,7 +122,7 @@ func (c *Client) getRequestDataForEdit(req *EditRequest) *editRequest {
 		req.Labels = []string{}
 	}
 
-	ef := editFieldsMarshaler{editFields{
+	update := editFieldsMarshaler{editFields{
 		Summary: []struct {
 			Set string `json:"set,omitempty"`
 		}{{Set: req.Summary}},
@@ -158,16 +159,31 @@ func (c *Client) getRequestDataForEdit(req *EditRequest) *editRequest {
 			}{Name: c})
 		}
 
-		ef.M.Components = []struct {
+		update.M.Components = []struct {
 			Set []struct {
 				Name string `json:"name,omitempty"`
 			} `json:"set,omitempty"`
 		}{{Set: cmp}}
 	}
 
+	fields := struct {
+		Parent *struct {
+			Key string `json:"key"`
+		} `json:"parent,omitempty"`
+	}{}
+	if req.ParentIssueKey != "" {
+		fields = struct {
+			Parent *struct {
+				Key string `json:"key"`
+			} `json:"parent,omitempty"`
+		}{Parent: &struct {
+			Key string `json:"key"`
+		}{Key: req.ParentIssueKey}}
+	}
+
 	data := editRequest{
-		Update: ef,
-		Fields: struct{}{},
+		Update: update,
+		Fields: fields,
 	}
 
 	return &data

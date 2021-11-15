@@ -96,10 +96,17 @@ func add(cmd *cobra.Command, args []string) {
 		return nil
 	}()
 
-	if passed {
-		cmdutil.Success("Issues added to the epic %s\n%s/browse/%s", params.epicKey, server, params.epicKey)
+	msg := fmt.Sprintf("Issues added to the epic %s\n%s/browse/%s", params.epicKey, server, params.epicKey)
+
+	if projectType != jira.ProjectTypeNextGen {
+		cmdutil.ExitIfError(err)
+		cmdutil.Success(msg)
+	} else {
+		if passed {
+			cmdutil.Success(msg)
+		}
+		cmdutil.ExitIfError(err)
 	}
-	cmdutil.ExitIfError(err)
 }
 
 func parseFlags(flags query.FlagParser, args []string, project string) *addParams {
