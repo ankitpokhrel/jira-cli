@@ -1,6 +1,7 @@
 package add
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -37,6 +38,7 @@ func NewCmdAdd() *cobra.Command {
 func add(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
+	projectType := viper.GetString("project.type")
 	params := parseFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})
 
@@ -62,15 +64,42 @@ func add(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	var (
+		failed strings.Builder
+		passed bool
+	)
+
 	err := func() error {
 		s := cmdutil.Info("Adding issues to the epic...")
 		defer s.Stop()
 
-		return client.EpicIssuesAdd(params.epicKey, params.issues...)
-	}()
-	cmdutil.ExitIfError(err)
+		if projectType != jira.ProjectTypeNextGen {
+			return client.EpicIssuesAdd(params.epicKey, params.issues...)
+		}
 
-	cmdutil.Success("Issues added to the epic %s\n%s/browse/%s", params.epicKey, server, params.epicKey)
+		// If the project is of the next-gen type, we need to set the parent property for each issue.
+		// There is no way to send bulk update requests as of now, so we need to send these requests
+		// in a loop. We will print failed requests with exit code 1 at the end if there are any.
+		for _, iss := range params.issues {
+			if err := client.Edit(iss, &jira.EditRequest{ParentIssueKey: params.epicKey}); err != nil {
+				msg := fmt.Sprintf("\n  - %s: %s", iss, cmdutil.NormalizeJiraError(err.Error()))
+				failed.WriteString(msg)
+			} else {
+				// We will show success message if at-least one request reports success.
+				passed = true
+			}
+		}
+
+		if failed.Len() > 0 {
+			return &jira.ErrMultipleFailed{Msg: failed.String()}
+		}
+		return nil
+	}()
+
+	if passed {
+		cmdutil.Success("Issues added to the epic %s\n%s/browse/%s", params.epicKey, server, params.epicKey)
+	}
+	cmdutil.ExitIfError(err)
 }
 
 func parseFlags(flags query.FlagParser, args []string, project string) *addParams {

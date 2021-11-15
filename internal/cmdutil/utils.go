@@ -35,6 +35,8 @@ func ExitIfError(err error) {
 		if len(bd) > 0 {
 			msg = fmt.Sprintf("%s%s", bd, dm)
 		}
+	} else if e, ok := err.(*jira.ErrMultipleFailed); ok {
+		msg = fmt.Sprintf("\n%s%s", "SOME REQUESTS REPORTED ERROR:", e.Error())
 	} else {
 		switch err {
 		case jira.ErrEmptyResponse:
@@ -142,4 +144,12 @@ func GetJiraIssueKey(project, key string) string {
 		return strings.ToUpper(key)
 	}
 	return fmt.Sprintf("%s-%s", project, key)
+}
+
+// NormalizeJiraError normalizes error message we receive from jira.
+func NormalizeJiraError(msg string) string {
+	msg = strings.TrimSpace(strings.Replace(msg, "Error:\n", "", 1))
+	msg = strings.Replace(msg, "- ", "", 1)
+
+	return msg
 }

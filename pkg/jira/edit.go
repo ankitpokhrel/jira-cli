@@ -15,13 +15,14 @@ type EditResponse struct {
 // EditRequest struct holds request data for edit request.
 // Setting an Assignee requires an account ID.
 type EditRequest struct {
-	IssueType  string
-	Summary    string
-	Body       string
-	Assignee   string
-	Priority   string
-	Labels     []string
-	Components []string
+	IssueType      string
+	ParentIssueKey string
+	Summary        string
+	Body           string
+	Assignee       string
+	Priority       string
+	Labels         []string
+	Components     []string
 }
 
 // Edit updates an issue using POST /issue endpoint.
@@ -53,6 +54,9 @@ func (c *Client) Edit(key string, req *EditRequest) error {
 }
 
 type editFields struct {
+	Parent *struct {
+		Key string `json:"key"`
+	} `json:"parent,omitempty"`
 	Summary []struct {
 		Set string `json:"set,omitempty"`
 	} `json:"summary,omitempty"`
