@@ -47,6 +47,16 @@ func (e *ErrUnexpectedResponse) Error() string {
 	return e.Body.String()
 }
 
+// ErrMultipleFailed represents a grouped error, usually when
+// multiple request fails when running them in a loop.
+type ErrMultipleFailed struct {
+	Msg string
+}
+
+func (e *ErrMultipleFailed) Error() string {
+	return e.Msg
+}
+
 // Errors is a jira error type.
 type Errors struct {
 	Errors          map[string]string
