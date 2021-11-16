@@ -1,6 +1,7 @@
 package remove
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -35,6 +36,7 @@ func NewCmdRemove() *cobra.Command {
 
 func remove(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
+	projectType := viper.GetString("project.type")
 	params := parseFlags(cmd.Flags(), args, project)
 	client := api.Client(jira.Config{Debug: params.debug})
 
@@ -56,15 +58,46 @@ func remove(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	var (
+		failed strings.Builder
+		passed bool
+	)
+
 	err := func() error {
 		s := cmdutil.Info("Removing assigned epic from issues...")
 		defer s.Stop()
 
-		return client.EpicIssuesRemove(params.issues...)
-	}()
-	cmdutil.ExitIfError(err)
+		if projectType != jira.ProjectTypeNextGen {
+			return client.EpicIssuesRemove(params.issues...)
+		}
 
-	cmdutil.Success("Epic unassigned from given issues")
+		for _, iss := range params.issues {
+			if err := client.Edit(iss, &jira.EditRequest{ParentIssueKey: jira.AssigneeNone}); err != nil {
+				msg := fmt.Sprintf("\n  - %s: %s", iss, cmdutil.NormalizeJiraError(err.Error()))
+				failed.WriteString(msg)
+			} else {
+				// We will show success message if at-least one request reports success.
+				passed = true
+			}
+		}
+
+		if failed.Len() > 0 {
+			return &jira.ErrMultipleFailed{Msg: failed.String()}
+		}
+		return nil
+	}()
+
+	msg := "Epic unassigned from given issues"
+
+	if projectType != jira.ProjectTypeNextGen {
+		cmdutil.ExitIfError(err)
+		cmdutil.Success(msg)
+	} else {
+		if passed {
+			cmdutil.Success(msg)
+		}
+		cmdutil.ExitIfError(err)
+	}
 }
 
 func parseFlags(flags query.FlagParser, args []string, project string) *removeParams {
