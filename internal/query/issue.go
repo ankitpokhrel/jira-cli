@@ -49,7 +49,8 @@ func (i *Issue) Get() string {
 			FilterBy("priority", i.params.Priority).
 			FilterBy("reporter", i.params.Reporter).
 			FilterBy("assignee", i.params.Assignee).
-			FilterBy("component", i.params.Component)
+			FilterBy("component", i.params.Component).
+			FilterBy("parent", i.params.Parent)
 
 		i.setCreatedFilters(q)
 		i.setUpdatedFilters(q)
@@ -129,6 +130,7 @@ type IssueParams struct {
 	Watching      bool
 	Resolution    string
 	IssueType     string
+	Parent        string
 	Status        string
 	Priority      string
 	Reporter      string
@@ -152,7 +154,7 @@ func (ip *IssueParams) init(flags FlagParser) error {
 
 	boolParams := []string{"history", "watching", "reverse", "debug"}
 	stringParams := []string{
-		"resolution", "type", "status", "priority", "reporter", "assignee", "component",
+		"resolution", "type", "parent", "status", "priority", "reporter", "assignee", "component",
 		"created", "created-after", "created-before", "updated", "updated-after", "updated-before",
 		"jql",
 	}
@@ -210,6 +212,8 @@ func (ip *IssueParams) setStringParams(paramsMap map[string]string) {
 			ip.Resolution = v
 		case "type":
 			ip.IssueType = v
+		case "parent":
+			ip.Parent = v
 		case "status":
 			ip.Status = v
 		case "priority":
