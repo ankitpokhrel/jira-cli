@@ -28,6 +28,7 @@ type SprintList struct {
 }
 
 // Render renders the sprint explorer view.
+//nolint:dupl
 func (sl SprintList) Render() error {
 	renderer, err := MDRenderer()
 	if err != nil {
@@ -47,7 +48,9 @@ func (sl SprintList) Render() error {
 			tui.WithSelectedFunc(navigate(sl.Server)),
 			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) (string, error)) {
 				dataFn := func() interface{} {
-					issue, _ := api.ProxyGetIssue(api.Client(jira.Config{}), d.(tui.TableData)[r][1])
+					data := d.(tui.TableData)
+					ci := getKeyColumnIndex(data[0])
+					issue, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data[r][ci])
 					return issue
 				}
 				renderFn := func(i interface{}) (string, error) {

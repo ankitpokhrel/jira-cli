@@ -59,7 +59,8 @@ func (l IssueList) Render() error {
 		tui.WithSelectedFunc(navigate(l.Server)),
 		tui.WithViewModeFunc(func(r, c int, _ interface{}) (func() interface{}, func(interface{}) (string, error)) {
 			dataFn := func() interface{} {
-				issue, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data[r][1])
+				ci := getKeyColumnIndex(data[0])
+				issue, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data[r][ci])
 				return issue
 			}
 			renderFn := func(i interface{}) (string, error) {
@@ -103,7 +104,10 @@ func (l IssueList) header() []string {
 		return validColumns[0:4]
 	}
 
-	var headers []string
+	var (
+		headers   []string
+		hasKeyCol bool
+	)
 
 	columnsMap := l.validColumnsMap()
 	for _, c := range l.Display.Columns {
@@ -111,6 +115,15 @@ func (l IssueList) header() []string {
 		if _, ok := columnsMap[c]; ok {
 			headers = append(headers, strings.ToUpper(c))
 		}
+		if c == fieldKey {
+			hasKeyCol = true
+		}
+	}
+
+	// Key field is required in TUI to fetch relevant data later.
+	// So, we will prepend the field if it is not available.
+	if !hasKeyCol {
+		headers = append([]string{fieldKey}, headers...)
 	}
 
 	return headers

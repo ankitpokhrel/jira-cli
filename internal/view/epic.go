@@ -21,6 +21,7 @@ type EpicList struct {
 }
 
 // Render renders the epic explorer view.
+//nolint:dupl
 func (el EpicList) Render() error {
 	renderer, err := MDRenderer()
 	if err != nil {
@@ -36,7 +37,9 @@ func (el EpicList) Render() error {
 			tui.WithSelectedFunc(navigate(el.Server)),
 			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) (string, error)) {
 				dataFn := func() interface{} {
-					issue, _ := api.ProxyGetIssue(api.Client(jira.Config{}), d.(tui.TableData)[r][1])
+					data := d.(tui.TableData)
+					ci := getKeyColumnIndex(data[0])
+					issue, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data[r][ci])
 					return issue
 				}
 				renderFn := func(i interface{}) (string, error) {
