@@ -112,7 +112,8 @@ type editRequest struct {
 	Update editFieldsMarshaler `json:"update"`
 	Fields struct {
 		Parent *struct {
-			Key string `json:"key"`
+			Key string `json:"key,omitempty"`
+			Set string `json:"set,omitempty"`
 		} `json:"parent,omitempty"`
 	} `json:"fields"`
 }
@@ -168,17 +169,21 @@ func (c *Client) getRequestDataForEdit(req *EditRequest) *editRequest {
 
 	fields := struct {
 		Parent *struct {
-			Key string `json:"key"`
+			Key string `json:"key,omitempty"`
+			Set string `json:"set,omitempty"`
 		} `json:"parent,omitempty"`
-	}{}
+	}{
+		Parent: &struct {
+			Key string `json:"key,omitempty"`
+			Set string `json:"set,omitempty"`
+		}{},
+	}
 	if req.ParentIssueKey != "" {
-		fields = struct {
-			Parent *struct {
-				Key string `json:"key"`
-			} `json:"parent,omitempty"`
-		}{Parent: &struct {
-			Key string `json:"key"`
-		}{Key: req.ParentIssueKey}}
+		if req.ParentIssueKey == AssigneeNone {
+			fields.Parent.Set = AssigneeNone
+		} else {
+			fields.Parent.Key = req.ParentIssueKey
+		}
 	}
 
 	data := editRequest{
