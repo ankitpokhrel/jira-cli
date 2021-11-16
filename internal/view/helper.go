@@ -146,3 +146,12 @@ func renderPlain(w io.Writer, data tui.TableData) error {
 	}
 	return nil
 }
+
+func getKeyColumnIndex(cols []string) int {
+	for i, col := range cols {
+		if col == fieldKey {
+			return i
+		}
+	}
+	return 1
+}
