@@ -123,7 +123,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" ` +
-				`AND assignee="test" AND component="test" ORDER BY lastViewed ASC`,
+				`AND assignee="test" AND component="test" AND parent="test" ORDER BY lastViewed ASC`,
 		},
 		{
 			name: "query without issue history parameter",
@@ -134,7 +134,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" ` +
-				`AND assignee="test" AND component="test" ORDER BY created ASC`,
+				`AND assignee="test" AND component="test" AND parent="test" ORDER BY created ASC`,
 		},
 		{
 			name: "query only with fields filter",
@@ -145,7 +145,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" ` +
-				`AND assignee="test" AND component="test" ORDER BY created ASC`,
+				`AND assignee="test" AND component="test" AND parent="test" ORDER BY created ASC`,
 		},
 		{
 			name: "query with error when fetching history flag",
@@ -211,7 +211,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
-				`AND component="test" ORDER BY lastViewed ASC`,
+				`AND component="test" AND parent="test" ORDER BY lastViewed ASC`,
 		},
 		{
 			name: "query with reverse set to true",
@@ -222,7 +222,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" ` +
-				`AND assignee="test" AND component="test" ORDER BY lastViewed DESC`,
+				`AND assignee="test" AND component="test" AND parent="test" ORDER BY lastViewed DESC`,
 		},
 		{
 			name: "query with labels",
@@ -233,7 +233,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
-				`AND component="test" AND labels IN ("first", "second", "third") ORDER BY lastViewed ASC`,
+				`AND component="test" AND parent="test" AND labels IN ("first", "second", "third") ORDER BY lastViewed ASC`,
 		},
 		{
 			name: "query with created and updated today filter",
@@ -244,7 +244,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
-				`AND component="test" AND createdDate>=startOfDay() AND updatedDate>=startOfDay() ORDER BY lastViewed ASC`,
+				`AND component="test" AND parent="test" AND createdDate>=startOfDay() AND updatedDate>=startOfDay() ORDER BY lastViewed ASC`,
 		},
 		{
 			name: "query with created and updated week filter",
@@ -255,7 +255,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
-				`AND component="test" AND createdDate>=startOfWeek() AND updatedDate>=startOfWeek() ORDER BY lastViewed ASC`,
+				`AND component="test" AND parent="test" AND createdDate>=startOfWeek() AND updatedDate>=startOfWeek() ORDER BY lastViewed ASC`,
 		},
 		{
 			name: "query with created and updated month filter",
@@ -266,7 +266,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
-				`AND component="test" AND createdDate>=startOfMonth() AND updatedDate>=startOfMonth() ORDER BY lastViewed ASC`,
+				`AND component="test" AND parent="test" AND createdDate>=startOfMonth() AND updatedDate>=startOfMonth() ORDER BY lastViewed ASC`,
 		},
 		{
 			name: "query with created and updated year filter",
@@ -277,7 +277,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
-				`AND component="test" AND createdDate>=startOfYear() AND updatedDate>=startOfYear() ORDER BY lastViewed ASC`,
+				`AND component="test" AND parent="test" AND createdDate>=startOfYear() AND updatedDate>=startOfYear() ORDER BY lastViewed ASC`,
 		},
 		{
 			name: "query with created and updated filter",
@@ -288,7 +288,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
-				`AND createdDate>="2020-12-31" AND createdDate<"2021-01-01" AND updatedDate>="2020-12-31" AND updatedDate<"2021-01-01" ` +
+				`AND parent="test" AND createdDate>="2020-12-31" AND createdDate<"2021-01-01" AND updatedDate>="2020-12-31" AND updatedDate<"2021-01-01" ` +
 				`ORDER BY lastViewed ASC`,
 		},
 		{
@@ -300,7 +300,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
-				`AND component="test" AND createdDate>="2020-15-31" AND updatedDate>="2020-12-31 10:30:30" ORDER BY lastViewed ASC`,
+				`AND component="test" AND parent="test" AND createdDate>="2020-15-31" AND updatedDate>="2020-12-31 10:30:30" ORDER BY lastViewed ASC`,
 		},
 		{
 			name: "query with created-after and created-before filter",
@@ -311,7 +311,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
-				`AND component="test" AND createdDate>"2020-12-01" AND createdDate<"2020-12-31" ORDER BY lastViewed ASC`,
+				`AND component="test" AND parent="test" AND createdDate>"2020-12-01" AND createdDate<"2020-12-31" ORDER BY lastViewed ASC`,
 		},
 		{
 			name: "query with updated-after and updated-before filter",
@@ -322,7 +322,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
-				`AND component="test" AND updatedDate>"2020-12-01" AND updatedDate<"2020-12-31" ORDER BY lastViewed ASC`,
+				`AND component="test" AND parent="test" AND updatedDate>"2020-12-01" AND updatedDate<"2020-12-31" ORDER BY lastViewed ASC`,
 		},
 		{
 			name: "created and updated flags gets precedence",
@@ -340,7 +340,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
-				`AND component="test" AND createdDate>="2020-11-01" AND createdDate<"2020-11-02" AND updatedDate>="-10d" ` +
+				`AND component="test" AND parent="test" AND createdDate>="2020-11-01" AND createdDate<"2020-11-02" AND updatedDate>="-10d" ` +
 				`ORDER BY lastViewed ASC`,
 		},
 		{
@@ -360,7 +360,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN watchedIssues() AND type="test" AND resolution="test" ` +
 				`AND status="test" AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
-				`AND createdDate>="2020-11-01" AND createdDate<"2020-11-02" AND updatedDate>="-10d" ` +
+				`AND parent="test" AND createdDate>="2020-11-01" AND createdDate<"2020-11-02" AND updatedDate>="-10d" ` +
 				`ORDER BY created ASC`,
 		},
 		{
@@ -378,7 +378,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN watchedIssues() AND type="test" AND resolution="test" ` +
 				`AND status="test" AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
-				`AND updatedDate>"2020-11-31" AND updatedDate<"2020-12-31" ` +
+				`AND parent="test" AND updatedDate>"2020-11-31" AND updatedDate<"2020-12-31" ` +
 				`ORDER BY updated ASC`,
 		},
 		{
@@ -390,7 +390,7 @@ func TestIssueGet(t *testing.T) {
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" ` +
-				`AND assignee="test" AND component="test" AND summary ~ cli OR x = y ORDER BY lastViewed ASC`,
+				`AND assignee="test" AND component="test" AND parent="test" AND summary ~ cli OR x = y ORDER BY lastViewed ASC`,
 		},
 	}
 

@@ -66,6 +66,12 @@ func List(cmd *cobra.Command, _ []string) {
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
+	pk, err := cmd.Flags().GetString("parent")
+	cmdutil.ExitIfError(err)
+
+	err = cmd.Flags().Set("parent", cmdutil.GetJiraIssueKey(project, pk))
+	cmdutil.ExitIfError(err)
+
 	issues, total, err := func() ([]*jira.Issue, int, error) {
 		s := cmdutil.Info("Fetching issues...")
 		defer s.Stop()
@@ -135,6 +141,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("assignee", "a", "", "Filter issues by assignee (email or display name)")
 	cmd.Flags().StringP("component", "C", "", "Filter issues by component")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
+	cmd.Flags().StringP("parent", "P", "", "Filter issues by parent")
 	cmd.Flags().Bool("history", false, "Issues you accessed recently")
 	cmd.Flags().BoolP("watching", "w", false, "Issues you are watching")
 	cmd.Flags().String("created", "", "Filter issues by created date\n"+
