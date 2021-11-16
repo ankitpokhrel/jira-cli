@@ -21,6 +21,7 @@ type EpicList struct {
 }
 
 // Render renders the epic explorer view.
+//nolint:dupl
 func (el EpicList) Render() error {
 	renderer, err := MDRenderer()
 	if err != nil {
