@@ -78,6 +78,7 @@ func SetFlags(cmd *cobra.Command) {
 func epicList(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
+	projectType := viper.GetString("project.type")
 
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
@@ -85,14 +86,14 @@ func epicList(cmd *cobra.Command, args []string) {
 	client := api.Client(jira.Config{Debug: debug})
 
 	if len(args) == 0 {
-		epicExplorerView(cmd.Flags(), project, server, client)
+		epicExplorerView(cmd.Flags(), project, projectType, server, client)
 	} else {
 		key := cmdutil.GetJiraIssueKey(project, args[0])
-		singleEpicView(cmd.Flags(), key, project, server, client)
+		singleEpicView(cmd.Flags(), key, project, projectType, server, client)
 	}
 }
 
-func singleEpicView(flags query.FlagParser, key, project, server string, client *jira.Client) {
+func singleEpicView(flags query.FlagParser, key, project, projectType, server string, client *jira.Client) {
 	err := flags.Set("type", "") // Unset issue type.
 	cmdutil.ExitIfError(err)
 
@@ -105,7 +106,17 @@ func singleEpicView(flags query.FlagParser, key, project, server string, client 
 			return nil, 0, err
 		}
 
-		resp, err := client.EpicIssues(key, q.Get(), q.Params().Limit)
+		var resp *jira.SearchResult
+
+		if projectType == jira.ProjectTypeNextGen {
+			q.Params().Parent = key
+			q.Params().IssueType = ""
+
+			resp, err = client.Search(q.Get(), q.Params().Limit)
+		} else {
+			resp, err = client.EpicIssues(key, q.Get(), q.Params().Limit)
+		}
+
 		if err != nil {
 			return nil, 0, err
 		}
@@ -152,7 +163,7 @@ func singleEpicView(flags query.FlagParser, key, project, server string, client 
 	cmdutil.ExitIfError(v.Render())
 }
 
-func epicExplorerView(flags query.FlagParser, project, server string, client *jira.Client) {
+func epicExplorerView(flags query.FlagParser, project, projectType, server string, client *jira.Client) {
 	q, err := query.NewIssue(project, flags)
 	cmdutil.ExitIfError(err)
 
@@ -180,7 +191,16 @@ func epicExplorerView(flags query.FlagParser, project, server string, client *ji
 		Server:  server,
 		Data:    epics,
 		Issues: func(key string) []*jira.Issue {
-			resp, err := client.EpicIssues(key, "", q.Params().Limit)
+			var resp *jira.SearchResult
+
+			if projectType == jira.ProjectTypeNextGen {
+				q.Params().Parent = key
+				q.Params().IssueType = ""
+
+				resp, err = client.Search(q.Get(), q.Params().Limit)
+			} else {
+				resp, err = client.EpicIssues(key, "", q.Params().Limit)
+			}
 			if err != nil {
 				return []*jira.Issue{}
 			}
@@ -198,4 +218,5 @@ func setFlags(cmd *cobra.Command) {
 
 func hideFlags(cmd *cobra.Command) {
 	cmdutil.ExitIfError(cmd.Flags().MarkHidden("type"))
+	cmdutil.ExitIfError(cmd.Flags().MarkHidden("parent"))
 }
