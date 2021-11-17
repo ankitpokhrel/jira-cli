@@ -99,7 +99,7 @@ func issueKeyFromTuiData(r int, d interface{}) string {
 
 	switch data := d.(type) {
 	case tui.TableData:
-		path = data[r][1]
+		path = data[r][getKeyColumnIndex(data[0])]
 	case tui.PreviewData:
 		path = data.Key
 	}
