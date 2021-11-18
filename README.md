@@ -453,6 +453,9 @@ When viewing sprint issues, you can use all filters available for the issue comm
 
 See [usage](#navigation) to learn more about UI interaction.
 
+#### List
+You can use all flags supported by `issue list` command to filter issues in the sprint.
+
 ```sh
 # List sprints in an explorer view
 $ jira sprint list
@@ -481,6 +484,17 @@ $ jira sprint list SPRINT_ID
 
 # List high priority issues in a sprint are assigned to me
 $ jira sprint list SPRINT_ID -yHigh -a$(jira me)
+```
+
+#### Add
+Add command allows you to add issues to the sprint. You can add up to 50 issues to the sprint at once.
+
+```sh
+# Add issues to the sprint using interactive prompt
+$ jira sprint add
+
+# Pass required parameters to skip prompt
+$ jira sprint add SPRINT_ID ISSUE-1 ISSUE-2
 ```
 
 ### Other commands

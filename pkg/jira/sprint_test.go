@@ -2,10 +2,12 @@
 package jira
 
 import (
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -307,5 +309,40 @@ func TestSprintIssues(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.SprintIssues(1, 2, "project=TEST", 100)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
+func TestSprintIssuesAdd(t *testing.T) {
+	var unexpectedStatusCode bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/agile/1.0/sprint/5/issue", r.URL.Path)
+
+		if unexpectedStatusCode {
+			w.WriteHeader(400)
+		} else {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "application/json", r.Header.Get("Accept"))
+			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+			expectedBody := `{"issues":["TEST-1","TEST-2"]}`
+			actualBody := new(strings.Builder)
+			_, _ = io.Copy(actualBody, r.Body)
+
+			assert.Equal(t, expectedBody, actualBody.String())
+
+			w.WriteHeader(204)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+
+	err := client.SprintIssuesAdd("5", "TEST-1", "TEST-2")
+	assert.NoError(t, err)
+
+	unexpectedStatusCode = true
+
+	err = client.SprintIssuesAdd("5", "TEST-1")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
