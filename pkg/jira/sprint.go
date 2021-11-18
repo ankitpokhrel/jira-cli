@@ -119,6 +119,37 @@ func (c *Client) SprintIssues(boardID, sprintID int, jql string, limit uint) (*S
 	return &out, err
 }
 
+// SprintIssuesAdd adds issues to the sprint.
+func (c *Client) SprintIssuesAdd(id string, issues ...string) error {
+	path := fmt.Sprintf("/sprint/%s/issue", id)
+
+	data := struct {
+		Issues []string `json:"issues"`
+	}{Issues: issues}
+
+	body, err := json.Marshal(&data)
+	if err != nil {
+		return err
+	}
+
+	res, err := c.PostV1(context.Background(), path, body, Header{
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	})
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusNoContent {
+		return formatUnexpectedResponse(res)
+	}
+	return nil
+}
+
 // LastNSprints fetches sprint in descending order.
 //
 // Jira api to get all sprints doesn't provide an option to sort results and

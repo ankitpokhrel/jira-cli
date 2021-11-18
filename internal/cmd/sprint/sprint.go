@@ -3,6 +3,7 @@ package sprint
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/sprint/add"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/sprint/list"
 )
 
@@ -20,7 +21,10 @@ func NewCmdSprint() *cobra.Command {
 	}
 
 	lc := list.NewCmdList()
-	cmd.AddCommand(lc)
+	ac := add.NewCmdAdd()
+
+	cmd.AddCommand(lc, ac)
+
 	list.SetFlags(lc)
 
 	return &cmd
