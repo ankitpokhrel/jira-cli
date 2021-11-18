@@ -426,7 +426,7 @@ $ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Epic de
 ```
 
 #### Add
-Add command allows you to add issues to the epic. You can add up to 50 issues to the epic at once.
+The `add` command allows you to add issues to the epic. You can add up to 50 issues to the epic at once.
 
 ```sh
 # Add issues to the epic using interactive prompt
@@ -487,7 +487,7 @@ $ jira sprint list SPRINT_ID -yHigh -a$(jira me)
 ```
 
 #### Add
-Add command allows you to add issues to the sprint. You can add up to 50 issues to the sprint at once.
+The `add` command allows you to add issues to the sprint. You can add up to 50 issues to the sprint at once.
 
 ```sh
 # Add issues to the sprint using interactive prompt
