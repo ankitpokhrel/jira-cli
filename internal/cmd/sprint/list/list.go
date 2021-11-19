@@ -31,18 +31,18 @@ $ jira sprint list <SPRINT_ID> --table
 
 # Display sprints or sprint issues in a plain table view
 $ jira sprint list --table --plain
-$ jira sprint list <SPRINT_ID> --table --plain
+$ jira sprint list <SPRINT_ID> --plain
 
 # Display sprints or sprint issues in a plain table view without headers
 $ jira sprint list --table --plain --no-headers
-$ jira sprint list <SPRINT_ID> --plain --no-headers
+$ jira sprint list <SPRINT_ID> --no-headers
 
 # Display some columns of sprint or sprint issues in a plain table view
 $ jira sprint list --table --plain --columns name,start,end
 $ jira sprint list <SPRINT_ID> --plain --columns type,key,summary
 
 # Display sprint issues in a plain table view and show all fields
-$ jira sprint list <SPRINT_ID> --table --plain --no-truncate`
+$ jira sprint list <SPRINT_ID> --plain --no-truncate`
 )
 
 // NewCmdList is a sprint list command.

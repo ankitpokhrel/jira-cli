@@ -572,7 +572,7 @@ Day #03: 21
 sprints=$(jira sprint list --table --plain --columns id,name --no-headers)
 
 echo "${sprints}" | while IFS=$'\t' read -r id name; do
-  count=$(jira sprint list "${id}" --table --plain --no-headers 2>/dev/null | wc -l)
+  count=$(jira sprint list "${id}" --plain --no-headers 2>/dev/null | wc -l)
 
   printf "%10s: %3d\n" "${name}" $((count))
 done
@@ -593,7 +593,7 @@ Sprint 1:   30
 sprints=$(jira sprint list --table --plain --columns id,name --no-headers)
 
 echo "${sprints}" | while IFS=$'\t' read -r id name; do
-  count=$(jira sprint list "${id}" --table --plain --columns assignee --no-headers 2>/dev/null | sort -n | uniq | wc -l)
+  count=$(jira sprint list "${id}" --plain --columns assignee --no-headers 2>/dev/null | sort -n | uniq | wc -l)
 
   printf "%10s: %3d\n" "${name}" $((count))
 done
