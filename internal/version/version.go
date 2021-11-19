@@ -7,7 +7,7 @@ import (
 
 // Build information is populated at build-time.
 var (
-	Version   string
+	Version   = "dev"
 	GitCommit string
 	BuildDate string
 	GoVersion = runtime.Version()
