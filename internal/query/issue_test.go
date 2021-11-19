@@ -32,6 +32,7 @@ type issueFlagParser struct {
 	updatedAfter  string
 	updatedBefore string
 	jql           string
+	orderBy       string
 }
 
 func (tfp issueFlagParser) GetBool(name string) (bool, error) {
@@ -72,6 +73,9 @@ func (tfp issueFlagParser) GetString(name string) (string, error) {
 	}
 	if name == "jql" {
 		return tfp.jql, nil
+	}
+	if tfp.orderBy == "" && name == "order-by" {
+		return "created", nil
 	}
 	if strings.HasPrefix(name, "created") {
 		if tfp.withCreated {

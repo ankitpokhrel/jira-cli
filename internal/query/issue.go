@@ -29,8 +29,9 @@ func NewIssue(project string, flags FlagParser) (*Issue, error) {
 
 // Get returns constructed jql query.
 func (i *Issue) Get() string {
-	q, obf := jql.NewJQL(i.Project), "created"
-	if (i.params.Updated != "" || i.params.UpdatedBefore != "" || i.params.UpdatedAfter != "") &&
+	q, obf := jql.NewJQL(i.Project), i.params.OrderBy
+	if obf == "created" &&
+		(i.params.Updated != "" || i.params.UpdatedBefore != "" || i.params.UpdatedAfter != "") &&
 		(i.params.Created == "" && i.params.CreatedBefore == "" && i.params.CreatedAfter == "") {
 		obf = "updated"
 	}
@@ -144,6 +145,7 @@ type IssueParams struct {
 	UpdatedBefore string
 	jql           string
 	Labels        []string
+	OrderBy       string
 	Reverse       bool
 	Limit         uint
 	debug         bool
@@ -156,7 +158,7 @@ func (ip *IssueParams) init(flags FlagParser) error {
 	stringParams := []string{
 		"resolution", "type", "parent", "status", "priority", "reporter", "assignee", "component",
 		"created", "created-after", "created-before", "updated", "updated-after", "updated-before",
-		"jql",
+		"jql", "order-by",
 	}
 
 	boolParamsMap := make(map[string]bool)
@@ -238,6 +240,8 @@ func (ip *IssueParams) setStringParams(paramsMap map[string]string) {
 			ip.UpdatedBefore = v
 		case "jql":
 			ip.jql = v
+		case "order-by":
+			ip.OrderBy = v
 		}
 	}
 }

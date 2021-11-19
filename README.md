@@ -111,7 +111,7 @@ The lists are displayed in an interactive UI by default.
 Issues are displayed in an interactive table view by default. You can output the results in a plain view using the `--plain` flag.
 
 #### List
-The `list` command lets you search and navigate the issues.
+The `list` command lets you search and navigate the issues. The issues are sorted by `created` field in descending order by default. 
 
 ```sh
 # List recent issues
@@ -125,6 +125,9 @@ $ jira issue list -s"To Do"
 
 # List recent issues in plain mode
 $ jira issue list --plain
+
+# List issue in the same order as you see in the UI
+$ jira issue list --order-by rank --reverse
 
 # You can execute raw JQL within a given project context using `--jql/-q` option.
 # For instance, the following command will list issues in current project whose
@@ -412,6 +415,9 @@ $ jira epic list KEY-1 -ax -yHigh
 
 # List high priority epics
 $ jira epic list KEY-1 -yHigh
+
+# List epic issues order by the rank in ASC order
+$ jira epic list KEY-1 --order-by rank --reverse
 ```
 
 #### Create
@@ -484,6 +490,9 @@ $ jira sprint list SPRINT_ID
 
 # List high priority issues in a sprint are assigned to me
 $ jira sprint list SPRINT_ID -yHigh -a$(jira me)
+
+# List sprint issues order by the rank in ASC order
+$ jira sprint list SPRINT_ID --order-by rank --reverse
 ```
 
 #### Add
