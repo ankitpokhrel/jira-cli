@@ -63,6 +63,12 @@ type IssueFields struct {
 	Components []struct {
 		Name string `json:"name"`
 	} `json:"components"`
+	Comment struct {
+		Total int `json:"total"`
+	} `json:"comment"`
+	IssueLinks []struct {
+		ID string `json:"id"`
+	} `json:"issueLinks"`
 	Created string `json:"created"`
 	Updated string `json:"updated"`
 }

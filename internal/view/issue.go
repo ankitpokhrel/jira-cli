@@ -6,12 +6,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ankitpokhrel/jira-cli/pkg/md"
 	"github.com/charmbracelet/glamour"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/md"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
@@ -72,12 +72,19 @@ func (i Issue) String() string {
 			desc = md.FromJiraMD(desc)
 		}
 	}
+	wch := fmt.Sprintf("%d watchers", i.Data.Fields.Watches.WatchCount)
+	if i.Data.Fields.Watches.WatchCount == 1 && i.Data.Fields.Watches.IsWatching {
+		wch = "You are watching"
+	} else if i.Data.Fields.Watches.IsWatching {
+		wch = fmt.Sprintf("You + %d watchers", i.Data.Fields.Watches.WatchCount-1)
+	}
 	return fmt.Sprintf(
-		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s\n\n-----------\n%s",
+		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s  💭 %d comments  \U0001F9F5 %d linked issues\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s  👀 %s\n\n-----------\n%s",
 		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as, i.Data.Key,
+		i.Data.Fields.Comment.Total, len(i.Data.Fields.IssueLinks),
 		i.Data.Fields.Summary,
 		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
-		i.Data.Fields.Priority.Name, cmpt, lbl,
+		i.Data.Fields.Priority.Name, cmpt, lbl, wch,
 		desc,
 	)
 }
