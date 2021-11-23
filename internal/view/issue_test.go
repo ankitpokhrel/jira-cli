@@ -51,6 +51,10 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 			Components: []struct {
 				Name string `json:"name"`
 			}{{Name: "BE"}, {Name: "FE"}},
+			Watches: struct {
+				IsWatching bool `json:"isWatching"`
+				WatchCount int  `json:"watchCount"`
+			}{IsWatching: true, WatchCount: 4},
 			Created: "2020-12-13T14:05:20.974+0100",
 			Updated: "2020-12-13T14:07:20.974+0100",
 		},
@@ -62,7 +66,7 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 	}
 	assert.NoError(t, issue.renderPlain(&b))
 
-	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None\n\n-----------\nTest description\n\n"
+	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  💭 0 comments  \U0001F9F5 0 linked issues\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 You + 3 watchers\n\n-----------\nTest description\n\n"
 	assert.Equal(t, tui.TextData(expected), issue.data())
 }
 
@@ -95,6 +99,12 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 			Components: []struct {
 				Name string `json:"name"`
 			}{{Name: "BE"}, {Name: "FE"}},
+			Comment: struct {
+				Total int `json:"total"`
+			}{Total: 3},
+			IssueLinks: []struct {
+				ID string `json:"id"`
+			}{{ID: "1001"}, {ID: "1002"}},
 			Created: "2020-12-13T14:05:20.974+0100",
 			Updated: "2020-12-13T14:07:20.974+0100",
 		},
@@ -106,6 +116,6 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 	}
 	assert.NoError(t, issue.renderPlain(&b))
 
-	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None\n\n-----------\n# Title\n## Subtitle\nThis is a **bold** and _italic_ text with [a link](https://ankit.pl) in between.\n"
+	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  💭 3 comments  \U0001F9F5 2 linked issues\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 0 watchers\n\n-----------\n# Title\n## Subtitle\nThis is a **bold** and _italic_ text with [a link](https://ankit.pl) in between.\n"
 	assert.Equal(t, tui.TextData(expected), issue.data())
 }
