@@ -44,5 +44,6 @@ func open(_ *cobra.Command, args []string) {
 		url = fmt.Sprintf("%s/browse/%s", server, cmdutil.GetJiraIssueKey(project, args[0]))
 	}
 
+	fmt.Println(url)
 	cmdutil.ExitIfError(browser.OpenURL(url))
 }
