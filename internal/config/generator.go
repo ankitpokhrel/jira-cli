@@ -387,6 +387,7 @@ func (c *JiraCLIConfig) getBoardSuggestions(project string) error {
 		c.boardsMap[board.Name] = board
 		c.boardSuggestions = append(c.boardSuggestions, board.Name)
 	}
+	c.boardSuggestions = append(c.boardSuggestions, "None")
 
 	return nil
 }
