@@ -345,15 +345,23 @@ func (c *JiraCLIConfig) decipherEpicMeta(epicMeta map[string]interface{}) (strin
 }
 
 func (c *JiraCLIConfig) write() error {
-	viper.Set("installation", c.value.installation)
-	viper.Set("server", c.value.server)
-	viper.Set("login", c.value.login)
-	viper.Set("project", c.value.project)
-	viper.Set("board", c.value.board)
-	viper.Set("epic", c.value.epic)
-	viper.Set("issue.types", c.value.issueTypes)
+	config := viper.New()
+	config.SetConfigFile(viper.ConfigFileUsed())
 
-	return viper.WriteConfig()
+	config.Set("installation", c.value.installation)
+	config.Set("server", c.value.server)
+	config.Set("login", c.value.login)
+	config.Set("project", c.value.project)
+	config.Set("epic", c.value.epic)
+	config.Set("issue.types", c.value.issueTypes)
+
+	if c.value.board != nil {
+		config.Set("board", c.value.board)
+	} else {
+		config.Set("board", "")
+	}
+
+	return config.WriteConfig()
 }
 
 func (c *JiraCLIConfig) getProjectSuggestions() error {
