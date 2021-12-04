@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/glamour"
+	"github.com/fatih/color"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
@@ -14,6 +15,22 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/md"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
+
+type fragment struct {
+	Body  string
+	Parse bool
+}
+
+func newBlankFragment(n int) fragment {
+	var buf strings.Builder
+	for i := 0; i < n; i++ {
+		buf.WriteRune('\n')
+	}
+	return fragment{
+		Body:  buf.String(),
+		Parse: false,
+	}
+}
 
 // Issue is a list view for issues.
 type Issue struct {
@@ -26,19 +43,73 @@ func (i Issue) Render() error {
 	if i.Display.Plain {
 		return i.renderPlain(os.Stdout)
 	}
-
 	r, err := MDRenderer()
 	if err != nil {
 		return err
 	}
-	out, err := r.Render(i.String())
+	out, err := i.RenderedOut(r)
 	if err != nil {
 		return err
 	}
 	return tui.PagerOut(out)
 }
 
+// RenderedOut translates raw data to the format we want to display in.
+func (i Issue) RenderedOut(renderer *glamour.TermRenderer) (string, error) {
+	var res strings.Builder
+
+	for _, p := range i.fragments() {
+		if p.Parse {
+			out, err := renderer.Render(p.Body)
+			if err != nil {
+				return "", err
+			}
+			res.WriteString(out)
+		} else {
+			res.WriteString(p.Body)
+		}
+	}
+
+	return res.String(), nil
+}
+
 func (i Issue) String() string {
+	return fmt.Sprintf(
+		"%s\n\n%s\n\n%s",
+		i.header(),
+		i.separator("Description"),
+		i.description(),
+	)
+}
+
+func (i Issue) fragments() []fragment {
+	return []fragment{
+		{Body: i.header(), Parse: true},
+		newBlankFragment(1),
+		{Body: i.separator("Description"), Parse: false},
+		newBlankFragment(2),
+		{Body: i.description(), Parse: true},
+	}
+}
+
+func (i Issue) separator(msg string) string {
+	pad := func(m string) string {
+		if m != "" {
+			return fmt.Sprintf(" %s ", m)
+		}
+		return m
+	}
+
+	if i.Display.Plain {
+		sep := "------------------------"
+		return fmt.Sprintf("%s%s%s", sep, pad(msg), sep)
+	}
+	cyan := color.New(color.FgHiCyan)
+	sep := cyan.Sprintf("————————————————————————")
+	return fmt.Sprintf("%s%s%s", sep, cyan.Sprint(pad(msg)), sep)
+}
+
+func (i Issue) header() string {
 	as := i.Data.Fields.Assignee.Name
 	if as == "" {
 		as = "Unassigned"
@@ -63,15 +134,6 @@ func (i Issue) String() string {
 	if it == "Bug" {
 		iti = "🐞"
 	}
-	desc := ""
-	if i.Data.Fields.Description != nil {
-		if adfNode, ok := i.Data.Fields.Description.(*adf.ADF); ok {
-			desc = adf.NewTranslator(adfNode, adf.NewMarkdownTranslator()).Translate()
-		} else {
-			desc = i.Data.Fields.Description.(string)
-			desc = md.FromJiraMD(desc)
-		}
-	}
 	wch := fmt.Sprintf("%d watchers", i.Data.Fields.Watches.WatchCount)
 	if i.Data.Fields.Watches.WatchCount == 1 && i.Data.Fields.Watches.IsWatching {
 		wch = "You are watching"
@@ -79,18 +141,30 @@ func (i Issue) String() string {
 		wch = fmt.Sprintf("You + %d watchers", i.Data.Fields.Watches.WatchCount-1)
 	}
 	return fmt.Sprintf(
-		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s  💭 %d comments  \U0001F9F5 %d linked issues\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s  👀 %s\n\n-----------\n%s",
+		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s  💭 %d comments  \U0001F9F5 %d linked issues\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s  👀 %s",
 		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as, i.Data.Key,
 		i.Data.Fields.Comment.Total, len(i.Data.Fields.IssueLinks),
 		i.Data.Fields.Summary,
 		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
 		i.Data.Fields.Priority.Name, cmpt, lbl, wch,
-		desc,
 	)
 }
 
-func (i Issue) data() tui.TextData {
-	return tui.TextData(i.String())
+func (i Issue) description() string {
+	if i.Data.Fields.Description == nil {
+		return ""
+	}
+
+	var desc string
+
+	if adfNode, ok := i.Data.Fields.Description.(*adf.ADF); ok {
+		desc = adf.NewTranslator(adfNode, adf.NewMarkdownTranslator()).Translate()
+	} else {
+		desc = i.Data.Fields.Description.(string)
+		desc = md.FromJiraMD(desc)
+	}
+
+	return desc
 }
 
 // renderPlain renders the issue in plain view.

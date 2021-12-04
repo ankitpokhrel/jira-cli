@@ -12,6 +12,8 @@ import (
 )
 
 func TestIssueDetailsRenderInPlainView(t *testing.T) {
+	t.Parallel()
+
 	var b bytes.Buffer
 
 	data := &jira.Issue{
@@ -64,13 +66,17 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 		Data:    data,
 		Display: DisplayFormat{Plain: true},
 	}
-	assert.NoError(t, issue.renderPlain(&b))
 
-	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  💭 0 comments  \U0001F9F5 0 linked issues\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 You + 3 watchers\n\n-----------\nTest description\n\n"
-	assert.Equal(t, tui.TextData(expected), issue.data())
+	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  💭 0 comments  \U0001F9F5 0 linked issues\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 You + 3 watchers\n\n------------------------ Description ------------------------\n\nTest description\n\n"
+	actual := issue.String()
+
+	assert.NoError(t, issue.renderPlain(&b))
+	assert.Equal(t, tui.TextData(expected), tui.TextData(actual))
 }
 
 func TestIssueDetailsWithV2Description(t *testing.T) {
+	t.Parallel()
+
 	var b bytes.Buffer
 
 	data := &jira.Issue{
@@ -116,6 +122,70 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 	}
 	assert.NoError(t, issue.renderPlain(&b))
 
-	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  💭 3 comments  \U0001F9F5 2 linked issues\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 0 watchers\n\n-----------\n# Title\n## Subtitle\nThis is a **bold** and _italic_ text with [a link](https://ankit.pl) in between.\n"
-	assert.Equal(t, tui.TextData(expected), issue.data())
+	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  💭 3 comments  \U0001F9F5 2 linked issues\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 0 watchers\n\n------------------------ Description ------------------------\n\n# Title\n## Subtitle\nThis is a **bold** and _italic_ text with [a link](https://ankit.pl) in between.\n"
+	actual := issue.String()
+
+	assert.Equal(t, tui.TextData(expected), tui.TextData(actual))
+}
+
+func TestSeparator(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		body     string
+		plain    bool
+		expected string
+	}{
+		{
+			name:     "it returns striaght horizontal bar for empty message",
+			body:     "",
+			expected: "————————————————————————————————————————————————",
+		},
+		{
+			name:     "it returns raw horizontal bar for empty message in plain output",
+			body:     "",
+			plain:    true,
+			expected: "------------------------------------------------",
+		},
+		{
+			name:     "it returns greyed out message wrapped in horizontal bar",
+			body:     "Some text",
+			expected: "———————————————————————— Some text ————————————————————————",
+		},
+		{
+			name:     "it returns greyed out message wrapped in raw horizontal bar for plain output",
+			body:     "Some text",
+			plain:    true,
+			expected: "------------------------ Some text ------------------------",
+		},
+		{
+			name:     "it doesn't trim spaces",
+			body:     "  ",
+			expected: "————————————————————————    ————————————————————————",
+		},
+		{
+			name:     "it doesn't trim spaces for plain output",
+			body:     "  ",
+			plain:    true,
+			expected: "------------------------    ------------------------",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			issue := Issue{
+				Data: &jira.Issue{
+					Key: "TEST-1",
+				},
+				Display: DisplayFormat{Plain: tc.plain},
+			}
+
+			assert.Equal(t, tc.expected, issue.separator(tc.body))
+		})
+	}
 }
