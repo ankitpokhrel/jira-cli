@@ -43,11 +43,7 @@ func (el EpicList) Render() error {
 					return issue
 				}
 				renderFn := func(i interface{}) (string, error) {
-					out, err := renderer.Render(Issue{Data: i.(*jira.Issue)}.String())
-					if err != nil {
-						return "", err
-					}
-					return out, nil
+					return Issue{Data: i.(*jira.Issue)}.RenderedOut(renderer)
 				}
 				return dataFn, renderFn
 			}),

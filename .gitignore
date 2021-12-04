@@ -5,6 +5,7 @@
 
 .DS_Store
 .idea/
+.jira/
 
 dist/
 bin/
