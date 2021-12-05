@@ -35,6 +35,7 @@ func newBlankFragment(n int) fragment {
 
 // Issue is a list view for issues.
 type Issue struct {
+	Server  string
 	Data    *jira.Issue
 	Display DisplayFormat
 }
@@ -86,6 +87,12 @@ func (i Issue) String() string {
 	if len(i.Data.Fields.IssueLinks) > 0 {
 		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s\n", i.separator("Linked Issues"), i.linkedIssues()))
 	}
+	if i.Data.Fields.Comment.Total > 0 {
+		author, body := i.comment()
+		sep := fmt.Sprintf("%d comments", i.Data.Fields.Comment.Total)
+		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s\n\n%s\n", i.separator(sep), author, body))
+	}
+	s.WriteString(i.footer())
 
 	return s.String()
 }
@@ -117,7 +124,20 @@ func (i Issue) fragments() []fragment {
 		)
 	}
 
-	return scraps
+	if i.Data.Fields.Comment.Total > 0 {
+		author, body := i.comment()
+		scraps = append(
+			scraps,
+			newBlankFragment(1),
+			fragment{Body: i.separator(fmt.Sprintf("%d comments", i.Data.Fields.Comment.Total))},
+			newBlankFragment(2),
+			fragment{Body: author},
+			newBlankFragment(1),
+			fragment{Body: body, Parse: true},
+		)
+	}
+
+	return append(scraps, newBlankFragment(1), fragment{Body: i.footer()}, newBlankFragment(2))
 }
 
 func (i Issue) separator(msg string) string {
@@ -270,6 +290,30 @@ func (i Issue) linkedIssues() string {
 	}
 
 	return linked.String()
+}
+
+func (i Issue) comment() (string, string) {
+	if i.Data.Fields.Comment.Total == 0 {
+		return "", ""
+	}
+	latestComment := i.Data.Fields.Comment.Comments[i.Data.Fields.Comment.Total-1]
+	var body string
+	if adfNode, ok := latestComment.Body.(*adf.ADF); ok {
+		body = adf.NewTranslator(adfNode, adf.NewMarkdownTranslator()).Translate()
+	} else {
+		body = latestComment.Body.(string)
+		body = md.FromJiraMD(body)
+	}
+	return fmt.Sprintf(
+		"\n  %s • %s • %s",
+		coloredOut(latestComment.Author.Name, color.FgWhite, color.Bold),
+		coloredOut(cmdutil.FormatDateTimeHuman(latestComment.Created, jira.RFC3339), color.FgWhite, color.Bold),
+		coloredOut("Latest comment", color.FgCyan, color.Bold),
+	), body
+}
+
+func (i Issue) footer() string {
+	return gray(fmt.Sprintf("View this issue on Jira: %s/browse/%s", i.Server, i.Data.Key))
 }
 
 // renderPlain renders the issue in plain view.

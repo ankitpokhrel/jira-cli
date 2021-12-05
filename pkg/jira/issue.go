@@ -65,6 +65,13 @@ func (c *Client) getIssue(key, ver string) (*Issue, error) {
 
 	if ver == apiVersion3 {
 		out.Fields.Description = ifaceToADF(out.Fields.Description)
+
+		if out.Fields.Comment.Total > 0 {
+			// We are only interested in top most comment at the moment so let's just unmarshal that one.
+			out.Fields.Comment.Comments[out.Fields.Comment.Total-1].Body = ifaceToADF(
+				out.Fields.Comment.Comments[out.Fields.Comment.Total-1].Body,
+			)
+		}
 	}
 
 	return &out, nil

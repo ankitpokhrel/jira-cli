@@ -64,6 +64,12 @@ type IssueFields struct {
 		Name string `json:"name"`
 	} `json:"components"`
 	Comment struct {
+		Comments []struct {
+			ID      string      `json:"id"`
+			Author  User        `json:"author"`
+			Body    interface{} `json:"body"` // string in v1/v2, adf.ADF in v3
+			Created string      `json:"created"`
+		} `json:"comments"`
 		Total int `json:"total"`
 	} `json:"comment"`
 	IssueLinks []struct {
