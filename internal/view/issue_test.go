@@ -53,6 +53,15 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 			Components: []struct {
 				Name string `json:"name"`
 			}{{Name: "BE"}, {Name: "FE"}},
+			Comment: struct {
+				Comments []struct {
+					ID      string      `json:"id"`
+					Author  jira.User   `json:"author"`
+					Body    interface{} `json:"body"`
+					Created string      `json:"created"`
+				} `json:"comments"`
+				Total int `json:"total"`
+			}{Total: 0},
 			Watches: struct {
 				IsWatching bool `json:"isWatching"`
 				WatchCount int  `json:"watchCount"`
@@ -63,11 +72,17 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 	}
 
 	issue := Issue{
+		Server:  "https://test.local",
 		Data:    data,
 		Display: DisplayFormat{Plain: true},
 	}
 
 	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  💭 0 comments  \U0001F9F5 0 linked issues\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 You + 3 watchers\n\n------------------------ Description ------------------------\n\nTest description\n\n"
+	if xterm256() {
+		expected += "\x1b[38;5;242mView this issue on Jira: https://test.local/browse/TEST-1\x1b[m"
+	} else {
+		expected += "\x1b[0;90mView this issue on Jira: https://test.local/browse/TEST-1\x1b[0m"
+	}
 	actual := issue.String()
 
 	assert.NoError(t, issue.renderPlain(&b))
@@ -106,8 +121,26 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 				Name string `json:"name"`
 			}{{Name: "BE"}, {Name: "FE"}},
 			Comment: struct {
+				Comments []struct {
+					ID      string      `json:"id"`
+					Author  jira.User   `json:"author"`
+					Body    interface{} `json:"body"`
+					Created string      `json:"created"`
+				} `json:"comments"`
 				Total int `json:"total"`
-			}{Total: 3},
+			}{
+				Comments: []struct {
+					ID      string      `json:"id"`
+					Author  jira.User   `json:"author"`
+					Body    interface{} `json:"body"`
+					Created string      `json:"created"`
+				}{
+					{ID: "10033", Author: jira.User{Name: "Person A"}, Body: "Test comment A", Created: "2021-11-22T23:44:13.782+0100"},
+					{ID: "10034", Author: jira.User{Name: "Person B"}, Body: "Test comment B", Created: "2021-11-23T23:44:13.782+0100"},
+					{ID: "10035", Author: jira.User{Name: "Person C"}, Body: "Test comment C", Created: "2021-11-24T23:44:13.782+0100"},
+				},
+				Total: 3,
+			},
 			IssueLinks: []struct {
 				LinkType struct {
 					Name    string `json:"name"`
@@ -162,12 +195,18 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 	}
 
 	issue := Issue{
+		Server:  "https://test.local",
 		Data:    data,
 		Display: DisplayFormat{Plain: true},
 	}
 	assert.NoError(t, issue.renderPlain(&b))
 
-	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  💭 3 comments  \U0001F9F5 2 linked issues\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 0 watchers\n\n------------------------ Description ------------------------\n\n# Title\n## Subtitle\nThis is a **bold** and _italic_ text with [a link](https://ankit.pl) in between.\n\n\n------------------------ Linked Issues ------------------------\n\n\n  BLOCKS\n\n    TEST-2 Something is broken   • Bug • High   • TO DO\n\n  RELATES TO\n\n    TEST-3 Everything is on fire • Bug • Urgent • Done \n\n"
+	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  💭 3 comments  \U0001F9F5 2 linked issues\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 0 watchers\n\n------------------------ Description ------------------------\n\n# Title\n## Subtitle\nThis is a **bold** and _italic_ text with [a link](https://ankit.pl) in between.\n\n\n------------------------ Linked Issues ------------------------\n\n\n  BLOCKS\n\n    TEST-2 Something is broken   • Bug • High   • TO DO\n\n  RELATES TO\n\n    TEST-3 Everything is on fire • Bug • Urgent • Done \n\n\n\n------------------------ 3 comments ------------------------\n\n\n  Person C • Wed, 24 Nov 21 • Latest comment\n\nTest comment C\n"
+	if xterm256() {
+		expected += "\x1b[38;5;242mView this issue on Jira: https://test.local/browse/TEST-1\x1b[m"
+	} else {
+		expected += "\x1b[0;90mView this issue on Jira: https://test.local/browse/TEST-1\x1b[0m"
+	}
 	actual := issue.String()
 
 	assert.Equal(t, tui.TextData(expected), tui.TextData(actual))
