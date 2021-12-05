@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/charmbracelet/glamour"
@@ -74,22 +75,49 @@ func (i Issue) RenderedOut(renderer *glamour.TermRenderer) (string, error) {
 }
 
 func (i Issue) String() string {
-	return fmt.Sprintf(
-		"%s\n\n%s\n\n%s",
-		i.header(),
-		i.separator("Description"),
-		i.description(),
-	)
+	var s strings.Builder
+
+	s.WriteString(i.header())
+
+	desc := i.description()
+	if desc != "" {
+		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s", i.separator("Description"), desc))
+	}
+	if len(i.Data.Fields.IssueLinks) > 0 {
+		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s\n", i.separator("Linked Issues"), i.linkedIssues()))
+	}
+
+	return s.String()
 }
 
 func (i Issue) fragments() []fragment {
-	return []fragment{
+	scraps := []fragment{
 		{Body: i.header(), Parse: true},
-		newBlankFragment(1),
-		{Body: i.separator("Description"), Parse: false},
-		newBlankFragment(2),
-		{Body: i.description(), Parse: true},
 	}
+
+	desc := i.description()
+	if desc != "" {
+		scraps = append(
+			scraps,
+			newBlankFragment(1),
+			fragment{Body: i.separator("Description")},
+			newBlankFragment(2),
+			fragment{Body: desc, Parse: true},
+		)
+	}
+
+	if len(i.Data.Fields.IssueLinks) > 0 {
+		scraps = append(
+			scraps,
+			newBlankFragment(1),
+			fragment{Body: i.separator("Linked Issues")},
+			newBlankFragment(2),
+			fragment{Body: i.linkedIssues()},
+			newBlankFragment(1),
+		)
+	}
+
+	return scraps
 }
 
 func (i Issue) separator(msg string) string {
@@ -104,9 +132,11 @@ func (i Issue) separator(msg string) string {
 		sep := "------------------------"
 		return fmt.Sprintf("%s%s%s", sep, pad(msg), sep)
 	}
-	cyan := color.New(color.FgHiCyan)
-	sep := cyan.Sprintf("————————————————————————")
-	return fmt.Sprintf("%s%s%s", sep, cyan.Sprint(pad(msg)), sep)
+	sep := "————————————————————————"
+	if msg == "" {
+		return gray(fmt.Sprintf("%s%s", sep, sep))
+	}
+	return gray(fmt.Sprintf("%s%s%s", sep, pad(msg), sep))
 }
 
 func (i Issue) header() string {
@@ -165,6 +195,81 @@ func (i Issue) description() string {
 	}
 
 	return desc
+}
+
+func (i Issue) linkedIssues() string {
+	if len(i.Data.Fields.IssueLinks) == 0 {
+		return ""
+	}
+
+	var (
+		linked         strings.Builder
+		keys           = make([]string, 0)
+		linkMap        = make(map[string][]*jira.Issue, len(i.Data.Fields.IssueLinks))
+		summaryLen     = 73 // +3 is to take '...' into account.
+		maxKeyLen      int
+		maxSummaryLen  int
+		maxTypeLen     int
+		maxStatusLen   int
+		maxPriorityLen int
+	)
+
+	for _, link := range i.Data.Fields.IssueLinks {
+		var (
+			linkType    string
+			linkedIssue *jira.Issue
+		)
+
+		if link.InwardIssue != nil {
+			linkType = link.LinkType.Inward
+			linkedIssue = link.InwardIssue
+		} else if link.OutwardIssue != nil {
+			linkType = link.LinkType.Outward
+			linkedIssue = link.OutwardIssue
+		}
+
+		if linkedIssue == nil {
+			continue
+		}
+
+		if _, ok := linkMap[linkType]; !ok {
+			keys = append(keys, linkType)
+		}
+		linkMap[linkType] = append(linkMap[linkType], linkedIssue)
+
+		maxKeyLen = max(len(linkedIssue.Key), maxKeyLen)
+		maxSummaryLen = max(len(linkedIssue.Fields.Summary), maxSummaryLen)
+		maxTypeLen = max(len(linkedIssue.Fields.IssueType.Name), maxTypeLen)
+		maxStatusLen = max(len(linkedIssue.Fields.Status.Name), maxStatusLen)
+		maxPriorityLen = max(len(linkedIssue.Fields.Priority.Name), maxPriorityLen)
+	}
+
+	if maxSummaryLen < summaryLen {
+		summaryLen = maxSummaryLen
+	}
+
+	// We are sorting keys to respect the order we see in the UI.
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		linked.WriteString(
+			fmt.Sprintf("\n  %s\n\n", coloredOut(strings.ToUpper(k), color.FgWhite, color.Bold)),
+		)
+		for _, iss := range linkMap[k] {
+			linked.WriteString(
+				fmt.Sprintf(
+					"    %s %s • %s • %s • %s\n",
+					coloredOut(pad(iss.Key, maxKeyLen), color.FgGreen, color.Bold),
+					shortenAndPad(iss.Fields.Summary, summaryLen),
+					pad(iss.Fields.IssueType.Name, maxTypeLen),
+					pad(iss.Fields.Priority.Name, maxPriorityLen),
+					pad(iss.Fields.Status.Name, maxStatusLen),
+				),
+			)
+		}
+	}
+
+	return linked.String()
 }
 
 // renderPlain renders the issue in plain view.

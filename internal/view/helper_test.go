@@ -11,6 +11,8 @@ import (
 )
 
 func TestFormatDateTime(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name     string
 		format   func() string
@@ -58,6 +60,8 @@ func TestFormatDateTime(t *testing.T) {
 }
 
 func TestPrepareTitle(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name     string
 		input    string
@@ -92,6 +96,94 @@ func TestPrepareTitle(t *testing.T) {
 			t.Parallel()
 
 			assert.Equal(t, tc.expected, prepareTitle(tc.input))
+		})
+	}
+}
+
+func TestShortenAndPad(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    string
+		limit    int
+		expected string
+	}{
+		{
+			name:     "it returns full string for zero limit",
+			input:    "Some text",
+			limit:    0,
+			expected: "Some text",
+		},
+		{
+			name:     "it returns full string if limit is less than 3",
+			input:    "Some text",
+			limit:    2,
+			expected: "Some text",
+		},
+		{
+			name:     "it returns full string if limit is equal to string len",
+			input:    "Some text",
+			limit:    9,
+			expected: "Some text",
+		},
+		{
+			name:     "it returns shortened string",
+			input:    "Some text",
+			limit:    7,
+			expected: "Some...",
+		},
+		{
+			name:     "it adds padding if string is shorter than the limit",
+			input:    "Some text",
+			limit:    15,
+			expected: "Some text      ",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, shortenAndPad(tc.input, tc.limit))
+		})
+	}
+}
+
+func TestMax(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    []int
+		expected int
+	}{
+		{
+			name:     "a > b",
+			input:    []int{5, 3},
+			expected: 5,
+		},
+		{
+			name:     "a < b",
+			input:    []int{-5, 5},
+			expected: 5,
+		},
+		{
+			name:     "a == b",
+			input:    []int{3, 3},
+			expected: 3,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, max(tc.input[0], tc.input[1]))
 		})
 	}
 }
