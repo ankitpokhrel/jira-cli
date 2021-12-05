@@ -177,43 +177,50 @@ func TestSeparator(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		name     string
-		body     string
-		plain    bool
-		expected string
+		name        string
+		body        string
+		plain       bool
+		expected    string
+		expected256 string
 	}{
 		{
-			name:     "it returns striaght horizontal bar for empty message",
-			body:     "",
-			expected: "\x1b[38;5;242m————————————————————————————————————————————————\x1b[m",
+			name:        "it returns striaght horizontal bar for empty message",
+			body:        "",
+			expected:    "\x1b[0;90m————————————————————————————————————————————————\x1b[0m",
+			expected256: "\x1b[38;5;242m————————————————————————————————————————————————\x1b[m",
 		},
 		{
-			name:     "it returns raw horizontal bar for empty message in plain output",
-			body:     "",
-			plain:    true,
-			expected: "------------------------------------------------",
+			name:        "it returns raw horizontal bar for empty message in plain output",
+			body:        "",
+			plain:       true,
+			expected:    "------------------------------------------------",
+			expected256: "------------------------------------------------",
 		},
 		{
-			name:     "it returns greyed out message wrapped in horizontal bar",
-			body:     "Some text",
-			expected: "\x1b[38;5;242m———————————————————————— Some text ————————————————————————\x1b[m",
+			name:        "it returns greyed out message wrapped in horizontal bar",
+			body:        "Some text",
+			expected:    "\x1b[0;90m———————————————————————— Some text ————————————————————————\x1b[0m",
+			expected256: "\x1b[38;5;242m———————————————————————— Some text ————————————————————————\x1b[m",
 		},
 		{
-			name:     "it returns greyed out message wrapped in raw horizontal bar for plain output",
-			body:     "Some text",
-			plain:    true,
-			expected: "------------------------ Some text ------------------------",
+			name:        "it returns greyed out message wrapped in raw horizontal bar for plain output",
+			body:        "Some text",
+			plain:       true,
+			expected:    "------------------------ Some text ------------------------",
+			expected256: "------------------------ Some text ------------------------",
 		},
 		{
-			name:     "it doesn't trim spaces",
-			body:     "  ",
-			expected: "\x1b[38;5;242m————————————————————————    ————————————————————————\x1b[m",
+			name:        "it doesn't trim spaces",
+			body:        "  ",
+			expected:    "\x1b[0;90m————————————————————————    ————————————————————————\x1b[0m",
+			expected256: "\x1b[38;5;242m————————————————————————    ————————————————————————\x1b[m",
 		},
 		{
-			name:     "it doesn't trim spaces for plain output",
-			body:     "  ",
-			plain:    true,
-			expected: "------------------------    ------------------------",
+			name:        "it doesn't trim spaces for plain output",
+			body:        "  ",
+			plain:       true,
+			expected:    "------------------------    ------------------------",
+			expected256: "------------------------    ------------------------",
 		},
 	}
 
@@ -230,7 +237,11 @@ func TestSeparator(t *testing.T) {
 				Display: DisplayFormat{Plain: tc.plain},
 			}
 
-			assert.Equal(t, tc.expected, issue.separator(tc.body))
+			if xterm256() {
+				assert.Equal(t, tc.expected256, issue.separator(tc.body))
+			} else {
+				assert.Equal(t, tc.expected, issue.separator(tc.body))
+			}
 		})
 	}
 }
