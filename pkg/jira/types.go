@@ -67,7 +67,13 @@ type IssueFields struct {
 		Total int `json:"total"`
 	} `json:"comment"`
 	IssueLinks []struct {
-		ID string `json:"id"`
+		LinkType struct {
+			Name    string `json:"name"`
+			Inward  string `json:"inward"`
+			Outward string `json:"outward"`
+		} `json:"type"`
+		InwardIssue  *Issue `json:"inwardIssue,omitempty"`
+		OutwardIssue *Issue `json:"outwardIssue,omitempty"`
 	} `json:"issueLinks"`
 	Created string `json:"created"`
 	Updated string `json:"updated"`
