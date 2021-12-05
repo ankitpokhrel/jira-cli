@@ -64,7 +64,11 @@ func (l IssueList) Render() error {
 				return issue
 			}
 			renderFn := func(i interface{}) (string, error) {
-				return Issue{Data: i.(*jira.Issue)}.RenderedOut(renderer)
+				iss := Issue{
+					Server: l.Server,
+					Data:   i.(*jira.Issue),
+				}
+				return iss.RenderedOut(renderer)
 			}
 			return dataFn, renderFn
 		}),
