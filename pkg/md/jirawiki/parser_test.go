@@ -458,6 +458,51 @@ func main() {
 }
 ` + "```\n",
 		},
+		{
+			name: "out of memory bug in preformatted block #221",
+			input: `{noformat}
+1
+2
+3
+4
+5
+6
+{noformat}
+{noformat}
+7
+{noformat}`,
+			expected: "\n```\n1\n2\n3\n4\n5\n6\n```\n\n```\n7\n```\n",
+		},
+		{
+			name: "Back to back fenced code block should not result in infinite loop",
+			input: `{code:go}
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, world!")
+}
+{code}
+{code}
+fn main() {
+	println!("Hello, world!");
+}
+{code}`,
+			expected: "\n```go" + `
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, world!")
+}
+` + "```\n" + "\n```" + `
+fn main() {
+	println!("Hello, world!");
+}
+` + "```\n",
+		},
 	}
 
 	for _, tc := range cases {
