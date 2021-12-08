@@ -440,7 +440,7 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 	}
 	out.WriteString(replacements[t.tag])
 
-	return i + 1
+	return i
 }
 
 func (t *Token) handleReferenceLink(line string, out *strings.Builder) int {
