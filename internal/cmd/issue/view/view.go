@@ -13,7 +13,10 @@ import (
 
 const (
 	helpText = `View displays contents of an issue.`
-	examples = `$ jira issue view ISSUE-1`
+	examples = `$ jira issue view ISSUE-1
+
+# Show 5 recent comments when viewing the issue
+$ jira issue view ISSUE-1 --comments 5`
 )
 
 // NewCmdView is a view command.
