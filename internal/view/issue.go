@@ -33,11 +33,22 @@ func newBlankFragment(n int) fragment {
 	}
 }
 
+type issueComment struct {
+	meta string
+	body string
+}
+
+// IssueOption is filtering options for an issue.
+type IssueOption struct {
+	NumComments uint
+}
+
 // Issue is a list view for issues.
 type Issue struct {
 	Server  string
 	Data    *jira.Issue
 	Display DisplayFormat
+	Options IssueOption
 }
 
 // Render renders the view.
@@ -87,10 +98,13 @@ func (i Issue) String() string {
 	if len(i.Data.Fields.IssueLinks) > 0 {
 		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s\n", i.separator("Linked Issues"), i.linkedIssues()))
 	}
-	if i.Data.Fields.Comment.Total > 0 {
-		author, body := i.comment()
-		sep := fmt.Sprintf("%d comments", i.Data.Fields.Comment.Total)
-		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s\n\n%s\n", i.separator(sep), author, body))
+	total := i.Data.Fields.Comment.Total
+	if total > 0 && i.Options.NumComments > 0 {
+		sep := fmt.Sprintf("%d Comments", total)
+		s.WriteString(fmt.Sprintf("\n\n%s", i.separator(sep)))
+		for _, comment := range i.comments() {
+			s.WriteString(fmt.Sprintf("\n\n%s\n\n%s\n", comment.meta, comment.body))
+		}
 	}
 	s.WriteString(i.footer())
 
@@ -124,17 +138,21 @@ func (i Issue) fragments() []fragment {
 		)
 	}
 
-	if i.Data.Fields.Comment.Total > 0 {
-		author, body := i.comment()
+	if i.Data.Fields.Comment.Total > 0 && i.Options.NumComments > 0 {
 		scraps = append(
 			scraps,
 			newBlankFragment(1),
-			fragment{Body: i.separator(fmt.Sprintf("%d comments", i.Data.Fields.Comment.Total))},
+			fragment{Body: i.separator(fmt.Sprintf("%d Comments", i.Data.Fields.Comment.Total))},
 			newBlankFragment(2),
-			fragment{Body: author},
-			newBlankFragment(1),
-			fragment{Body: body, Parse: true},
 		)
+		for _, comment := range i.comments() {
+			scraps = append(
+				scraps,
+				fragment{Body: comment.meta},
+				newBlankFragment(1),
+				fragment{Body: comment.body, Parse: true},
+			)
+		}
 	}
 
 	return append(scraps, newBlankFragment(1), fragment{Body: i.footer()}, newBlankFragment(2))
@@ -191,7 +209,7 @@ func (i Issue) header() string {
 		wch = fmt.Sprintf("You + %d watchers", i.Data.Fields.Watches.WatchCount-1)
 	}
 	return fmt.Sprintf(
-		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s  💭 %d comments  \U0001F9F5 %d linked issues\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s  👀 %s",
+		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s  💭 %d comments  \U0001F9F5 %d linked\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s  👀 %s",
 		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as, i.Data.Key,
 		i.Data.Fields.Comment.Total, len(i.Data.Fields.IssueLinks),
 		i.Data.Fields.Summary,
@@ -273,12 +291,12 @@ func (i Issue) linkedIssues() string {
 
 	for _, k := range keys {
 		linked.WriteString(
-			fmt.Sprintf("\n  %s\n\n", coloredOut(strings.ToUpper(k), color.FgWhite, color.Bold)),
+			fmt.Sprintf("\n %s\n\n", coloredOut(strings.ToUpper(k), color.FgWhite, color.Bold)),
 		)
 		for _, iss := range linkMap[k] {
 			linked.WriteString(
 				fmt.Sprintf(
-					"    %s %s • %s • %s • %s\n",
+					"  %s %s • %s • %s • %s\n",
 					coloredOut(pad(iss.Key, maxKeyLen), color.FgGreen, color.Bold),
 					shortenAndPad(iss.Fields.Summary, summaryLen),
 					pad(iss.Fields.IssueType.Name, maxTypeLen),
@@ -292,28 +310,61 @@ func (i Issue) linkedIssues() string {
 	return linked.String()
 }
 
-func (i Issue) comment() (string, string) {
-	if i.Data.Fields.Comment.Total == 0 {
-		return "", ""
+func (i Issue) comments() []issueComment {
+	comments := make([]issueComment, 0, i.Options.NumComments)
+
+	total := i.Data.Fields.Comment.Total
+	if total == 0 {
+		return comments
 	}
-	latestComment := i.Data.Fields.Comment.Comments[i.Data.Fields.Comment.Total-1]
-	var body string
-	if adfNode, ok := latestComment.Body.(*adf.ADF); ok {
-		body = adf.NewTranslator(adfNode, adf.NewMarkdownTranslator()).Translate()
-	} else {
-		body = latestComment.Body.(string)
-		body = md.FromJiraMD(body)
+
+	limit := int(i.Options.NumComments)
+	if limit > total {
+		limit = total
 	}
-	return fmt.Sprintf(
-		"\n  %s • %s • %s",
-		coloredOut(latestComment.Author.Name, color.FgWhite, color.Bold),
-		coloredOut(cmdutil.FormatDateTimeHuman(latestComment.Created, jira.RFC3339), color.FgWhite, color.Bold),
-		coloredOut("Latest comment", color.FgCyan, color.Bold),
-	), body
+
+	for idx := total - 1; idx >= total-limit; idx-- {
+		c := i.Data.Fields.Comment.Comments[idx]
+		var body string
+		if adfNode, ok := c.Body.(*adf.ADF); ok {
+			body = adf.NewTranslator(adfNode, adf.NewMarkdownTranslator()).Translate()
+		} else {
+			body = c.Body.(string)
+			body = md.FromJiraMD(body)
+		}
+		meta := fmt.Sprintf(
+			"\n %s • %s",
+			coloredOut(c.Author.Name, color.FgWhite, color.Bold),
+			coloredOut(cmdutil.FormatDateTimeHuman(c.Created, jira.RFC3339), color.FgWhite, color.Bold),
+		)
+		if idx == total-1 {
+			meta += fmt.Sprintf(" • %s", coloredOut("Latest comment", color.FgCyan, color.Bold))
+		}
+		comments = append(comments, issueComment{
+			meta: meta,
+			body: body,
+		})
+	}
+
+	return comments
 }
 
 func (i Issue) footer() string {
-	return gray(fmt.Sprintf("View this issue on Jira: %s/browse/%s", i.Server, i.Data.Key))
+	var out strings.Builder
+
+	nc := int(i.Options.NumComments)
+	if i.Data.Fields.Comment.Total > 0 && nc > 0 && nc < i.Data.Fields.Comment.Total {
+		if i.Display.Plain {
+			out.WriteString("\n")
+		}
+		out.WriteString(fmt.Sprintf("%s\n", gray("Use --comments <limit> with `jira issue view` to load more comments")))
+	}
+	if i.Display.Plain {
+		out.WriteString("\n")
+	}
+	out.WriteString(gray(fmt.Sprintf("View this issue on Jira: %s/browse/%s", i.Server, i.Data.Key)))
+
+	return out.String()
 }
 
 // renderPlain renders the issue in plain view.

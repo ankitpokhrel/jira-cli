@@ -341,6 +341,11 @@ $ jira issue view ISSUE-1
 The view screen will display linked issues and the latest comment after description. Note that the displayed comment may
 not be the latest one if you for some reason have more than 5k comments in a ticket.
 
+```sh
+# Show 5 recent comments when viewing the issue
+$ jira issue view ISSUE-1 --comments 5
+```
+
 #### Link
 The `link` command lets you link two issues.
 

@@ -11,6 +11,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter/issue"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
@@ -50,13 +51,14 @@ func (sl SprintList) Render() error {
 				dataFn := func() interface{} {
 					data := d.(tui.TableData)
 					ci := getKeyColumnIndex(data[0])
-					issue, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data[r][ci])
-					return issue
+					iss, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data[r][ci], issue.NewNumCommentsFilter(1))
+					return iss
 				}
 				renderFn := func(i interface{}) (string, error) {
 					iss := Issue{
-						Server: sl.Server,
-						Data:   i.(*jira.Issue),
+						Server:  sl.Server,
+						Data:    i.(*jira.Issue),
+						Options: IssueOption{NumComments: 1},
 					}
 					return iss.RenderedOut(renderer)
 				}
