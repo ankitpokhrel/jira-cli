@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter/issue"
+
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
+	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter"
 	"github.com/ankitpokhrel/jira-cli/pkg/md"
 )
 
@@ -22,16 +25,16 @@ const (
 )
 
 // GetIssue fetches issue details using GET /issue/{key} endpoint.
-func (c *Client) GetIssue(key string) (*Issue, error) {
-	return c.getIssue(key, apiVersion3)
+func (c *Client) GetIssue(key string, opts ...filter.Filter) (*Issue, error) {
+	return c.getIssue(key, apiVersion3, opts)
 }
 
 // GetIssueV2 fetches issue details using v2 version of Jira GET /issue/{key} endpoint.
-func (c *Client) GetIssueV2(key string) (*Issue, error) {
-	return c.getIssue(key, apiVersion2)
+func (c *Client) GetIssueV2(key string, opts ...filter.Filter) (*Issue, error) {
+	return c.getIssue(key, apiVersion2, opts)
 }
 
-func (c *Client) getIssue(key, ver string) (*Issue, error) {
+func (c *Client) getIssue(key, ver string, opts filter.Collection) (*Issue, error) {
 	path := fmt.Sprintf("/issue/%s", key)
 
 	var (
@@ -66,11 +69,14 @@ func (c *Client) getIssue(key, ver string) (*Issue, error) {
 	if ver == apiVersion3 {
 		out.Fields.Description = ifaceToADF(out.Fields.Description)
 
-		if out.Fields.Comment.Total > 0 {
-			// We are only interested in top most comment at the moment so let's just unmarshal that one.
-			out.Fields.Comment.Comments[out.Fields.Comment.Total-1].Body = ifaceToADF(
-				out.Fields.Comment.Comments[out.Fields.Comment.Total-1].Body,
-			)
+		total := out.Fields.Comment.Total
+		limit := opts.GetInt(issue.KeyIssueNumComments)
+		if limit > total {
+			limit = total
+		}
+		for i := total - 1; i >= total-limit; i-- {
+			body := out.Fields.Comment.Comments[i].Body
+			out.Fields.Comment.Comments[i].Body = ifaceToADF(body)
 		}
 	}
 

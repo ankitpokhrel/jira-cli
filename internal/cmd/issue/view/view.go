@@ -8,6 +8,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	tuiView "github.com/ankitpokhrel/jira-cli/internal/view"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter/issue"
 )
 
 const (
@@ -30,6 +31,7 @@ func NewCmdView() *cobra.Command {
 		Run:  view,
 	}
 
+	cmd.Flags().Uint("comments", 1, "Show N comments")
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 
 	return &cmd
@@ -39,13 +41,16 @@ func view(cmd *cobra.Command, args []string) {
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
+	comments, err := cmd.Flags().GetUint("comments")
+	cmdutil.ExitIfError(err)
+
 	key := cmdutil.GetJiraIssueKey(viper.GetString("project.key"), args[0])
-	issue, err := func() (*jira.Issue, error) {
+	iss, err := func() (*jira.Issue, error) {
 		s := cmdutil.Info("Fetching issue details...")
 		defer s.Stop()
 
 		client := api.Client(jira.Config{Debug: debug})
-		return api.ProxyGetIssue(client, key)
+		return api.ProxyGetIssue(client, key, issue.NewNumCommentsFilter(comments))
 	}()
 	cmdutil.ExitIfError(err)
 
@@ -54,8 +59,9 @@ func view(cmd *cobra.Command, args []string) {
 
 	v := tuiView.Issue{
 		Server:  viper.GetString("server"),
-		Data:    issue,
+		Data:    iss,
 		Display: tuiView.DisplayFormat{Plain: plain},
+		Options: tuiView.IssueOption{NumComments: comments},
 	}
 	cmdutil.ExitIfError(v.Render())
 }

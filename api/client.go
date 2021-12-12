@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter"
 )
 
 const clientTimeout = 15 * time.Second
@@ -56,21 +57,21 @@ func ProxyCreate(c *jira.Client, cr *jira.CreateRequest) (*jira.CreateResponse, 
 // ProxyGetIssue uses either a v2 or v3 version of the Jira GET /issue/{key}
 // endpoint to fetch the issue details based on configured installation type.
 // Defaults to v3 if installation type is not defined in the config.
-func ProxyGetIssue(c *jira.Client, key string) (*jira.Issue, error) {
+func ProxyGetIssue(c *jira.Client, key string, opts ...filter.Filter) (*jira.Issue, error) {
 	var (
-		issue *jira.Issue
-		err   error
+		iss *jira.Issue
+		err error
 	)
 
 	it := viper.GetString("installation")
 
 	if it == jira.InstallationTypeLocal {
-		issue, err = c.GetIssueV2(key)
+		iss, err = c.GetIssueV2(key, opts...)
 	} else {
-		issue, err = c.GetIssue(key)
+		iss, err = c.GetIssue(key, opts...)
 	}
 
-	return issue, err
+	return iss, err
 }
 
 // ProxySearch uses either a v2 or v3 version of the Jira GET /search endpoint
