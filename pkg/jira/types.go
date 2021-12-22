@@ -41,10 +41,8 @@ type IssueFields struct {
 	Resolution  struct {
 		Name string `json:"name"`
 	} `json:"resolution"`
-	IssueType struct {
-		Name string `json:"name"`
-	} `json:"issueType"`
-	Assignee struct {
+	IssueType IssueType `json:"issueType"`
+	Assignee  struct {
 		Name string `json:"displayName"`
 	} `json:"assignee"`
 	Priority struct {
@@ -89,6 +87,7 @@ type IssueFields struct {
 type IssueType struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
+	Handle  string `json:"untranslatedName"`
 	Subtask bool   `json:"subtask"`
 }
 

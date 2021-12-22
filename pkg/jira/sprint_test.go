@@ -224,11 +224,9 @@ func TestSprintIssues(t *testing.T) {
 			{
 				Key: "TEST-1",
 				Fields: IssueFields{
-					Summary: "Bug summary",
-					Labels:  []string{},
-					IssueType: struct {
-						Name string `json:"name"`
-					}{Name: "Bug"},
+					Summary:   "Bug summary",
+					Labels:    []string{},
+					IssueType: IssueType{Name: "Bug"},
 					Priority: struct {
 						Name string `json:"name"`
 					}{Name: "Medium"},
@@ -249,11 +247,9 @@ func TestSprintIssues(t *testing.T) {
 			{
 				Key: "TEST-2",
 				Fields: IssueFields{
-					Summary: "Story summary",
-					Labels:  []string{"critical", "feature"},
-					IssueType: struct {
-						Name string `json:"name"`
-					}{Name: "Story"},
+					Summary:   "Story summary",
+					Labels:    []string{"critical", "feature"},
+					IssueType: IssueType{Name: "Story"},
 					Priority: struct {
 						Name string `json:"name"`
 					}{Name: "High"},
@@ -279,9 +275,7 @@ func TestSprintIssues(t *testing.T) {
 					Resolution: struct {
 						Name string `json:"name"`
 					}{Name: "Done"},
-					IssueType: struct {
-						Name string `json:"name"`
-					}{Name: "Task"},
+					IssueType: IssueType{Name: "Task"},
 					Assignee: struct {
 						Name string `json:"displayName"`
 					}{Name: "Person A"},

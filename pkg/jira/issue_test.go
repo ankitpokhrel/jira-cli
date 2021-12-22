@@ -53,10 +53,8 @@ func TestGetIssue(t *testing.T) {
 					},
 				},
 			},
-			Labels: []string{},
-			IssueType: struct {
-				Name string `json:"name"`
-			}{Name: "Bug"},
+			Labels:    []string{},
+			IssueType: IssueType{Name: "Bug"},
 			Priority: struct {
 				Name string `json:"name"`
 			}{Name: "Medium"},
@@ -107,9 +105,7 @@ func TestGetIssueWithoutDescription(t *testing.T) {
 			Summary:     "Bug summary",
 			Description: nilADF,
 			Labels:      []string{},
-			IssueType: struct {
-				Name string `json:"name"`
-			}{Name: "Bug"},
+			IssueType:   IssueType{Name: "Bug"},
 			Priority: struct {
 				Name string `json:"name"`
 			}{Name: "Medium"},
@@ -160,9 +156,7 @@ func TestGetIssueV2(t *testing.T) {
 			Summary:     "Bug summary",
 			Description: "Test description",
 			Labels:      []string{},
-			IssueType: struct {
-				Name string `json:"name"`
-			}{Name: "Bug"},
+			IssueType:   IssueType{Name: "Bug"},
 			Priority: struct {
 				Name string `json:"name"`
 			}{Name: "Medium"},

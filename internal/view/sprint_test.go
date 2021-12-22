@@ -35,9 +35,7 @@ func TestSprintPreviewLayoutData(t *testing.T) {
 			Resolution: struct {
 				Name string `json:"name"`
 			}{Name: "Fixed"},
-			IssueType: struct {
-				Name string `json:"name"`
-			}{Name: "Bug"},
+			IssueType: jira.IssueType{Name: "Bug"},
 			Assignee: struct {
 				Name string `json:"displayName"`
 			}{Name: "Person A"},
@@ -57,10 +55,8 @@ func TestSprintPreviewLayoutData(t *testing.T) {
 	issue2 := jira.Issue{
 		Key: "ISSUE-2",
 		Fields: jira.IssueFields{
-			Summary: "This is another issue",
-			IssueType: struct {
-				Name string `json:"name"`
-			}{Name: "Story"},
+			Summary:   "This is another issue",
+			IssueType: jira.IssueType{Name: "Story"},
 			Priority: struct {
 				Name string `json:"name"`
 			}{Name: "Normal"},
