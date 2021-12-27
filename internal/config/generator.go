@@ -288,12 +288,13 @@ func (c *JiraCLIConfig) configureMetadata() error {
 	)
 
 	for _, it := range meta.Projects[0].IssueTypes {
-		if it.Name == jira.IssueTypeEpic {
+		if it.Handle == jira.IssueTypeEpic || it.Name == jira.IssueTypeEpic {
 			epicMeta = it.Fields
 		}
 		issueTypes = append(issueTypes, &jira.IssueType{
 			ID:      it.ID,
 			Name:    it.Name,
+			Handle:  it.Handle,
 			Subtask: it.Subtask,
 		})
 	}

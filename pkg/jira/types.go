@@ -87,7 +87,7 @@ type IssueFields struct {
 type IssueType struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
-	Handle  string `json:"untranslatedName"`
+	Handle  string `json:"untranslatedName,omitempty"` // This field doesn't exist in v2.
 	Subtask bool   `json:"subtask"`
 }
 
