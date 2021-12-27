@@ -619,6 +619,8 @@ Sprint 1:   3
 
 1. Not all [Atlassian nodes](https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/#nodes) are
    translated properly at the moment which can cause formatting issue sometimes.
+2. Language other than English is not fully supported for on-premise installation because the API returns translated
+   name instead of the issue type handle.
 
 ## Feature requests
 
