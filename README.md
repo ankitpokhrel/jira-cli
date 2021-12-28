@@ -86,6 +86,11 @@ See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more 
 2. Run `jira init`, select installation type as `Local`, and provide required details to generate a config file required
    for the tool.
 
+   **Note:** If your on-premise Jira installation is using a language other than `English`, then the issue/epic creation
+   may not work because the older version of Jira API doesn't return untranslated name for `issuetypes`. In that case,
+   you will have to fill in `epic.name`, `epic.link` and `issue.types.*.handle` fields manually in the generated config
+   to get the expected behavior.
+
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.
 
@@ -619,8 +624,6 @@ Sprint 1:   3
 
 1. Not all [Atlassian nodes](https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/#nodes) are
    translated properly at the moment which can cause formatting issue sometimes.
-2. Language other than English is not fully supported for on-premise installation because the API returns translated
-   name instead of the issue type handle.
 
 ## Feature requests
 

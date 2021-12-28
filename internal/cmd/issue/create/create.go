@@ -220,12 +220,10 @@ func (cc *createCmd) askQuestions() error {
 
 		if cc.params.issueType == "" {
 			for _, t := range cc.issueTypes {
-				if t.Name == ans.IssueType || fmt.Sprintf("%s (%s)", t.Name, t.Handle) == ans.IssueType {
-					if t.Handle != "" {
-						cc.params.issueType = t.Handle
-					} else {
-						cc.params.issueType = t.Name
-					}
+				if t.Handle != "" && fmt.Sprintf("%s (%s)", t.Name, t.Handle) == ans.IssueType {
+					cc.params.issueType = t.Handle
+				} else if t.Name == ans.IssueType {
+					cc.params.issueType = t.Name
 				}
 			}
 		}
