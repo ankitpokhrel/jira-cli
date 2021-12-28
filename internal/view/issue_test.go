@@ -35,9 +35,7 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 					},
 				},
 			},
-			IssueType: struct {
-				Name string `json:"name"`
-			}{Name: "Bug"},
+			IssueType: jira.IssueType{Name: "Bug"},
 			Assignee: struct {
 				Name string `json:"displayName"`
 			}{Name: "Person A"},
@@ -102,9 +100,7 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 				Name string `json:"name"`
 			}{Name: "Fixed"},
 			Description: "h1. Title\nh2. Subtitle\n\nThis is a *bold* and _italic_ text with [a link|https://ankit.pl] in between.",
-			IssueType: struct {
-				Name string `json:"name"`
-			}{Name: "Bug"},
+			IssueType:   jira.IssueType{Name: "Bug"},
 			Assignee: struct {
 				Name string `json:"displayName"`
 			}{Name: "Person A"},
@@ -159,9 +155,9 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 					InwardIssue: &jira.Issue{
 						Key: "TEST-2",
 						Fields: jira.IssueFields{
-							Summary: "Something is broken", IssueType: struct {
-								Name string `json:"name"`
-							}{Name: "Bug"}, Priority: struct {
+							Summary:   "Something is broken",
+							IssueType: jira.IssueType{Name: "Bug"},
+							Priority: struct {
 								Name string `json:"name"`
 							}{Name: "High"}, Status: struct {
 								Name string `json:"name"`
@@ -178,9 +174,9 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 					OutwardIssue: &jira.Issue{
 						Key: "TEST-3",
 						Fields: jira.IssueFields{
-							Summary: "Everything is on fire", IssueType: struct {
-								Name string `json:"name"`
-							}{Name: "Bug"}, Priority: struct {
+							Summary:   "Everything is on fire",
+							IssueType: jira.IssueType{Name: "Bug"},
+							Priority: struct {
 								Name string `json:"name"`
 							}{Name: "Urgent"}, Status: struct {
 								Name string `json:"name"`

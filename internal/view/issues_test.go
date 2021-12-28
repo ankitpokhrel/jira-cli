@@ -140,9 +140,7 @@ func getIssues() []*jira.Issue {
 				Resolution: struct {
 					Name string `json:"name"`
 				}{Name: "Fixed"},
-				IssueType: struct {
-					Name string `json:"name"`
-				}{Name: "Bug"},
+				IssueType: jira.IssueType{Name: "Bug"},
 				Assignee: struct {
 					Name string `json:"displayName"`
 				}{Name: "Person A"},
@@ -162,10 +160,8 @@ func getIssues() []*jira.Issue {
 		{
 			Key: "TEST-2",
 			Fields: jira.IssueFields{
-				Summary: "This is another test",
-				IssueType: struct {
-					Name string `json:"name"`
-				}{Name: "Story"},
+				Summary:   "This is another test",
+				IssueType: jira.IssueType{Name: "Story"},
 				Priority: struct {
 					Name string `json:"name"`
 				}{Name: "Normal"},

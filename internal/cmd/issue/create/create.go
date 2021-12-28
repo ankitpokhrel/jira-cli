@@ -167,12 +167,14 @@ func (cc *createCmd) setIssueTypes() error {
 	for _, at := range availableTypes {
 		tp := at.(map[interface{}]interface{})
 		name := tp["name"].(string)
-		if name == jira.IssueTypeEpic {
+		handle := tp["handle"].(string)
+		if handle == jira.IssueTypeEpic || name == jira.IssueTypeEpic {
 			continue
 		}
 		issueTypes = append(issueTypes, &jira.IssueType{
 			ID:      tp["id"].(string),
 			Name:    name,
+			Handle:  handle,
 			Subtask: tp["subtask"].(bool),
 		})
 	}
@@ -187,7 +189,11 @@ func (cc *createCmd) getIssueType() *survey.Question {
 	if cc.params.issueType == "" {
 		var options []string
 		for _, t := range cc.issueTypes {
-			options = append(options, t.Name)
+			if t.Handle != "" && t.Handle != t.Name {
+				options = append(options, fmt.Sprintf("%s (%s)", t.Name, t.Handle))
+			} else {
+				options = append(options, t.Name)
+			}
 		}
 
 		qs = &survey.Question{
@@ -213,7 +219,13 @@ func (cc *createCmd) askQuestions() error {
 		}
 
 		if cc.params.issueType == "" {
-			cc.params.issueType = ans.IssueType
+			for _, t := range cc.issueTypes {
+				if t.Handle != "" && fmt.Sprintf("%s (%s)", t.Name, t.Handle) == ans.IssueType {
+					cc.params.issueType = t.Handle
+				} else if t.Name == ans.IssueType {
+					cc.params.issueType = t.Name
+				}
+			}
 		}
 	}
 
@@ -251,7 +263,7 @@ func (cc *createCmd) getRemainingQuestions() []*survey.Question {
 
 	if cc.params.parentIssueKey == "" {
 		for _, t := range cc.issueTypes {
-			if t.Name == cc.params.issueType && t.Subtask {
+			if t.Subtask && (t.Name == cc.params.issueType || (t.Handle != "" && t.Handle == cc.params.issueType)) {
 				qs = append(qs, &survey.Question{
 					Name:     "parentIssueKey",
 					Prompt:   &survey.Input{Message: "Parent issue key"},

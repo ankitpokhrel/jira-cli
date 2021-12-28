@@ -17,9 +17,7 @@ func TestEpicData(t *testing.T) {
 			Resolution: struct {
 				Name string `json:"name"`
 			}{Name: "Fixed"},
-			IssueType: struct {
-				Name string `json:"name"`
-			}{Name: "Epic"},
+			IssueType: jira.IssueType{Name: "Epic"},
 			Assignee: struct {
 				Name string `json:"displayName"`
 			}{Name: "Person A"},
@@ -39,10 +37,8 @@ func TestEpicData(t *testing.T) {
 	epic2 := jira.Issue{
 		Key: "TEST-2",
 		Fields: jira.IssueFields{
-			Summary: "[EPIC] This is another test",
-			IssueType: struct {
-				Name string `json:"name"`
-			}{Name: "Epic"},
+			Summary:   "[EPIC] This is another test",
+			IssueType: jira.IssueType{Name: "Epic"},
 			Priority: struct {
 				Name string `json:"name"`
 			}{Name: "Normal"},
@@ -64,9 +60,7 @@ func TestEpicData(t *testing.T) {
 			Resolution: struct {
 				Name string `json:"name"`
 			}{Name: "Fixed"},
-			IssueType: struct {
-				Name string `json:"name"`
-			}{Name: "Bug"},
+			IssueType: jira.IssueType{Name: "Bug"},
 			Assignee: struct {
 				Name string `json:"displayName"`
 			}{Name: "Person A"},
@@ -86,10 +80,8 @@ func TestEpicData(t *testing.T) {
 	issue2 := jira.Issue{
 		Key: "ISSUE-2",
 		Fields: jira.IssueFields{
-			Summary: "This is another issue",
-			IssueType: struct {
-				Name string `json:"name"`
-			}{Name: "Story"},
+			Summary:   "This is another issue",
+			IssueType: jira.IssueType{Name: "Story"},
 			Priority: struct {
 				Name string `json:"name"`
 			}{Name: "Normal"},
