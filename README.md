@@ -64,7 +64,7 @@ brew install jira-cli
 You can also install the runnable binary to your `$GOPATH/bin`.
 
 ```sh
-go get github.com/ankitpokhrel/jira-cli/cmd/jira
+go install github.com/ankitpokhrel/jira-cli/cmd/jira
 ```
 
 See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more info. Other installation options will be available later.
@@ -279,6 +279,8 @@ $ jira issue create --template -
 $ echo "Description from stdin" | jira issue create -s"Summary" -tTask
 ```
 
+Note: For issue description, the flag `--body/-b` always takes precedence over the `--template` flag if both of them are passed.
+
 ![Markdown render preview](.github/assets/markdown.jpg)
 > The preview above shows markdown template passed in Jira CLI and how it is rendered in the Jira UI.
 
@@ -401,6 +403,14 @@ $ jira issue comment add ISSUE-1 --template -
 
 # Or, use pipe to read input directly from standard input
 $ echo "Comment from stdin" | jira issue comment add ISSUE-1
+```
+
+Note: For comment body, the positional argument always takes precedence over the `--template` flag if both of them are passed. In the
+example below, the body will be picked from positional argument instead of the template.
+```sh
+jira issue comment add ISSUE-42 "comment body positional" --template - <<'EOF'
+comment body template
+EOF
 ```
 
 ### Epic

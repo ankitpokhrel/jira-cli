@@ -24,7 +24,20 @@ const (
 $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 
 # Create issue in another project
-$ jira issue create -pPRJ -tBug -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'`
+$ jira issue create -pPRJ -tBug -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'
+
+# Load description from template file
+$ jira issue create --template /path/to/template.tmpl
+
+# Get description from standard input
+$ jira issue create --template -
+
+# Or, use pipe to read input directly from standard input
+$ echo "Description from stdin" | jira issue create -s"Summary" -tTask
+
+# For issue description, the flag --body/-b takes precedence over the --template flag
+# The example below will add "Body from flag" as an issue description
+$ jira issue create -tTask -sSummary -b"Body from flag" --template /path/to/template.tpl`
 )
 
 // NewCmdCreate is a create command.
