@@ -1,5 +1,5 @@
 .ONESHELL:
-.PHONY: all deps build install lint test ci jira.server
+.PHONY: all deps build install lint test ci jira.server clean distclean
 
 # Build vars
 git_commit  = $(shell git rev-parse HEAD)
@@ -9,6 +9,8 @@ VERSION_PKG = github.com/ankitpokhrel/jira-cli/internal/version
 LDFLAGS     := "-X $(VERSION_PKG).Version=$(VERSION) \
 				-X $(VERSION_PKG).GitCommit=$(git_commit) \
 				-X $(VERSION_PKG).BuildDate=$(build_date)"
+
+export GOCACHE ?= $(CURDIR)/.gocache
 
 all: deps lint test install
 
@@ -36,3 +38,9 @@ ci: lint test
 
 jira.server:
 	docker compose up -d
+
+clean:
+	go clean -x ./...
+
+distclean:
+	go clean -x -cache -testcache -modcache ./...

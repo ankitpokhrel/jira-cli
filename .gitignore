@@ -11,3 +11,4 @@ dist/
 bin/
 coverage/
 vendor/
+/.gocache
