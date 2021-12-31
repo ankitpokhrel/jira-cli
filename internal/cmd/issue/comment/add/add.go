@@ -43,7 +43,7 @@ $ jira issue comment add ISSUE-1 "comment from arg" --template /path/to/template
 func NewCmdCommentAdd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:     "add ISSUE-KEY [COMMENT_BODY]",
-		Short:   "Add adds comment to an issue",
+		Short:   "Add a comment to an issue",
 		Long:    helpText,
 		Example: examples,
 		Annotations: map[string]string{
