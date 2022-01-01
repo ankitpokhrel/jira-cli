@@ -1,0 +1,16 @@
+version = 1
+
+[[analyzers]]
+name = "go"
+enabled = true
+
+  [analyzers.meta]
+  import_root = "github.com/ankitpokhrel/jira-cli"
+
+[[analyzers]]
+name = "shell"
+enabled = true
+
+[[transformers]]
+name = "gofmt"
+enabled = true
