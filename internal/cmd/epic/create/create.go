@@ -221,9 +221,8 @@ func (cc *createCmd) getQuestions(projectType string) []*survey.Question {
 }
 
 type createCmd struct {
-	client     *jira.Client
-	issueTypes []*jira.IssueType
-	params     *createParams
+	client *jira.Client
+	params *createParams
 }
 
 func (cc *createCmd) isNonInteractive() bool {

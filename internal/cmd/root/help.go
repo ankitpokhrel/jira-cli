@@ -102,7 +102,7 @@ func outdent(s string) string {
 	lines, minIndent := strings.Split(s, "\n"), -1
 
 	for _, l := range lines {
-		if len(l) == 0 {
+		if l == "" {
 			continue
 		}
 

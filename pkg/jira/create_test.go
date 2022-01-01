@@ -13,7 +13,7 @@ import (
 
 type createTestServer struct{ code int }
 
-func (c createTestServer) serve(t *testing.T, expectedBody string) *httptest.Server {
+func (c *createTestServer) serve(t *testing.T, expectedBody string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/rest/api/2/issue", r.URL.Path)
 		assert.Equal(t, "POST", r.Method)
@@ -38,7 +38,7 @@ func (c createTestServer) serve(t *testing.T, expectedBody string) *httptest.Ser
 	}))
 }
 
-func (c createTestServer) statusCode(code int) {
+func (c *createTestServer) statusCode(code int) {
 	c.code = code
 }
 
