@@ -37,7 +37,7 @@ type IssueList struct {
 }
 
 // Render renders the view.
-func (l IssueList) Render() error {
+func (l *IssueList) Render() error {
 	if l.Display.Plain {
 		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
 		return l.renderPlain(w)
@@ -82,11 +82,11 @@ func (l IssueList) Render() error {
 }
 
 // renderPlain renders the issue in plain view.
-func (l IssueList) renderPlain(w io.Writer) error {
+func (l *IssueList) renderPlain(w io.Writer) error {
 	return renderPlain(w, l.data())
 }
 
-func (l IssueList) validColumnsMap() map[string]struct{} {
+func (l *IssueList) validColumnsMap() map[string]struct{} {
 	columns := ValidIssueColumns()
 	out := make(map[string]struct{}, len(columns))
 
@@ -97,7 +97,7 @@ func (l IssueList) validColumnsMap() map[string]struct{} {
 	return out
 }
 
-func (l IssueList) header() []string {
+func (l *IssueList) header() []string {
 	if len(l.Display.Columns) == 0 {
 		validColumns := ValidIssueColumns()
 		if l.Display.NoTruncate || !l.Display.Plain {
@@ -131,7 +131,7 @@ func (l IssueList) header() []string {
 	return headers
 }
 
-func (l IssueList) data() tui.TableData {
+func (l *IssueList) data() tui.TableData {
 	var data tui.TableData
 
 	headers := l.header()
@@ -141,8 +141,8 @@ func (l IssueList) data() tui.TableData {
 	if len(headers) == 0 {
 		headers = ValidIssueColumns()
 	}
-	for _, issue := range l.Data {
-		data = append(data, l.assignColumns(headers, issue))
+	for _, iss := range l.Data {
+		data = append(data, l.assignColumns(headers, iss))
 	}
 
 	return data

@@ -146,13 +146,11 @@ type createParams struct {
 	assignee   string
 	labels     []string
 	components []string
-	replace    string
 }
 
 type cloneCmd struct {
-	client  *jira.Client
-	params  *cloneParams
-	cParams *createParams
+	client *jira.Client
+	params *cloneParams
 }
 
 func (cc *cloneCmd) getActualCreateParams(issue *jira.Issue) *createParams {

@@ -205,7 +205,7 @@ func (ac *assignCmd) setAssignee(project string) error {
 				if !ok {
 					return errInvalidSelection
 				}
-				if len(ans.Value) == 0 || ans.Value == lineBreak {
+				if ans.Value == "" || ans.Value == lineBreak {
 					return errInvalidSelection
 				}
 
@@ -317,12 +317,10 @@ func (ac *assignCmd) verifyAssignee() (*jira.User, error) {
 	var user *jira.User
 
 	st := strings.ToLower(ac.params.user)
-	all := make([]string, 0, len(ac.users))
 	for _, u := range ac.users {
 		if strings.ToLower(u.Name) == st || strings.ToLower(u.Email) == st {
 			user = u
 		}
-		all = append(all, fmt.Sprintf("'%s'", u.Name))
 	}
 
 	if user == nil {

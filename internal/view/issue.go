@@ -380,6 +380,6 @@ func (i Issue) renderPlain(w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprintf(w, out)
+	_, err = fmt.Fprint(w, out)
 	return err
 }
