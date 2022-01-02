@@ -12,7 +12,7 @@ LDFLAGS     := "-X $(VERSION_PKG).Version=$(VERSION) \
 
 export GOCACHE ?= $(CURDIR)/.gocache
 
-all: deps lint test install
+all: build
 
 deps:
 	go mod vendor -v
