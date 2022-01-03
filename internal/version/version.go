@@ -3,22 +3,33 @@ package version
 import (
 	"fmt"
 	"runtime"
+	"strconv"
+	"time"
 )
 
 // Build information is populated at build-time.
 var (
-	Version   = "dev"
-	GitCommit string
-	BuildDate string
-	GoVersion = runtime.Version()
-	Compiler  = runtime.Compiler
-	Platform  = fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
+	Version         = "dev"
+	GitCommit       = "ffffffffffffffffffffffffffffffffffffffff"
+	SourceDateEpoch = "-1"
+	GoVersion       = runtime.Version()
+	Compiler        = runtime.Compiler
+	Platform        = fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 )
 
 // Info returns version and build information.
 func Info() string {
+	i, err := strconv.ParseInt(SourceDateEpoch, 10, 64) //nolint:gomnd
+	if err != nil {
+		panic(err)
+	}
+	// https://pkg.go.dev/time#Time.Format
+	//
+	//     $ TZ=MST date -Iseconds -d"Jan 2 15:04:05 2006 MST"
+	//     2006-01-02T15:04:05-07:00
+	sourceDate := time.Unix(i, 0).UTC().Format("2006-01-02T15:04:05-07:00")
 	return fmt.Sprintf(
-		"(Version=\"%s\", GitCommit=\"%s\", GoVersion=\"%s\", BuildDate=\"%s\", Compiler=\"%s\", Platform=\"%s\")",
-		Version, GitCommit, GoVersion, BuildDate, Compiler, Platform,
+		"(Version=\"%s\", GitCommit=\"%s\", SourceDate=\"%s\", GoVersion=\"%s\", Compiler=\"%s\", Platform=\"%s\")",
+		Version, GitCommit, sourceDate, GoVersion, Compiler, Platform,
 	)
 }

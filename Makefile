@@ -1,15 +1,34 @@
 .ONESHELL:
 .PHONY: all deps build install lint test ci jira.server clean distclean
 
-# Build vars
-git_commit  = $(shell git rev-parse HEAD)
-build_date  = $(shell date +%FT%T%Z)
-VERSION     ?= $(shell git symbolic-ref -q --short HEAD || git describe --tags --exact-match)
-VERSION_PKG = github.com/ankitpokhrel/jira-cli/internal/version
-LDFLAGS     := "-X $(VERSION_PKG).Version=$(VERSION) \
-				-X $(VERSION_PKG).GitCommit=$(git_commit) \
-				-X $(VERSION_PKG).BuildDate=$(build_date)"
+##############
+# Build vars #
+##############
 
+# https://git-scm.com/docs/git-stash#Documentation/git-stash.txt-create
+#
+# If uncommitted changes exist, then 'git stash create' will create a "stash
+# entry" and print its object name; otherwise 'git stash create' will do
+# nothing and print the empty string. In either case, 'git stash create'
+# returns success.
+#
+# 'git rev-parse HEAD` (on success) prints the sha1sum of the current HEAD.
+#
+# Invoke both commands and take the first 40-xdigit string.
+GIT_COMMIT ?= $(shell { git stash create; git rev-parse HEAD; } | grep -Exm1 '[[:xdigit:]]{40}')
+
+# https://reproducible-builds.org/docs/source-date-epoch/
+export SOURCE_DATE_EPOCH ?= $(shell git show -s --format="%ct" $(GIT_COMMIT))
+
+VERSION ?= $(shell git symbolic-ref -q --short HEAD || git describe --tags --exact-match)
+VERSION_PKG = github.com/ankitpokhrel/jira-cli/internal/version
+export LDFLAGS += -X $(VERSION_PKG).GitCommit=$(GIT_COMMIT)
+export LDFLAGS += -X $(VERSION_PKG).SourceDateEpoch=$(SOURCE_DATE_EPOCH)
+export LDFLAGS += -X $(VERSION_PKG).Version=$(VERSION)
+export LDFLAGS += -s
+export LDFLAGS += -w
+
+export CGO_ENABLED ?= 0
 export GOCACHE ?= $(CURDIR)/.gocache
 
 all: build
@@ -18,10 +37,10 @@ deps:
 	go mod vendor -v
 
 build: deps
-	CGO_ENABLED=0 go build -ldflags $(LDFLAGS) ./...
+	go build -ldflags='$(LDFLAGS)' ./...
 
 install:
-	CGO_ENABLED=0 go install -ldflags $(LDFLAGS) ./...
+	go install -ldflags='$(LDFLAGS)' ./...
 
 lint:
 	@if ! command -v golangci-lint > /dev/null 2>&1; then
@@ -32,7 +51,7 @@ lint:
 
 test:
 	@go clean -testcache ./...
-	go test -race $(shell go list ./...)
+	CGO_ENABLED=1 go test -race ./...
 
 ci: lint test
 

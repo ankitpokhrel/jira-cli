@@ -15,8 +15,8 @@ builds:
       ldflags:
         - -s -w
         - -X github.com/ankitpokhrel/jira-cli/internal/version.Version={{.Version}}
-        - -X github.com/ankitpokhrel/jira-cli/internal/version.GitCommit={{.Commit}}
-        - -X github.com/ankitpokhrel/jira-cli/internal/version.BuildDate={{time "2006-01-02"}}
+        - -X github.com/ankitpokhrel/jira-cli/internal/version.GitCommit={{.FullCommit}}
+        - -X github.com/ankitpokhrel/jira-cli/internal/version.SourceDateEpoch={{.CommitTimestamp}}
       env:
         - CGO_ENABLED=0
     id: macOS
