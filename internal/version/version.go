@@ -10,7 +10,7 @@ import (
 // Build information is populated at build-time.
 var (
 	Version         = "dev"
-	GitCommit       = "ffffffffffffffffffffffffffffffffffffffff"
+	GitCommit       = ""
 	SourceDateEpoch = "-1"
 	GoVersion       = runtime.Version()
 	Compiler        = runtime.Compiler
@@ -23,13 +23,16 @@ func Info() string {
 	if err != nil {
 		panic(err)
 	}
-	// https://pkg.go.dev/time#Time.Format
-	//
-	//     $ TZ=MST date -Iseconds -d"Jan 2 15:04:05 2006 MST"
-	//     2006-01-02T15:04:05-07:00
-	sourceDate := time.Unix(i, 0).UTC().Format("2006-01-02T15:04:05-07:00")
+	commitDate := ""
+	if i >= 0 {
+		// https://pkg.go.dev/time#Time.Format
+		//
+		//     $ TZ=MST date -Iseconds -d"Jan 2 15:04:05 2006 MST"
+		//     2006-01-02T15:04:05-07:00
+		commitDate = time.Unix(i, 0).UTC().Format("2006-01-02T15:04:05-07:00")
+	}
 	return fmt.Sprintf(
-		"(Version=\"%s\", GitCommit=\"%s\", SourceDate=\"%s\", GoVersion=\"%s\", Compiler=\"%s\", Platform=\"%s\")",
-		Version, GitCommit, sourceDate, GoVersion, Compiler, Platform,
+		"(Version=\"%s\", GitCommit=\"%s\", CommitDate=\"%s\", GoVersion=\"%s\", Compiler=\"%s\", Platform=\"%s\")",
+		Version, GitCommit, commitDate, GoVersion, Compiler, Platform,
 	)
 }
