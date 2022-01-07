@@ -3,11 +3,11 @@ package open
 import (
 	"fmt"
 
-	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
+	"github.com/ankitpokhrel/jira-cli/pkg/browser"
 )
 
 const (
@@ -45,5 +45,5 @@ func open(_ *cobra.Command, args []string) {
 	}
 
 	fmt.Println(url)
-	cmdutil.ExitIfError(browser.OpenURL(url))
+	cmdutil.ExitIfError(browser.Browse(url))
 }

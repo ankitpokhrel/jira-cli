@@ -10,6 +10,7 @@ require (
 	github.com/cli/safeexec v1.0.0
 	github.com/fatih/color v1.13.0
 	github.com/gdamore/tcell/v2 v2.4.1-0.20210905002822-f057f0a857a1
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/kentaro-m/blackfriday-confluence v0.0.0-20210619074151-1628b53c6f29
 	github.com/kr/text v0.2.0
