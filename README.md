@@ -61,10 +61,10 @@ brew install jira-cli
 ```
 
 #### Manual
-You can also install the runnable binary to your `$GOPATH/bin`.
+You can also install the runnable binary to your `$GOPATH/bin` (go1.16+).
 
 ```sh
-go install github.com/ankitpokhrel/jira-cli/cmd/jira
+go install github.com/ankitpokhrel/jira-cli/cmd/jira@latest
 ```
 
 See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more info. Other installation options will be available later.
