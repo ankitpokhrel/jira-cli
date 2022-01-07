@@ -21,17 +21,17 @@ func Browse(url string) error {
 		return browser.OpenURL(url)
 	}
 
-	openerArgs, err := shlex.Split(opener)
+	args, err := shlex.Split(opener)
 	if err != nil {
 		return err
 	}
-	openerExe, err := exec.LookPath(openerArgs[0])
+	exe, err := exec.LookPath(args[0])
 	if err != nil {
 		return err
 	}
 
-	args := append(openerArgs[1:], url) //nolint:gocritic
-	cmd := exec.Command(openerExe, args...)
+	args = append(args[1:], url)
+	cmd := exec.Command(exe, args...)
 
 	// io.Writer to which executed commands write standard output and error.
 	// We are not interested in any output from cmd, so let's discard them.
