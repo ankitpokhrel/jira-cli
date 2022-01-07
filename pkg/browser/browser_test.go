@@ -19,9 +19,9 @@ func TestBrowserENVPrecedence(t *testing.T) {
 			setup: func() {
 				_ = os.Setenv("JIRA_BROWSER", "firefox")
 			},
-			expected: `exec: "firefox": executable file not found in $PATH`,
+			expected: "firefox",
 			teardown: func() {
-				os.Clearenv()
+				_ = os.Unsetenv("JIRA_BROWSER")
 			},
 		},
 		{
@@ -29,9 +29,9 @@ func TestBrowserENVPrecedence(t *testing.T) {
 			setup: func() {
 				_ = os.Setenv("BROWSER", "chrome")
 			},
-			expected: `exec: "chrome": executable file not found in $PATH`,
+			expected: "chrome",
 			teardown: func() {
-				os.Clearenv()
+				_ = os.Unsetenv("BROWSER")
 			},
 		},
 		{
@@ -40,9 +40,10 @@ func TestBrowserENVPrecedence(t *testing.T) {
 				_ = os.Setenv("BROWSER", "chrome")
 				_ = os.Setenv("JIRA_BROWSER", "firefox")
 			},
-			expected: `exec: "firefox": executable file not found in $PATH`,
+			expected: "firefox",
 			teardown: func() {
-				os.Clearenv()
+				_ = os.Unsetenv("BROWSER")
+				_ = os.Unsetenv("JIRA_BROWSER")
 			},
 		},
 	}
@@ -50,11 +51,7 @@ func TestBrowserENVPrecedence(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.setup()
-
-			err := Browse("https://test.local")
-			assert.Error(t, err)
-			assert.Equal(t, tc.expected, err.Error())
-
+			assert.Equal(t, tc.expected, getBrowserFromENV())
 			tc.teardown()
 		})
 	}
