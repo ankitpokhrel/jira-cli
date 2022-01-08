@@ -11,8 +11,8 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/mitchellh/go-homedir"
-	"github.com/pkg/browser"
 
+	"github.com/ankitpokhrel/jira-cli/pkg/browser"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
@@ -85,7 +85,7 @@ func Failed(msg string, args ...interface{}) {
 // Navigate navigates to jira issue.
 func Navigate(server, path string) error {
 	url := fmt.Sprintf("%s/browse/%s", server, path)
-	return browser.OpenURL(url)
+	return browser.Browse(url)
 }
 
 // FormatDateTimeHuman formats date time in human readable format.

@@ -12,8 +12,8 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/fatih/color"
 	"github.com/mgutz/ansi"
-	"github.com/pkg/browser"
 
+	"github.com/ankitpokhrel/jira-cli/pkg/browser"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
@@ -116,7 +116,7 @@ func jiraURLFromTuiData(server string, r int, d interface{}) string {
 
 func navigate(server string) tui.SelectedFunc {
 	return func(r, c int, d interface{}) {
-		_ = browser.OpenURL(jiraURLFromTuiData(server, r, d))
+		_ = browser.Browse(jiraURLFromTuiData(server, r, d))
 	}
 }
 
