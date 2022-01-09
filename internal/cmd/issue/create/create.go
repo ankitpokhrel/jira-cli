@@ -180,7 +180,7 @@ func (cc *createCmd) setIssueTypes() error {
 	for _, at := range availableTypes {
 		tp := at.(map[interface{}]interface{})
 		name := tp["name"].(string)
-		handle := tp["handle"].(string)
+		handle, _ := tp["handle"].(string)
 		if handle == jira.IssueTypeEpic || name == jira.IssueTypeEpic {
 			continue
 		}
