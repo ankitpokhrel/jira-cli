@@ -3,6 +3,8 @@ project_name: jira
 release:
   prerelease: auto
   name_template: "v{{.Version}}"
+  draft: true
+  mode: "keep-existing"
 
 before:
   hooks:
@@ -105,6 +107,7 @@ brews:
 
 changelog:
   skip: true
+  use: github
   sort: desc
   filters:
     exclude:

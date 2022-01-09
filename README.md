@@ -91,6 +91,8 @@ See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more 
    you will have to fill in `epic.name`, `epic.link` and `issue.types.*.handle` fields manually in the generated config
    to get the expected behavior.
 
+See [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs) for frequently asked questions.
+
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.
 
