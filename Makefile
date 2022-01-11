@@ -1,4 +1,3 @@
-.ONESHELL:
 .PHONY: all deps build install lint test ci jira.server clean distclean
 
 ##############
@@ -43,9 +42,9 @@ install:
 	go install -ldflags='$(LDFLAGS)' ./...
 
 lint:
-	@if ! command -v golangci-lint > /dev/null 2>&1; then
+	@if ! command -v golangci-lint > /dev/null 2>&1; then \
 		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
-		sh -s -- -b "$$(go env GOPATH)/bin" v1.43.0
+		sh -s -- -b "$$(go env GOPATH)/bin" v1.43.0 ; \
 	fi
 	golangci-lint run ./...
 
