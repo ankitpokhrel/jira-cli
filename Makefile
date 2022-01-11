@@ -1,4 +1,3 @@
-.ONESHELL:
 .PHONY: all deps build install lint test ci jira.server clean distclean
 
 ##############
