@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/board"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/completion"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/epic"
@@ -142,11 +143,12 @@ func cmdRequireToken(cmd string) bool {
 }
 
 func checkForJiraToken() {
-	if os.Getenv("JIRA_API_TOKEN") != "" {
+	token, _ := api.GetTokenConfig()
+	if token != "" {
 		return
 	}
 
-	msg := fmt.Sprintf(`You need to define JIRA_API_TOKEN env for the tool to work. 
+	msg := fmt.Sprintf(`You need to define JIRA_API_TOKEN{|_CMD|_PAT|_PAT_CMD} env or set an appropriate value in the config file for the tool to work. 
 
 You can generate a token using this link: %s
 

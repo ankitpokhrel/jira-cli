@@ -1,6 +1,10 @@
 package api
 
 import (
+	"log"
+	"os/exec"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -12,6 +16,18 @@ import (
 const clientTimeout = 15 * time.Second
 
 var jiraClient *jira.Client
+
+// GetTokenConfig returns the API token config value amd whether it is a command.
+func GetTokenConfig() (string, bool) {
+	switch {
+	case viper.GetString("api_token") != "":
+		return viper.GetString("api_token"), false
+	case viper.GetString("api_token_cmd") != "":
+		return viper.GetString("api_token_cmd"), true
+	default:
+		return "", false
+	}
+}
 
 // Client initializes and returns jira client.
 func Client(config jira.Config) *jira.Client {
@@ -25,8 +41,24 @@ func Client(config jira.Config) *jira.Client {
 	if config.Login == "" {
 		config.Login = viper.GetString("login")
 	}
+
 	if config.APIToken == "" {
-		config.APIToken = viper.GetString("api_token")
+		token, isCommand := GetTokenConfig()
+		if isCommand {
+			var err error
+			var out []byte
+			if runtime.GOOS == "windows" {
+				out, err = exec.Command("cmd", "/C", token).Output()
+			} else {
+				out, err = exec.Command("/bin/sh", "-c", token).Output()
+			}
+			if err != nil {
+				log.Fatal("\nError while retrieving token from command '", token, "': ", err.Error())
+			}
+			config.APIToken = strings.Trim(string(out), "\n")
+		} else {
+			config.APIToken = token
+		}
 	}
 
 	jiraClient = jira.NewClient(config, jira.WithTimeout(clientTimeout))
