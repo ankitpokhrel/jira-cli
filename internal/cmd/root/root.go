@@ -143,7 +143,7 @@ func cmdRequireToken(cmd string) bool {
 }
 
 func checkForJiraToken() {
-	token, _ := api.GetTokenConfig()
+	token, _, _ := api.GetTokenConfig()
 	if token != "" {
 		return
 	}

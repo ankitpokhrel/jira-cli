@@ -17,15 +17,20 @@ const clientTimeout = 15 * time.Second
 
 var jiraClient *jira.Client
 
-// GetTokenConfig returns the API token config value amd whether it is a command.
-func GetTokenConfig() (string, bool) {
+// GetTokenConfig returns the API token config value, whether it is a command,
+// and whether it is a PAT.
+func GetTokenConfig() (string, bool, bool) {
 	switch {
 	case viper.GetString("api_token") != "":
-		return viper.GetString("api_token"), false
+		return viper.GetString("api_token"), false, false
 	case viper.GetString("api_token_cmd") != "":
-		return viper.GetString("api_token_cmd"), true
+		return viper.GetString("api_token_cmd"), true, false
+	case viper.GetString("api_token_pat") != "":
+		return viper.GetString("api_token_pat"), false, true
+	case viper.GetString("api_token_pat_cmd") != "":
+		return viper.GetString("api_token_pat_cmd"), true, true
 	default:
-		return "", false
+		return "", false, false
 	}
 }
 
@@ -43,7 +48,7 @@ func Client(config jira.Config) *jira.Client {
 	}
 
 	if config.APIToken == "" {
-		token, isCommand := GetTokenConfig()
+		token, isCommand, isPAT := GetTokenConfig()
 		if isCommand {
 			var err error
 			var out []byte
@@ -59,6 +64,7 @@ func Client(config jira.Config) *jira.Client {
 		} else {
 			config.APIToken = token
 		}
+		config.IsPAT = isPAT
 	}
 
 	jiraClient = jira.NewClient(config, jira.WithTimeout(clientTimeout))

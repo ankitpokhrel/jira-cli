@@ -95,6 +95,7 @@ type Config struct {
 	Server   string
 	Login    string
 	APIToken string
+	IsPAT    bool
 	Debug    bool
 }
 
@@ -104,6 +105,7 @@ type Client struct {
 	server    string
 	login     string
 	token     string
+	bearer    bool
 	timeout   time.Duration
 	debug     bool
 }
@@ -117,6 +119,7 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 		server: strings.TrimSuffix(c.Server, "/"),
 		login:  c.Login,
 		token:  c.APIToken,
+		bearer: c.IsPAT,
 		debug:  c.Debug,
 	}
 	client.transport = &http.Transport{
@@ -222,7 +225,11 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		req.Header.Set(k, v)
 	}
 
-	req.SetBasicAuth(c.login, c.token)
+	if c.bearer {
+		req.Header.Set("Authorization", "Bearer "+c.token[4:])
+	} else {
+		req.SetBasicAuth(c.login, c.token)
+	}
 
 	res, err = c.transport.RoundTrip(req.WithContext(ctx))
 
