@@ -45,9 +45,9 @@ features like issue creation, cloning, linking, ticket transition, and much more
 Note that some features might work slightly differently in cloud installation versus on-premise installation due to the
 nature of the data. Yet, we've attempted to make the experience as similar as possible.
 
-| Platform | <a href="#"><img alt="Linux" src="https://img.shields.io/badge/Linux-%E2%9C%93-dark--green?logo=linux&style=flat-square" /></a><a href="#"><img alt="macOS" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=apple&style=flat-square" /></a><a href="#"><img alt="FreeBSD" src="https://img.shields.io/badge/FreeBSD-%E2%9C%93-dark--green?logo=freebsd&style=flat-square" /></a><a href="#"><img alt="Windows" src="https://img.shields.io/badge/Windows-partial-yellow?logo=windows&style=flat-square" /></a> |
+| Platform | <a href="#"><img alt="Linux" src="https://img.shields.io/badge/Linux-%E2%9C%93-dark--green?logo=linux&style=flat-square" /></a><a href="#"><img alt="macOS" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=apple&style=flat-square" /></a><a href="#"><img alt="FreeBSD" src="https://img.shields.io/badge/FreeBSD-%E2%9C%93-dark--green?logo=freebsd&style=flat-square" /></a><a href="#"><img alt="pkgsrc" src="https://img.shields.io/badge/pkgsrc-%E2%9C%93-dark--green?logo=pkgsrc&style=flat-square" /></a><a href="#"><img alt="Windows" src="https://img.shields.io/badge/Windows-partial-yellow?logo=windows&style=flat-square" /></a> |
 | :------------- | :----------: |
-| **Jira**  | <a href="#"><img alt="Jira Cloud" src="https://img.shields.io/badge/jira cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Jira Server" src="https://img.shields.io/badge/jira server-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a> |
+| **Jira**  | <a href="#"><img alt="Jira Cloud" src="https://img.shields.io/badge/Jira Cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Jira Server" src="https://img.shields.io/badge/Jira Server-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a> |
 
 ## Installation
 `jira-cli` is available as a downloadable binary for Linux, macOS, and Windows from the [releases page](https://github.com/ankitpokhrel/jira-cli/releases).
