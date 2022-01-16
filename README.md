@@ -60,6 +60,32 @@ brew tap ankitpokhrel/jira-cli
 brew install jira-cli
 ```
 
+#### FreeBSD
+You can install it from the ports tree using the following command
+
+```sh
+cd /usr/ports/www/jira-cli/ && make install clean
+```
+
+or directly from the binary package repository using the command
+
+``` sh
+pkg install jira-cli
+```
+
+#### NetBSD
+You can install it from pkgsrc using the following command
+
+```sh
+cd /usr/pkgsrc/www/jira-cli/ && make install clean
+```
+
+or directly from the binary package repository using the command
+
+``` sh
+pkgin install jira-cli
+```
+
 #### Manual
 You can also install the runnable binary to your `$GOPATH/bin` (go1.16+).
 
@@ -120,7 +146,7 @@ The lists are displayed in an interactive UI by default.
 Issues are displayed in an interactive table view by default. You can output the results in a plain view using the `--plain` flag.
 
 #### List
-The `list` command lets you search and navigate the issues. The issues are sorted by `created` field in descending order by default. 
+The `list` command lets you search and navigate the issues. The issues are sorted by `created` field in descending order by default.
 
 ```sh
 # List recent issues
@@ -653,7 +679,7 @@ Please [open a discussion](https://github.com/ankitpokhrel/jira-cli/discussions/
    git clone git@github.com:ankitpokhrel/jira-cli.git
    ```
 
-2. Optional: If you want to run a Jira instance locally, you can use the following make recipe. 
+2. Optional: If you want to run a Jira instance locally, you can use the following make recipe.
    The trial license key can be generated from "Licenses" section in the [atlassian admin](https://my.atlassian.com).
    ```sh
    make jira.server
