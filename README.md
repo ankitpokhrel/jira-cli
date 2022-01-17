@@ -45,9 +45,9 @@ features like issue creation, cloning, linking, ticket transition, and much more
 Note that some features might work slightly differently in cloud installation versus on-premise installation due to the
 nature of the data. Yet, we've attempted to make the experience as similar as possible.
 
-| Platform | <a href="#"><img alt="Linux" src="https://img.shields.io/badge/linux-%E2%9C%93-dark--green?logo=linux&style=flat-square" /></a><a href="#"><img alt="macOS" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=macos&style=flat-square" /></a><a href="#"><img alt="Windows" src="https://img.shields.io/badge/windows-partial-yellow?logo=windows&style=flat-square" /></a> |
+| Platform | <a href="#"><img alt="Linux" src="https://img.shields.io/badge/Linux-%E2%9C%93-dark--green?logo=linux&logoColor=white&style=flat-square" /></a><a href="#"><img alt="macOS" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=apple&style=flat-square" /></a><a href="#"><img alt="FreeBSD" src="https://img.shields.io/badge/FreeBSD-%E2%9C%93-dark--green?logo=freebsd&style=flat-square" /></a><a href="#"><img alt="NetBSD" src="https://img.shields.io/badge/NetBSD-%E2%9C%93-dark--green?logo=netbsd&style=flat-square" /></a><a href="#"><img alt="Windows" src="https://img.shields.io/badge/Windows-partial-yellow?logo=windows&style=flat-square" /></a> |
 | :------------- | :----------: |
-| **Jira**  | <a href="#"><img alt="Jira Cloud" src="https://img.shields.io/badge/jira cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Jira Server" src="https://img.shields.io/badge/jira server-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a> |
+| **Jira**  | <a href="#"><img alt="Jira Cloud" src="https://img.shields.io/badge/Jira Cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Jira Server" src="https://img.shields.io/badge/Jira Server-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a> |
 
 ## Installation
 `jira-cli` is available as a downloadable binary for Linux, macOS, and Windows from the [releases page](https://github.com/ankitpokhrel/jira-cli/releases).
@@ -58,6 +58,32 @@ You can use Homebrew tap in macOS to install `jira-cli`.
 ```sh
 brew tap ankitpokhrel/jira-cli
 brew install jira-cli
+```
+
+#### FreeBSD
+You can install it from the ports tree using the following command
+
+```sh
+cd /usr/ports/www/jira-cli/ && make install clean
+```
+
+or directly from the binary package repository using the command
+
+``` sh
+pkg install jira-cli
+```
+
+#### NetBSD
+You can install it from pkgsrc using the following command
+
+```sh
+cd /usr/pkgsrc/www/jira-cli/ && make install clean
+```
+
+or directly from the binary package repository using the command
+
+``` sh
+pkgin install jira-cli
 ```
 
 #### Manual
@@ -120,7 +146,7 @@ The lists are displayed in an interactive UI by default.
 Issues are displayed in an interactive table view by default. You can output the results in a plain view using the `--plain` flag.
 
 #### List
-The `list` command lets you search and navigate the issues. The issues are sorted by `created` field in descending order by default. 
+The `list` command lets you search and navigate the issues. The issues are sorted by `created` field in descending order by default.
 
 ```sh
 # List recent issues
@@ -653,7 +679,7 @@ Please [open a discussion](https://github.com/ankitpokhrel/jira-cli/discussions/
    git clone git@github.com:ankitpokhrel/jira-cli.git
    ```
 
-2. Optional: If you want to run a Jira instance locally, you can use the following make recipe. 
+2. Optional: If you want to run a Jira instance locally, you can use the following make recipe.
    The trial license key can be generated from "Licenses" section in the [atlassian admin](https://my.atlassian.com).
    ```sh
    make jira.server
