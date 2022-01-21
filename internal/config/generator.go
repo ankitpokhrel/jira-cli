@@ -64,7 +64,7 @@ func NewJiraCLIConfig() *JiraCLIConfig {
 }
 
 // Generate generates the config file.
-func (c *JiraCLIConfig) Generate() error {
+func (c *JiraCLIConfig) Generate() (string, error) {
 	ce := func() bool {
 		s := cmdutil.Info("Checking configuration...")
 		defer s.Stop()
@@ -73,24 +73,24 @@ func (c *JiraCLIConfig) Generate() error {
 	}()
 
 	if ce && !shallOverwrite() {
-		return ErrSkip
+		return "", ErrSkip
 	}
 	if err := c.configureInstallationType(); err != nil {
-		return err
+		return "", err
 	}
 	if err := c.configureServerAndLoginDetails(); err != nil {
-		return err
+		return "", err
 	}
 	if err := c.configureProjectAndBoardDetails(); err != nil {
-		return err
+		return "", err
 	}
 	if err := c.configureMetadata(); err != nil {
-		return err
+		return "", err
 	}
 
 	home, err := cmdutil.GetConfigHome()
 	if err != nil {
-		return err
+		return "", err
 	}
 	cfgDir := fmt.Sprintf("%s/%s", home, Dir)
 
@@ -100,7 +100,7 @@ func (c *JiraCLIConfig) Generate() error {
 
 		return create(cfgDir, fmt.Sprintf("%s.%s", FileName, FileType))
 	}(); err != nil {
-		return err
+		return "", err
 	}
 
 	return c.write(cfgDir)
@@ -346,7 +346,7 @@ func (c *JiraCLIConfig) decipherEpicMeta(epicMeta map[string]interface{}) (strin
 	return epicName, epicLink
 }
 
-func (c *JiraCLIConfig) write(path string) error {
+func (c *JiraCLIConfig) write(path string) (string, error) {
 	config := viper.New()
 	config.AddConfigPath(path)
 	config.SetConfigName(FileName)
@@ -365,7 +365,10 @@ func (c *JiraCLIConfig) write(path string) error {
 		config.Set("board", "")
 	}
 
-	return config.WriteConfig()
+	if err := config.WriteConfig(); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s.%s", path, FileName, FileType), nil
 }
 
 func (c *JiraCLIConfig) getProjectSuggestions() error {
