@@ -26,7 +26,8 @@ func NewCmdInit() *cobra.Command {
 func initialize(*cobra.Command, []string) {
 	c := jiraConfig.NewJiraCLIConfig()
 
-	if err := c.Generate(); err != nil {
+	file, err := c.Generate()
+	if err != nil {
 		if e, ok := err.(*jira.ErrUnexpectedResponse); ok {
 			fmt.Println()
 			cmdutil.Failed("Received unexpected response '%s' from jira. Please try again.", e.Status)
@@ -45,5 +46,5 @@ func initialize(*cobra.Command, []string) {
 		os.Exit(1)
 	}
 
-	cmdutil.Success("Configuration generated: %s", viper.ConfigFileUsed())
+	cmdutil.Success("Configuration generated: %s", file)
 }

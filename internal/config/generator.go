@@ -20,8 +20,8 @@ const (
 	Dir = ".jira"
 	// FileName is a jira-cli config file name.
 	FileName = ".config"
-	// FileExt is a jira-cli config file extension.
-	FileExt = "yml"
+	// FileType is a jira-cli config file extension.
+	FileType = "yml"
 )
 
 var (
@@ -64,7 +64,7 @@ func NewJiraCLIConfig() *JiraCLIConfig {
 }
 
 // Generate generates the config file.
-func (c *JiraCLIConfig) Generate() error {
+func (c *JiraCLIConfig) Generate() (string, error) {
 	ce := func() bool {
 		s := cmdutil.Info("Checking configuration...")
 		defer s.Stop()
@@ -73,36 +73,37 @@ func (c *JiraCLIConfig) Generate() error {
 	}()
 
 	if ce && !shallOverwrite() {
-		return ErrSkip
+		return "", ErrSkip
 	}
 	if err := c.configureInstallationType(); err != nil {
-		return err
+		return "", err
 	}
 	if err := c.configureServerAndLoginDetails(); err != nil {
-		return err
+		return "", err
 	}
 	if err := c.configureProjectAndBoardDetails(); err != nil {
-		return err
+		return "", err
 	}
 	if err := c.configureMetadata(); err != nil {
-		return err
+		return "", err
 	}
+
+	home, err := cmdutil.GetConfigHome()
+	if err != nil {
+		return "", err
+	}
+	cfgDir := fmt.Sprintf("%s/%s", home, Dir)
 
 	if err := func() error {
 		s := cmdutil.Info("Creating new configuration...")
 		defer s.Stop()
 
-		home, err := cmdutil.GetConfigHome()
-		if err != nil {
-			return err
-		}
-
-		return create(fmt.Sprintf("%s/%s/", home, Dir), fmt.Sprintf("%s.%s", FileName, FileExt))
+		return create(cfgDir, fmt.Sprintf("%s.%s", FileName, FileType))
 	}(); err != nil {
-		return err
+		return "", err
 	}
 
-	return c.write()
+	return c.write(cfgDir)
 }
 
 func (c *JiraCLIConfig) configureInstallationType() error {
@@ -345,9 +346,11 @@ func (c *JiraCLIConfig) decipherEpicMeta(epicMeta map[string]interface{}) (strin
 	return epicName, epicLink
 }
 
-func (c *JiraCLIConfig) write() error {
+func (c *JiraCLIConfig) write(path string) (string, error) {
 	config := viper.New()
-	config.SetConfigFile(viper.ConfigFileUsed())
+	config.AddConfigPath(path)
+	config.SetConfigName(FileName)
+	config.SetConfigType(FileType)
 
 	config.Set("installation", c.value.installation)
 	config.Set("server", c.value.server)
@@ -362,7 +365,10 @@ func (c *JiraCLIConfig) write() error {
 		config.Set("board", "")
 	}
 
-	return config.WriteConfig()
+	if err := config.WriteConfig(); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s.%s", path, FileName, FileType), nil
 }
 
 func (c *JiraCLIConfig) getProjectSuggestions() error {
@@ -434,7 +440,7 @@ func create(path, name string) error {
 		}
 	}
 
-	file := path + name
+	file := fmt.Sprintf("%s/%s", path, name)
 	if Exists(file) {
 		if err := os.Rename(file, file+".bkp"); err != nil {
 			return err

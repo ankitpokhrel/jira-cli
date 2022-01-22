@@ -42,6 +42,7 @@ func init() {
 
 			viper.AddConfigPath(fmt.Sprintf("%s/%s", home, jiraConfig.Dir))
 			viper.SetConfigName(jiraConfig.FileName)
+			viper.SetConfigType(jiraConfig.FileType)
 		}
 
 		viper.AutomaticEnv()
