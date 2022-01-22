@@ -28,6 +28,7 @@ type CreateRequest struct {
 	Priority       string
 	Labels         []string
 	Components     []string
+	FixVersions    []string
 	// EpicField is the dynamic epic field name
 	// that changes per jira installation.
 	EpicField string
@@ -111,6 +112,9 @@ type createFields struct {
 	Components []struct {
 		Name string `json:"name,omitempty"`
 	} `json:"components,omitempty"`
+	FixVersions []struct {
+		Name string `json:"name,omitempty"`
+	} `json:"fixVersions,omitempty"`
 
 	epicField string
 }
@@ -200,6 +204,18 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 			}{c})
 		}
 		data.Fields.M.Components = comps
+	}
+	if len(req.FixVersions) > 0 {
+		versions := make([]struct {
+			Name string `json:"name,omitempty"`
+		}, 0, len(req.FixVersions))
+
+		for _, v := range req.FixVersions {
+			versions = append(versions, struct {
+				Name string `json:"name,omitempty"`
+			}{v})
+		}
+		data.Fields.M.FixVersions = versions
 	}
 
 	return &data

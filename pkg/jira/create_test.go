@@ -45,7 +45,7 @@ func (c *createTestServer) statusCode(code int) {
 func TestCreate(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Bug"},` +
 		`"summary":"Test bug","description":"Test description","priority":{"name":"Normal"},"labels":["test","dev"],` +
-		`"components":[{"name":"BE"},{"name":"FE"}]}}`
+		`"components":[{"name":"BE"},{"name":"FE"}],"fixVersions":[{"name":"v2.0"},{"name":"v2.1-hotfix"}]}}`
 	testServer := createTestServer{code: 201}
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
@@ -53,13 +53,14 @@ func TestCreate(t *testing.T) {
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
 
 	requestData := CreateRequest{
-		Project:    "TEST",
-		IssueType:  "Bug",
-		Summary:    "Test bug",
-		Body:       "Test description",
-		Priority:   "Normal",
-		Labels:     []string{"test", "dev"},
-		Components: []string{"BE", "FE"},
+		Project:     "TEST",
+		IssueType:   "Bug",
+		Summary:     "Test bug",
+		Body:        "Test description",
+		Priority:    "Normal",
+		Labels:      []string{"test", "dev"},
+		Components:  []string{"BE", "FE"},
+		FixVersions: []string{"v2.0", "v2.1-hotfix"},
 	}
 	actual, err := client.CreateV2(&requestData)
 	assert.NoError(t, err)

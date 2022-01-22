@@ -31,6 +31,7 @@ And, this field is mandatory when creating a sub-task.`)
 	cmd.Flags().StringP("assignee", "a", "", prefix+" assignee (email or display name)")
 	cmd.Flags().StringArrayP("label", "l", []string{}, prefix+" labels")
 	cmd.Flags().StringArrayP("component", "C", []string{}, prefix+" components")
+	cmd.Flags().StringArray("fix-version", []string{}, prefix+" fix version list")
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read body/description from")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful creation")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
@@ -59,7 +60,7 @@ func GetMetadata() []*survey.Question {
 			Name: "metadata",
 			Prompt: &survey.MultiSelect{
 				Message: "What would you like to add?",
-				Options: []string{"Priority", "Components", "Labels"},
+				Options: []string{"Priority", "Components", "Labels", "FixVersions"},
 			},
 		},
 	}
@@ -90,6 +91,14 @@ func GetMetadataQuestions(cat []string) []*survey.Question {
 				Prompt: &survey.Input{
 					Message: "Labels",
 					Help:    "Comma separated list of labels. For eg: backend,urgent",
+				},
+			})
+		case "FixVersions":
+			qs = append(qs, &survey.Question{
+				Name: "fixversions",
+				Prompt: &survey.Input{
+					Message: "Fix Versions",
+					Help:    "Comma separated list of fixVersions. For eg: v1.0-beta,v2.0",
 				},
 			})
 		}
