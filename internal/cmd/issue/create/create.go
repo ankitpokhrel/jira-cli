@@ -98,9 +98,10 @@ func create(cmd *cobra.Command, _ []string) {
 				if len(ans.Metadata) > 0 {
 					qs := cmdcommon.GetMetadataQuestions(ans.Metadata)
 					ans := struct {
-						Priority   string
-						Labels     string
-						Components string
+						Priority    string
+						Labels      string
+						Components  string
+						FixVersions string
 					}{}
 					err := survey.Ask(qs, &ans)
 					cmdutil.ExitIfError(err)
@@ -113,6 +114,9 @@ func create(cmd *cobra.Command, _ []string) {
 					}
 					if len(ans.Components) > 0 {
 						params.components = strings.Split(ans.Components, ",")
+					}
+					if len(ans.FixVersions) > 0 {
+						params.fixVersions = strings.Split(ans.FixVersions, ",")
 					}
 				}
 			}
@@ -132,6 +136,7 @@ func create(cmd *cobra.Command, _ []string) {
 			Priority:       params.priority,
 			Labels:         params.labels,
 			Components:     params.components,
+			FixVersions:    params.fixVersions,
 			EpicField:      viper.GetString("epic.link"),
 		}
 		cr.ForProjectType(projectType)
@@ -346,6 +351,7 @@ type createParams struct {
 	assignee       string
 	labels         []string
 	components     []string
+	fixVersions    []string
 	template       string
 	noInput        bool
 	debug          bool
@@ -376,6 +382,9 @@ func parseFlags(flags query.FlagParser) *createParams {
 	components, err := flags.GetStringArray("component")
 	cmdutil.ExitIfError(err)
 
+	fixVersions, err := flags.GetStringArray("fix-version")
+	cmdutil.ExitIfError(err)
+
 	template, err := flags.GetString("template")
 	cmdutil.ExitIfError(err)
 
@@ -394,6 +403,7 @@ func parseFlags(flags query.FlagParser) *createParams {
 		assignee:       assignee,
 		labels:         labels,
 		components:     components,
+		fixVersions:    fixVersions,
 		template:       template,
 		noInput:        noInput,
 		debug:          debug,

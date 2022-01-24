@@ -278,8 +278,8 @@ The `create` command lets you create an issue.
 # Create an issue using interactive prompt
 $ jira issue create
 
-# Pass required parameters to skip prompt or use --no-input option
-$ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
+# Pass required parameters and use --no-input option to skip prompt
+$ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description" --fix-version v2.0 --no-input
 ```
 
 To attach epic to an issue on creation, you can use `-P/--parent` field. We call it parent because the semantics of epic

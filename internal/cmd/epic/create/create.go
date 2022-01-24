@@ -101,9 +101,10 @@ func create(cmd *cobra.Command, _ []string) {
 				if len(ans.Metadata) > 0 {
 					qs = cmdcommon.GetMetadataQuestions(ans.Metadata)
 					ans := struct {
-						Priority   string
-						Labels     string
-						Components string
+						Priority    string
+						Labels      string
+						Components  string
+						FixVersions string
 					}{}
 					err := survey.Ask(qs, &ans)
 					cmdutil.ExitIfError(err)
@@ -117,6 +118,9 @@ func create(cmd *cobra.Command, _ []string) {
 					if len(ans.Components) > 0 {
 						params.components = strings.Split(ans.Components, ",")
 					}
+					if len(ans.FixVersions) > 0 {
+						params.fixVersions = strings.Split(ans.FixVersions, ",")
+					}
 				}
 			}
 		}
@@ -127,14 +131,15 @@ func create(cmd *cobra.Command, _ []string) {
 		defer s.Stop()
 
 		cr := jira.CreateRequest{
-			Project:    project,
-			IssueType:  jira.IssueTypeEpic,
-			Summary:    params.summary,
-			Body:       params.body,
-			Priority:   params.priority,
-			Labels:     params.labels,
-			Components: params.components,
-			EpicField:  viper.GetString("epic.name"),
+			Project:     project,
+			IssueType:   jira.IssueTypeEpic,
+			Summary:     params.summary,
+			Body:        params.body,
+			Priority:    params.priority,
+			Labels:      params.labels,
+			Components:  params.components,
+			FixVersions: params.fixVersions,
+			EpicField:   viper.GetString("epic.name"),
 		}
 		if projectType != jira.ProjectTypeNextGen {
 			cr.Name = params.name
@@ -234,16 +239,17 @@ func (cc *createCmd) isMandatoryParamsMissing() bool {
 }
 
 type createParams struct {
-	name       string
-	summary    string
-	body       string
-	priority   string
-	assignee   string
-	labels     []string
-	components []string
-	template   string
-	noInput    bool
-	debug      bool
+	name        string
+	summary     string
+	body        string
+	priority    string
+	assignee    string
+	labels      []string
+	components  []string
+	fixVersions []string
+	template    string
+	noInput     bool
+	debug       bool
 }
 
 func parseFlags(flags query.FlagParser) *createParams {
@@ -268,6 +274,9 @@ func parseFlags(flags query.FlagParser) *createParams {
 	components, err := flags.GetStringArray("component")
 	cmdutil.ExitIfError(err)
 
+	fixVersions, err := flags.GetStringArray("fix-version")
+	cmdutil.ExitIfError(err)
+
 	template, err := flags.GetString("template")
 	cmdutil.ExitIfError(err)
 
@@ -278,15 +287,16 @@ func parseFlags(flags query.FlagParser) *createParams {
 	cmdutil.ExitIfError(err)
 
 	return &createParams{
-		name:       name,
-		summary:    summary,
-		body:       body,
-		priority:   priority,
-		assignee:   assignee,
-		labels:     labels,
-		components: components,
-		template:   template,
-		noInput:    noInput,
-		debug:      debug,
+		name:        name,
+		summary:     summary,
+		body:        body,
+		priority:    priority,
+		assignee:    assignee,
+		labels:      labels,
+		components:  components,
+		fixVersions: fixVersions,
+		template:    template,
+		noInput:     noInput,
+		debug:       debug,
 	}
 }

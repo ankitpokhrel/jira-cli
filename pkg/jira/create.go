@@ -28,6 +28,7 @@ type CreateRequest struct {
 	Priority       string
 	Labels         []string
 	Components     []string
+	FixVersions    []string
 	// EpicField is the dynamic epic field name
 	// that changes per jira installation.
 	EpicField string
@@ -91,61 +92,7 @@ func (c *Client) create(req *CreateRequest, ver string) (*CreateResponse, error)
 	return &out, err
 }
 
-type createFields struct {
-	Project struct {
-		Key string `json:"key"`
-	} `json:"project"`
-	IssueType struct {
-		Name string `json:"name"`
-	} `json:"issuetype"`
-	Parent *struct {
-		Key string `json:"key"`
-	} `json:"parent,omitempty"`
-	Name        string      `json:"name,omitempty"`
-	Summary     string      `json:"summary"`
-	Description interface{} `json:"description,omitempty"`
-	Priority    *struct {
-		Name string `json:"name,omitempty"`
-	} `json:"priority,omitempty"`
-	Labels     []string `json:"labels,omitempty"`
-	Components []struct {
-		Name string `json:"name,omitempty"`
-	} `json:"components,omitempty"`
-
-	epicField string
-}
-
-type createFieldsMarshaler struct {
-	M createFields
-}
-
-// MarshalJSON is a custom marshaler to handle dynamic field.
-func (cfm createFieldsMarshaler) MarshalJSON() ([]byte, error) {
-	m, err := json.Marshal(cfm.M)
-	if err != nil {
-		return m, err
-	}
-
-	var temp interface{}
-	if err := json.Unmarshal(m, &temp); err != nil {
-		return nil, err
-	}
-	dm := temp.(map[string]interface{})
-
-	if cfm.M.epicField != "" {
-		dm[cfm.M.epicField] = dm["name"]
-	}
-	delete(dm, "name")
-
-	return json.Marshal(dm)
-}
-
-type createRequest struct {
-	Update struct{}              `json:"update"`
-	Fields createFieldsMarshaler `json:"fields"`
-}
-
-func (c *Client) getRequestData(req *CreateRequest) *createRequest {
+func (*Client) getRequestData(req *CreateRequest) *createRequest {
 	if req.Labels == nil {
 		req.Labels = []string{}
 	}
@@ -201,6 +148,75 @@ func (c *Client) getRequestData(req *CreateRequest) *createRequest {
 		}
 		data.Fields.M.Components = comps
 	}
+	if len(req.FixVersions) > 0 {
+		versions := make([]struct {
+			Name string `json:"name,omitempty"`
+		}, 0, len(req.FixVersions))
+
+		for _, v := range req.FixVersions {
+			versions = append(versions, struct {
+				Name string `json:"name,omitempty"`
+			}{v})
+		}
+		data.Fields.M.FixVersions = versions
+	}
 
 	return &data
+}
+
+type createRequest struct {
+	Update struct{}              `json:"update"`
+	Fields createFieldsMarshaler `json:"fields"`
+}
+
+type createFields struct {
+	Project struct {
+		Key string `json:"key"`
+	} `json:"project"`
+	IssueType struct {
+		Name string `json:"name"`
+	} `json:"issuetype"`
+	Parent *struct {
+		Key string `json:"key"`
+	} `json:"parent,omitempty"`
+	Name        string      `json:"name,omitempty"`
+	Summary     string      `json:"summary"`
+	Description interface{} `json:"description,omitempty"`
+	Priority    *struct {
+		Name string `json:"name,omitempty"`
+	} `json:"priority,omitempty"`
+	Labels     []string `json:"labels,omitempty"`
+	Components []struct {
+		Name string `json:"name,omitempty"`
+	} `json:"components,omitempty"`
+	FixVersions []struct {
+		Name string `json:"name,omitempty"`
+	} `json:"fixVersions,omitempty"`
+
+	epicField string
+}
+
+type createFieldsMarshaler struct {
+	M createFields
+}
+
+// MarshalJSON is a custom marshaler to handle dynamic field.
+func (cfm createFieldsMarshaler) MarshalJSON() ([]byte, error) {
+	m, err := json.Marshal(cfm.M)
+	if err != nil {
+		return m, err
+	}
+
+	var temp interface{}
+	if err := json.Unmarshal(m, &temp); err != nil {
+		return nil, err
+	}
+	dm := temp.(map[string]interface{})
+
+	if cfm.M.epicField != "" {
+		dm[cfm.M.epicField] = dm["name"]
+	}
+	delete(dm, "name")
+
+	return json.Marshal(dm)
 }
