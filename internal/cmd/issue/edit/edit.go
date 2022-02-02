@@ -170,13 +170,17 @@ func edit(cmd *cobra.Command, args []string) {
 		if isADF {
 			body = md.ToJiraMD(body)
 		}
+		labels:=params.labels
+		if(params.labelAppend) {
+			labels =append(labels,issue.Fields.Labels...)
+		}
 
 		edr := jira.EditRequest{
 			Summary:    params.summary,
 			Body:       body,
 			Assignee:   userAccountID,
 			Priority:   params.priority,
-			Labels:     params.labels,
+			Labels:     labels,
 			Components: params.components,
 		}
 
@@ -247,15 +251,16 @@ func (ec *editCmd) askQuestions(issue *jira.Issue, originalBody string) error {
 }
 
 type editParams struct {
-	issueKey   string
-	summary    string
-	body       string
-	priority   string
-	assignee   string
-	labels     []string
-	components []string
-	noInput    bool
-	debug      bool
+	issueKey    string
+	summary     string
+	body        string
+	priority    string
+	assignee    string
+	labels      []string
+	labelAppend bool
+	components  []string
+	noInput     bool
+	debug       bool
 }
 
 func (ep editParams) isEmpty() bool {
@@ -279,6 +284,9 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	labels, err := flags.GetStringArray("label")
 	cmdutil.ExitIfError(err)
 
+	labelAppend, err := flags.GetBool("label-append")
+	cmdutil.ExitIfError(err)
+
 	components, err := flags.GetStringArray("component")
 	cmdutil.ExitIfError(err)
 
@@ -289,15 +297,16 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	cmdutil.ExitIfError(err)
 
 	return &editParams{
-		issueKey:   cmdutil.GetJiraIssueKey(project, args[0]),
-		summary:    summary,
-		body:       body,
-		priority:   priority,
-		assignee:   assignee,
-		labels:     labels,
-		components: components,
-		noInput:    noInput,
-		debug:      debug,
+		issueKey:    cmdutil.GetJiraIssueKey(project, args[0]),
+		summary:     summary,
+		body:        body,
+		priority:    priority,
+		assignee:    assignee,
+		labels:      labels,
+		labelAppend: labelAppend,
+		components:  components,
+		noInput:     noInput,
+		debug:       debug,
 	}
 }
 
@@ -345,4 +354,5 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringArrayP("component", "C", []string{}, "Replace components")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful update")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
+	cmd.Flags().Bool("label-append", false, "Append label fields")
 }
