@@ -17,4 +17,5 @@ const (
 	fieldStartDate    = "START"
 	fieldEndDate      = "END"
 	fieldCompleteDate = "COMPLETE"
+	fieldLabels       = "LABELS"
 )
