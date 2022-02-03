@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 )
@@ -32,6 +33,11 @@ func (c *Client) search(jql string, limit uint, ver string) (*SearchResult, erro
 		err error
 	)
 
+	// maxResults is a int32
+	// https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-search/#api-rest-api-3-search-get
+	if math.MaxInt32 < limit {
+		limit = math.MaxInt32
+	}
 	path := fmt.Sprintf("/search?jql=%s&maxResults=%d", url.QueryEscape(jql), limit)
 
 	switch ver {
