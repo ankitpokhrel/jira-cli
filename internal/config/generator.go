@@ -220,6 +220,8 @@ func (c *JiraCLIConfig) verifyLoginDetails(server, login string) error {
 	s := cmdutil.Info("Verifying login details...")
 	defer s.Stop()
 
+	server = strings.TrimRight(server, "/")
+
 	c.jiraClient = api.Client(jira.Config{
 		Server: server,
 		Login:  login,
