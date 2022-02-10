@@ -141,6 +141,10 @@ func create(cmd *cobra.Command, _ []string) {
 		}
 		cr.ForProjectType(projectType)
 
+		if strings.ToLower(params.issueType) == strings.ToLower(jira.IssueTypeSubTask) {
+			cr.SubtaskField = cmdutil.GetSubtaskHandle(cc.issueTypes)
+		}
+
 		resp, err := client.CreateV2(&cr)
 		if err != nil {
 			return "", err

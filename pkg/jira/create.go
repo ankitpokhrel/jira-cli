@@ -32,6 +32,10 @@ type CreateRequest struct {
 	// EpicField is the dynamic epic field name
 	// that changes per jira installation.
 	EpicField string
+	// SubtaskField is usually called "Sub-task" but is
+	// case-sensitive in Jira and can differ slightly
+	// in different Jira versions.
+	SubtaskField string
 
 	projectType string
 }
@@ -123,7 +127,12 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 	}
 
 	if req.ParentIssueKey != "" {
-		if req.projectType == ProjectTypeNextGen || data.Fields.M.IssueType.Name == IssueTypeSubTask {
+		subtaskField := IssueTypeSubTask
+		if req.SubtaskField != "" {
+			subtaskField = req.SubtaskField
+		}
+
+		if req.projectType == ProjectTypeNextGen || data.Fields.M.IssueType.Name == subtaskField {
 			data.Fields.M.Parent = &struct {
 				Key string `json:"key"`
 			}{Key: req.ParentIssueKey}
