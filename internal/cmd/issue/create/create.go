@@ -141,7 +141,7 @@ func create(cmd *cobra.Command, _ []string) {
 		}
 		cr.ForProjectType(projectType)
 
-		if strings.ToLower(params.issueType) == strings.ToLower(jira.IssueTypeSubTask) {
+		if strings.EqualFold(params.issueType, jira.IssueTypeSubTask) {
 			cr.SubtaskField = cmdutil.GetSubtaskHandle(cc.issueTypes)
 		}
 
