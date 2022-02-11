@@ -4,7 +4,7 @@ services:
   jira:
     depends_on:
       - postgresql
-    image: teamatldocker/jira
+    image: teamatldocker/jira:8.21.0
     networks:
       - jiranet
     volumes:
@@ -26,7 +26,7 @@ services:
         max-file: "50"
 
   postgresql:
-    image: postgres:9.5-alpine
+    image: postgres:12.9-alpine
     networks:
       - jiranet
     volumes:
