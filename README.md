@@ -16,6 +16,9 @@
         <a href="https://github.com/ankitpokhrel/jira-cli/blob/master/LICENSE">
             <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square" />
         </a>
+        <a href="https://opencollective.com/jira-cli#backers">
+            <img alt="Software License" src="https://img.shields.io/opencollective/backers/jira-cli?style=flat-square" />
+        </a>
         <a href="#">
             <img alt="Software License" src="https://img.shields.io/badge/status-WIP-yellow?style=flat-square&color=orange" />
         </a>
