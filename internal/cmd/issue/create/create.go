@@ -60,6 +60,9 @@ func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
 	projectType := viper.GetString("project.type")
+	defaultComponents := viper.GetStringSlice("project.default_components")
+	defaultLabels := viper.GetStringSlice("project.default_labels")
+	defaultPriority := viper.GetStringSlice("project.default_priority")
 
 	params := parseFlags(cmd.Flags())
 	client := api.Client(jira.Config{Debug: params.debug})
@@ -108,12 +111,18 @@ func create(cmd *cobra.Command, _ []string) {
 
 					if ans.Priority != "" {
 						params.priority = ans.Priority
+					} else {
+						params.priority = defaultPriority
 					}
 					if len(ans.Labels) > 0 {
 						params.labels = strings.Split(ans.Labels, ",")
+					} else {
+						params.labels = defaultLabels
 					}
 					if len(ans.Components) > 0 {
 						params.components = strings.Split(ans.Components, ",")
+					} else {
+						params.components = defaultComponents
 					}
 					if len(ans.FixVersions) > 0 {
 						params.fixVersions = strings.Split(ans.FixVersions, ",")
