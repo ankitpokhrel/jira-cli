@@ -62,7 +62,7 @@ func create(cmd *cobra.Command, _ []string) {
 	projectType := viper.GetString("project.type")
 	defaultComponents := viper.GetStringSlice("project.default_components")
 	defaultLabels := viper.GetStringSlice("project.default_labels")
-	defaultPriority := viper.GetStringSlice("project.default_priority")
+	defaultPriority := viper.GetString("project.default_priority")
 
 	params := parseFlags(cmd.Flags())
 	client := api.Client(jira.Config{Debug: params.debug})
