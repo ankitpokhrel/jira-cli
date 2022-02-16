@@ -29,6 +29,7 @@ export LDFLAGS += -w
 
 export CGO_ENABLED ?= 0
 export GOCACHE ?= $(CURDIR)/.gocache
+export GOBIN ?= $(CURDIR)/bin
 
 all: build
 
