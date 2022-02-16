@@ -161,6 +161,10 @@ func edit(cmd *cobra.Command, args []string) {
 	if params.body != "" && params.body == originalBody {
 		params.body = ""
 	}
+	labels := params.labels
+	if params.labelAppend {
+		labels = append(labels, issue.Fields.Labels...)
+	}
 
 	err = func() error {
 		s := cmdutil.Info("Updating an issue...")
@@ -169,10 +173,6 @@ func edit(cmd *cobra.Command, args []string) {
 		body := params.body
 		if isADF {
 			body = md.ToJiraMD(body)
-		}
-		labels:=params.labels
-		if(params.labelAppend) {
-			labels =append(labels,issue.Fields.Labels...)
 		}
 
 		edr := jira.EditRequest{
