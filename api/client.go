@@ -28,8 +28,13 @@ func Client(config jira.Config) *jira.Client {
 	if config.APIToken == "" {
 		config.APIToken = viper.GetString("api_token")
 	}
+	config.Insecure = viper.GetBool("insecure")
 
-	jiraClient = jira.NewClient(config, jira.WithTimeout(clientTimeout))
+	jiraClient = jira.NewClient(
+		config,
+		jira.WithTimeout(clientTimeout),
+		jira.WithInsecureTLS(config.Insecure),
+	)
 
 	return jiraClient
 }
