@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -23,7 +24,7 @@ func TestGet(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 	resp, err := client.Get(context.Background(), "/search?jql=project=TEST%20AND%20status=Done", Header{
 		"Content-Type": "text/plain",
 	})
@@ -45,7 +46,7 @@ func TestGetV1(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 	resp, err := client.GetV1(context.Background(), "/epic/TEST-1/issue?jql=project=TEST%20AND%20status=Done", nil)
 
 	assert.NoError(t, err)
@@ -66,7 +67,7 @@ func TestGetV2(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 	resp, err := client.GetV2(context.Background(), "/search?jql=project=TEST%20AND%20status=Done", Header{
 		"Content-Type": "text/plain",
 	})
@@ -87,7 +88,7 @@ func TestPost(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 	resp, err := client.Post(context.Background(), "/issue", []byte("hello"), Header{
 		"Content-Type":   "application/json",
 		"X-Requested-By": "jira-cli",
@@ -109,7 +110,7 @@ func TestPostV2(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 	resp, err := client.PostV2(context.Background(), "/issue", []byte("hello"), Header{
 		"Content-Type":   "application/json",
 		"X-Requested-By": "jira-cli",
@@ -131,7 +132,7 @@ func TestPostV1(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 	resp, err := client.PostV1(context.Background(), "/issue", []byte("hello"), Header{
 		"Content-Type":   "application/json",
 		"X-Requested-By": "jira-cli",
@@ -153,7 +154,7 @@ func TestPut(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 	resp, err := client.Put(context.Background(), "/issue/TEST-1/assignee", []byte("jon"), Header{
 		"Content-Type":   "application/json",
 		"X-Requested-By": "jira-cli",
@@ -175,7 +176,7 @@ func TestPutV2(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 	resp, err := client.PutV2(context.Background(), "/issue/TEST-1/assignee", []byte("jon"), Header{
 		"Content-Type":   "application/json",
 		"X-Requested-By": "jira-cli",

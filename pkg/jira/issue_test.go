@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -32,7 +33,7 @@ func TestGetIssue(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	actual, err := client.GetIssue("TEST-1")
 	assert.NoError(t, err)
@@ -93,7 +94,7 @@ func TestGetIssueWithoutDescription(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	actual, err := client.GetIssue("TEST-1")
 	assert.NoError(t, err)
@@ -145,7 +146,7 @@ func TestGetIssueV2(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	actual, err := client.GetIssueV2("TEST-1")
 	assert.NoError(t, err)
@@ -208,7 +209,7 @@ func TestAssignIssue(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	err := client.AssignIssue("TEST-1", "a12b3")
 	assert.NoError(t, err)
@@ -242,7 +243,7 @@ func TestGetIssueLinkTypes(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	actual, err := client.GetIssueLinkTypes()
 	assert.NoError(t, err)
@@ -289,7 +290,7 @@ func TestLinkIssue(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	err := client.LinkIssue("TEST-1", "TEST-2", "Blocks")
 	assert.NoError(t, err)
@@ -324,7 +325,7 @@ func TestAddIssueComment(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	err := client.AddIssueComment("TEST-1", "comment")
 	assert.NoError(t, err)
