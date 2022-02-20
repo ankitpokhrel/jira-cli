@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -35,7 +36,7 @@ func TestBoards(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	_, err := client.Boards("BAD", "scrum")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)

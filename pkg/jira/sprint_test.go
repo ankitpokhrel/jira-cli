@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -40,7 +41,7 @@ func TestSprints(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	actual, err := client.Sprints(2, "state=active,closed", 0, 10)
 	assert.NoError(t, err)
@@ -152,7 +153,7 @@ func TestSprintsInBoards(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 	actual := client.SprintsInBoards([]int{2}, "state=active,closed", 3)
 	expected := []*Sprint{
 		{
@@ -211,7 +212,7 @@ func TestSprintIssues(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	actual, err := client.SprintIssues(1, 2, "project=TEST AND status=Done ORDER BY created DESC", 100)
 	assert.NoError(t, err)
@@ -330,7 +331,7 @@ func TestSprintIssuesAdd(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	err := client.SprintIssuesAdd("5", "TEST-1", "TEST-2")
 	assert.NoError(t, err)

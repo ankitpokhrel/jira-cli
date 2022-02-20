@@ -119,15 +119,16 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 		token:  c.APIToken,
 		debug:  c.Debug,
 	}
+
+	for _, opt := range opts {
+		opt(&client)
+	}
+
 	client.transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout: client.timeout,
 		}).DialContext,
-	}
-
-	for _, opt := range opts {
-		opt(&client)
 	}
 
 	return &client
