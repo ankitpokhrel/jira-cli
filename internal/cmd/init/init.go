@@ -14,17 +14,31 @@ import (
 
 // NewCmdInit is an init command.
 func NewCmdInit() *cobra.Command {
-	return &cobra.Command{
+	cmd := cobra.Command{
 		Use:     "init",
 		Short:   "Init initializes jira config",
 		Long:    "Init initializes jira configuration required for the tool to work properly.",
 		Aliases: []string{"initialize", "configure", "config", "setup"},
 		Run:     initialize,
 	}
+
+	cmd.Flags().Bool("insecure", false, `If set, the tool will skip TLS certificate verification.
+This can be useful if your server is using self-signed certificates.`)
+
+	return &cmd
 }
 
-func initialize(*cobra.Command, []string) {
-	c := jiraConfig.NewJiraCLIConfig()
+func initialize(cmd *cobra.Command, _ []string) {
+	insecure, err := cmd.Flags().GetBool("insecure")
+	cmdutil.ExitIfError(err)
+
+	c := jiraConfig.NewJiraCLIConfig(jiraConfig.WithInsecureTLS(insecure))
+
+	if insecure {
+		cmdutil.Warn(`You are using --insecure option. In this mode, the client will NOT verify
+server's certificate chain and host name in requests to the jira server.`)
+		fmt.Println()
+	}
 
 	file, err := c.Generate()
 	if err != nil {

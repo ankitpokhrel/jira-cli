@@ -48,6 +48,7 @@ type JiraCLIConfig struct {
 		epic         *jira.Epic
 		issueTypes   []*jira.IssueType
 	}
+	insecure           bool
 	jiraClient         *jira.Client
 	projectSuggestions []string
 	boardSuggestions   []string
@@ -55,11 +56,27 @@ type JiraCLIConfig struct {
 	boardsMap          map[string]*jira.Board
 }
 
+// JiraCLIConfigFunc decorates option for JiraCLIConfig.
+type JiraCLIConfigFunc func(*JiraCLIConfig)
+
 // NewJiraCLIConfig creates a new Jira CLI config.
-func NewJiraCLIConfig() *JiraCLIConfig {
-	return &JiraCLIConfig{
+func NewJiraCLIConfig(opts ...JiraCLIConfigFunc) *JiraCLIConfig {
+	cfg := JiraCLIConfig{
 		projectsMap: make(map[string]*projectConf),
 		boardsMap:   make(map[string]*jira.Board),
+	}
+
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
+	return &cfg
+}
+
+// WithInsecureTLS is a functional opt to set TLS certificate verfication option.
+func WithInsecureTLS(ins bool) JiraCLIConfigFunc {
+	return func(c *JiraCLIConfig) {
+		c.insecure = ins
 	}
 }
 
@@ -223,9 +240,10 @@ func (c *JiraCLIConfig) verifyLoginDetails(server, login string) error {
 	server = strings.TrimRight(server, "/")
 
 	c.jiraClient = api.Client(jira.Config{
-		Server: server,
-		Login:  login,
-		Debug:  viper.GetBool("debug"),
+		Server:   server,
+		Login:    login,
+		Insecure: c.insecure,
+		Debug:    viper.GetBool("debug"),
 	})
 	if _, err := c.jiraClient.Me(); err != nil {
 		return err
@@ -353,6 +371,10 @@ func (c *JiraCLIConfig) write(path string) (string, error) {
 	config.AddConfigPath(path)
 	config.SetConfigName(FileName)
 	config.SetConfigType(FileType)
+
+	if c.insecure {
+		config.Set("insecure", c.insecure)
+	}
 
 	config.Set("installation", c.value.installation)
 	config.Set("server", c.value.server)
