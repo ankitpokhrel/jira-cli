@@ -24,15 +24,15 @@ func TestIssueData(t *testing.T) {
 	expected := tui.TableData{
 		[]string{
 			"TYPE", "KEY", "SUMMARY", "STATUS", "ASSIGNEE", "REPORTER", "PRIORITY", "RESOLUTION",
-			"CREATED", "UPDATED", "LABELS",
+			"CREATED", "UPDATED",
 		},
 		[]string{
 			"Bug", "TEST-1", "This is a test", "Done", "Person A", "Person Z", "High", "Fixed",
-			"2020-12-13 14:05:20", "2020-12-13 14:07:20", "label1,label2",
+			"2020-12-13 14:05:20", "2020-12-13 14:07:20",
 		},
 		[]string{
 			"Story", "TEST-2", "This is another test", "Open", "", "Person A", "Normal", "",
-			"2020-12-13 14:05:20", "2020-12-13 14:07:20", "label1,label2",
+			"2020-12-13 14:05:20", "2020-12-13 14:07:20",
 		},
 	}
 	assert.Equal(t, expected, issue.data())
@@ -77,9 +77,9 @@ func TestIssueRenderInPlainViewAndNoTruncate(t *testing.T) {
 	}
 	assert.NoError(t, issue.renderPlain(&b))
 
-	expected := `TYPE	KEY	SUMMARY	STATUS	ASSIGNEE	REPORTER	PRIORITY	RESOLUTION	CREATED	UPDATED	LABELS
-Bug	TEST-1	This is a test	Done	Person A	Person Z	High	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20	label1,label2
-Story	TEST-2	This is another test	Open		Person A	Normal		2020-12-13 14:05:20	2020-12-13 14:07:20	label1,label2
+	expected := `TYPE	KEY	SUMMARY	STATUS	ASSIGNEE	REPORTER	PRIORITY	RESOLUTION	CREATED	UPDATED
+Bug	TEST-1	This is a test	Done	Person A	Person Z	High	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20
+Story	TEST-2	This is another test	Open		Person A	Normal		2020-12-13 14:05:20	2020-12-13 14:07:20
 `
 	assert.Equal(t, expected, b.String())
 }
@@ -100,8 +100,8 @@ func TestIssueRenderInPlainViewWithoutHeaders(t *testing.T) {
 	}
 	assert.NoError(t, issue.renderPlain(&b))
 
-	expected := `Bug	TEST-1	This is a test	Done	Person A	Person Z	High	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20	label1,label2
-Story	TEST-2	This is another test	Open		Person A	Normal		2020-12-13 14:05:20	2020-12-13 14:07:20	label1,label2
+	expected := `Bug	TEST-1	This is a test	Done	Person A	Person Z	High	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20
+Story	TEST-2	This is another test	Open		Person A	Normal		2020-12-13 14:05:20	2020-12-13 14:07:20
 `
 	assert.Equal(t, expected, b.String())
 }
@@ -155,7 +155,6 @@ func getIssues() []*jira.Issue {
 				}{Name: "Done"},
 				Created: "2020-12-13T14:05:20.974+0100",
 				Updated: "2020-12-13T14:07:20.974+0100",
-				Labels:  []string{"label1", "label2"},
 			},
 		},
 		{
@@ -174,7 +173,6 @@ func getIssues() []*jira.Issue {
 				}{Name: "Open"},
 				Created: "2020-12-13T14:05:20.974+0100",
 				Updated: "2020-12-13T14:07:20.974+0100",
-				Labels:  []string{"label1", "label2"},
 			},
 		},
 	}

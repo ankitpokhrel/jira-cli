@@ -52,7 +52,6 @@ func ValidIssueColumns() []string {
 		fieldResolution,
 		fieldCreated,
 		fieldUpdated,
-		fieldLabels,
 	}
 }
 
