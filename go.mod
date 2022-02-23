@@ -17,7 +17,7 @@ require (
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/rivo/tview v0.0.0-20211029142923-a4acb08f513e
+	github.com/rivo/tview v0.0.0-20220216162559-96063d6082f3
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
