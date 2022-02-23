@@ -28,6 +28,10 @@ func Client(config jira.Config) *jira.Client {
 	if config.APIToken == "" {
 		config.APIToken = viper.GetString("api_token")
 	}
+	if config.Bearer == nil {
+		bearer := viper.GetBool("bearer")
+		config.Bearer = &bearer
+	}
 	config.Insecure = viper.GetBool("insecure")
 
 	jiraClient = jira.NewClient(
