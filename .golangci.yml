@@ -29,7 +29,7 @@ linters-settings:
   testpackage:
     skip-regexp: ".*"
   gocyclo:
-    min-complexity: 21
+    min-complexity: 20
   gomnd:
     settings:
       mnd:

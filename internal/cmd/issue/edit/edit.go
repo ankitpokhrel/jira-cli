@@ -162,9 +162,7 @@ func edit(cmd *cobra.Command, args []string) {
 		params.body = ""
 	}
 	labels := params.labels
-	if params.labelAppend {
-		labels = append(labels, issue.Fields.Labels...)
-	}
+	labels = append(labels, issue.Fields.Labels...)
 
 	err = func() error {
 		s := cmdutil.Info("Updating an issue...")
@@ -251,16 +249,15 @@ func (ec *editCmd) askQuestions(issue *jira.Issue, originalBody string) error {
 }
 
 type editParams struct {
-	issueKey    string
-	summary     string
-	body        string
-	priority    string
-	assignee    string
-	labels      []string
-	labelAppend bool
-	components  []string
-	noInput     bool
-	debug       bool
+	issueKey   string
+	summary    string
+	body       string
+	priority   string
+	assignee   string
+	labels     []string
+	components []string
+	noInput    bool
+	debug      bool
 }
 
 func (ep editParams) isEmpty() bool {
@@ -284,9 +281,6 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	labels, err := flags.GetStringArray("label")
 	cmdutil.ExitIfError(err)
 
-	labelAppend, err := flags.GetBool("label-append")
-	cmdutil.ExitIfError(err)
-
 	components, err := flags.GetStringArray("component")
 	cmdutil.ExitIfError(err)
 
@@ -297,16 +291,15 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	cmdutil.ExitIfError(err)
 
 	return &editParams{
-		issueKey:    cmdutil.GetJiraIssueKey(project, args[0]),
-		summary:     summary,
-		body:        body,
-		priority:    priority,
-		assignee:    assignee,
-		labels:      labels,
-		labelAppend: labelAppend,
-		components:  components,
-		noInput:     noInput,
-		debug:       debug,
+		issueKey:   cmdutil.GetJiraIssueKey(project, args[0]),
+		summary:    summary,
+		body:       body,
+		priority:   priority,
+		assignee:   assignee,
+		labels:     labels,
+		components: components,
+		noInput:    noInput,
+		debug:      debug,
 	}
 }
 
@@ -350,9 +343,8 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("body", "b", "", "Edit description")
 	cmd.Flags().StringP("priority", "y", "", "Edit priority")
 	cmd.Flags().StringP("assignee", "a", "", "Edit assignee (email or display name)")
-	cmd.Flags().StringArrayP("label", "l", []string{}, "Replace labels")
+	cmd.Flags().StringArrayP("label", "l", []string{}, "Add labels to existed list")
 	cmd.Flags().StringArrayP("component", "C", []string{}, "Replace components")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful update")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
-	cmd.Flags().Bool("label-append", false, "Append label fields")
 }
