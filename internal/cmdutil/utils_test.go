@@ -167,3 +167,71 @@ func TestNormalizeJiraError(t *testing.T) {
 		})
 	}
 }
+
+func TestGetSubtaskHandle(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    []*jira.IssueType
+		expected string
+	}{
+		{
+			name: "should get default issue type handle for sub-task",
+			input: []*jira.IssueType{
+				{
+					ID:      "123",
+					Name:    "Story",
+					Handle:  "story",
+					Subtask: false,
+				},
+			},
+			expected: "Sub-task",
+		},
+		{
+			name: "should get valid sub-task handle",
+			input: []*jira.IssueType{
+				{
+					ID:      "123",
+					Name:    "Story",
+					Handle:  "story",
+					Subtask: false,
+				},
+				{
+					ID:      "234",
+					Name:    "Sub-Task",
+					Handle:  "Sub-Task",
+					Subtask: true,
+				},
+			},
+			expected: "Sub-Task",
+		},
+		{
+			name: "should get sub-task name as handle",
+			input: []*jira.IssueType{
+				{
+					ID:      "123",
+					Name:    "Story",
+					Handle:  "story",
+					Subtask: false,
+				},
+				{
+					ID:      "234",
+					Name:    "Subtask",
+					Subtask: true,
+				},
+			},
+			expected: "Subtask",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, GetSubtaskHandle(tc.input))
+		})
+	}
+}
