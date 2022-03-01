@@ -70,7 +70,7 @@ func ValidSprintColumns() []string {
 // MDRenderer constructs markdown renderer.
 func MDRenderer() (*glamour.TermRenderer, error) {
 	return glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
+		glamour.WithEnvironmentConfig(),
 		glamour.WithWordWrap(wordWrap),
 	)
 }
