@@ -16,6 +16,8 @@ const (
 
 // SetCreateFlags sets flags supported by create command.
 func SetCreateFlags(cmd *cobra.Command, prefix string) {
+	custom := make(map[string]string)
+
 	cmd.Flags().SortFlags = false
 
 	if prefix == "Epic" {
@@ -32,6 +34,7 @@ And, this field is mandatory when creating a sub-task.`)
 	cmd.Flags().StringArrayP("label", "l", []string{}, prefix+" labels")
 	cmd.Flags().StringArrayP("component", "C", []string{}, prefix+" components")
 	cmd.Flags().StringArray("fix-version", []string{}, "Release info (fixVersions)")
+	cmd.Flags().StringToString("custom", custom, "Set custom fields")
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read body/description from")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful creation")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")

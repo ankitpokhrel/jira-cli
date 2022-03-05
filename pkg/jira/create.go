@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 	"github.com/ankitpokhrel/jira-cli/pkg/md"
@@ -36,6 +40,9 @@ type CreateRequest struct {
 	// case-sensitive in Jira and can differ slightly
 	// in different Jira versions.
 	SubtaskField string
+	// CustomFields holds all custom fields passed
+	// while creating an issue.
+	CustomFields map[string]string
 
 	projectType string
 }
@@ -169,8 +176,59 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 		}
 		data.Fields.M.FixVersions = versions
 	}
+	constructCustomFields(req.CustomFields, &data)
 
 	return &data
+}
+
+func constructCustomFields(fields map[string]string, data *createRequest) {
+	if len(fields) == 0 {
+		return
+	}
+
+	var configuredFields []IssueTypeField
+
+	err := viper.UnmarshalKey("issue.fields.custom", &configuredFields)
+	if err != nil || len(configuredFields) == 0 {
+		return
+	}
+
+	data.Fields.M.customFields = make(customField)
+
+	for key, val := range fields {
+		for _, configured := range configuredFields {
+			identifier := strings.ReplaceAll(strings.ToLower(strings.TrimSpace(configured.Name)), " ", "-")
+			if identifier != key {
+				continue
+			}
+
+			switch configured.Schema.DataType {
+			case customFieldFormatOption:
+				data.Fields.M.customFields[configured.Key] = customFieldTypeOption{Value: val}
+			case customFieldFormatArray:
+				pieces := strings.Split(strings.TrimSpace(val), ",")
+				if configured.Schema.Items == customFieldFormatOption {
+					items := make([]customFieldTypeOption, 0)
+					for _, p := range pieces {
+						items = append(items, customFieldTypeOption{Value: p})
+					}
+					data.Fields.M.customFields[configured.Key] = items
+				} else {
+					data.Fields.M.customFields[configured.Key] = pieces
+				}
+			case customFieldFormatNumber:
+				num, err := strconv.ParseFloat(val, 64) //nolint:gomnd
+				if err != nil {
+					// Let Jira API handle data type error for now.
+					data.Fields.M.customFields[configured.Key] = val
+				} else {
+					data.Fields.M.customFields[configured.Key] = customFieldTypeNumber(num)
+				}
+			default:
+				data.Fields.M.customFields[configured.Key] = val
+			}
+		}
+	}
 }
 
 type createRequest struct {
@@ -202,7 +260,8 @@ type createFields struct {
 		Name string `json:"name,omitempty"`
 	} `json:"fixVersions,omitempty"`
 
-	epicField string
+	epicField    string
+	customFields customField
 }
 
 type createFieldsMarshaler struct {
@@ -226,6 +285,10 @@ func (cfm *createFieldsMarshaler) MarshalJSON() ([]byte, error) {
 		dm[cfm.M.epicField] = dm["name"]
 	}
 	delete(dm, "name")
+
+	for key, val := range cfm.M.customFields {
+		dm[key] = val
+	}
 
 	return json.Marshal(dm)
 }
