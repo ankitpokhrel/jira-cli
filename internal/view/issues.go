@@ -86,7 +86,7 @@ func (l *IssueList) renderPlain(w io.Writer) error {
 	return renderPlain(w, l.data())
 }
 
-func (l *IssueList) validColumnsMap() map[string]struct{} {
+func (*IssueList) validColumnsMap() map[string]struct{} {
 	columns := ValidIssueColumns()
 	out := make(map[string]struct{}, len(columns))
 
@@ -148,7 +148,7 @@ func (l *IssueList) data() tui.TableData {
 	return data
 }
 
-func (l IssueList) assignColumns(columns []string, issue *jira.Issue) []string {
+func (IssueList) assignColumns(columns []string, issue *jira.Issue) []string {
 	var bucket []string
 
 	for _, column := range columns {

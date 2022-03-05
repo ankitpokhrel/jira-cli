@@ -161,6 +161,8 @@ func edit(cmd *cobra.Command, args []string) {
 	if params.body != "" && params.body == originalBody {
 		params.body = ""
 	}
+	labels := params.labels
+	labels = append(labels, issue.Fields.Labels...)
 
 	err = func() error {
 		s := cmdutil.Info("Updating an issue...")
@@ -176,7 +178,7 @@ func edit(cmd *cobra.Command, args []string) {
 			Body:       body,
 			Assignee:   userAccountID,
 			Priority:   params.priority,
-			Labels:     params.labels,
+			Labels:     labels,
 			Components: params.components,
 		}
 
@@ -341,7 +343,7 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("body", "b", "", "Edit description")
 	cmd.Flags().StringP("priority", "y", "", "Edit priority")
 	cmd.Flags().StringP("assignee", "a", "", "Edit assignee (email or display name)")
-	cmd.Flags().StringArrayP("label", "l", []string{}, "Replace labels")
+	cmd.Flags().StringArrayP("label", "l", []string{}, "Append labels")
 	cmd.Flags().StringArrayP("component", "C", []string{}, "Replace components")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful update")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
