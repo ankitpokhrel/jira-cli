@@ -71,6 +71,11 @@ func Success(msg string, args ...interface{}) {
 	fmt.Fprintf(os.Stdout, fmt.Sprintf("\n\u001B[0;32m✓\u001B[0m %s\n", msg), args...)
 }
 
+// Warn prints warning message in stderr.
+func Warn(msg string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, fmt.Sprintf("\u001B[0;33m%s\u001B[0m\n", msg), args...)
+}
+
 // Fail prints failure message in stderr.
 func Fail(msg string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, fmt.Sprintf("\u001B[0;31m✗\u001B[0m %s\n", msg), args...)
@@ -152,4 +157,19 @@ func NormalizeJiraError(msg string) string {
 	msg = strings.Replace(msg, "- ", "", 1)
 
 	return msg
+}
+
+// GetSubtaskHandle fetches actual subtask handle.
+// This value can either be handle or name based
+// on the used jira version.
+func GetSubtaskHandle(issueTypes []*jira.IssueType) string {
+	for _, it := range issueTypes {
+		if it.Subtask {
+			if it.Handle != "" {
+				return it.Handle
+			}
+			return it.Name
+		}
+	}
+	return jira.IssueTypeSubTask
 }

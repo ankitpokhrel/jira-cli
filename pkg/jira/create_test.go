@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -50,7 +51,7 @@ func TestCreate(t *testing.T) {
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	requestData := CreateRequest{
 		Project:     "TEST",
@@ -85,7 +86,7 @@ func TestCreateSubtask(t *testing.T) {
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	requestData := CreateRequest{
 		Project:        "TEST",
@@ -117,7 +118,7 @@ func TestCreateEpic(t *testing.T) {
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 	requestData := CreateRequest{
 		Project:   "TEST",
 		IssueType: "Bug",
@@ -149,7 +150,7 @@ func TestCreateEpicNextGen(t *testing.T) {
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 	requestData := CreateRequest{
 		Project:        "TEST",
 		IssueType:      "Bug",

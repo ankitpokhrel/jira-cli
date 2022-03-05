@@ -3,6 +3,7 @@ package jira
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -95,12 +96,14 @@ type Config struct {
 	Server   string
 	Login    string
 	APIToken string
+	Insecure bool
 	Debug    bool
 }
 
 // Client is a jira client.
 type Client struct {
 	transport http.RoundTripper
+	insecure  bool
 	server    string
 	login     string
 	token     string
@@ -119,15 +122,17 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 		token:  c.APIToken,
 		debug:  c.Debug,
 	}
-	client.transport = &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout: client.timeout,
-		}).DialContext,
-	}
 
 	for _, opt := range opts {
 		opt(&client)
+	}
+
+	client.transport = &http.Transport{
+		Proxy:           http.ProxyFromEnvironment,
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: client.insecure},
+		DialContext: (&net.Dialer{
+			Timeout: client.timeout,
+		}).DialContext,
 	}
 
 	return &client
@@ -137,6 +142,13 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 func WithTimeout(to time.Duration) ClientFunc {
 	return func(c *Client) {
 		c.timeout = to
+	}
+}
+
+// WithInsecureTLS is a functional opt that allow you to skip TLS certificate verfication.
+func WithInsecureTLS(ins bool) ClientFunc {
+	return func(c *Client) {
+		c.insecure = ins
 	}
 }
 

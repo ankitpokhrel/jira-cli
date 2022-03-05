@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -39,7 +40,7 @@ func TestEpicIssues(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	actual, err := client.EpicIssues("TEST-0", "project=TEST AND status=Done ORDER BY created DESC", 100)
 	assert.NoError(t, err)
@@ -158,7 +159,7 @@ func TestEpicIssuesAdd(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	err := client.EpicIssuesAdd("TEST-0", "TEST-1", "TEST-2")
 	assert.NoError(t, err)
@@ -193,7 +194,7 @@ func TestEpicIssuesRemove(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	err := client.EpicIssuesRemove("TEST-1", "TEST-2")
 	assert.NoError(t, err)

@@ -18,7 +18,7 @@ $ jira open ISSUE-1`
 
 // NewCmdOpen is an open command.
 func NewCmdOpen() *cobra.Command {
-	return &cobra.Command{
+	cmd := cobra.Command{
 		Use:     "open [ISSUE-KEY]",
 		Short:   "Open issue in a browser",
 		Long:    helpText,
@@ -30,9 +30,13 @@ func NewCmdOpen() *cobra.Command {
 		},
 		Run: open,
 	}
+
+	cmd.Flags().BoolP("no-browser", "n", false, `Skip opening destination URL in the browser`)
+
+	return &cmd
 }
 
-func open(_ *cobra.Command, args []string) {
+func open(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
 
@@ -45,5 +49,11 @@ func open(_ *cobra.Command, args []string) {
 	}
 
 	fmt.Println(url)
-	cmdutil.ExitIfError(browser.Browse(url))
+
+	noBrowser, err := cmd.Flags().GetBool("no-browser")
+	cmdutil.ExitIfError(err)
+
+	if !noBrowser {
+		cmdutil.ExitIfError(browser.Browse(url))
+	}
 }
