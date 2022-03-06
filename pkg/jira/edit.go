@@ -19,7 +19,6 @@ type EditRequest struct {
 	ParentIssueKey string
 	Summary        string
 	Body           string
-	Assignee       string
 	Priority       string
 	Labels         []string
 	Components     []string
@@ -60,11 +59,6 @@ type editFields struct {
 	Description []struct {
 		Set string `json:"set,omitempty"`
 	} `json:"description,omitempty"`
-	Assignee []struct {
-		Set struct {
-			AccountID string `json:"accountId,omitempty"`
-		} `json:"set,omitempty"`
-	} `json:"assignee,omitempty"`
 	Priority []struct {
 		Set struct {
 			Name string `json:"name,omitempty"`
@@ -91,9 +85,6 @@ func (cfm editFieldsMarshaler) MarshalJSON() ([]byte, error) {
 	}
 	if len(cfm.M.Description) == 0 || cfm.M.Description[0].Set == "" {
 		cfm.M.Description = nil
-	}
-	if len(cfm.M.Assignee) == 0 || cfm.M.Assignee[0].Set.AccountID == "" {
-		cfm.M.Assignee = nil
 	}
 	if len(cfm.M.Priority) == 0 || cfm.M.Priority[0].Set.Name == "" {
 		cfm.M.Priority = nil
@@ -130,13 +121,6 @@ func (c *Client) getRequestDataForEdit(req *EditRequest) *editRequest {
 		Description: []struct {
 			Set string `json:"set,omitempty"`
 		}{{Set: req.Body}},
-		Assignee: []struct {
-			Set struct {
-				AccountID string `json:"accountId,omitempty"`
-			} `json:"set,omitempty"`
-		}{{Set: struct {
-			AccountID string `json:"accountId,omitempty"`
-		}{AccountID: req.Assignee}}},
 		Priority: []struct {
 			Set struct {
 				Name string `json:"name,omitempty"`

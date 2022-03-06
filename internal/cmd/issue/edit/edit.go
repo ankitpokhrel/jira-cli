@@ -1,7 +1,6 @@
 package edit
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -128,30 +127,6 @@ func edit(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	var userAccountID string
-
-	if params.assignee != "" {
-		err := func() error {
-			s := cmdutil.Info("Looking for assignee...")
-			defer s.Stop()
-
-			user, err := client.UserSearch(&jira.UserSearchOptions{
-				Query: params.assignee,
-			})
-			if err != nil {
-				return err
-			}
-			if len(user) == 0 {
-				return errors.New("unable to find assignee")
-			}
-
-			userAccountID = user[0].AccountID
-
-			return nil
-		}()
-		cmdutil.ExitIfError(err)
-	}
-
 	if params.isEmpty() {
 		fmt.Println()
 		cmdutil.Failed("Nothing to update")
@@ -176,7 +151,6 @@ func edit(cmd *cobra.Command, args []string) {
 		edr := jira.EditRequest{
 			Summary:    params.summary,
 			Body:       body,
-			Assignee:   userAccountID,
 			Priority:   params.priority,
 			Labels:     labels,
 			Components: params.components,
@@ -188,9 +162,33 @@ func edit(cmd *cobra.Command, args []string) {
 
 	cmdutil.Success("Issue updated\n%s/browse/%s", server, params.issueKey)
 
+	handleUserAssign(project, params.issueKey, params.assignee, client)
+
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, params.issueKey)
 		cmdutil.ExitIfError(err)
+	}
+}
+
+func handleUserAssign(project, key, assignee string, client *jira.Client) {
+	if assignee == "" {
+		return
+	}
+	if assignee == "x" {
+		if err := api.ProxyAssignIssue(client, key, nil, jira.AssigneeNone); err != nil {
+			cmdutil.Failed("Unable to unassign user: %s", err.Error())
+		}
+		return
+	}
+	user, err := api.ProxyUserSearch(client, &jira.UserSearchOptions{
+		Query:   assignee,
+		Project: project,
+	})
+	if err != nil || len(user) == 0 {
+		cmdutil.Failed("Unable to find assignee")
+	}
+	if err = api.ProxyAssignIssue(client, key, user[0], assignee); err != nil {
+		cmdutil.Failed("Unable to set assignee: %s", err.Error())
 	}
 }
 
