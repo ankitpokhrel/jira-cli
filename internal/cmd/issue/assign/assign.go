@@ -88,7 +88,7 @@ func assign(cmd *cobra.Command, args []string) {
 
 	switch {
 	case u != nil:
-		uname = u.Name
+		uname = getQueryableName(u.DisplayName, u.Name)
 	case lu == strings.ToLower(optionNone) || lu == "x":
 		assignee = jira.AssigneeNone
 		uname = "unassigned"
@@ -173,7 +173,7 @@ func (ac *assignCmd) setIssueKey(project string) error {
 
 func (ac *assignCmd) setAssignee(project string) error {
 	if ac.params.user != "" && len(ac.users) == 1 {
-		ac.params.user = ac.users[0].Name
+		ac.params.user = getQueryableName(ac.users[0].Name, ac.users[0].DisplayName)
 		return nil
 	}
 
@@ -241,7 +241,11 @@ func (ac *assignCmd) getOptions(last bool) []string {
 
 	for _, t := range ac.users {
 		if t.Active {
-			validUsers = append(validUsers, t.Name)
+			name := t.DisplayName
+			if t.Name != "" {
+				name += fmt.Sprintf(" (%s)", t.Name)
+			}
+			validUsers = append(validUsers, name)
 		}
 	}
 	always := []string{optionDefault, optionNone, optionCancel}
@@ -285,12 +289,8 @@ func (ac *assignCmd) getSearchKeyword() error {
 }
 
 func (ac *assignCmd) searchAndAssignUser(project string) error {
-	q := ac.params.user
-	if q == "" {
-		q = "*"
-	}
 	u, err := api.ProxyUserSearch(ac.client, &jira.UserSearchOptions{
-		Query:      q,
+		Query:      ac.params.user,
 		Project:    project,
 		MaxResults: maxResults,
 	})
@@ -318,8 +318,14 @@ func (ac *assignCmd) verifyAssignee() (*jira.User, error) {
 
 	st := strings.ToLower(ac.params.user)
 	for _, u := range ac.users {
-		if strings.ToLower(u.Name) == st || strings.ToLower(u.Email) == st {
+		if strings.ToLower(getQueryableName(u.Name, u.DisplayName)) == st || strings.ToLower(u.Email) == st {
 			user = u
+		}
+		if strings.ToLower(fmt.Sprintf("%s (%s)", u.DisplayName, u.Name)) == st {
+			user = u
+		}
+		if user != nil {
+			break
 		}
 	}
 
@@ -327,7 +333,14 @@ func (ac *assignCmd) verifyAssignee() (*jira.User, error) {
 		return nil, fmt.Errorf("invalid assignee \"%s\"", ac.params.user)
 	}
 	if !user.Active {
-		return nil, fmt.Errorf("user \"%s\" is not active", user.Name)
+		return nil, fmt.Errorf("user \"%s\" is not active", getQueryableName(user.Name, user.DisplayName))
 	}
 	return user, nil
+}
+
+func getQueryableName(name, displayName string) string {
+	if name != "" {
+		return name
+	}
+	return displayName
 }

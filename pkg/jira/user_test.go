@@ -56,16 +56,17 @@ func TestUserSearch(t *testing.T) {
 
 	expected := []*User{
 		{
-			AccountID: "5fb82376aca10c006949f35b",
-			Email:     "jane@domain.tld",
-			Name:      "Jane Doe",
-			Active:    true,
+			AccountID:   "5fb82376aca10c006949f35b",
+			Email:       "jane@domain.tld",
+			Name:        "janedoe",
+			DisplayName: "Jane Doe",
+			Active:      true,
 		},
 		{
-			AccountID: "5fb82376aca10c006949f35c",
-			Email:     "jon@domain.tld",
-			Name:      "Jon Doe",
-			Active:    false,
+			AccountID:   "5fb82376aca10c006949f35c",
+			Email:       "jon@domain.tld",
+			DisplayName: "Jon Doe",
+			Active:      false,
 		},
 	}
 	assert.Equal(t, expected, actual)
@@ -80,8 +81,6 @@ func TestUserSearch(t *testing.T) {
 
 	apiVersion2 = true
 
-	_, err = client.UserSearchV2(&UserSearchOptions{
-		Username: "doe",
-	})
+	_, err = client.UserSearchV2(&UserSearchOptions{})
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
