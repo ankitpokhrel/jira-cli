@@ -26,7 +26,7 @@ type EditRequest struct {
 
 // Edit updates an issue using POST /issue endpoint.
 func (c *Client) Edit(key string, req *EditRequest) error {
-	data := c.getRequestDataForEdit(req)
+	data := getRequestDataForEdit(req)
 
 	body, err := json.Marshal(&data)
 	if err != nil {
@@ -109,7 +109,7 @@ type editRequest struct {
 	} `json:"fields"`
 }
 
-func (c *Client) getRequestDataForEdit(req *EditRequest) *editRequest {
+func getRequestDataForEdit(req *EditRequest) *editRequest {
 	if req.Labels == nil {
 		req.Labels = []string{}
 	}
