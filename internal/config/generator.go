@@ -329,7 +329,7 @@ func (c *JiraCLIConfig) configureProjectAndBoardDetails() error {
 	return nil
 }
 
-func (c *JiraCLIConfig) getSearchKeyword() (string, error) {
+func (*JiraCLIConfig) getSearchKeyword() (string, error) {
 	var ans string
 
 	qs := &survey.Question{
