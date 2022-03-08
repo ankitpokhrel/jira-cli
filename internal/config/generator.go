@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
@@ -22,6 +23,10 @@ const (
 	FileName = ".config"
 	// FileType is a jira-cli config file extension.
 	FileType = "yml"
+
+	optionSearch = "[Search...]"
+	optionBack   = "Go-back"
+	lineBreak    = "----------"
 )
 
 var (
@@ -273,17 +278,98 @@ func (c *JiraCLIConfig) configureProjectAndBoardDetails() error {
 	if err := c.getBoardSuggestions(project); err != nil {
 		return err
 	}
-	boardPrompt := survey.Select{
-		Message: "Default board:",
-		Help:    "This is your default project board that you want to access by default when using the cli.",
-		Options: c.boardSuggestions,
-	}
-	if err := survey.AskOne(&boardPrompt, &board, survey.WithValidator(survey.Required)); err != nil {
-		return err
+	defaultBoardSuggestions := c.boardSuggestions
+
+	for {
+		boardPrompt := &survey.Question{
+			Name: "",
+			Prompt: &survey.Select{
+				Message: "Default board:",
+				Help:    "This is your default project board that you want to access by default when using the cli.",
+				Options: c.boardSuggestions,
+			},
+			Validate: func(val interface{}) error {
+				errInvalidSelection := fmt.Errorf("invalid selection")
+
+				ans, ok := val.(core.OptionAnswer)
+				if !ok {
+					return errInvalidSelection
+				}
+				if ans.Value == "" || ans.Value == lineBreak {
+					return errInvalidSelection
+				}
+
+				return nil
+			},
+		}
+
+		if err := survey.Ask([]*survey.Question{boardPrompt}, &board, survey.WithValidator(survey.Required)); err != nil {
+			return err
+		}
+		if board != optionBack && board != optionSearch {
+			break
+		}
+		if board == optionBack {
+			c.boardSuggestions = defaultBoardSuggestions
+		}
+		if board == optionSearch {
+			kw, err := c.getSearchKeyword()
+			if err != nil {
+				return err
+			}
+			if err := c.searchAndAssignBoard(project, kw); err != nil {
+				return err
+			}
+		}
 	}
 
 	c.value.project = c.projectsMap[project]
 	c.value.board = c.boardsMap[board]
+
+	return nil
+}
+
+func (*JiraCLIConfig) getSearchKeyword() (string, error) {
+	var ans string
+
+	qs := &survey.Question{
+		Name: "board",
+		Prompt: &survey.Input{
+			Message: "Search board:",
+			Help:    "Type board name to search",
+		},
+		Validate: func(val interface{}) error {
+			errInvalidKeyword := fmt.Errorf("enter atleast 3 characters to search")
+
+			str, ok := val.(string)
+			if !ok {
+				return errInvalidKeyword
+			}
+			if len(str) < 3 {
+				return errInvalidKeyword
+			}
+
+			return nil
+		},
+	}
+	if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {
+		return "", err
+	}
+	return ans, nil
+}
+
+func (c *JiraCLIConfig) searchAndAssignBoard(project, keyword string) error {
+	resp, err := c.jiraClient.BoardSearch(project, keyword)
+	if err != nil {
+		return err
+	}
+
+	c.boardSuggestions = []string{}
+	for _, board := range resp.Boards {
+		c.boardsMap[board.Name] = board
+		c.boardSuggestions = append(c.boardSuggestions, board.Name)
+	}
+	c.boardSuggestions = append(c.boardSuggestions, lineBreak, optionSearch, optionBack)
 
 	return nil
 }
@@ -422,6 +508,7 @@ func (c *JiraCLIConfig) getBoardSuggestions(project string) error {
 	if err != nil {
 		return err
 	}
+	c.boardSuggestions = append(c.boardSuggestions, optionSearch, lineBreak)
 	for _, board := range resp.Boards {
 		c.boardsMap[board.Name] = board
 		c.boardSuggestions = append(c.boardSuggestions, board.Name)

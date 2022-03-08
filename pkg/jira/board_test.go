@@ -32,6 +32,18 @@ func TestBoards(t *testing.T) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(200)
 			_, _ = w.Write(resp)
+		case "SEARCH":
+			assert.Equal(t, url.Values{
+				"projectKeyOrId": []string{"SEARCH"},
+				"name":           []string{"board"},
+			}, qs)
+
+			resp, err := ioutil.ReadFile("./testdata/boards.json")
+			assert.NoError(t, err)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			_, _ = w.Write(resp)
 		}
 	}))
 	defer server.Close()
@@ -39,6 +51,9 @@ func TestBoards(t *testing.T) {
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	_, err := client.Boards("BAD", "scrum")
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+
+	_, err = client.BoardSearch("BAD", "scrum")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 
 	actual, err := client.Boards("TEST", "scrum")
@@ -60,5 +75,9 @@ func TestBoards(t *testing.T) {
 			},
 		},
 	}
+	assert.Equal(t, expected, actual)
+
+	actual, err = client.BoardSearch("SEARCH", "board")
+	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 }
