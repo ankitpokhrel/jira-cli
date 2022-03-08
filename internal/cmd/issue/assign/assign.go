@@ -74,8 +74,6 @@ func assign(cmd *cobra.Command, args []string) {
 	if lu != strings.ToLower(optionNone) && lu != "x" && lu != jira.AssigneeDefault {
 		cmdutil.ExitIfError(ac.setAvailableUsers(project))
 		cmdutil.ExitIfError(ac.setAssignee(project))
-
-		lu = strings.ToLower(ac.params.user)
 	}
 
 	u, err := ac.verifyAssignee()
@@ -309,19 +307,19 @@ func (ac *assignCmd) setAvailableUsers(project string) error {
 }
 
 func (ac *assignCmd) verifyAssignee() (*jira.User, error) {
-	u, d, n := strings.ToLower(ac.params.user), strings.ToLower(optionDefault), strings.ToLower(optionNone)
-	if u == d || u == n || u == "x" {
+	assignee := strings.ToLower(ac.params.user)
+	if assignee == strings.ToLower(optionDefault) || assignee == strings.ToLower(optionNone) || assignee == "x" {
 		return nil, nil
 	}
 
 	var user *jira.User
 
-	st := strings.ToLower(ac.params.user)
 	for _, u := range ac.users {
-		if strings.ToLower(getQueryableName(u.Name, u.DisplayName)) == st || strings.ToLower(u.Email) == st {
+		name := strings.ToLower(getQueryableName(u.Name, u.DisplayName))
+		if name == assignee || strings.ToLower(u.Email) == assignee {
 			user = u
 		}
-		if strings.ToLower(fmt.Sprintf("%s (%s)", u.DisplayName, u.Name)) == st {
+		if strings.ToLower(fmt.Sprintf("%s (%s)", u.DisplayName, u.Name)) == assignee {
 			user = u
 		}
 		if user != nil {
