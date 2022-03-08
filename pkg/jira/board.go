@@ -21,13 +21,24 @@ type BoardResult struct {
 	Boards     []*Board `json:"values"`
 }
 
-// Boards gets all boards in a project.
+// Boards gets all boards of a given type in a project.
 func (c *Client) Boards(project, boardType string) (*BoardResult, error) {
 	path := fmt.Sprintf("/board?projectKeyOrId=%s", project)
 	if boardType != "" {
 		path += fmt.Sprintf("&type=%s", boardType)
 	}
 
+	return c.board(path)
+}
+
+// BoardSearch fetches boards with the given name in a project.
+func (c *Client) BoardSearch(project, name string) (*BoardResult, error) {
+	path := fmt.Sprintf("/board?projectKeyOrId=%s&name=%s", project, name)
+
+	return c.board(path)
+}
+
+func (c *Client) board(path string) (*BoardResult, error) {
 	res, err := c.GetV1(context.Background(), path, nil)
 	if err != nil {
 		return nil, err
