@@ -118,7 +118,7 @@ func LoadList(cmd *cobra.Command) {
 		Total:   total,
 		Data:    issues,
 		Refresh: func() {
-			Load(cmd)
+			LoadList(cmd)
 		},
 		Display: view.DisplayFormat{
 			Plain:      plain,

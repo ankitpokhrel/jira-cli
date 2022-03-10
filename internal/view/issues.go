@@ -26,8 +26,6 @@ type DisplayFormat struct {
 	Columns    []string
 }
 
-type Refresh func()
-
 // IssueList is a list view for issues.
 type IssueList struct {
 	Total      int
