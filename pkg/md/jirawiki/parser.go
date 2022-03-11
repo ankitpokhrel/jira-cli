@@ -330,6 +330,9 @@ func extractAttributes(token string) (string, map[string]string) {
 	}
 
 	pieces := strings.Split(token, ":")
+	if len(pieces) != 2 || len(pieces[1]) == 0 {
+		return token, attrs
+	}
 
 	tag := pieces[0] + "}"
 	meta := pieces[1][0 : len(pieces[1])-1]
@@ -434,8 +437,14 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 			break
 		}
 
-		// Write everything as is.
-		out.WriteString(lines[i])
+		if x := checkForInlineClose(line); x > 0 {
+			out.WriteString(line[:x])
+			out.WriteRune(newLine)
+			break
+		} else {
+			// Write everything as is.
+			out.WriteString(lines[i])
+		}
 		out.WriteRune(newLine)
 	}
 	out.WriteString(replacements[t.tag])
@@ -572,4 +581,17 @@ func isReferenceLink(beg int, line string) bool {
 func isTable(beg int, line string) bool {
 	end := len(line) - 1
 	return end != beg && line[beg] == '|' && line[end] == '|'
+}
+
+func checkForInlineClose(line string) int {
+	n := len(line)
+
+	if n > len(TagCodeBlock) && line[n-len(TagCodeBlock):] == TagCodeBlock {
+		return n - len(TagCodeBlock)
+	}
+	if n > len(TagNoFormat) && line[n-len(TagNoFormat):] == TagNoFormat {
+		return n - len(TagNoFormat)
+	}
+
+	return 0
 }

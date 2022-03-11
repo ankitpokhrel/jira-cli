@@ -111,6 +111,11 @@ func TestParseTextEffectTags(t *testing.T) {
 			input:    "Line with *bold and _italic text.",
 			expected: "Line with **bold and _italic text.**\n",
 		},
+		{
+			name:     "normal sentence with semicolon should not parse as an attribute",
+			input:    "Line with semicolon {{MySQL::Conn()}}.",
+			expected: "Line with semicolon {{MySQL::Conn()}}.",
+		},
 	}
 
 	for _, tc := range cases {
@@ -502,6 +507,48 @@ fn main() {
 	println!("Hello, world!");
 }
 ` + "```\n",
+		},
+		{
+			name: "Back to back fenced code block in the list should render properly",
+			input: `1. Ordered list item A
+{code:go}
+package main
+
+func main() {
+	println("Hello, World!")
+}{code}
+
+2. Ordered list item B
+{code:go}
+// no code
+{code}`,
+			expected: "1. Ordered list item A\n\n```go" + `
+package main
+
+func main() {
+	println("Hello, World!")
+}` + "\n```\n\n2. Ordered list item B\n\n```go\n// no code" + "\n```\n",
+		},
+		{
+			name: "Back to back preformatted block in the list should render properly",
+			input: `1. Ordered list item A
+{noformat}
+package main
+
+func main() {
+	println("Hello, World!")
+}{noformat}
+
+2. Ordered list item B
+{noformat}
+// no code
+{noformat}`,
+			expected: "1. Ordered list item A\n\n```" + `
+package main
+
+func main() {
+	println("Hello, World!")
+}` + "\n```\n\n2. Ordered list item B\n\n```\n// no code" + "\n```\n",
 		},
 	}
 
