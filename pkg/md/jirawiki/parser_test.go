@@ -112,9 +112,9 @@ func TestParseTextEffectTags(t *testing.T) {
 			expected: "Line with **bold and _italic text.**\n",
 		},
 		{
-			name:     "normal sentence with semicolon should not parse as an attribute",
-			input:    "Line with semicolon {{MySQL::Conn()}}.",
-			expected: "Line with semicolon {{MySQL::Conn()}}.",
+			name:     "normal sentence with braces and semicolon should be parsed as is",
+			input:    "Line with semicolon inside curly braces {{MySQL::Conn()}}.",
+			expected: "Line with semicolon inside curly braces {{MySQL::Conn()}}.",
 		},
 	}
 
