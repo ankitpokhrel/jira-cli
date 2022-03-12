@@ -96,6 +96,7 @@ type Config struct {
 	Server   string
 	Login    string
 	APIToken string
+	AuthType AuthType
 	Insecure bool
 	Debug    bool
 }
@@ -106,6 +107,7 @@ type Client struct {
 	insecure  bool
 	server    string
 	login     string
+	authType  AuthType
 	token     string
 	timeout   time.Duration
 	debug     bool
@@ -117,10 +119,11 @@ type ClientFunc func(*Client)
 // NewClient instantiates new jira client.
 func NewClient(c Config, opts ...ClientFunc) *Client {
 	client := Client{
-		server: strings.TrimSuffix(c.Server, "/"),
-		login:  c.Login,
-		token:  c.APIToken,
-		debug:  c.Debug,
+		server:   strings.TrimSuffix(c.Server, "/"),
+		login:    c.Login,
+		token:    c.APIToken,
+		authType: c.AuthType,
+		debug:    c.Debug,
 	}
 
 	for _, opt := range opts {
@@ -234,7 +237,11 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		req.Header.Set(k, v)
 	}
 
-	req.SetBasicAuth(c.login, c.token)
+	if c.authType == AuthTypeBearer {
+		req.Header.Add("Authorization", "Bearer "+c.token)
+	} else {
+		req.SetBasicAuth(c.login, c.token)
+	}
 
 	res, err = c.transport.RoundTrip(req.WithContext(ctx))
 
