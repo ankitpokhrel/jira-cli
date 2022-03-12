@@ -24,7 +24,7 @@ func TestGet(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second), WithInsecureTLS(true))
 	resp, err := client.Get(context.Background(), "/search?jql=project=TEST%20AND%20status=Done", Header{
 		"Content-Type": "text/plain",
 	})
