@@ -330,7 +330,7 @@ func extractAttributes(token string) (string, map[string]string) {
 	}
 
 	pieces := strings.Split(token, ":")
-	if len(pieces) != 2 || len(pieces[1]) == 0 {
+	if len(pieces) != 2 || pieces[1] == "" {
 		return token, attrs
 	}
 

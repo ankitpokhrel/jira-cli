@@ -210,7 +210,7 @@ type createFieldsMarshaler struct {
 }
 
 // MarshalJSON is a custom marshaler to handle dynamic field.
-func (cfm createFieldsMarshaler) MarshalJSON() ([]byte, error) {
+func (cfm *createFieldsMarshaler) MarshalJSON() ([]byte, error) {
 	m, err := json.Marshal(cfm.M)
 	if err != nil {
 		return m, err

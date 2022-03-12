@@ -262,7 +262,7 @@ func (tr *MarkdownTranslator) setOpenTagAttributes(a interface{}) string {
 	return tag.String()
 }
 
-func (tr *MarkdownTranslator) setCloseTagAttributes(a interface{}) string {
+func (*MarkdownTranslator) setCloseTagAttributes(a interface{}) string {
 	if a == nil {
 		return ""
 	}
@@ -279,7 +279,7 @@ func (tr *MarkdownTranslator) setCloseTagAttributes(a interface{}) string {
 	return tag.String()
 }
 
-func (tr *MarkdownTranslator) isValidAttr(attr string) bool {
+func (*MarkdownTranslator) isValidAttr(attr string) bool {
 	known := []string{"language", "level", "text"}
 	for _, k := range known {
 		if k == attr {

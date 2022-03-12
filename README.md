@@ -108,7 +108,7 @@ See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more 
 2. Run `jira init`, select installation type as `Cloud`, and provide required details to generate a config file required
    for the tool.
 
-#### On-premise Installation
+#### On-premise installation
 
 1. Export required environment variables:
    - If you are using basic auth, export the `password` you use to login to Jira as a `JIRA_API_TOKEN` variable.
@@ -125,7 +125,7 @@ See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more 
 
 See [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs) for frequently asked questions.
 
-#### Authentication Types
+#### Authentication types
 
 The tool supports `basic` and `bearer` (Personal Access Token) authentication types at the moment. Basic auth is used by
 default. If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.

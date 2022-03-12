@@ -35,7 +35,7 @@ type issueFlagParser struct {
 	orderBy       string
 }
 
-func (tfp issueFlagParser) GetBool(name string) (bool, error) {
+func (tfp *issueFlagParser) GetBool(name string) (bool, error) {
 	if tfp.err.history && name == "history" {
 		return false, fmt.Errorf("oops! couldn't fetch history flag")
 	}
@@ -55,7 +55,7 @@ func (tfp issueFlagParser) GetBool(name string) (bool, error) {
 }
 
 //nolint:gocyclo
-func (tfp issueFlagParser) GetString(name string) (string, error) {
+func (tfp *issueFlagParser) GetString(name string) (string, error) {
 	if tfp.err.resolution && name == "resolution" {
 		return "", fmt.Errorf("oops! couldn't fetch resolution flag")
 	}
@@ -102,15 +102,15 @@ func (tfp issueFlagParser) GetString(name string) (string, error) {
 	return "test", nil
 }
 
-func (tfp issueFlagParser) GetStringArray(name string) ([]string, error) {
+func (tfp *issueFlagParser) GetStringArray(name string) ([]string, error) {
 	if tfp.err.labels && name == "label" {
 		return []string{}, fmt.Errorf("oops! couldn't fetch label flag")
 	}
 	return tfp.labels, nil
 }
 
-func (tfp issueFlagParser) GetUint(string) (uint, error) { return 100, nil }
-func (tfp issueFlagParser) Set(string, string) error     { return nil }
+func (*issueFlagParser) GetUint(string) (uint, error) { return 100, nil }
+func (*issueFlagParser) Set(string, string) error     { return nil }
 
 func TestIssueGet(t *testing.T) {
 	cases := []struct {

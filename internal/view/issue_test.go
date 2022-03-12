@@ -222,7 +222,7 @@ func TestSeparator(t *testing.T) {
 		expected256 string
 	}{
 		{
-			name:        "it returns striaght horizontal bar for empty message",
+			name:        "it returns straight horizontal bar for empty message",
 			body:        "",
 			expected:    "\x1b[0;90m————————————————————————————————————————————————\x1b[0m",
 			expected256: "\x1b[38;5;242m————————————————————————————————————————————————\x1b[m",
