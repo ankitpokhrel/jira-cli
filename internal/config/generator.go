@@ -48,7 +48,7 @@ type JiraCLIConfig struct {
 		installation string
 		server       string
 		login        string
-		bearer       bool
+		authType     jira.AuthType
 		project      *projectConf
 		board        *jira.Board
 		epic         *jira.Epic
@@ -144,22 +144,6 @@ func (c *JiraCLIConfig) configureInstallationType() error {
 
 	c.value.installation = installation
 
-	qs = &survey.Select{
-		Message: "Auth type:",
-		Help:    "Contains the JIRA_API_TOKEN password or bearer api token?",
-		Options: []string{"password", "bearer"},
-		Default: "password",
-	}
-
-	var authType string
-	if err := survey.AskOne(qs, &authType); err != nil {
-		return err
-	}
-
-	if authType == "bearer" {
-		c.value.bearer = true
-	}
-
 	return nil
 }
 
@@ -221,28 +205,26 @@ func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
 			},
 		})
 	} else if c.value.installation == jira.InstallationTypeLocal {
-		if !c.value.bearer {
-			qs = append(qs, &survey.Question{
-				Name: "login",
-				Prompt: &survey.Input{
-					Message: "Login username:",
-					Help:    "This is the username you use to login to your jira account.",
-				},
-				Validate: func(val interface{}) error {
-					errInvalidUser := fmt.Errorf("not a valid user")
+		qs = append(qs, &survey.Question{
+			Name: "login",
+			Prompt: &survey.Input{
+				Message: "Login username:",
+				Help:    "This is the username you use to login to your jira account.",
+			},
+			Validate: func(val interface{}) error {
+				errInvalidUser := fmt.Errorf("not a valid user")
 
-					str, ok := val.(string)
-					if !ok {
-						return errInvalidUser
-					}
-					if len(str) < 3 || len(str) > 254 {
-						return errInvalidUser
-					}
+				str, ok := val.(string)
+				if !ok {
+					return errInvalidUser
+				}
+				if len(str) < 3 || len(str) > 254 {
+					return errInvalidUser
+				}
 
-					return nil
-				},
-			})
-		}
+				return nil
+			},
+		})
 	}
 
 	ans := struct {
@@ -267,12 +249,12 @@ func (c *JiraCLIConfig) verifyLoginDetails(server, login string) error {
 		Server:   server,
 		Login:    login,
 		Insecure: c.insecure,
-		Bearer:   &c.value.bearer,
+		AuthType: c.value.authType,
 		Debug:    viper.GetBool("debug"),
 	})
 	if ret, err := c.jiraClient.Me(); err != nil {
 		return err
-	} else if c.value.bearer {
+	} else if c.value.authType == jira.AuthTypeBearer {
 		login = ret.Login
 	}
 
@@ -487,7 +469,6 @@ func (c *JiraCLIConfig) write(path string) (string, error) {
 	config.Set("installation", c.value.installation)
 	config.Set("server", c.value.server)
 	config.Set("login", c.value.login)
-	config.Set("bearer", c.value.bearer)
 	config.Set("project", c.value.project)
 	config.Set("epic", c.value.epic)
 	config.Set("issue.types", c.value.issueTypes)

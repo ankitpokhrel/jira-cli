@@ -110,8 +110,11 @@ See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more 
 
 #### On-premise Installation
 
-1. Export the password you use to login to Jira as a `JIRA_API_TOKEN` variable. Add it to your shell configuration file,
-   for instance, `$HOME/.bashrc`, so that the variable is always available.
+1. Export required environment variables:
+   - If you are using basic auth, export the `password` you use to login to Jira as a `JIRA_API_TOKEN` variable.
+   - If you are using personal access token (PAT), get the `token` from your jira profile and export it as
+     a `JIRA_API_TOKEN` variable. In addition to this, set `JIRA_AUTH_TYPE` env to `bearer`.
+   - Add these ENVs to your shell configuration file, for instance, `$HOME/.bashrc`, so that they are always available.
 2. Run `jira init`, select installation type as `Local`, and provide required details to generate a config file required
    for the tool.
 
@@ -121,6 +124,11 @@ See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more 
    to get the expected behavior.
 
 See [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs) for frequently asked questions.
+
+#### Authentication Types
+
+The tool supports `basic` and `bearer` (Personal Access Token) authentication types at the moment. Basic auth is used by
+default. If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
 
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.

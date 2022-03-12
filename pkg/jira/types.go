@@ -4,6 +4,26 @@ import (
 	"encoding/json"
 )
 
+const (
+	// AuthTypeBasic is a basic auth.
+	AuthTypeBasic AuthType = "basic"
+	// AuthTypeBearer is a bearer auth.
+	AuthTypeBearer AuthType = "bearer"
+)
+
+// AuthType is a jira authentication type.
+// Currently supports basic and bearer (PAT).
+// Defaults to basic for empty or invalid value.
+type AuthType string
+
+// String implements stringer interface.
+func (at AuthType) String() string {
+	if at == "" {
+		return string(AuthTypeBasic)
+	}
+	return string(at)
+}
+
 // Project holds project info.
 type Project struct {
 	Key  string `json:"key"`
