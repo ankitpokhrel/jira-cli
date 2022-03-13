@@ -3,6 +3,8 @@ package api
 import (
 	"time"
 
+	"github.com/ankitpokhrel/jira-cli/pkg/envrc"
+
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -28,6 +30,11 @@ func Client(config jira.Config) *jira.Client {
 	if config.APIToken == "" {
 		config.APIToken = viper.GetString("api_token")
 	}
+	if config.APIToken == "" {
+		token, _ := envrc.ReadEnvrcToken(config.Server)
+		config.APIToken = token
+	}
+
 	if config.AuthType == "" {
 		config.AuthType = jira.AuthType(viper.GetString("auth_type"))
 	}

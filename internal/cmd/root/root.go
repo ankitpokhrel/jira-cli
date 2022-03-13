@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ankitpokhrel/jira-cli/pkg/envrc"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -69,7 +71,7 @@ func NewCmdRoot() *cobra.Command {
 				return
 			}
 
-			checkForJiraToken()
+			checkForJiraToken(viper.GetString("server"))
 
 			configFile := viper.ConfigFileUsed()
 			if !jiraConfig.Exists(configFile) {
@@ -142,8 +144,13 @@ func cmdRequireToken(cmd string) bool {
 	return true
 }
 
-func checkForJiraToken() {
+func checkForJiraToken(server string) {
 	if os.Getenv("JIRA_API_TOKEN") != "" {
+		return
+	}
+
+	jiraEnvrcToken, _ := envrc.ReadEnvrcToken(server)
+	if jiraEnvrcToken != "" {
 		return
 	}
 

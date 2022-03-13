@@ -1,6 +1,8 @@
 package envrc
 
 import (
+	"errors"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -11,6 +13,22 @@ type netrcLine struct {
 	machine  string
 	login    string
 	password string
+}
+
+func ReadEnvrcToken(serverURL string) (string, error) {
+	URL, err := url.ParseRequestURI(serverURL)
+	netrcLines, err := readNetrc()
+	if err != nil {
+		return "", err
+	}
+
+	for _, line := range netrcLines {
+		if line.machine == URL.Host {
+			return line.password, nil
+		}
+	}
+
+	return "", errors.New("envrc token not found")
 }
 
 func readNetrc() ([]netrcLine, error) {

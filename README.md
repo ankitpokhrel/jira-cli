@@ -111,10 +111,11 @@ See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more 
 #### On-premise installation
 
 1. Export required environment variables:
-   - If you are using basic auth, export the `password` you use to login to Jira as a `JIRA_API_TOKEN` variable.
+   - If you are using basic auth, export the `password` you use to login to Jira as a JIRA_API_TOKEN variable.
    - If you are using personal access token (PAT), get the `token` from your jira profile and export it as
      a `JIRA_API_TOKEN` variable. In addition to this, set `JIRA_AUTH_TYPE` env to `bearer`.
    - Add these ENVs to your shell configuration file, for instance, `$HOME/.bashrc`, so that they are always available.
+   - Alternatively, you might want to define JIRA server and users details in your .envrc and jira-cli will attempt to read them.
 2. Run `jira init`, select installation type as `Local`, and provide required details to generate a config file required
    for the tool.
 
