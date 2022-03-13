@@ -31,7 +31,7 @@ func Client(config jira.Config) *jira.Client {
 		config.APIToken = viper.GetString("api_token")
 	}
 	if config.APIToken == "" {
-		token, _ := envrc.ReadEnvrcToken(config.Server)
+		token, _ := envrc.ReadEnvrcPassword(config.Server, config.Login)
 		config.APIToken = token
 	}
 

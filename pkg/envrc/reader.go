@@ -15,15 +15,20 @@ type netrcLine struct {
 	password string
 }
 
-func ReadEnvrcToken(serverURL string) (string, error) {
+// ReadEnvrcPassword retrieves password for the desired server and login.
+func ReadEnvrcPassword(serverURL string, login string) (string, error) {
 	URL, err := url.ParseRequestURI(serverURL)
+	if err != nil {
+		return "", err
+	}
+
 	netrcLines, err := readNetrc()
 	if err != nil {
 		return "", err
 	}
 
 	for _, line := range netrcLines {
-		if line.machine == URL.Host {
+		if line.machine == URL.Host && line.login == login {
 			return line.password, nil
 		}
 	}
@@ -33,7 +38,6 @@ func ReadEnvrcToken(serverURL string) (string, error) {
 
 func readNetrc() ([]netrcLine, error) {
 	path, err := netrcPath()
-
 	if err != nil {
 		return []netrcLine{}, err
 	}

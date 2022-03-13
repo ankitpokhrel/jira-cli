@@ -71,7 +71,7 @@ func NewCmdRoot() *cobra.Command {
 				return
 			}
 
-			checkForJiraToken(viper.GetString("server"))
+			checkForJiraToken(viper.GetString("server"), viper.GetString("login"))
 
 			configFile := viper.ConfigFileUsed()
 			if !jiraConfig.Exists(configFile) {
@@ -144,12 +144,12 @@ func cmdRequireToken(cmd string) bool {
 	return true
 }
 
-func checkForJiraToken(server string) {
+func checkForJiraToken(server string, login string) {
 	if os.Getenv("JIRA_API_TOKEN") != "" {
 		return
 	}
 
-	jiraEnvrcToken, _ := envrc.ReadEnvrcToken(server)
+	jiraEnvrcToken, _ := envrc.ReadEnvrcPassword(server, login)
 	if jiraEnvrcToken != "" {
 		return
 	}
@@ -158,7 +158,9 @@ func checkForJiraToken(server string) {
 
 You can generate a token using this link: %s
 
-After generating the token, export it to your shell and run 'jira init' if you haven't already.`, jiraAPITokenLink)
+After generating the token, export it to your shell and run 'jira init' if you haven't already.
+
+Alternatively, you might want to define JIRA server and user details in your .envrc and jira-cli will attempt to read them.`, jiraAPITokenLink)
 
 	fmt.Fprintf(os.Stderr, "%s\n", msg)
 	os.Exit(1)
