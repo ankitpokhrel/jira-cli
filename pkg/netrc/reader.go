@@ -19,22 +19,21 @@ var (
 // ReadNetrcPassword retrieves password for the desired server and login.
 // We just borrowed original code due to its internal nature, it is original implementation of .netrc read in Go
 // https://github.com/golang/go/blob/master/src/cmd/go/internal/auth/netrc.go
-func ReadNetrcPassword(serverURL string, login string) (string, error) {
-	URL, err := url.ParseRequestURI(serverURL)
+func ReadNetrcPassword(jiraServer string, login string) (string, error) {
+	netrcOnce.Do(func() {
+		readNetrc()
+	})
+	if netrcErr != nil {
+		return "", netrcErr
+	}
+
+	jiraServerURL, err := url.ParseRequestURI(jiraServer)
 	if err != nil {
 		return "", err
 	}
 
-	netrcOnce.Do(func() {
-		readNetrc()
-	})
-
-	if netrcErr != nil {
-		return "", err
-	}
-
 	for _, line := range netrc {
-		if line.machine == URL.Host && line.login == login {
+		if line.machine == jiraServerURL.Host && line.login == login {
 			return line.password, nil
 		}
 	}
@@ -73,8 +72,9 @@ func parseNetrc(data string) []netrcLine {
 			switch f[i] {
 			case "machine":
 				l = netrcLine{machine: f[i+1]}
-			case "default":
-				break
+			// Commenting redundant case default below to avoid CI failures
+			// case "default":
+			//	break
 			case "login":
 				l.login = f[i+1]
 			case "password":
