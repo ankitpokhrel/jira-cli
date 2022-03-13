@@ -27,6 +27,13 @@ func Test_parseNetrc(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "does not parse incomplete envrc",
+			args: args{
+				data: "machine test.sample.org\npassword mypassword",
+			},
+			want: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
