@@ -3,7 +3,7 @@ package api
 import (
 	"time"
 
-	"github.com/ankitpokhrel/jira-cli/pkg/envrc"
+	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
 
 	"github.com/spf13/viper"
 
@@ -31,7 +31,7 @@ func Client(config jira.Config) *jira.Client {
 		config.APIToken = viper.GetString("api_token")
 	}
 	if config.APIToken == "" {
-		token, _ := envrc.ReadEnvrcPassword(config.Server, config.Login)
+		token, _ := netrc.ReadNetrcPassword(config.Server, config.Login)
 		config.APIToken = token
 	}
 

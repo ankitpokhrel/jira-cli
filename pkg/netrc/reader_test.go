@@ -1,4 +1,4 @@
-package envrc
+package netrc
 
 import (
 	"reflect"
@@ -28,7 +28,7 @@ func Test_parseNetrc(t *testing.T) {
 			},
 		},
 		{
-			name: "does not parse incomplete envrc",
+			name: "does not parse incomplete netrc",
 			args: args{
 				data: "machine test.sample.org\npassword mypassword",
 			},

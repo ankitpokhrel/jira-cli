@@ -1,4 +1,4 @@
-package envrc
+package netrc
 
 import (
 	"errors"
@@ -15,8 +15,8 @@ type netrcLine struct {
 	password string
 }
 
-// ReadEnvrcPassword retrieves password for the desired server and login.
-func ReadEnvrcPassword(serverURL string, login string) (string, error) {
+// ReadNetrcPassword retrieves password for the desired server and login.
+func ReadNetrcPassword(serverURL string, login string) (string, error) {
 	URL, err := url.ParseRequestURI(serverURL)
 	if err != nil {
 		return "", err

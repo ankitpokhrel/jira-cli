@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ankitpokhrel/jira-cli/pkg/envrc"
+	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -149,7 +149,7 @@ func checkForJiraToken(server string, login string) {
 		return
 	}
 
-	jiraEnvrcToken, _ := envrc.ReadEnvrcPassword(server, login)
+	jiraEnvrcToken, _ := netrc.ReadNetrcPassword(server, login)
 	if jiraEnvrcToken != "" {
 		return
 	}
@@ -160,7 +160,7 @@ You can generate a token using this link: %s
 
 After generating the token, export it to your shell and run 'jira init' if you haven't already.
 
-Alternatively, you might want to define JIRA server and user details in your .envrc and jira-cli will attempt to read them.`, jiraAPITokenLink)
+Alternatively, you might want to define JIRA server and user details in your .netrc and jira-cli will attempt to read them.`, jiraAPITokenLink)
 
 	fmt.Fprintf(os.Stderr, "%s\n", msg)
 	os.Exit(1)
