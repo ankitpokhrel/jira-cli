@@ -97,8 +97,6 @@ func parseNetrc(data string) []netrcLine {
 			switch f[i] {
 			case "machine":
 				l = netrcLine{machine: f[i+1]}
-			case "default":
-				break
 			case "login":
 				l.login = f[i+1]
 			case "password":
