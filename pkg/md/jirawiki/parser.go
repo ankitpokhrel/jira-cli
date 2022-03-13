@@ -404,6 +404,11 @@ func (t *Token) handleList(line string, out *strings.Builder) int {
 		out.WriteRune('\t')
 	}
 
+	if end >= len(line) {
+		out.WriteString("-")
+		return t.endIdx
+	}
+
 	rem := strings.TrimSpace(line[end:])
 	out.WriteString(fmt.Sprintf("- %s", rem))
 
