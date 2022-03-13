@@ -168,13 +168,13 @@ func TestParseListTags(t *testing.T) {
 `,
 		},
 		{
-			name: "empty list",
+			name: "empty sublist",
 			input: `* Item 1
- ** Subitem 1
- **`,
+** Subitem 1
+**`,
 			expected: `- Item 1
 	- Subitem 1
-	- 
+	-
 `,
 		},
 	}
