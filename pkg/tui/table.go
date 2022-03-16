@@ -176,7 +176,7 @@ func (t *Table) initTable() {
 			}
 		}).
 		SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
-			if ev.Rune() == 'r' {
+			if ev.Key() == tcell.KeyCtrlR || ev.Key() == tcell.KeyF5 {
 				if t.refreshFunc == nil {
 					return ev
 				}
