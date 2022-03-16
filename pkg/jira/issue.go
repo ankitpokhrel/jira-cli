@@ -228,6 +228,47 @@ func (c *Client) LinkIssue(inwardIssue, outwardIssue, linkType string) error {
 	return nil
 }
 
+type remoteLinkObject struct {
+	Url   string `json:"url"`
+	Title string `json:"title"`
+}
+
+type remoteLinkRequest struct {
+	Object remoteLinkObject `json:"object"`
+}
+
+// AddIssueRemoteLink creates or updates remote link object on a given issue using POST /issue/{key}/remotelink endpoint.
+func (c *Client) AddIssueRemoteLink(key, url, title string) error {
+	body, err := json.Marshal(remoteLinkRequest{
+		Object: remoteLinkObject{
+			Url:   url,
+			Title: title,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	res, err := c.Post(context.Background(), fmt.Sprintf("/issue/%s/remotelink", key), body, Header{
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	})
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	switch res.StatusCode {
+	case http.StatusOK, http.StatusCreated:
+		return nil
+	default:
+		return formatUnexpectedResponse(res)
+	}
+}
+
 type issueCommentRequest struct {
 	Body string `json:"body"`
 }
