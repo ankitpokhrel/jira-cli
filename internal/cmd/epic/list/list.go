@@ -147,6 +147,9 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 		Server:  server,
 		Total:   total,
 		Data:    issues,
+		Refresh: func() {
+			singleEpicView(flags, key, project, projectType, server, client)
+		},
 		Display: view.DisplayFormat{
 			Plain:      plain,
 			NoHeaders:  noHeaders,
