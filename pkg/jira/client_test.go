@@ -187,3 +187,23 @@ func TestPutV2(t *testing.T) {
 
 	_ = resp.Body.Close()
 }
+
+func TestDeleteV2(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/2/issue/TEST-1", r.URL.Path)
+		assert.Equal(t, "jira-cli", r.Header.Get("X-Requested-By"))
+
+		w.WriteHeader(204)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+	resp, err := client.DeleteV2(context.Background(), "/issue/TEST-1", Header{
+		"X-Requested-By": "jira-cli",
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, 204, resp.StatusCode)
+
+	_ = resp.Body.Close()
+}

@@ -7,6 +7,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/clone"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/comment"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/create"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/delete"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/edit"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/link"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/list"
@@ -32,7 +33,7 @@ func NewCmdIssue() *cobra.Command {
 
 	cmd.AddCommand(
 		lc, cc, edit.NewCmdEdit(), move.NewCmdMove(), view.NewCmdView(), assign.NewCmdAssign(),
-		link.NewCmdLink(), comment.NewCmdComment(), clone.NewCmdClone(),
+		link.NewCmdLink(), comment.NewCmdComment(), clone.NewCmdClone(), delete.NewCmdDelete(),
 	)
 
 	list.SetFlags(lc)
