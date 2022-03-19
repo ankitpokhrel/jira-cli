@@ -301,6 +301,33 @@ func TestLinkIssue(t *testing.T) {
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
+func TestAddIssueRemoteLink(t *testing.T) {
+	var unexpectedStatusCode bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/3/issue/TEST-1/remotelink", r.URL.Path)
+		assert.Equal(t, "application/json", r.Header.Get("Accept"))
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+		if unexpectedStatusCode {
+			w.WriteHeader(400)
+		} else {
+			w.WriteHeader(201)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	err := client.AddIssueRemoteLink("TEST-1", "https://example.com", "Example")
+	assert.NoError(t, err)
+
+	unexpectedStatusCode = true
+
+	err = client.AddIssueRemoteLink("TEST-1", "https://example.com", "")
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
 func TestAddIssueComment(t *testing.T) {
 	var unexpectedStatusCode bool
 
