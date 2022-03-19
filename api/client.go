@@ -31,8 +31,10 @@ func Client(config jira.Config) *jira.Client {
 		config.APIToken = viper.GetString("api_token")
 	}
 	if config.APIToken == "" {
-		token, _ := netrc.ReadNetrcPassword(config.Server, config.Login)
-		config.APIToken = token
+		netrcConfig, _ := netrc.Read(config.Server, config.Login)
+		if netrcConfig != nil {
+			config.APIToken = netrcConfig.Password
+		}
 	}
 
 	if config.AuthType == "" {

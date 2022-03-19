@@ -149,8 +149,9 @@ func checkForJiraToken(server string, login string) {
 		return
 	}
 
-	jiraNetrcToken, _ := netrc.ReadNetrcPassword(server, login)
-	if jiraNetrcToken != "" {
+	netrcConfig, _ := netrc.Read(server, login)
+	if netrcConfig != nil {
+		fmt.Println("Somehow config was not nil")
 		return
 	}
 
