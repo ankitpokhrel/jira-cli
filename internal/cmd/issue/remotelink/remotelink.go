@@ -50,7 +50,7 @@ func remoteLink(cmd *cobra.Command, args []string) {
 	}
 
 	cmdutil.ExitIfError(lc.setIssueKey(project))
-	cmdutil.ExitIfError(lc.setRemoteLinkURL(project))
+	cmdutil.ExitIfError(lc.setRemoteLinkURL())
 	cmdutil.ExitIfError(lc.setRemoteLinkTitle())
 
 	err := func() error {
@@ -129,7 +129,7 @@ func (lc *remoteLinkCmd) setIssueKey(project string) error {
 	return nil
 }
 
-func (lc *remoteLinkCmd) setRemoteLinkURL(project string) error {
+func (lc *remoteLinkCmd) setRemoteLinkURL() error {
 	if lc.params.remoteLinkURL != "" {
 		return nil
 	}
