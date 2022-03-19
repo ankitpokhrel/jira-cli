@@ -229,7 +229,7 @@ func (c *Client) LinkIssue(inwardIssue, outwardIssue, linkType string) error {
 }
 
 type remoteLinkObject struct {
-	Url   string `json:"url"`
+	URL   string `json:"url"`
 	Title string `json:"title"`
 }
 
@@ -241,7 +241,7 @@ type remoteLinkRequest struct {
 func (c *Client) AddIssueRemoteLink(key, url, title string) error {
 	body, err := json.Marshal(remoteLinkRequest{
 		Object: remoteLinkObject{
-			Url:   url,
+			URL:   url,
 			Title: title,
 		},
 	})

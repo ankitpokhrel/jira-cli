@@ -50,20 +50,20 @@ func remoteLink(cmd *cobra.Command, args []string) {
 	}
 
 	cmdutil.ExitIfError(lc.setIssueKey(project))
-	cmdutil.ExitIfError(lc.setRemoteLinkUrl(project))
+	cmdutil.ExitIfError(lc.setRemoteLinkURL(project))
 	cmdutil.ExitIfError(lc.setRemoteLinkTitle())
 
 	err := func() error {
 		s := cmdutil.Info("Linking url")
 		defer s.Stop()
 
-		return client.AddIssueRemoteLink(lc.params.issueKey, lc.params.remoteLinkUrl, lc.params.remoteLinkTitle)
+		return client.AddIssueRemoteLink(lc.params.issueKey, lc.params.remoteLinkURL, lc.params.remoteLinkTitle)
 	}()
 	cmdutil.ExitIfError(err)
 
 	server := viper.GetString("server")
 
-	cmdutil.Success("Remote link \"%s\"(%s) added", lc.params.remoteLinkTitle, lc.params.remoteLinkUrl)
+	cmdutil.Success("Remote link \"%s\"(%s) added", lc.params.remoteLinkTitle, lc.params.remoteLinkURL)
 	fmt.Printf("%s/browse/%s\n", server, lc.params.issueKey)
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
@@ -74,20 +74,20 @@ func remoteLink(cmd *cobra.Command, args []string) {
 
 type remoteLinkParams struct {
 	issueKey        string
-	remoteLinkUrl   string
+	remoteLinkURL   string
 	remoteLinkTitle string
 	debug           bool
 }
 
 func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *remoteLinkParams {
-	var issueKey, remoteLinkUrl, remoteLinkTitle string
+	var issueKey, remoteLinkURL, remoteLinkTitle string
 
 	nargs := len(args)
 	if nargs >= 1 {
 		issueKey = cmdutil.GetJiraIssueKey(project, args[0])
 	}
 	if nargs >= 2 {
-		remoteLinkUrl = args[1]
+		remoteLinkURL = args[1]
 	}
 	if nargs >= 3 {
 		remoteLinkTitle = args[2]
@@ -98,7 +98,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *r
 
 	return &remoteLinkParams{
 		issueKey:        issueKey,
-		remoteLinkUrl:   remoteLinkUrl,
+		remoteLinkURL:   remoteLinkURL,
 		remoteLinkTitle: remoteLinkTitle,
 		debug:           debug,
 	}
@@ -129,8 +129,8 @@ func (lc *remoteLinkCmd) setIssueKey(project string) error {
 	return nil
 }
 
-func (lc *remoteLinkCmd) setRemoteLinkUrl(project string) error {
-	if lc.params.remoteLinkUrl != "" {
+func (lc *remoteLinkCmd) setRemoteLinkURL(project string) error {
+	if lc.params.remoteLinkURL != "" {
 		return nil
 	}
 
@@ -144,7 +144,7 @@ func (lc *remoteLinkCmd) setRemoteLinkUrl(project string) error {
 	if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {
 		return err
 	}
-	lc.params.remoteLinkUrl = ans
+	lc.params.remoteLinkURL = ans
 
 	return nil
 }
