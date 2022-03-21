@@ -138,7 +138,7 @@ The lists are displayed in an interactive UI by default.
 - Use arrow keys or `j, k, h, l` characters to navigate through the list.
 - Use `g` and `SHIFT+G` to quickly navigate to the top and bottom respectively.
 - Press `v` to view selected issue details.
-- Press `CTRL+R` to refresh issues list.
+- Press `CTRL+R` or `F5` to refresh issues list.
 - Hit `ENTER` to open the selected issue in the browser.
 - Press `c` to copy issue URL to the system clipboard. This requires `xclip` / `xsel` in linux.
 - Press `CTRL+K` to copy issue key to the system clipboard.

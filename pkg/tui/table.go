@@ -21,7 +21,7 @@ type SelectedFunc func(row, column int, data interface{})
 // ViewModeFunc sets view mode handler func which gets triggered when a user press 'v'.
 type ViewModeFunc func(row, col int, data interface{}) (func() interface{}, func(data interface{}) (string, error))
 
-// RefreshFunc is fired when a user press 'CTRL+R' character in the table.
+// RefreshFunc is fired when a user press 'CTRL+R' or `F5` character in the table.
 type RefreshFunc func()
 
 // CopyFunc is fired when a user press 'c' character in the table cell.
@@ -119,7 +119,7 @@ func WithViewModeFunc(fn ViewModeFunc) TableOption {
 	}
 }
 
-// WithRefreshFunc sets a func that is triggered when a user press 'CTRL+R'.
+// WithRefreshFunc sets a func that is triggered when a user press 'CTRL+R' or 'F5'.
 func WithRefreshFunc(fn RefreshFunc) TableOption {
 	return func(t *Table) {
 		t.refreshFunc = fn
