@@ -60,6 +60,10 @@ func NewCmdList() *cobra.Command {
 
 // List displays a list view.
 func List(cmd *cobra.Command, _ []string) {
+	loadList(cmd)
+}
+
+func loadList(cmd *cobra.Command) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
 
@@ -113,6 +117,9 @@ func List(cmd *cobra.Command, _ []string) {
 		Server:  server,
 		Total:   total,
 		Data:    issues,
+		Refresh: func() {
+			loadList(cmd)
+		},
 		Display: view.DisplayFormat{
 			Plain:      plain,
 			NoHeaders:  noHeaders,

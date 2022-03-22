@@ -33,6 +33,7 @@ type IssueList struct {
 	Server     string
 	Data       []*jira.Issue
 	Display    DisplayFormat
+	Refresh    tui.RefreshFunc
 	FooterText string
 }
 
@@ -76,6 +77,7 @@ func (l *IssueList) Render() error {
 		}),
 		tui.WithCopyFunc(copyURL(l.Server)),
 		tui.WithCopyKeyFunc(copyKey()),
+		tui.WithRefreshFunc(l.Refresh),
 	)
 
 	return view.Paint(data)

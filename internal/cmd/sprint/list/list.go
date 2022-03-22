@@ -152,6 +152,9 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 		Total:      total,
 		Data:       issues,
 		FooterText: ft,
+		Refresh: func() {
+			singleSprintView(flags, boardID, sprintID, project, server, client, nil)
+		},
 		Display: view.DisplayFormat{
 			Plain:      plain,
 			NoHeaders:  noHeaders,
