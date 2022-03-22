@@ -115,6 +115,7 @@ See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more 
    - If you are using personal access token (PAT), get the `token` from your jira profile and export it as
      a `JIRA_API_TOKEN` variable. In addition to this, set `JIRA_AUTH_TYPE` env to `bearer`.
    - Add these ENVs to your shell configuration file, for instance, `$HOME/.bashrc`, so that they are always available.
+   - Alternatively, you might want to define JIRA server and user details in your `.netrc` and it will be read as a fallback to `JIRA_API_TOKEN` variable.
 2. Run `jira init`, select installation type as `Local`, and provide required details to generate a config file required
    for the tool.
 

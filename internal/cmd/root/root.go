@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -69,7 +71,7 @@ func NewCmdRoot() *cobra.Command {
 				return
 			}
 
-			checkForJiraToken()
+			checkForJiraToken(viper.GetString("server"), viper.GetString("login"))
 
 			configFile := viper.ConfigFileUsed()
 			if !jiraConfig.Exists(configFile) {
@@ -142,8 +144,14 @@ func cmdRequireToken(cmd string) bool {
 	return true
 }
 
-func checkForJiraToken() {
+func checkForJiraToken(server string, login string) {
 	if os.Getenv("JIRA_API_TOKEN") != "" {
+		return
+	}
+
+	netrcConfig, _ := netrc.Read(server, login)
+	if netrcConfig != nil {
+		fmt.Println("Somehow config was not nil")
 		return
 	}
 
@@ -151,7 +159,9 @@ func checkForJiraToken() {
 
 You can generate a token using this link: %s
 
-After generating the token, export it to your shell and run 'jira init' if you haven't already.`, jiraAPITokenLink)
+After generating the token, export it to your shell and run 'jira init' if you haven't already.
+
+Alternatively, you might want to define JIRA server and user details in your .netrc and jira-cli will attempt to read them.`, jiraAPITokenLink)
 
 	fmt.Fprintf(os.Stderr, "%s\n", msg)
 	os.Exit(1)

@@ -3,6 +3,8 @@ package api
 import (
 	"time"
 
+	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
+
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -28,6 +30,13 @@ func Client(config jira.Config) *jira.Client {
 	if config.APIToken == "" {
 		config.APIToken = viper.GetString("api_token")
 	}
+	if config.APIToken == "" {
+		netrcConfig, _ := netrc.Read(config.Server, config.Login)
+		if netrcConfig != nil {
+			config.APIToken = netrcConfig.Password
+		}
+	}
+
 	if config.AuthType == "" {
 		config.AuthType = jira.AuthType(viper.GetString("auth_type"))
 	}
