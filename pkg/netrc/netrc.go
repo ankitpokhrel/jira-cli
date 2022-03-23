@@ -21,9 +21,7 @@ type Entry struct {
 
 // Read reads config for the given machine.
 func Read(machine string, login string) (*Entry, error) {
-	netrcOnce.Do(func() {
-		readNetrc()
-	})
+	netrcOnce.Do(readNetrc)
 	if netrcErr != nil {
 		return nil, netrcErr
 	}
