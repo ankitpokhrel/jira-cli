@@ -79,7 +79,7 @@ func NewJiraCLIConfig(opts ...JiraCLIConfigFunc) *JiraCLIConfig {
 	return &cfg
 }
 
-// WithInsecureTLS is a functional opt to set TLS certificate verfication option.
+// WithInsecureTLS is a functional opt to set TLS certificate verification option.
 func WithInsecureTLS(ins bool) JiraCLIConfigFunc {
 	return func(c *JiraCLIConfig) {
 		c.insecure = ins

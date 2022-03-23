@@ -151,7 +151,6 @@ func checkForJiraToken(server string, login string) {
 
 	netrcConfig, _ := netrc.Read(server, login)
 	if netrcConfig != nil {
-		fmt.Println("Somehow config was not nil")
 		return
 	}
 
@@ -161,7 +160,7 @@ You can generate a token using this link: %s
 
 After generating the token, export it to your shell and run 'jira init' if you haven't already.
 
-Alternatively, you might want to define JIRA server and user details in your .netrc and jira-cli will attempt to read them.`, jiraAPITokenLink)
+Alternatively, you can use .netrc file to define required machine details.`, jiraAPITokenLink)
 
 	fmt.Fprintf(os.Stderr, "%s\n", msg)
 	os.Exit(1)
