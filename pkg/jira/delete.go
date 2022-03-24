@@ -6,9 +6,14 @@ import (
 	"net/http"
 )
 
-// Delete deletes an issue using /issue/{key} endpoint.
-func (c *Client) Delete(key string) error {
-	res, err := c.DeleteV2(context.Background(), fmt.Sprintf("/issue/%s", key), nil)
+// DeleteIssue deletes an issue using /issue/{key} endpoint.
+func (c *Client) DeleteIssue(key string, cascade bool) error {
+	path := fmt.Sprintf("/issue/%s", key)
+	if cascade {
+		path = fmt.Sprintf("%s?deleteSubtasks=true", path)
+	}
+
+	res, err := c.DeleteV2(context.Background(), path, nil)
 	if err != nil {
 		return err
 	}

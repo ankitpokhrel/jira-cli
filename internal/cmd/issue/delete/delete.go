@@ -14,9 +14,11 @@ import (
 )
 
 const (
-	helpText = `Delete deletes an issue. To delete an issue with subtasks, use '--cascade' flag.`
+	helpText = `Delete deletes an issue. To delete a task with subtasks, use '--cascade' flag.`
 	examples = `$ jira issue delete ISSUE-1
-$ jira issue delete ISSUE-1 --force`
+
+# Delete task along with all of its subtasks
+$ jira issue delete ISSUE-1 --cascade`
 )
 
 // NewCmdDelete is a delete command.
@@ -54,7 +56,7 @@ func del(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info(fmt.Sprintf("Removing issue \"%s\"", mc.params.key))
 		defer s.Stop()
 
-		return client.Delete(mc.params.key)
+		return client.DeleteIssue(mc.params.key, mc.params.cascade)
 	}()
 	cmdutil.ExitIfError(err)
 

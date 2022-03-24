@@ -430,7 +430,7 @@ $ jira issue delete
 # Pass required parameters to skip prompt
 $ jira issue delete ISSUE-1
 
-# Delete task along with all of its subtasks.
+# Delete task along with all of its subtasks
 $ jira issue delete ISSUE-1 --cascade
 ```
 
