@@ -198,7 +198,7 @@ func constructCustomFields(fields map[string]string, data *createRequest) {
 	for key, val := range fields {
 		for _, configured := range configuredFields {
 			identifier := strings.ReplaceAll(strings.ToLower(strings.TrimSpace(configured.Name)), " ", "-")
-			if identifier != key {
+			if identifier != strings.ToLower(key) {
 				continue
 			}
 
