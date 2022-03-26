@@ -321,8 +321,6 @@ $ jira issue create --template -
 $ echo "Description from stdin" | jira issue create -s"Summary" -tTask
 ```
 
-Note: For issue description, the flag `--body/-b` always takes precedence over the `--template` flag if both of them are passed.
-
 ![Markdown render preview](.github/assets/markdown.jpg)
 > The preview above shows markdown template passed in Jira CLI and how it is rendered in the Jira UI.
 

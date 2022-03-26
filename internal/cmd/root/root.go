@@ -24,7 +24,10 @@ import (
 	jiraConfig "github.com/ankitpokhrel/jira-cli/internal/config"
 )
 
-const jiraAPITokenLink = "https://id.atlassian.com/manage-profile/security/api-tokens"
+const (
+	jiraCLIHelpLink  = "https://github.com/ankitpokhrel/jira-cli#getting-started"
+	jiraAPITokenLink = "https://id.atlassian.com/manage-profile/security/api-tokens"
+)
 
 var (
 	config string
@@ -154,14 +157,20 @@ func checkForJiraToken(server string, login string) {
 		return
 	}
 
-	msg := fmt.Sprintf(`You need to define JIRA_API_TOKEN env for the tool to work. 
+	msg := fmt.Sprintf(`The tool needs a Jira API token to function.
 
-You can generate a token using this link: %s
+For cloud server: you can generate the token using this link: %s
+For local server: you can use the password you use to log in to Jira for basic auth or get a token from your Jira profile for PAT.
 
-After generating the token, export it to your shell and run 'jira init' if you haven't already.
+After generating the token, you can either:
+  - Export API token to your shell as a JIRA_API_TOKEN env variable
+  - Or, you can use a .netrc file to define required machine details
 
-Alternatively, you can use .netrc file to define required machine details.`, jiraAPITokenLink)
+Once you are done with the above steps, run 'jira init' to generate the config if you haven't already.
 
-	fmt.Fprintf(os.Stderr, "%s\n", msg)
+For more details, see: %s
+`, jiraAPITokenLink, jiraCLIHelpLink)
+
+	cmdutil.Warn(msg)
 	os.Exit(1)
 }
