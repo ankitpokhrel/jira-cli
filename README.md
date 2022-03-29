@@ -420,6 +420,20 @@ $ jira issue clone ISSUE-1 -s"Modified summary" -yHigh -a$(jira me)
 $ jira issue clone ISSUE-1 -H"find me:replace with me"
 ```
 
+#### Delete
+The `delete` command lets you delete an issue.
+
+```sh
+# Delete an issue using interactive prompt
+$ jira issue delete
+
+# Pass required parameters to skip prompt
+$ jira issue delete ISSUE-1
+
+# Delete task along with all of its subtasks
+$ jira issue delete ISSUE-1 --cascade
+```
+
 #### Comment
 The `comment` command provides a list of sub-commands to manage issue comments.
 
