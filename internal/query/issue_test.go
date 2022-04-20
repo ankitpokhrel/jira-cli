@@ -109,8 +109,9 @@ func (tfp *issueFlagParser) GetStringArray(name string) ([]string, error) {
 	return tfp.labels, nil
 }
 
-func (*issueFlagParser) GetUint(string) (uint, error) { return 100, nil }
-func (*issueFlagParser) Set(string, string) error     { return nil }
+func (*issueFlagParser) GetStringToString(string) (map[string]string, error) { return nil, nil }
+func (*issueFlagParser) GetUint(string) (uint, error)                        { return 100, nil }
+func (*issueFlagParser) Set(string, string) error                            { return nil }
 
 func TestIssueGet(t *testing.T) {
 	cases := []struct {

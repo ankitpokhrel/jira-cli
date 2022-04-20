@@ -42,6 +42,16 @@ type projectConf struct {
 	Type string `json:"type"`
 }
 
+// issueTypeFieldConf is a trimmed down version of jira.IssueTypeField.
+type issueTypeFieldConf struct {
+	Name   string `yaml:"name"`
+	Key    string `yaml:"key"`
+	Schema struct {
+		DataType string `yaml:"datatype"`
+		Items    string `yaml:"items,omitempty"`
+	}
+}
+
 // JiraCLIConfig is a Jira CLI config.
 type JiraCLIConfig struct {
 	value struct {
@@ -53,6 +63,7 @@ type JiraCLIConfig struct {
 		board        *jira.Board
 		epic         *jira.Epic
 		issueTypes   []*jira.IssueType
+		customFields []*issueTypeFieldConf
 	}
 	insecure           bool
 	jiraClient         *jira.Client
@@ -394,60 +405,86 @@ func (c *JiraCLIConfig) configureMetadata() error {
 	}
 
 	var (
-		epicMeta   map[string]interface{}
-		issueTypes = make([]*jira.IssueType, 0, len(meta.Projects[0].IssueTypes))
+		epicMeta     map[string]jira.IssueTypeField
+		issueTypes   = make([]*jira.IssueType, 0, len(meta.Projects[0].IssueTypes))
+		customFields = make([]*issueTypeFieldConf, 0)
+		fieldSeen    = make(map[string]struct{})
 	)
 
 	for _, it := range meta.Projects[0].IssueTypes {
 		if it.Handle == jira.IssueTypeEpic || it.Name == jira.IssueTypeEpic {
 			epicMeta = it.Fields
 		}
-		issueTypes = append(issueTypes, &jira.IssueType{
+		issueType := jira.IssueType{
 			ID:      it.ID,
 			Name:    it.Name,
 			Handle:  it.Handle,
 			Subtask: it.Subtask,
-		})
+		}
+		for key, field := range it.Fields {
+			if strings.HasPrefix(key, "customfield_") {
+				if _, ok := fieldSeen[key]; ok {
+					continue
+				}
+				fieldSeen[key] = struct{}{}
+
+				fieldKey := field.Key
+				if field.FieldID != "" {
+					fieldKey = field.FieldID
+				}
+				customFields = append(customFields, &issueTypeFieldConf{
+					Name: field.Name,
+					Key:  fieldKey,
+					Schema: struct {
+						DataType string `yaml:"datatype"`
+						Items    string `yaml:"items,omitempty"`
+					}{
+						DataType: field.Schema.DataType,
+						Items:    field.Schema.Items,
+					},
+				})
+			}
+		}
+		issueTypes = append(issueTypes, &issueType)
 	}
 
 	c.value.issueTypes = issueTypes
 
 	epicName, epicLink := c.decipherEpicMeta(epicMeta)
 	c.value.epic = &jira.Epic{Name: epicName, Link: epicLink}
+	c.value.customFields = customFields
 
 	return nil
 }
 
-func (c *JiraCLIConfig) decipherEpicMeta(epicMeta map[string]interface{}) (string, string) {
+func (c *JiraCLIConfig) decipherEpicMeta(epicMeta map[string]jira.IssueTypeField) (string, string) {
 	var (
 		temp     string
 		epicName string
 		epicLink string
 	)
 
-	for field, value := range epicMeta {
+	for field, meta := range epicMeta {
 		if !strings.Contains(field, "customfield") {
 			continue
 		}
-		v := value.(map[string]interface{})
 
-		f := v["name"].(string)
-		if f == jira.EpicFieldName || f == jira.EpicFieldLink {
+		if meta.Name == jira.EpicFieldName || meta.Name == jira.EpicFieldLink {
 			switch c.value.installation {
 			case jira.InstallationTypeCloud:
-				temp = v["key"].(string)
+				temp = meta.Key
 			case jira.InstallationTypeLocal:
-				if _, ok := v["fieldId"]; ok {
-					temp = v["fieldId"].(string)
+				if meta.FieldID != "" {
+					temp = meta.FieldID
 				} else {
 					temp = field
 				}
 			}
 
-			if f == jira.EpicFieldName {
+			if meta.Name == jira.EpicFieldName {
 				epicName = temp
 			}
-			if f == jira.EpicFieldLink {
+			if meta.Name == jira.EpicFieldLink {
 				epicLink = temp
 			}
 		}
@@ -472,6 +509,7 @@ func (c *JiraCLIConfig) write(path string) (string, error) {
 	config.Set("project", c.value.project)
 	config.Set("epic", c.value.epic)
 	config.Set("issue.types", c.value.issueTypes)
+	config.Set("issue.fields.custom", c.value.customFields)
 
 	if c.value.board != nil {
 		config.Set("board", c.value.board)

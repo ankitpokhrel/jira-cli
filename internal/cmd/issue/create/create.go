@@ -137,6 +137,7 @@ func create(cmd *cobra.Command, _ []string) {
 			Labels:         params.labels,
 			Components:     params.components,
 			FixVersions:    params.fixVersions,
+			CustomFields:   params.customFields,
 			EpicField:      viper.GetString("epic.link"),
 		}
 		cr.ForProjectType(projectType)
@@ -356,6 +357,7 @@ type createParams struct {
 	labels         []string
 	components     []string
 	fixVersions    []string
+	customFields   map[string]string
 	template       string
 	noInput        bool
 	debug          bool
@@ -389,6 +391,9 @@ func parseFlags(flags query.FlagParser) *createParams {
 	fixVersions, err := flags.GetStringArray("fix-version")
 	cmdutil.ExitIfError(err)
 
+	custom, err := flags.GetStringToString("custom")
+	cmdutil.ExitIfError(err)
+
 	template, err := flags.GetString("template")
 	cmdutil.ExitIfError(err)
 
@@ -408,6 +413,7 @@ func parseFlags(flags query.FlagParser) *createParams {
 		labels:         labels,
 		components:     components,
 		fixVersions:    fixVersions,
+		customFields:   custom,
 		template:       template,
 		noInput:        noInput,
 		debug:          debug,

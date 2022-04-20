@@ -62,18 +62,18 @@ func TestGetCreateMeta(t *testing.T) {
 						Name:    "Epic",
 						Subtask: false,
 					},
-					Fields: map[string]interface{}{
-						"customfield_10011": map[string]interface{}{
-							"name": "Epic Name",
-							"key":  "customfield_10011",
+					Fields: map[string]IssueTypeField{
+						"customfield_10011": {
+							Name: "Epic Name",
+							Key:  "customfield_10011",
 						},
-						"priority": map[string]interface{}{
-							"name": "Priority",
-							"key":  "priority",
+						"priority": {
+							Name: "Priority",
+							Key:  "priority",
 						},
-						"customfield_10014": map[string]interface{}{
-							"name": "Epic Link",
-							"key":  "customfield_10014",
+						"customfield_10014": {
+							Name: "Epic Link",
+							Key:  "customfield_10014",
 						},
 					},
 				},

@@ -26,7 +26,7 @@ type CreateMetaResponse struct {
 // CreateMetaIssueType struct holds issue types from GET /issue/createmeta endpoint.
 type CreateMetaIssueType struct {
 	IssueType
-	Fields map[string]interface{} `json:"fields"`
+	Fields map[string]IssueTypeField `json:"fields"`
 }
 
 // GetCreateMeta gets create metadata using GET /issue/createmeta endpoint.
