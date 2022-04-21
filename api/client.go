@@ -9,6 +9,8 @@ import (
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter"
+
+	"github.com/zalando/go-keyring"
 )
 
 const clientTimeout = 15 * time.Second
@@ -35,6 +37,10 @@ func Client(config jira.Config) *jira.Client {
 		if netrcConfig != nil {
 			config.APIToken = netrcConfig.Password
 		}
+	}
+	if config.APIToken == "" {
+		secret, _ := keyring.Get("jira-cli", "token")
+		config.APIToken = secret
 	}
 
 	if config.AuthType == "" {

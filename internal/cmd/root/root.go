@@ -22,6 +22,8 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/version"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	jiraConfig "github.com/ankitpokhrel/jira-cli/internal/config"
+
+	"github.com/zalando/go-keyring"
 )
 
 const (
@@ -154,6 +156,11 @@ func checkForJiraToken(server string, login string) {
 
 	netrcConfig, _ := netrc.Read(server, login)
 	if netrcConfig != nil {
+		return
+	}
+
+	secret, _ := keyring.Get("jira-cli", "token")
+	if secret != "" {
 		return
 	}
 
