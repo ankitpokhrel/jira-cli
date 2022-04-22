@@ -306,6 +306,8 @@ $  jira issue create -tStory -s"Epic during creation" -PEPIC-42
 
 ![Create an issue](.github/assets/create.gif)
 
+You can use a `--custom` flag to set custom fields while creating the issue. See [this post](https://github.com/ankitpokhrel/jira-cli/discussions/346) for more details.
+
 The command supports both [Github-flavored](https://github.github.com/gfm/)
 and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) markdown for writing
 description. You can load pre-defined templates using `--template` flag.
@@ -604,14 +606,14 @@ jira open KEY-1
 <details><summary>List all projects you have access to</summary>
 
 ```sh
-jira project
+jira project list
 ```
 </details>
 
 <details><summary>List all boards in a project</summary>
 
 ```sh
-jira board
+jira board list
 ```
 </details>
 
