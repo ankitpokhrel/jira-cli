@@ -79,7 +79,7 @@ type editFieldsMarshaler struct {
 }
 
 // MarshalJSON is a custom marshaler to handle empty fields.
-func (cfm editFieldsMarshaler) MarshalJSON() ([]byte, error) {
+func (cfm *editFieldsMarshaler) MarshalJSON() ([]byte, error) {
 	if len(cfm.M.Summary) == 0 || cfm.M.Summary[0].Set == "" {
 		cfm.M.Summary = nil
 	}

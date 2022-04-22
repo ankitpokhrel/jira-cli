@@ -258,7 +258,7 @@ type editParams struct {
 	debug      bool
 }
 
-func (ep editParams) isEmpty() bool {
+func (ep *editParams) isEmpty() bool {
 	return ep.summary == "" && ep.body == "" && ep.priority == "" &&
 		ep.assignee == "" && len(ep.labels) == 0 && len(ep.components) == 0
 }
