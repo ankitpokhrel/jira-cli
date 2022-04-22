@@ -19,7 +19,6 @@ type EditRequest struct {
 	ParentIssueKey string
 	Summary        string
 	Body           string
-	Assignee       string
 	Priority       string
 	Labels         []string
 	Components     []string
@@ -27,7 +26,7 @@ type EditRequest struct {
 
 // Edit updates an issue using POST /issue endpoint.
 func (c *Client) Edit(key string, req *EditRequest) error {
-	data := c.getRequestDataForEdit(req)
+	data := getRequestDataForEdit(req)
 
 	body, err := json.Marshal(&data)
 	if err != nil {
@@ -60,11 +59,6 @@ type editFields struct {
 	Description []struct {
 		Set string `json:"set,omitempty"`
 	} `json:"description,omitempty"`
-	Assignee []struct {
-		Set struct {
-			AccountID string `json:"accountId,omitempty"`
-		} `json:"set,omitempty"`
-	} `json:"assignee,omitempty"`
 	Priority []struct {
 		Set struct {
 			Name string `json:"name,omitempty"`
@@ -85,15 +79,12 @@ type editFieldsMarshaler struct {
 }
 
 // MarshalJSON is a custom marshaler to handle empty fields.
-func (cfm editFieldsMarshaler) MarshalJSON() ([]byte, error) {
+func (cfm *editFieldsMarshaler) MarshalJSON() ([]byte, error) {
 	if len(cfm.M.Summary) == 0 || cfm.M.Summary[0].Set == "" {
 		cfm.M.Summary = nil
 	}
 	if len(cfm.M.Description) == 0 || cfm.M.Description[0].Set == "" {
 		cfm.M.Description = nil
-	}
-	if len(cfm.M.Assignee) == 0 || cfm.M.Assignee[0].Set.AccountID == "" {
-		cfm.M.Assignee = nil
 	}
 	if len(cfm.M.Priority) == 0 || cfm.M.Priority[0].Set.Name == "" {
 		cfm.M.Priority = nil
@@ -118,7 +109,7 @@ type editRequest struct {
 	} `json:"fields"`
 }
 
-func (c *Client) getRequestDataForEdit(req *EditRequest) *editRequest {
+func getRequestDataForEdit(req *EditRequest) *editRequest {
 	if req.Labels == nil {
 		req.Labels = []string{}
 	}
@@ -130,13 +121,6 @@ func (c *Client) getRequestDataForEdit(req *EditRequest) *editRequest {
 		Description: []struct {
 			Set string `json:"set,omitempty"`
 		}{{Set: req.Body}},
-		Assignee: []struct {
-			Set struct {
-				AccountID string `json:"accountId,omitempty"`
-			} `json:"set,omitempty"`
-		}{{Set: struct {
-			AccountID string `json:"accountId,omitempty"`
-		}{AccountID: req.Assignee}}},
 		Priority: []struct {
 			Set struct {
 				Name string `json:"name,omitempty"`

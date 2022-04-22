@@ -2,6 +2,7 @@
   {
     "accountId": "5fb82376aca10c006949f35b",
     "emailAddress": "jane@domain.tld",
+    "name": "janedoe",
     "displayName": "Jane Doe",
     "active": true
   },
