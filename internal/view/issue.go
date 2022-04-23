@@ -311,9 +311,9 @@ func (i Issue) linkedIssues() string {
 }
 
 func (i Issue) comments() []issueComment {
-	comments := make([]issueComment, 0, i.Options.NumComments)
-
 	total := i.Data.Fields.Comment.Total
+	comments := make([]issueComment, 0, total)
+
 	if total == 0 {
 		return comments
 	}
