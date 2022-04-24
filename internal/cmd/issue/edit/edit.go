@@ -148,12 +148,18 @@ func edit(cmd *cobra.Command, args []string) {
 			body = md.ToJiraMD(body)
 		}
 
+		var parent string
+		if issue.Fields.Parent != nil {
+			parent = issue.Fields.Parent.Key
+		}
+
 		edr := jira.EditRequest{
-			Summary:    params.summary,
-			Body:       body,
-			Priority:   params.priority,
-			Labels:     labels,
-			Components: params.components,
+			ParentIssueKey: parent,
+			Summary:        params.summary,
+			Body:           body,
+			Priority:       params.priority,
+			Labels:         labels,
+			Components:     params.components,
 		}
 
 		return client.Edit(params.issueKey, &edr)

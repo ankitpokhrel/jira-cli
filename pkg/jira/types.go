@@ -62,7 +62,10 @@ type IssueFields struct {
 		Name string `json:"name"`
 	} `json:"resolution"`
 	IssueType IssueType `json:"issueType"`
-	Assignee  struct {
+	Parent    *struct {
+		Key string `json:"key"`
+	} `json:"parent,omitempty"`
+	Assignee struct {
 		Name string `json:"displayName"`
 	} `json:"assignee"`
 	Priority struct {
