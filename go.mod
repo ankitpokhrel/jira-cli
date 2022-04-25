@@ -22,6 +22,7 @@ require (
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
+	github.com/zalando/go-keyring v0.2.1
 )
 
 require (
@@ -58,7 +59,6 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/yuin/goldmark v1.4.7 // indirect
 	github.com/yuin/goldmark-emoji v1.0.1 // indirect
-	github.com/zalando/go-keyring v0.2.1 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/sys v0.0.0-20220223155357-96fed51e1446 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
