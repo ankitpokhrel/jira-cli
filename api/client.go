@@ -39,7 +39,7 @@ func Client(config jira.Config) *jira.Client {
 		}
 	}
 	if config.APIToken == "" {
-		secret, _ := keyring.Get("jira-cli", "token")
+		secret, _ := keyring.Get("jira-cli", config.Login)
 		config.APIToken = secret
 	}
 

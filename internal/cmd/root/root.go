@@ -159,7 +159,7 @@ func checkForJiraToken(server string, login string) {
 		return
 	}
 
-	secret, _ := keyring.Get("jira-cli", "token")
+	secret, _ := keyring.Get("jira-cli", login)
 	if secret != "" {
 		return
 	}
