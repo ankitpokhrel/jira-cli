@@ -28,6 +28,12 @@ in plain view. A --no-truncate flag will display all available fields in plain m
 
 	examples = `$ jira issue list
 
+# Limit list to 20 items
+$ jira issue list --paginate 20
+
+# Get 50 items starting from 10
+$ jira issue list --paginate 10:50
+
 # List issues in a plain table view without headers
 $ jira issue list --plain --no-headers
 
@@ -42,8 +48,6 @@ $ jira issue list -tEpic -sDone
 
 # List issues in status other than "Open" and is assigned to no one
 $ jira issue list -s~Open -ax`
-
-	defaultLimit = 100
 )
 
 // NewCmdList is a list command.
@@ -85,7 +89,7 @@ func loadList(cmd *cobra.Command) {
 			return nil, 0, err
 		}
 
-		resp, err := api.ProxySearch(api.Client(jira.Config{Debug: debug}), q.Get(), q.Params().Limit)
+		resp, err := api.ProxySearch(api.Client(jira.Config{Debug: debug}), q.Get(), q.Params().From, q.Params().Limit)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -166,7 +170,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("jql", "q", "", "Run a raw JQL query in a given project context")
 	cmd.Flags().String("order-by", "created", "Field to order the list with")
 	cmd.Flags().Bool("reverse", false, "Reverse the display order (default \"DESC\")")
-	cmd.Flags().Uint("limit", defaultLimit, "Number of results to return")
+	cmd.Flags().String("paginate", "0:100", "Paginate the result. Max 100 at a time, format: <from>:<limit> where <from> is optional")
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")

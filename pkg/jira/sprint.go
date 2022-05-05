@@ -26,10 +26,10 @@ type SprintResult struct {
 // Sprints fetches all sprints for a given board.
 //
 // qp is an additional query parameters in key, value pair format, eg: state=closed.
-func (c *Client) Sprints(boardID int, qp string, startAt, max int) (*SprintResult, error) {
+func (c *Client) Sprints(boardID int, qp string, from, limit int) (*SprintResult, error) {
 	res, err := c.GetV1(
 		context.Background(),
-		fmt.Sprintf("/board/%d/sprint?%s&startAt=%d&maxResults=%d", boardID, qp, startAt, max),
+		fmt.Sprintf("/board/%d/sprint?%s&startAt=%d&maxResults=%d", boardID, qp, from, limit),
 		nil,
 	)
 	if err != nil {
@@ -93,8 +93,8 @@ func (c *Client) SprintsInBoards(boardIDs []int, qp string, limit int) []*Sprint
 }
 
 // SprintIssues fetches issues in the given sprint.
-func (c *Client) SprintIssues(boardID, sprintID int, jql string, limit uint) (*SearchResult, error) {
-	path := fmt.Sprintf("/board/%d/sprint/%d/issue?maxResults=%d", boardID, sprintID, limit)
+func (c *Client) SprintIssues(boardID, sprintID int, jql string, from, limit uint) (*SearchResult, error) {
+	path := fmt.Sprintf("/board/%d/sprint/%d/issue?startAt=%d&maxResults=%d", boardID, sprintID, from, limit)
 	if jql != "" {
 		path += fmt.Sprintf("&jql=%s", url.QueryEscape(jql))
 	}
