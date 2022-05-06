@@ -2,6 +2,8 @@ package query
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jql"
@@ -11,8 +13,11 @@ import (
 type Issue struct {
 	Project string
 	Flags   FlagParser
-	params  *IssueParams
+
+	params *IssueParams
 }
+
+const defaultLimit = 100
 
 // NewIssue creates and initializes a new Issue type.
 func NewIssue(project string, flags FlagParser) (*Issue, error) {
@@ -79,7 +84,7 @@ func (i *Issue) Params() *IssueParams {
 	return i.params
 }
 
-func (i *Issue) setDateFilters(q *jql.JQL, field, value string) {
+func (*Issue) setDateFilters(q *jql.JQL, field, value string) {
 	switch value {
 	case "today":
 		q.Gte(field, "startOfDay()", false)
@@ -143,12 +148,14 @@ type IssueParams struct {
 	UpdatedAfter  string
 	CreatedBefore string
 	UpdatedBefore string
-	jql           string
 	Labels        []string
 	OrderBy       string
 	Reverse       bool
+	From          uint
 	Limit         uint
-	debug         bool
+
+	jql   string
+	debug bool
 }
 
 func (ip *IssueParams) init(flags FlagParser) error {
@@ -158,7 +165,7 @@ func (ip *IssueParams) init(flags FlagParser) error {
 	stringParams := []string{
 		"resolution", "type", "parent", "status", "priority", "reporter", "assignee", "component",
 		"created", "created-after", "created-before", "updated", "updated-after", "updated-before",
-		"jql", "order-by",
+		"jql", "order-by", "paginate",
 	}
 
 	boolParamsMap := make(map[string]bool)
@@ -179,7 +186,11 @@ func (ip *IssueParams) init(flags FlagParser) error {
 	if err != nil {
 		return err
 	}
-	limit, err := flags.GetUint("limit")
+	paginate, err := flags.GetString("paginate")
+	if err != nil {
+		return err
+	}
+	from, limit, err := getPaginateParams(paginate)
 	if err != nil {
 		return err
 	}
@@ -187,6 +198,7 @@ func (ip *IssueParams) init(flags FlagParser) error {
 	ip.setBoolParams(boolParamsMap)
 	ip.setStringParams(stringParamsMap)
 	ip.Labels = labels
+	ip.From = from
 	ip.Limit = limit
 
 	return nil
@@ -264,4 +276,56 @@ func isValidDate(date string) (time.Time, string, bool) {
 
 func addDay(dt time.Time, format string) string {
 	return dt.AddDate(0, 0, 1).Format(format)
+}
+
+func getPaginateParams(paginate string) (uint, uint, error) {
+	var (
+		err         error
+		from, limit int
+
+		errInvalidPaginateArg = fmt.Errorf(
+			"invalid argument for paginate: must be a positive integer in format <from>:<limit>, where <from> is optional",
+		)
+		errOutOfBounds = fmt.Errorf(
+			"invalid argument for paginate: Format <from>:<limit>, where <from> is optional and "+
+				"<limit> must be between %d and %d (inclusive)", 1, defaultLimit,
+		)
+	)
+
+	paginate = strings.TrimSpace(paginate)
+
+	if paginate == "" {
+		return 0, defaultLimit, nil
+	}
+
+	if !strings.Contains(paginate, ":") {
+		limit, err = strconv.Atoi(paginate)
+		if err != nil {
+			return 0, 0, errInvalidPaginateArg
+		}
+	} else {
+		pieces := strings.Split(paginate, ":")
+		if len(pieces) != 2 {
+			return 0, 0, errInvalidPaginateArg
+		}
+
+		from, err = strconv.Atoi(pieces[0])
+		if err != nil {
+			return 0, 0, errInvalidPaginateArg
+		}
+
+		limit, err = strconv.Atoi(pieces[1])
+		if err != nil {
+			return 0, 0, errInvalidPaginateArg
+		}
+	}
+
+	if from < 0 || limit <= 0 {
+		return 0, 0, errOutOfBounds
+	}
+	if limit > defaultLimit {
+		return 0, 0, errOutOfBounds
+	}
+
+	return uint(from), uint(limit), nil
 }

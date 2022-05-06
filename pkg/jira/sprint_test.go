@@ -199,6 +199,7 @@ func TestSprintIssues(t *testing.T) {
 		} else {
 			assert.Equal(t, url.Values{
 				"jql":        []string{"project=TEST AND status=Done ORDER BY created DESC"},
+				"startAt":    []string{"0"},
 				"maxResults": []string{"100"},
 			}, qs)
 
@@ -214,7 +215,7 @@ func TestSprintIssues(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
-	actual, err := client.SprintIssues(1, 2, "project=TEST AND status=Done ORDER BY created DESC", 100)
+	actual, err := client.SprintIssues(1, 2, "project=TEST AND status=Done ORDER BY created DESC", 0, 100)
 	assert.NoError(t, err)
 
 	expected := &SearchResult{
@@ -303,7 +304,7 @@ func TestSprintIssues(t *testing.T) {
 
 	unexpectedStatusCode = true
 
-	_, err = client.SprintIssues(1, 2, "project=TEST", 100)
+	_, err = client.SprintIssues(1, 2, "project=TEST", 0, 100)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 

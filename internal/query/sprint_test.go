@@ -40,6 +40,9 @@ func (sfp sprintFlagParser) GetString(name string) (string, error) {
 	if sfp.err.state && name == "state" {
 		return "", fmt.Errorf("oops! couldn't fetch state flag")
 	}
+	if name == "paginate" {
+		return "", nil
+	}
 	return sfp.state, nil
 }
 

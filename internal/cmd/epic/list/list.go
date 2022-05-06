@@ -112,9 +112,9 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 			q.Params().Parent = key
 			q.Params().IssueType = ""
 
-			resp, err = client.Search(q.Get(), q.Params().Limit)
+			resp, err = client.Search(q.Get(), q.Params().From, q.Params().Limit)
 		} else {
-			resp, err = client.EpicIssues(key, q.Get(), q.Params().Limit)
+			resp, err = client.EpicIssues(key, q.Get(), q.Params().From, q.Params().Limit)
 		}
 
 		if err != nil {
@@ -174,7 +174,7 @@ func epicExplorerView(flags query.FlagParser, project, projectType, server strin
 		s := cmdutil.Info("Fetching epics...")
 		defer s.Stop()
 
-		resp, err := api.ProxySearch(client, q.Get(), q.Params().Limit)
+		resp, err := api.ProxySearch(client, q.Get(), q.Params().From, q.Params().Limit)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -200,9 +200,9 @@ func epicExplorerView(flags query.FlagParser, project, projectType, server strin
 				q.Params().Parent = key
 				q.Params().IssueType = ""
 
-				resp, err = client.Search(q.Get(), q.Params().Limit)
+				resp, err = client.Search(q.Get(), q.Params().From, q.Params().Limit)
 			} else {
-				resp, err = client.EpicIssues(key, "", q.Params().Limit)
+				resp, err = client.EpicIssues(key, "", q.Params().From, q.Params().Limit)
 			}
 			if err != nil {
 				return []*jira.Issue{}

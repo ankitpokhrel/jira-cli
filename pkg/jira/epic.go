@@ -16,8 +16,8 @@ const (
 )
 
 // EpicIssues fetches issues in the given epic.
-func (c *Client) EpicIssues(key, jql string, limit uint) (*SearchResult, error) {
-	path := fmt.Sprintf("/epic/%s/issue?maxResults=%d", key, limit)
+func (c *Client) EpicIssues(key, jql string, from, limit uint) (*SearchResult, error) {
+	path := fmt.Sprintf("/epic/%s/issue?startAt=%d&maxResults=%d", key, from, limit)
 	if jql != "" {
 		path += fmt.Sprintf("&jql=%s", url.QueryEscape(jql))
 	}
