@@ -84,7 +84,7 @@ func (i *Issue) Params() *IssueParams {
 	return i.params
 }
 
-func (i *Issue) setDateFilters(q *jql.JQL, field, value string) {
+func (*Issue) setDateFilters(q *jql.JQL, field, value string) {
 	switch value {
 	case "today":
 		q.Gte(field, "startOfDay()", false)
@@ -294,7 +294,7 @@ func getPaginateParams(paginate string) (uint, uint, error) {
 
 	paginate = strings.TrimSpace(paginate)
 
-	if len(paginate) == 0 {
+	if paginate == "" {
 		return 0, defaultLimit, nil
 	}
 
