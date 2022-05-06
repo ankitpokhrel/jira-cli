@@ -286,9 +286,9 @@ func getPaginateParams(paginate string) (uint, uint, error) {
 		errInvalidPaginateArg = fmt.Errorf(
 			"invalid argument for paginate: must be a positive integer in format <from>:<limit>, where <from> is optional",
 		)
-		errLimitExceeded = fmt.Errorf(
+		errOutOfBounds = fmt.Errorf(
 			"invalid argument for paginate: Format <from>:<limit>, where <from> is optional and "+
-				"<limit> must not be greater than %d", defaultLimit,
+				"<limit> must be between %d and %d (inclusive)", 1, defaultLimit,
 		)
 	)
 
@@ -320,11 +320,11 @@ func getPaginateParams(paginate string) (uint, uint, error) {
 		}
 	}
 
-	if from < 0 || limit < 0 {
-		return 0, 0, errInvalidPaginateArg
+	if from < 0 || limit <= 0 {
+		return 0, 0, errOutOfBounds
 	}
 	if limit > defaultLimit {
-		return 0, 0, errLimitExceeded
+		return 0, 0, errOutOfBounds
 	}
 
 	return uint(from), uint(limit), nil
