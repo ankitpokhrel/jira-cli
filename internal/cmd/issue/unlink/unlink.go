@@ -2,8 +2,6 @@ package unlink
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
@@ -50,12 +48,6 @@ func unlink(cmd *cobra.Command, args []string) {
 
 	cmdutil.ExitIfError(uc.setInwardIssueKey(project))
 	cmdutil.ExitIfError(uc.setOutwardIssueKey(project))
-
-	// TODO: Why is this being compared with optionCancel?!
-	if uc.params.outwardIssueKey == optionCancel {
-		cmdutil.Fail("Action aborted")
-		os.Exit(0)
-	}
 
 	err := func() error {
 		s := cmdutil.Info("Unlinking issues")
