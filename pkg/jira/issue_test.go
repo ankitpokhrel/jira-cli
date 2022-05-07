@@ -350,7 +350,7 @@ func TestUnlinkIssue(t *testing.T) {
 
 func TestGetLinkID(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/rest/api/3/issue/TEST-1", r.URL.Path)
+		assert.Equal(t, "/rest/api/2/issue/TEST-1", r.URL.Path)
 
 		resp, err := ioutil.ReadFile("./testdata/issue.json")
 		assert.NoError(t, err)

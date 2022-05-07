@@ -251,7 +251,7 @@ func (c *Client) UnlinkIssue(linkID string) error {
 
 // GetLinkID gets linkID between two issues.
 func (c *Client) GetLinkID(inwardIssue, outwardIssue string) (string, error) {
-	i, err := c.GetIssue(inwardIssue)
+	i, err := c.GetIssueV2(inwardIssue)
 	if err != nil {
 		return "", err
 	}

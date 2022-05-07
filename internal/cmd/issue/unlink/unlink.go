@@ -2,19 +2,20 @@ package unlink
 
 import (
 	"fmt"
+
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 const (
-	helpText     = `Unlink disconnects two issues from each other, if already connected.`
-	examples     = `$ jira issue unlink ISSUE-1 ISSUE-2`
-	optionCancel = "Cancel"
+	helpText = `Unlink disconnects two issues from each other, if already connected.`
+	examples = `$ jira issue unlink ISSUE-1 ISSUE-2`
 )
 
 // NewCmdUnlink is an unlink command.
