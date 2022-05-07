@@ -94,6 +94,7 @@ type IssueFields struct {
 		Total int `json:"total"`
 	} `json:"comment"`
 	IssueLinks []struct {
+		ID       string `json:"id"`
 		LinkType struct {
 			Name    string `json:"name"`
 			Inward  string `json:"inward"`

@@ -138,6 +138,7 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 				Total: 3,
 			},
 			IssueLinks: []struct {
+				ID       string `json:"id"`
 				LinkType struct {
 					Name    string `json:"name"`
 					Inward  string `json:"inward"`

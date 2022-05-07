@@ -1,4 +1,4 @@
-package unlinkParams
+package unlink
 
 import (
 	"fmt"
@@ -61,7 +61,12 @@ func unlink(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Unlinking issues")
 		defer s.Stop()
 
-		return client.UnlinkIssue(uc.params.inwardIssueKey, uc.params.outwardIssueKey)
+		linkID, err := client.GetLinkID(uc.params.inwardIssueKey, uc.params.outwardIssueKey)
+		if err != nil {
+			return err
+		}
+
+		return client.UnlinkIssue(linkID)
 	}()
 	cmdutil.ExitIfError(err)
 

@@ -229,15 +229,9 @@ func (c *Client) LinkIssue(inwardIssue, outwardIssue, linkType string) error {
 }
 
 // UnlinkIssue disconnects two issues using DELETE /issueLink/{linkId} endpoint.
-func (c *Client) UnlinkIssue(inwardIssue, outwardIssue string) error {
-	// TODO: Get linkID using both inward and outward issues before calling delete.
-	// See: To obtain the ID of the issue link, use
-	// https://your-domain.atlassian.net/rest/api/3/issue/[linked issue key]?fields=issuelinks.
-	// Filter out the links by outwardIssue.
-
-	linkID := 123
-
-	res, err := c.DeleteV2(context.Background(), fmt.Sprintf("/issueLink/%d", linkID), Header{
+func (c *Client) UnlinkIssue(linkID string) error {
+	deleteLinkURL := fmt.Sprintf("/issueLink/%s", linkID)
+	res, err := c.DeleteV2(context.Background(), deleteLinkURL, Header{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	})
@@ -253,6 +247,21 @@ func (c *Client) UnlinkIssue(inwardIssue, outwardIssue string) error {
 		return formatUnexpectedResponse(res)
 	}
 	return nil
+}
+
+// GetLinkID gets linkID between two issues.
+func (c *Client) GetLinkID(inwardIssue, outwardIssue string) (string, error) {
+	i, err := c.GetIssue(inwardIssue)
+	if err != nil {
+		return "", err
+	}
+
+	for _, link := range i.Fields.IssueLinks {
+		if link.InwardIssue != nil && link.InwardIssue.Key == outwardIssue {
+			return link.ID, nil
+		}
+	}
+	return "", fmt.Errorf("no link found between provided issues")
 }
 
 type issueCommentRequest struct {

@@ -71,6 +71,25 @@ func TestGetIssue(t *testing.T) {
 			}{Name: "To Do"},
 			Created: "2020-12-03T14:05:20.974+0100",
 			Updated: "2020-12-03T14:05:20.974+0100",
+			IssueLinks: []struct {
+				ID       string `json:"id"`
+				LinkType struct {
+					Name    string `json:"name"`
+					Inward  string `json:"inward"`
+					Outward string `json:"outward"`
+				} `json:"type"`
+				InwardIssue  *Issue `json:"inwardIssue,omitempty"`
+				OutwardIssue *Issue `json:"outwardIssue,omitempty"`
+			}{
+				{
+					ID:           "10001",
+					OutwardIssue: &Issue{Key: "TEST-2"},
+				},
+				{
+					ID:           "10002",
+					OutwardIssue: &Issue{},
+				},
+			},
 		},
 	}
 	assert.Equal(t, expected, actual)
@@ -299,6 +318,60 @@ func TestLinkIssue(t *testing.T) {
 
 	err = client.LinkIssue("TEST-1", "TEST-2", "invalid")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
+func TestUnlinkIssue(t *testing.T) {
+	var unexpectedStatusCode bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/2/issueLink/123", r.URL.Path)
+		assert.Equal(t, http.MethodDelete, r.Method)
+		assert.Equal(t, "application/json", r.Header.Get("Accept"))
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+		if unexpectedStatusCode {
+			w.WriteHeader(400)
+		} else {
+			w.WriteHeader(204)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	err := client.UnlinkIssue("123")
+	assert.NoError(t, err)
+
+	unexpectedStatusCode = true
+
+	err = client.UnlinkIssue("123")
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
+func TestGetLinkID(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/3/issue/TEST-1", r.URL.Path)
+
+		resp, err := ioutil.ReadFile("./testdata/issue.json")
+		assert.NoError(t, err)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		_, _ = w.Write(resp)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	actual, err := client.GetLinkID("TEST-1", "TEST-2")
+	assert.NoError(t, err)
+
+	expected := "10001"
+	assert.Equal(t, expected, actual)
+
+	_, err = client.GetLinkID("TEST-1", "TEST-1234")
+	assert.NotNil(t, err)
+	assert.Equal(t, "no link found between provided issues", err.Error())
 }
 
 func TestAddIssueComment(t *testing.T) {
