@@ -62,7 +62,10 @@ type IssueFields struct {
 		Name string `json:"name"`
 	} `json:"resolution"`
 	IssueType IssueType `json:"issueType"`
-	Assignee  struct {
+	Parent    *struct {
+		Key string `json:"key"`
+	} `json:"parent,omitempty"`
+	Assignee struct {
 		Name string `json:"displayName"`
 	} `json:"assignee"`
 	Priority struct {
@@ -150,8 +153,9 @@ type Transition struct {
 
 // User holds user info.
 type User struct {
-	AccountID string `json:"accountId"`
-	Email     string `json:"emailAddress"`
-	Name      string `json:"displayName"`
-	Active    bool   `json:"active"`
+	AccountID   string `json:"accountId,omitempty"`
+	Email       string `json:"emailAddress"`
+	Name        string `json:"name,omitempty"`
+	DisplayName string `json:"displayName"`
+	Active      bool   `json:"active"`
 }

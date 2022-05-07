@@ -58,8 +58,10 @@ type SprintParams struct {
 	Current bool
 	Prev    bool
 	Next    bool
+	From    uint
 	Limit   uint
-	debug   bool
+
+	debug bool
 }
 
 func (sp *SprintParams) init(flags FlagParser) error {
@@ -87,10 +89,15 @@ func (sp *SprintParams) init(flags FlagParser) error {
 	}
 	sp.Next = next
 
-	limit, err := flags.GetUint("limit")
+	paginate, err := flags.GetString("paginate")
 	if err != nil {
 		return err
 	}
+	from, limit, err := getPaginateParams(paginate)
+	if err != nil {
+		return err
+	}
+	sp.From = from
 	sp.Limit = limit
 
 	debug, err := flags.GetBool("debug")

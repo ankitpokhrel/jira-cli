@@ -9,6 +9,8 @@ import (
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter"
+
+	"github.com/zalando/go-keyring"
 )
 
 const clientTimeout = 15 * time.Second
@@ -35,6 +37,10 @@ func Client(config jira.Config) *jira.Client {
 		if netrcConfig != nil {
 			config.APIToken = netrcConfig.Password
 		}
+	}
+	if config.APIToken == "" {
+		secret, _ := keyring.Get("jira-cli", config.Login)
+		config.APIToken = secret
 	}
 
 	if config.AuthType == "" {
@@ -94,7 +100,7 @@ func ProxyGetIssue(c *jira.Client, key string, opts ...filter.Filter) (*jira.Iss
 // ProxySearch uses either a v2 or v3 version of the Jira GET /search endpoint
 // to search for the relevant issues based on configured installation type.
 // Defaults to v3 if installation type is not defined in the config.
-func ProxySearch(c *jira.Client, jql string, limit uint) (*jira.SearchResult, error) {
+func ProxySearch(c *jira.Client, jql string, from, limit uint) (*jira.SearchResult, error) {
 	var (
 		issues *jira.SearchResult
 		err    error
@@ -103,9 +109,9 @@ func ProxySearch(c *jira.Client, jql string, limit uint) (*jira.SearchResult, er
 	it := viper.GetString("installation")
 
 	if it == jira.InstallationTypeLocal {
-		issues, err = c.SearchV2(jql, limit)
+		issues, err = c.SearchV2(jql, from, limit)
 	} else {
-		issues, err = c.Search(jql, limit)
+		issues, err = c.Search(jql, from, limit)
 	}
 
 	return issues, err

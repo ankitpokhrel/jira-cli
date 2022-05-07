@@ -17,10 +17,10 @@
             <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square" />
         </a>
         <a href="https://opencollective.com/jira-cli#backers">
-            <img alt="Software License" src="https://img.shields.io/opencollective/backers/jira-cli?style=flat-square" />
+            <img alt="Financial Contributors" src="https://img.shields.io/opencollective/backers/jira-cli?style=flat-square" />
         </a>
         <a href="#">
-            <img alt="Software License" src="https://img.shields.io/badge/status-WIP-yellow?style=flat-square&color=orange" />
+            <img alt="Project Status" src="https://img.shields.io/badge/status-WIP-yellow?style=flat-square&color=orange" />
         </a>
     </p>
     <p align="center">
@@ -104,7 +104,8 @@ See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more 
 
 1. [Get a Jira API token](https://id.atlassian.com/manage-profile/security/api-tokens) and export it to your shell as
    a `JIRA_API_TOKEN` variable. Add it to your shell configuration file, for instance, `$HOME/.bashrc`, so that the
-   variable is always available.
+   variable is always available. Alternatively, you can also use `.netrc` file or `keychain` to set the token. Learn
+   more [here](https://github.com/ankitpokhrel/jira-cli/discussions/356).
 2. Run `jira init`, select installation type as `Cloud`, and provide required details to generate a config file required
    for the tool.
 
@@ -115,8 +116,8 @@ See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more 
    - If you are using personal access token (PAT), get the `token` from your jira profile and export it as
      a `JIRA_API_TOKEN` variable. In addition to this, set `JIRA_AUTH_TYPE` env to `bearer`.
    - Add these ENVs to your shell configuration file, for instance, `$HOME/.bashrc`, so that they are always available.
-   - Alternatively, you can use the `.netrc` file to define required machine details and the tool will read as a
-     fallback to `JIRA_API_TOKEN` variable.
+   - Alternatively, you can also use `.netrc` file or `keychain` to set the token. Learn
+     more [here](https://github.com/ankitpokhrel/jira-cli/discussions/356).
 2. Run `jira init`, select installation type as `Local`, and provide required details to generate a config file required
    for the tool.
 
@@ -305,6 +306,8 @@ $  jira issue create -tStory -s"Epic during creation" -PEPIC-42
 ```
 
 ![Create an issue](.github/assets/create.gif)
+
+You can use a `--custom` flag to set custom fields while creating the issue. See [this post](https://github.com/ankitpokhrel/jira-cli/discussions/346) for more details.
 
 The command supports both [Github-flavored](https://github.github.com/gfm/)
 and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) markdown for writing
@@ -604,14 +607,14 @@ jira open KEY-1
 <details><summary>List all projects you have access to</summary>
 
 ```sh
-jira project
+jira project list
 ```
 </details>
 
 <details><summary>List all boards in a project</summary>
 
 ```sh
-jira board
+jira board list
 ```
 </details>
 
