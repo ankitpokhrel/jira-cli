@@ -25,7 +25,7 @@ func NewCmdUnlink() *cobra.Command {
 		Short:   "Unlink disconnects two issues from each other",
 		Long:    helpText,
 		Example: examples,
-		Aliases: []string{"ln"},
+		Aliases: []string{"uln"},
 		Annotations: map[string]string{
 			"help:args": "INWARD_ISSUE_KEY\tIssue key of the source issue, eg: ISSUE-1\n" +
 				"OUTWARD_ISSUE_KEY\tIssue key of the target issue, eg: ISSUE-2.",
