@@ -260,6 +260,10 @@ func (c *Client) GetLinkID(inwardIssue, outwardIssue string) (string, error) {
 		if link.InwardIssue != nil && link.InwardIssue.Key == outwardIssue {
 			return link.ID, nil
 		}
+
+		if link.OutwardIssue != nil && link.OutwardIssue.Key == outwardIssue {
+			return link.ID, nil
+		}
 	}
 	return "", fmt.Errorf("no link found between provided issues")
 }
