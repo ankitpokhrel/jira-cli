@@ -228,6 +228,46 @@ func (c *Client) LinkIssue(inwardIssue, outwardIssue, linkType string) error {
 	return nil
 }
 
+// UnlinkIssue disconnects two issues using DELETE /issueLink/{linkId} endpoint.
+func (c *Client) UnlinkIssue(linkID string) error {
+	deleteLinkURL := fmt.Sprintf("/issueLink/%s", linkID)
+	res, err := c.DeleteV2(context.Background(), deleteLinkURL, Header{
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	})
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusNoContent {
+		return formatUnexpectedResponse(res)
+	}
+	return nil
+}
+
+// GetLinkID gets linkID between two issues.
+func (c *Client) GetLinkID(inwardIssue, outwardIssue string) (string, error) {
+	i, err := c.GetIssueV2(inwardIssue)
+	if err != nil {
+		return "", err
+	}
+
+	for _, link := range i.Fields.IssueLinks {
+		if link.InwardIssue != nil && link.InwardIssue.Key == outwardIssue {
+			return link.ID, nil
+		}
+
+		if link.OutwardIssue != nil && link.OutwardIssue.Key == outwardIssue {
+			return link.ID, nil
+		}
+	}
+	return "", fmt.Errorf("no link found between provided issues")
+}
+
 type issueCommentRequest struct {
 	Body string `json:"body"`
 }

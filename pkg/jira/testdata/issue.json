@@ -31,6 +31,18 @@
         }
       ]
     },
+    "issuelinks": [
+      {
+        "id": "10001",
+        "outwardIssue": {
+          "key": "TEST-2"
+        }
+      },
+      {
+        "id": "10002",
+        "outwardIssue": {}
+      }
+    ],
     "reporter": {
       "displayName": "Person A"
     },
