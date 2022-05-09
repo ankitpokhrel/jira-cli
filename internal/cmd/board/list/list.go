@@ -42,6 +42,11 @@ func List(cmd *cobra.Command, _ []string) {
 	}()
 	cmdutil.ExitIfError(err)
 
+	// Total results in jira API response may not be present in older versions.
+	if total == 0 {
+		total = len(boards)
+	}
+
 	if total == 0 {
 		fmt.Println()
 		cmdutil.Failed("No boards found in project \"%s\"", project)
