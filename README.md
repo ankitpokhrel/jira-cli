@@ -407,6 +407,17 @@ $ jira issue link
 $ jira issue link ISSUE-1 ISSUE-2 Blocks
 ```
 
+#### Unlink
+The `unlink` command lets you unlink two linked issues.
+
+```sh
+# Unlink issues using interactive prompt
+$ jira issue unlink
+
+# Pass required parameters to skip prompt
+$ jira issue unlink ISSUE-1 ISSUE-2
+```
+
 #### Clone
 The `clone` command lets you clone an issue. You can update fields like summary, priority, assignee, labels, and
 components when cloning the issue. The command also allows you to replace a part of the string (case-sensitive)
