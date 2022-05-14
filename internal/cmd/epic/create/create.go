@@ -23,7 +23,11 @@ const (
 $ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Bug description"
 
 # Create epic in another project
-$ jira epic create -pPRJ -n"Amazing epic" -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'`
+$ jira epic create -pPRJ -n"Amazing epic" -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'
+
+# Create epic and set custom fields
+# See https://github.com/ankitpokhrel/jira-cli/discussions/346
+$ jira epic create -n"Epic with custom fields" --custom story-points=3`
 )
 
 // NewCmdCreate is a create command.
@@ -131,15 +135,16 @@ func create(cmd *cobra.Command, _ []string) {
 		defer s.Stop()
 
 		cr := jira.CreateRequest{
-			Project:     project,
-			IssueType:   jira.IssueTypeEpic,
-			Summary:     params.summary,
-			Body:        params.body,
-			Priority:    params.priority,
-			Labels:      params.labels,
-			Components:  params.components,
-			FixVersions: params.fixVersions,
-			EpicField:   viper.GetString("epic.name"),
+			Project:      project,
+			IssueType:    jira.IssueTypeEpic,
+			Summary:      params.summary,
+			Body:         params.body,
+			Priority:     params.priority,
+			Labels:       params.labels,
+			Components:   params.components,
+			FixVersions:  params.fixVersions,
+			CustomFields: params.customFields,
+			EpicField:    viper.GetString("epic.name"),
 		}
 		if projectType != jira.ProjectTypeNextGen {
 			cr.Name = params.name
@@ -239,17 +244,18 @@ func (cc *createCmd) isMandatoryParamsMissing() bool {
 }
 
 type createParams struct {
-	name        string
-	summary     string
-	body        string
-	priority    string
-	assignee    string
-	labels      []string
-	components  []string
-	fixVersions []string
-	template    string
-	noInput     bool
-	debug       bool
+	name         string
+	summary      string
+	body         string
+	priority     string
+	assignee     string
+	labels       []string
+	components   []string
+	fixVersions  []string
+	customFields map[string]string
+	template     string
+	noInput      bool
+	debug        bool
 }
 
 func parseFlags(flags query.FlagParser) *createParams {
@@ -277,6 +283,9 @@ func parseFlags(flags query.FlagParser) *createParams {
 	fixVersions, err := flags.GetStringArray("fix-version")
 	cmdutil.ExitIfError(err)
 
+	custom, err := flags.GetStringToString("custom")
+	cmdutil.ExitIfError(err)
+
 	template, err := flags.GetString("template")
 	cmdutil.ExitIfError(err)
 
@@ -287,16 +296,17 @@ func parseFlags(flags query.FlagParser) *createParams {
 	cmdutil.ExitIfError(err)
 
 	return &createParams{
-		name:        name,
-		summary:     summary,
-		body:        body,
-		priority:    priority,
-		assignee:    assignee,
-		labels:      labels,
-		components:  components,
-		fixVersions: fixVersions,
-		template:    template,
-		noInput:     noInput,
-		debug:       debug,
+		name:         name,
+		summary:      summary,
+		body:         body,
+		priority:     priority,
+		assignee:     assignee,
+		labels:       labels,
+		components:   components,
+		fixVersions:  fixVersions,
+		customFields: custom,
+		template:     template,
+		noInput:      noInput,
+		debug:        debug,
 	}
 }
