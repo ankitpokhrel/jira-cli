@@ -26,6 +26,10 @@ $ jira issue create -tBug -s"New Bug" -yHigh -lbug -lurgent -b"Bug description"
 # Create issue in another project
 $ jira issue create -pPRJ -tBug -yHigh -s"New Bug" -b$'Bug description\n\nSome more text'
 
+# Create issue and set custom fields
+# See https://github.com/ankitpokhrel/jira-cli/discussions/346
+$ jira issue create -tStory -s"Issue with custom fields" --custom story-points=3
+
 # Load description from template file
 $ jira issue create --template /path/to/template.tmpl
 
