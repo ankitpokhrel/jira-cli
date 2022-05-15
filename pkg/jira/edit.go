@@ -22,6 +22,7 @@ type EditRequest struct {
 	Priority       string
 	Labels         []string
 	Components     []string
+	FixVersions    []string
 }
 
 // Edit updates an issue using POST /issue endpoint.
@@ -72,6 +73,11 @@ type editFields struct {
 			Name string `json:"name,omitempty"`
 		} `json:"set,omitempty"`
 	} `json:"components,omitempty"`
+	FixVersions []struct {
+		Set []struct {
+			Name string `json:"name,omitempty"`
+		} `json:"set,omitempty"`
+	} `json:"fixVersions,omitempty"`
 }
 
 type editFieldsMarshaler struct {
@@ -149,6 +155,22 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 				Name string `json:"name,omitempty"`
 			} `json:"set,omitempty"`
 		}{{Set: cmp}}
+	}
+	if len(req.FixVersions) > 0 {
+		versions := make([]struct {
+			Name string `json:"name,omitempty"`
+		}, 0, len(req.FixVersions))
+
+		for _, v := range req.FixVersions {
+			versions = append(versions, struct {
+				Name string `json:"name,omitempty"`
+			}{Name: v})
+		}
+		update.M.FixVersions = []struct {
+			Set []struct {
+				Name string `json:"name,omitempty"`
+			} `json:"set,omitempty"`
+		}{{Set: versions}}
 	}
 
 	fields := struct {

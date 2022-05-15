@@ -84,6 +84,9 @@ type IssueFields struct {
 	Components []struct {
 		Name string `json:"name"`
 	} `json:"components"`
+	FixVersions []struct {
+		Name string `json:"name"`
+	} `json:"fixVersions"`
 	Comment struct {
 		Comments []struct {
 			ID      string      `json:"id"`
