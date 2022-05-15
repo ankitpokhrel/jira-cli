@@ -106,9 +106,10 @@ func edit(cmd *cobra.Command, args []string) {
 				if len(ans.Metadata) > 0 {
 					qs := getMetadataQuestions(ans.Metadata, issue)
 					ans := struct {
-						Priority   string
-						Labels     string
-						Components string
+						Priority    string
+						Labels      string
+						Components  string
+						FixVersions string
 					}{}
 					err := survey.Ask(qs, &ans)
 					cmdutil.ExitIfError(err)
@@ -121,6 +122,9 @@ func edit(cmd *cobra.Command, args []string) {
 					}
 					if len(ans.Components) > 0 {
 						params.components = strings.Split(ans.Components, ",")
+					}
+					if len(ans.FixVersions) > 0 {
+						params.fixVersions = strings.Split(ans.FixVersions, ",")
 					}
 				}
 			}
@@ -138,6 +142,12 @@ func edit(cmd *cobra.Command, args []string) {
 	}
 	labels := params.labels
 	labels = append(labels, issue.Fields.Labels...)
+
+	fixVersions := make([]string, 0, len(issue.Fields.FixVersions)+len(params.fixVersions))
+	for _, fv := range issue.Fields.FixVersions {
+		fixVersions = append(fixVersions, fv.Name)
+	}
+	fixVersions = append(fixVersions, params.fixVersions...)
 
 	err = func() error {
 		s := cmdutil.Info("Updating an issue...")
@@ -160,6 +170,7 @@ func edit(cmd *cobra.Command, args []string) {
 			Priority:       params.priority,
 			Labels:         labels,
 			Components:     params.components,
+			FixVersions:    fixVersions,
 		}
 
 		return client.Edit(params.issueKey, &edr)
@@ -253,15 +264,16 @@ func (ec *editCmd) askQuestions(issue *jira.Issue, originalBody string) error {
 }
 
 type editParams struct {
-	issueKey   string
-	summary    string
-	body       string
-	priority   string
-	assignee   string
-	labels     []string
-	components []string
-	noInput    bool
-	debug      bool
+	issueKey    string
+	summary     string
+	body        string
+	priority    string
+	assignee    string
+	labels      []string
+	components  []string
+	fixVersions []string
+	noInput     bool
+	debug       bool
 }
 
 func (ep *editParams) isEmpty() bool {
@@ -288,6 +300,9 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	components, err := flags.GetStringArray("component")
 	cmdutil.ExitIfError(err)
 
+	fixVersions, err := flags.GetStringArray("fix-version")
+	cmdutil.ExitIfError(err)
+
 	noInput, err := flags.GetBool("no-input")
 	cmdutil.ExitIfError(err)
 
@@ -295,20 +310,26 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	cmdutil.ExitIfError(err)
 
 	return &editParams{
-		issueKey:   cmdutil.GetJiraIssueKey(project, args[0]),
-		summary:    summary,
-		body:       body,
-		priority:   priority,
-		assignee:   assignee,
-		labels:     labels,
-		components: components,
-		noInput:    noInput,
-		debug:      debug,
+		issueKey:    cmdutil.GetJiraIssueKey(project, args[0]),
+		summary:     summary,
+		body:        body,
+		priority:    priority,
+		assignee:    assignee,
+		labels:      labels,
+		components:  components,
+		fixVersions: fixVersions,
+		noInput:     noInput,
+		debug:       debug,
 	}
 }
 
 func getMetadataQuestions(meta []string, issue *jira.Issue) []*survey.Question {
 	var qs []*survey.Question
+
+	fixVersions := make([]string, 0, len(issue.Fields.FixVersions))
+	for _, fv := range issue.Fields.FixVersions {
+		fixVersions = append(fixVersions, fv.Name)
+	}
 
 	for _, m := range meta {
 		switch m {
@@ -334,6 +355,15 @@ func getMetadataQuestions(meta []string, issue *jira.Issue) []*survey.Question {
 					Default: strings.Join(issue.Fields.Labels, ","),
 				},
 			})
+		case "FixVersions":
+			qs = append(qs, &survey.Question{
+				Name: "fixversions",
+				Prompt: &survey.Input{
+					Message: "Fix Versions",
+					Help:    "Comma separated list of fixVersions. For eg: v1.0-beta,v2.0",
+					Default: strings.Join(fixVersions, ","),
+				},
+			})
 		}
 	}
 
@@ -349,6 +379,7 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("assignee", "a", "", "Edit assignee (email or display name)")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Append labels")
 	cmd.Flags().StringArrayP("component", "C", []string{}, "Replace components")
+	cmd.Flags().StringArray("fix-version", []string{}, "Add/Append release info (fixVersions)")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful update")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
