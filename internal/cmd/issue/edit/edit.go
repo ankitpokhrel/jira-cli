@@ -90,45 +90,7 @@ func edit(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(ec.askQuestions(issue, originalBody))
 
 	if !params.noInput {
-		answer := struct{ Action string }{}
-		for answer.Action != cmdcommon.ActionSubmit {
-			err := survey.Ask([]*survey.Question{cmdcommon.GetNextAction()}, &answer)
-			cmdutil.ExitIfError(err)
-
-			switch answer.Action {
-			case cmdcommon.ActionCancel:
-				cmdutil.Failed("Action aborted")
-			case cmdcommon.ActionMetadata:
-				ans := struct{ Metadata []string }{}
-				err := survey.Ask(cmdcommon.GetMetadata(), &ans)
-				cmdutil.ExitIfError(err)
-
-				if len(ans.Metadata) > 0 {
-					qs := getMetadataQuestions(ans.Metadata, issue)
-					ans := struct {
-						Priority    string
-						Labels      string
-						Components  string
-						FixVersions string
-					}{}
-					err := survey.Ask(qs, &ans)
-					cmdutil.ExitIfError(err)
-
-					if ans.Priority != "" {
-						params.priority = ans.Priority
-					}
-					if len(ans.Labels) > 0 {
-						params.labels = strings.Split(ans.Labels, ",")
-					}
-					if len(ans.Components) > 0 {
-						params.components = strings.Split(ans.Components, ",")
-					}
-					if len(ans.FixVersions) > 0 {
-						params.fixVersions = strings.Split(ans.FixVersions, ",")
-					}
-				}
-			}
-		}
+		getAnswers(params, issue)
 	}
 
 	if params.isEmpty() {
@@ -140,8 +102,15 @@ func edit(cmd *cobra.Command, args []string) {
 	if params.body != "" && params.body == originalBody {
 		params.body = ""
 	}
+
 	labels := params.labels
 	labels = append(labels, issue.Fields.Labels...)
+
+	components := make([]string, 0, len(issue.Fields.Components)+len(params.components))
+	for _, c := range issue.Fields.Components {
+		components = append(components, c.Name)
+	}
+	components = append(components, params.components...)
 
 	fixVersions := make([]string, 0, len(issue.Fields.FixVersions)+len(params.fixVersions))
 	for _, fv := range issue.Fields.FixVersions {
@@ -169,7 +138,7 @@ func edit(cmd *cobra.Command, args []string) {
 			Body:           body,
 			Priority:       params.priority,
 			Labels:         labels,
-			Components:     params.components,
+			Components:     components,
 			FixVersions:    fixVersions,
 		}
 
@@ -184,6 +153,48 @@ func edit(cmd *cobra.Command, args []string) {
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, params.issueKey)
 		cmdutil.ExitIfError(err)
+	}
+}
+
+func getAnswers(params *editParams, issue *jira.Issue) {
+	answer := struct{ Action string }{}
+	for answer.Action != cmdcommon.ActionSubmit {
+		err := survey.Ask([]*survey.Question{cmdcommon.GetNextAction()}, &answer)
+		cmdutil.ExitIfError(err)
+
+		switch answer.Action {
+		case cmdcommon.ActionCancel:
+			cmdutil.Failed("Action aborted")
+		case cmdcommon.ActionMetadata:
+			ans := struct{ Metadata []string }{}
+			err := survey.Ask(cmdcommon.GetMetadata(), &ans)
+			cmdutil.ExitIfError(err)
+
+			if len(ans.Metadata) > 0 {
+				qs := getMetadataQuestions(ans.Metadata, issue)
+				ans := struct {
+					Priority    string
+					Labels      string
+					Components  string
+					FixVersions string
+				}{}
+				err := survey.Ask(qs, &ans)
+				cmdutil.ExitIfError(err)
+
+				if ans.Priority != "" {
+					params.priority = ans.Priority
+				}
+				if len(ans.Labels) > 0 {
+					params.labels = strings.Split(ans.Labels, ",")
+				}
+				if len(ans.Components) > 0 {
+					params.components = strings.Split(ans.Components, ",")
+				}
+				if len(ans.FixVersions) > 0 {
+					params.fixVersions = strings.Split(ans.FixVersions, ",")
+				}
+			}
+		}
 	}
 }
 
