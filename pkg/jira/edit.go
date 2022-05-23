@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 )
+
+const separatorMinus = "-"
 
 // EditResponse struct holds response from POST /issue endpoint.
 type EditResponse struct {
@@ -66,7 +69,8 @@ type editFields struct {
 		} `json:"set,omitempty"`
 	} `json:"priority,omitempty"`
 	Labels []struct {
-		Set []string `json:"set,omitempty"`
+		Add    string `json:"add,omitempty"`
+		Remove string `json:"remove,omitempty"`
 	} `json:"labels,omitempty"`
 	Components []struct {
 		Set []struct {
@@ -98,7 +102,7 @@ func (cfm *editFieldsMarshaler) MarshalJSON() ([]byte, error) {
 	if len(cfm.M.Components) == 0 || len(cfm.M.Components[0].Set) == 0 {
 		cfm.M.Components = nil
 	}
-	if len(cfm.M.Labels) == 0 || len(cfm.M.Labels[0].Set) == 0 {
+	if len(cfm.M.Labels) == 0 || (cfm.M.Labels[0].Add == "" && cfm.M.Labels[0].Remove == "") {
 		cfm.M.Labels = nil
 	}
 
@@ -134,11 +138,31 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 		}{{Set: struct {
 			Name string `json:"name,omitempty"`
 		}{Name: req.Priority}}},
-		Labels: []struct {
-			Set []string `json:"set,omitempty"`
-		}{{Set: req.Labels}},
 	}}
 
+	if len(req.Labels) > 0 {
+		add, sub := addOrSub(req.Labels)
+
+		labels := make([]struct {
+			Add    string `json:"add,omitempty"`
+			Remove string `json:"remove,omitempty"`
+		}, 0, len(req.Labels))
+
+		for _, l := range sub {
+			labels = append(labels, struct {
+				Add    string `json:"add,omitempty"`
+				Remove string `json:"remove,omitempty"`
+			}{Remove: l})
+		}
+		for _, l := range add {
+			labels = append(labels, struct {
+				Add    string `json:"add,omitempty"`
+				Remove string `json:"remove,omitempty"`
+			}{Add: l})
+		}
+
+		update.M.Labels = labels
+	}
 	if len(req.Components) > 0 {
 		cmp := make([]struct {
 			Name string `json:"name,omitempty"`
@@ -198,4 +222,31 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 	}
 
 	return &data
+}
+
+func addOrSub(input []string) ([]string, []string) {
+	add := make([]string, 0, len(input))
+	sub := make([]string, 0, len(input))
+
+	for _, l := range input {
+		if strings.HasPrefix(l, separatorMinus) {
+			sub = append(sub, strings.TrimPrefix(l, separatorMinus))
+		}
+	}
+	for _, l := range input {
+		if !strings.HasPrefix(l, separatorMinus) && !inArray(sub, l) {
+			add = append(add, l)
+		}
+	}
+
+	return add, sub
+}
+
+func inArray(array []string, item string) bool {
+	for _, i := range array {
+		if i == item {
+			return true
+		}
+	}
+	return false
 }
