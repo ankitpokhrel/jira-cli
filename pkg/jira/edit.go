@@ -141,7 +141,7 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 	}}
 
 	if len(req.Labels) > 0 {
-		add, sub := addOrSub(req.Labels)
+		add, sub := splitAddAndRemove(req.Labels)
 
 		labels := make([]struct {
 			Add    string `json:"add,omitempty"`
@@ -224,18 +224,18 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 	return &data
 }
 
-func addOrSub(input []string) ([]string, []string) {
+func splitAddAndRemove(input []string) ([]string, []string) {
 	add := make([]string, 0, len(input))
 	sub := make([]string, 0, len(input))
 
-	for _, l := range input {
-		if strings.HasPrefix(l, separatorMinus) {
-			sub = append(sub, strings.TrimPrefix(l, separatorMinus))
+	for _, inp := range input {
+		if strings.HasPrefix(inp, separatorMinus) {
+			sub = append(sub, strings.TrimPrefix(inp, separatorMinus))
 		}
 	}
-	for _, l := range input {
-		if !strings.HasPrefix(l, separatorMinus) && !inArray(sub, l) {
-			add = append(add, l)
+	for _, inp := range input {
+		if !strings.HasPrefix(inp, separatorMinus) && !inArray(sub, inp) {
+			add = append(add, inp)
 		}
 	}
 
