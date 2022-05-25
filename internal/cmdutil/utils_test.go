@@ -172,9 +172,10 @@ func TestGetSubtaskHandle(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		name     string
-		input    []*jira.IssueType
-		expected string
+		name      string
+		input     []*jira.IssueType
+		inputType string
+		expected  string
 	}{
 		{
 			name: "should get default issue type handle for sub-task",
@@ -186,7 +187,8 @@ func TestGetSubtaskHandle(t *testing.T) {
 					Subtask: false,
 				},
 			},
-			expected: "Sub-task",
+			inputType: "Sub-task",
+			expected:  "Sub-task",
 		},
 		{
 			name: "should get valid sub-task handle",
@@ -204,7 +206,8 @@ func TestGetSubtaskHandle(t *testing.T) {
 					Subtask: true,
 				},
 			},
-			expected: "Sub-Task",
+			inputType: "Sub-task",
+			expected:  "Sub-Task",
 		},
 		{
 			name: "should get sub-task name as handle",
@@ -221,7 +224,33 @@ func TestGetSubtaskHandle(t *testing.T) {
 					Subtask: true,
 				},
 			},
-			expected: "Subtask",
+			inputType: "Sub-task",
+			expected:  "Subtask",
+		},
+		{
+			name: "exact matches for a custom sub-task should take precedence",
+			input: []*jira.IssueType{
+				{
+					ID:      "123",
+					Name:    "Story",
+					Handle:  "story",
+					Subtask: false,
+				},
+				{
+					ID:      "234",
+					Name:    "Sub-Task",
+					Handle:  "Sub-Task",
+					Subtask: true,
+				},
+				{
+					ID:      "567",
+					Name:    "Custom Sub-Task",
+					Handle:  "Custom Sub-Task",
+					Subtask: true,
+				},
+			},
+			inputType: "Custom Sub-Task",
+			expected:  "Custom Sub-Task",
 		},
 	}
 
@@ -231,7 +260,7 @@ func TestGetSubtaskHandle(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			assert.Equal(t, tc.expected, GetSubtaskHandle(tc.input))
+			assert.Equal(t, tc.expected, GetSubtaskHandle(tc.inputType, tc.input))
 		})
 	}
 }
