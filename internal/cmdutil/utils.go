@@ -162,14 +162,33 @@ func NormalizeJiraError(msg string) string {
 // GetSubtaskHandle fetches actual subtask handle.
 // This value can either be handle or name based
 // on the used jira version.
-func GetSubtaskHandle(issueTypes []*jira.IssueType) string {
+func GetSubtaskHandle(issueType string, issueTypes []*jira.IssueType) string {
+	get := func(it *jira.IssueType) string {
+		if it.Handle != "" {
+			return it.Handle
+		}
+		return it.Name
+	}
+	fallback := ""
+
 	for _, it := range issueTypes {
 		if it.Subtask {
-			if it.Handle != "" {
-				return it.Handle
+			// Exact matches return immediately
+			if strings.EqualFold(issueType, it.Name) {
+				return get(it)
 			}
-			return it.Name
+
+			// Store the first subtask type as backup
+			if fallback == "" {
+				fallback = get(it)
+			}
 		}
 	}
-	return jira.IssueTypeSubTask
+
+	// Set default for fallback if none found
+	if strings.EqualFold(issueType, jira.IssueTypeSubTask) && fallback == "" {
+		fallback = jira.IssueTypeSubTask
+	}
+
+	return fallback
 }
