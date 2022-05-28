@@ -73,9 +73,12 @@ type editFields struct {
 		Remove string `json:"remove,omitempty"`
 	} `json:"labels,omitempty"`
 	Components []struct {
-		Set []struct {
+		Add *struct {
 			Name string `json:"name,omitempty"`
-		} `json:"set,omitempty"`
+		} `json:"add,omitempty"`
+		Remove *struct {
+			Name string `json:"name,omitempty"`
+		} `json:"remove,omitempty"`
 	} `json:"components,omitempty"`
 	FixVersions []struct {
 		Set []struct {
@@ -99,7 +102,7 @@ func (cfm *editFieldsMarshaler) MarshalJSON() ([]byte, error) {
 	if len(cfm.M.Priority) == 0 || cfm.M.Priority[0].Set.Name == "" {
 		cfm.M.Priority = nil
 	}
-	if len(cfm.M.Components) == 0 || len(cfm.M.Components[0].Set) == 0 {
+	if len(cfm.M.Components) == 0 || (cfm.M.Components[0].Add != nil && cfm.M.Components[0].Remove != nil) {
 		cfm.M.Components = nil
 	}
 	if len(cfm.M.Labels) == 0 || (cfm.M.Labels[0].Add == "" && cfm.M.Labels[0].Remove == "") {
@@ -164,21 +167,43 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 		update.M.Labels = labels
 	}
 	if len(req.Components) > 0 {
+		add, sub := splitAddAndRemove(req.Components)
+
 		cmp := make([]struct {
-			Name string `json:"name,omitempty"`
+			Add *struct {
+				Name string `json:"name,omitempty"`
+			} `json:"add,omitempty"`
+			Remove *struct {
+				Name string `json:"name,omitempty"`
+			} `json:"remove,omitempty"`
 		}, 0, len(req.Components))
 
-		for _, c := range req.Components {
+		for _, c := range sub {
 			cmp = append(cmp, struct {
+				Add *struct {
+					Name string `json:"name,omitempty"`
+				} `json:"add,omitempty"`
+				Remove *struct {
+					Name string `json:"name,omitempty"`
+				} `json:"remove,omitempty"`
+			}{Remove: &struct {
 				Name string `json:"name,omitempty"`
-			}{Name: c})
+			}{Name: c}})
+		}
+		for _, c := range add {
+			cmp = append(cmp, struct {
+				Add *struct {
+					Name string `json:"name,omitempty"`
+				} `json:"add,omitempty"`
+				Remove *struct {
+					Name string `json:"name,omitempty"`
+				} `json:"remove,omitempty"`
+			}{Add: &struct {
+				Name string `json:"name,omitempty"`
+			}{Name: c}})
 		}
 
-		update.M.Components = []struct {
-			Set []struct {
-				Name string `json:"name,omitempty"`
-			} `json:"set,omitempty"`
-		}{{Set: cmp}}
+		update.M.Components = cmp
 	}
 	if len(req.FixVersions) > 0 {
 		versions := make([]struct {
