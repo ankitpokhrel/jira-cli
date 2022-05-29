@@ -169,16 +169,17 @@ func GetSubtaskHandle(issueType string, issueTypes []*jira.IssueType) string {
 		}
 		return it.Name
 	}
-	fallback := ""
+
+	var fallback string
 
 	for _, it := range issueTypes {
 		if it.Subtask {
-			// Exact matches return immediately
+			// Exact matches return immediately.
 			if strings.EqualFold(issueType, it.Name) {
 				return get(it)
 			}
 
-			// Store the first subtask type as backup
+			// Store the first subtask type as backup.
 			if fallback == "" {
 				fallback = get(it)
 			}

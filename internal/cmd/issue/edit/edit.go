@@ -26,7 +26,10 @@ const (
 $ jira issue edit ISSUE-1 -s"New Bug" -yHigh -lbug -lurgent -CBackend -b"Bug description"
 
 # Use --no-input option to disable interactive prompt
-$ jira issue edit ISSUE-1 -s"New updated summary" --no-input`
+$ jira issue edit ISSUE-1 -s"New updated summary" --no-input
+
+# Use minus (-) to remove label, component or fixVersion
+$ jira issue edit ISSUE-1 --label -urgent --component -BE --fix-version -v1.0`
 )
 
 // NewCmdEdit is an edit command.

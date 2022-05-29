@@ -247,7 +247,7 @@ jira issue list --created -1h --updated -30m
 <details><summary>Give me issues that are of high priority, is in progress, was created this month, and has given labels :fire:</summary>
 
 ```sh
-jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high prio"
+jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high-prio"
 ```
 </details>
 
@@ -337,7 +337,13 @@ $ jira issue edit ISSUE-1
 $ jira issue edit ISSUE-1 -s"New Bug" -yHigh -lbug -lurgent -CBackend -b"Bug description"
 
 # Use --no-input option to disable interactive prompt
-$ jira issue edit ISSUE-1 -s"New updated summary" --no-input`
+$ jira issue edit ISSUE-1 -s"New updated summary" --no-input
+
+# Use minus (-) to remove label, component or fixVersion
+# For instance, to edit issue to 
+#   - remove label p2, component FE, fixVersion v1.0 
+#   - add label p1, component BE, fixVersion v2.0
+$ jira issue edit ISSUE-1 --label -p2 --label p1 --component -FE --component BE --fix-version -v1.0 --fix-version v2.0
 ```
 
 #### Assign
