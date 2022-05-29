@@ -143,6 +143,7 @@ func edit(cmd *cobra.Command, args []string) {
 			Labels:         labels,
 			Components:     components,
 			FixVersions:    fixVersions,
+			CustomFields:   params.customFields,
 		}
 
 		return client.Edit(params.issueKey, &edr)
@@ -278,16 +279,17 @@ func (ec *editCmd) askQuestions(issue *jira.Issue, originalBody string) error {
 }
 
 type editParams struct {
-	issueKey    string
-	summary     string
-	body        string
-	priority    string
-	assignee    string
-	labels      []string
-	components  []string
-	fixVersions []string
-	noInput     bool
-	debug       bool
+	issueKey     string
+	summary      string
+	body         string
+	priority     string
+	assignee     string
+	labels       []string
+	components   []string
+	fixVersions  []string
+	customFields map[string]string
+	noInput      bool
+	debug        bool
 }
 
 func (ep *editParams) isEmpty() bool {
@@ -317,6 +319,9 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	fixVersions, err := flags.GetStringArray("fix-version")
 	cmdutil.ExitIfError(err)
 
+	custom, err := flags.GetStringToString("custom")
+	cmdutil.ExitIfError(err)
+
 	noInput, err := flags.GetBool("no-input")
 	cmdutil.ExitIfError(err)
 
@@ -324,16 +329,17 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	cmdutil.ExitIfError(err)
 
 	return &editParams{
-		issueKey:    cmdutil.GetJiraIssueKey(project, args[0]),
-		summary:     summary,
-		body:        body,
-		priority:    priority,
-		assignee:    assignee,
-		labels:      labels,
-		components:  components,
-		fixVersions: fixVersions,
-		noInput:     noInput,
-		debug:       debug,
+		issueKey:     cmdutil.GetJiraIssueKey(project, args[0]),
+		summary:      summary,
+		body:         body,
+		priority:     priority,
+		assignee:     assignee,
+		labels:       labels,
+		components:   components,
+		fixVersions:  fixVersions,
+		customFields: custom,
+		noInput:      noInput,
+		debug:        debug,
 	}
 }
 
@@ -385,6 +391,8 @@ func getMetadataQuestions(meta []string, issue *jira.Issue) []*survey.Question {
 }
 
 func setFlags(cmd *cobra.Command) {
+	custom := make(map[string]string)
+
 	cmd.Flags().SortFlags = false
 
 	cmd.Flags().StringP("summary", "s", "", "Edit summary or title")
@@ -394,6 +402,7 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Append labels")
 	cmd.Flags().StringArrayP("component", "C", []string{}, "Replace components")
 	cmd.Flags().StringArray("fix-version", []string{}, "Add/Append release info (fixVersions)")
+	cmd.Flags().StringToString("custom", custom, "Edit custom fields")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful update")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
