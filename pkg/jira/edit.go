@@ -81,9 +81,12 @@ type editFields struct {
 		} `json:"remove,omitempty"`
 	} `json:"components,omitempty"`
 	FixVersions []struct {
-		Set []struct {
+		Add *struct {
 			Name string `json:"name,omitempty"`
-		} `json:"set,omitempty"`
+		} `json:"add,omitempty"`
+		Remove *struct {
+			Name string `json:"name,omitempty"`
+		} `json:"remove,omitempty"`
 	} `json:"fixVersions,omitempty"`
 }
 
@@ -206,20 +209,43 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 		update.M.Components = cmp
 	}
 	if len(req.FixVersions) > 0 {
+		add, sub := splitAddAndRemove(req.FixVersions)
+
 		versions := make([]struct {
-			Name string `json:"name,omitempty"`
+			Add *struct {
+				Name string `json:"name,omitempty"`
+			} `json:"add,omitempty"`
+			Remove *struct {
+				Name string `json:"name,omitempty"`
+			} `json:"remove,omitempty"`
 		}, 0, len(req.FixVersions))
 
-		for _, v := range req.FixVersions {
+		for _, v := range sub {
 			versions = append(versions, struct {
+				Add *struct {
+					Name string `json:"name,omitempty"`
+				} `json:"add,omitempty"`
+				Remove *struct {
+					Name string `json:"name,omitempty"`
+				} `json:"remove,omitempty"`
+			}{Remove: &struct {
 				Name string `json:"name,omitempty"`
-			}{Name: v})
+			}{Name: v}})
 		}
-		update.M.FixVersions = []struct {
-			Set []struct {
+		for _, v := range add {
+			versions = append(versions, struct {
+				Add *struct {
+					Name string `json:"name,omitempty"`
+				} `json:"add,omitempty"`
+				Remove *struct {
+					Name string `json:"name,omitempty"`
+				} `json:"remove,omitempty"`
+			}{Add: &struct {
 				Name string `json:"name,omitempty"`
-			} `json:"set,omitempty"`
-		}{{Set: versions}}
+			}{Name: v}})
+		}
+
+		update.M.FixVersions = versions
 	}
 
 	fields := struct {
