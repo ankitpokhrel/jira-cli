@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
+
+	"github.com/spf13/viper"
 )
 
 const separatorMinus = "-"
@@ -26,6 +29,9 @@ type EditRequest struct {
 	Labels         []string
 	Components     []string
 	FixVersions    []string
+	// CustomFields holds all custom fields passed
+	// while editing the issue.
+	CustomFields map[string]string
 }
 
 // Edit updates an issue using POST /issue endpoint.
@@ -88,6 +94,8 @@ type editFields struct {
 			Name string `json:"name,omitempty"`
 		} `json:"remove,omitempty"`
 	} `json:"fixVersions,omitempty"`
+
+	customFields customField
 }
 
 type editFieldsMarshaler struct {
@@ -112,7 +120,22 @@ func (cfm *editFieldsMarshaler) MarshalJSON() ([]byte, error) {
 		cfm.M.Labels = nil
 	}
 
-	return json.Marshal(cfm.M)
+	m, err := json.Marshal(cfm.M)
+	if err != nil {
+		return m, err
+	}
+
+	var temp interface{}
+	if err := json.Unmarshal(m, &temp); err != nil {
+		return nil, err
+	}
+	dm := temp.(map[string]interface{})
+
+	for key, val := range cfm.M.customFields {
+		dm[key] = val
+	}
+
+	return json.Marshal(dm)
 }
 
 type editRequest struct {
@@ -271,8 +294,59 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 		Update: update,
 		Fields: fields,
 	}
+	constructCustomFieldsForEdit(req.CustomFields, &data)
 
 	return &data
+}
+
+func constructCustomFieldsForEdit(fields map[string]string, data *editRequest) {
+	if len(fields) == 0 {
+		return
+	}
+
+	var configuredFields []IssueTypeField
+
+	err := viper.UnmarshalKey("issue.fields.custom", &configuredFields)
+	if err != nil || len(configuredFields) == 0 {
+		return
+	}
+
+	data.Update.M.customFields = make(customField)
+
+	for key, val := range fields {
+		for _, configured := range configuredFields {
+			identifier := strings.ReplaceAll(strings.ToLower(strings.TrimSpace(configured.Name)), " ", "-")
+			if identifier != strings.ToLower(key) {
+				continue
+			}
+
+			switch configured.Schema.DataType {
+			case customFieldFormatOption:
+				data.Update.M.customFields[configured.Key] = []customFieldTypeOptionSet{{Set: customFieldTypeOption{Value: val}}}
+			case customFieldFormatArray:
+				pieces := strings.Split(strings.TrimSpace(val), ",")
+				if configured.Schema.Items == customFieldFormatOption {
+					items := make([]customFieldTypeOptionAddRemove, 0)
+					for _, p := range pieces {
+						items = append(items, customFieldTypeOptionAddRemove{Add: &customFieldTypeOption{Value: p}})
+					}
+					data.Update.M.customFields[configured.Key] = items
+				} else {
+					data.Update.M.customFields[configured.Key] = pieces
+				}
+			case customFieldFormatNumber:
+				num, err := strconv.ParseFloat(val, 64) //nolint:gomnd
+				if err != nil {
+					// Let Jira API handle data type error for now.
+					data.Update.M.customFields[configured.Key] = []customFieldTypeStringSet{{Set: val}}
+				} else {
+					data.Update.M.customFields[configured.Key] = []customFieldTypeNumberSet{{Set: customFieldTypeNumber(num)}}
+				}
+			default:
+				data.Update.M.customFields[configured.Key] = []customFieldTypeStringSet{{Set: val}}
+			}
+		}
+	}
 }
 
 func splitAddAndRemove(input []string) ([]string, []string) {
