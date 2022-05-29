@@ -328,7 +328,11 @@ func constructCustomFieldsForEdit(fields map[string]string, data *editRequest) {
 				if configured.Schema.Items == customFieldFormatOption {
 					items := make([]customFieldTypeOptionAddRemove, 0)
 					for _, p := range pieces {
-						items = append(items, customFieldTypeOptionAddRemove{Add: &customFieldTypeOption{Value: p}})
+						if strings.HasPrefix(p, separatorMinus) {
+							items = append(items, customFieldTypeOptionAddRemove{Remove: &customFieldTypeOption{Value: strings.TrimPrefix(p, separatorMinus)}})
+						} else {
+							items = append(items, customFieldTypeOptionAddRemove{Add: &customFieldTypeOption{Value: p}})
+						}
 					}
 					data.Update.M.customFields[configured.Key] = items
 				} else {
