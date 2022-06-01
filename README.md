@@ -28,7 +28,9 @@
     </p>
     <img align="center" alt="JiraCLI Demo" src=".github/assets/demo.gif" /><br/><br/>
     <p align="center">
-        :construction: This project is still a work in progress :construction:<br/>
+         Financial support from private and corporate sponsors ensures the tool's continued development.<br/>
+         Please <a href="https://opencollective.com/jira-cli#backers">consider becoming a sponsor</a> if you or your company rely on JiraCLI.
+         <br/><br/>
         <a href="https://opencollective.com/jira-cli#backers" target="_blank">
             <img src="https://opencollective.com/jira-cli/backers.svg" alt="jira-cli open collective badge">
         </a>
