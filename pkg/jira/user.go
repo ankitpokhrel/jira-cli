@@ -29,6 +29,17 @@ func (c *Client) UserSearch(opt *UserSearchOptions) ([]*User, error) {
 
 // UserSearchV2 search for user details using v2 version of the GET /user/assignable/search endpoint.
 func (c *Client) UserSearchV2(opt *UserSearchOptions) ([]*User, error) {
+	// The `username` query param is deprecated since Jira API v2 and is not available in v3.
+	// Since the` query` parameter doesn't seem to return expected results, we will use the
+	// `username` param in call to v2. Chances are the `query` param may stop working in
+	// later v2 updates so we might have to revisit this in the future. Note that the
+	// `username` param is not as flexible as the `query` param available in v3.
+	//
+	// See https://github.com/ankitpokhrel/jira-cli/issues/198
+	if opt.Query != "" && opt.Username == "" {
+		opt.Username = opt.Query
+		opt.Query = ""
+	}
 	return c.userSearch(opt, apiVersion2)
 }
 
