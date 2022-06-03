@@ -12,17 +12,10 @@ import (
 )
 
 func TestUserSearch(t *testing.T) {
-	var (
-		apiVersion2          bool
-		unexpectedStatusCode bool
-	)
+	var unexpectedStatusCode bool
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if apiVersion2 {
-			assert.Equal(t, "/rest/api/2/user/assignable/search", r.URL.Path)
-		} else {
-			assert.Equal(t, "/rest/api/3/user/assignable/search", r.URL.Path)
-		}
+		assert.Equal(t, "/rest/api/3/user/assignable/search", r.URL.Path)
 
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
@@ -78,9 +71,61 @@ func TestUserSearch(t *testing.T) {
 
 	_, err = client.UserSearch(&UserSearchOptions{})
 	assert.Error(t, ErrInvalidSearchOption, err)
+}
 
-	apiVersion2 = true
+func TestUserSearchV2(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/2/user/assignable/search", r.URL.Path)
 
-	_, err = client.UserSearchV2(&UserSearchOptions{})
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+		assert.Equal(t, url.Values{
+			"username":   []string{"doe"},
+			"startAt":    []string{"1"},
+			"maxResults": []string{"5"},
+			"accountId":  []string{"a123b"},
+		}, r.URL.Query())
+
+		resp, err := ioutil.ReadFile("./testdata/users.json")
+		assert.NoError(t, err)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		_, _ = w.Write(resp)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	actual, err := client.UserSearchV2(&UserSearchOptions{
+		Query:      "doe",
+		AccountID:  "a123b",
+		StartAt:    1,
+		MaxResults: 5,
+	})
+	assert.NoError(t, err)
+
+	expected := []*User{
+		{
+			AccountID:   "5fb82376aca10c006949f35b",
+			Email:       "jane@domain.tld",
+			Name:        "janedoe",
+			DisplayName: "Jane Doe",
+			Active:      true,
+		},
+		{
+			AccountID:   "5fb82376aca10c006949f35c",
+			Email:       "jon@domain.tld",
+			DisplayName: "Jon Doe",
+			Active:      false,
+		},
+	}
+	assert.Equal(t, expected, actual)
+
+	actual, err = client.UserSearchV2(&UserSearchOptions{
+		Query:      "doe",
+		AccountID:  "a123b",
+		StartAt:    1,
+		MaxResults: 5,
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
 }
