@@ -26,6 +26,7 @@ const (
 
 	optionSearch = "[Search...]"
 	optionBack   = "Go-back"
+	optionNone   = "None"
 	lineBreak    = "----------"
 )
 
@@ -54,7 +55,19 @@ type issueTypeFieldConf struct {
 
 // JiraCLIConfig is a Jira CLI config.
 type JiraCLIConfig struct {
-	value struct {
+	Installation string
+	Server       string
+	Login        string
+	Project      string
+	Board        string
+	Force        bool
+	Insecure     bool
+}
+
+// JiraCLIConfigGenerator is a Jira CLI config generator.
+type JiraCLIConfigGenerator struct {
+	usrCfg *JiraCLIConfig
+	value  struct {
 		installation string
 		server       string
 		login        string
@@ -73,32 +86,19 @@ type JiraCLIConfig struct {
 	boardsMap          map[string]*jira.Board
 }
 
-// JiraCLIConfigFunc decorates option for JiraCLIConfig.
-type JiraCLIConfigFunc func(*JiraCLIConfig)
-
-// NewJiraCLIConfig creates a new Jira CLI config.
-func NewJiraCLIConfig(opts ...JiraCLIConfigFunc) *JiraCLIConfig {
-	cfg := JiraCLIConfig{
+// NewJiraCLIConfigGenerator creates a new Jira CLI config.
+func NewJiraCLIConfigGenerator(cfg *JiraCLIConfig) *JiraCLIConfigGenerator {
+	gen := JiraCLIConfigGenerator{
+		usrCfg:      cfg,
 		projectsMap: make(map[string]*projectConf),
 		boardsMap:   make(map[string]*jira.Board),
 	}
 
-	for _, opt := range opts {
-		opt(&cfg)
-	}
-
-	return &cfg
-}
-
-// WithInsecureTLS is a functional opt to set TLS certificate verification option.
-func WithInsecureTLS(ins bool) JiraCLIConfigFunc {
-	return func(c *JiraCLIConfig) {
-		c.insecure = ins
-	}
+	return &gen
 }
 
 // Generate generates the config file.
-func (c *JiraCLIConfig) Generate() (string, error) {
+func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 	ce := func() bool {
 		s := cmdutil.Info("Checking configuration...")
 		defer s.Stop()
@@ -106,7 +106,7 @@ func (c *JiraCLIConfig) Generate() (string, error) {
 		return Exists(viper.ConfigFileUsed())
 	}()
 
-	if ce && !shallOverwrite() {
+	if !c.usrCfg.Force && ce && !shallOverwrite() {
 		return "", ErrSkip
 	}
 	if err := c.configureInstallationType(); err != nil {
@@ -140,27 +140,39 @@ func (c *JiraCLIConfig) Generate() (string, error) {
 	return c.write(cfgDir)
 }
 
-func (c *JiraCLIConfig) configureInstallationType() error {
-	qs := &survey.Select{
-		Message: "Installation type:",
-		Help:    "Is this a cloud installation or an on-premise (local) installation.",
-		Options: []string{"Cloud", "Local"},
-		Default: "Cloud",
-	}
+func (c *JiraCLIConfigGenerator) configureInstallationType() error {
+	switch c.usrCfg.Installation {
+	case strings.ToLower(jira.InstallationTypeCloud):
+		c.value.installation = jira.InstallationTypeCloud
+	case strings.ToLower(jira.InstallationTypeLocal):
+		c.value.installation = jira.InstallationTypeLocal
+	default:
+		qs := &survey.Select{
+			Message: "Installation type:",
+			Help:    "Is this a cloud installation or an on-premise (local) installation.",
+			Options: []string{"Cloud", "Local"},
+			Default: "Cloud",
+		}
 
-	var installation string
-	if err := survey.AskOne(qs, &installation); err != nil {
-		return err
-	}
+		var installation string
+		if err := survey.AskOne(qs, &installation); err != nil {
+			return err
+		}
 
-	c.value.installation = installation
+		c.value.installation = installation
+	}
 
 	return nil
 }
 
-func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
-	qs := []*survey.Question{
-		{
+func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
+	var qs []*survey.Question
+
+	c.value.server = c.usrCfg.Server
+	c.value.login = c.usrCfg.Login
+
+	if c.usrCfg.Server == "" {
+		qs = append(qs, &survey.Question{
 			Name: "server",
 			Prompt: &survey.Input{
 				Message: "Link to Jira server:",
@@ -183,74 +195,82 @@ func (c *JiraCLIConfig) configureServerAndLoginDetails() error {
 
 				return nil
 			},
-		},
-	}
-
-	if c.value.installation == jira.InstallationTypeCloud {
-		qs = append(qs, &survey.Question{
-			Name: "login",
-			Prompt: &survey.Input{
-				Message: "Login email:",
-				Help:    "This is the email you use to login to your jira account.",
-			},
-			Validate: func(val interface{}) error {
-				var (
-					emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9]" +
-						"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-
-					errInvalidEmail = fmt.Errorf("not a valid email")
-				)
-
-				str, ok := val.(string)
-				if !ok {
-					return errInvalidEmail
-				}
-				if len(str) < 3 || len(str) > 254 {
-					return errInvalidEmail
-				}
-				if !emailRegex.MatchString(str) {
-					return errInvalidEmail
-				}
-
-				return nil
-			},
-		})
-	} else if c.value.installation == jira.InstallationTypeLocal {
-		qs = append(qs, &survey.Question{
-			Name: "login",
-			Prompt: &survey.Input{
-				Message: "Login username:",
-				Help:    "This is the username you use to login to your jira account.",
-			},
-			Validate: func(val interface{}) error {
-				errInvalidUser := fmt.Errorf("not a valid user")
-
-				str, ok := val.(string)
-				if !ok {
-					return errInvalidUser
-				}
-				if len(str) < 3 || len(str) > 254 {
-					return errInvalidUser
-				}
-
-				return nil
-			},
 		})
 	}
 
-	ans := struct {
-		Server string
-		Login  string
-	}{}
+	if c.usrCfg.Login == "" {
+		switch c.value.installation {
+		case jira.InstallationTypeCloud:
+			qs = append(qs, &survey.Question{
+				Name: "login",
+				Prompt: &survey.Input{
+					Message: "Login email:",
+					Help:    "This is the email you use to login to your jira account.",
+				},
+				Validate: func(val interface{}) error {
+					var (
+						emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9]" +
+							"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
-	if err := survey.Ask(qs, &ans); err != nil {
-		return err
+						errInvalidEmail = fmt.Errorf("not a valid email")
+					)
+
+					str, ok := val.(string)
+					if !ok {
+						return errInvalidEmail
+					}
+					if len(str) < 3 || len(str) > 254 {
+						return errInvalidEmail
+					}
+					if !emailRegex.MatchString(str) {
+						return errInvalidEmail
+					}
+
+					return nil
+				},
+			})
+		case jira.InstallationTypeLocal:
+			qs = append(qs, &survey.Question{
+				Name: "login",
+				Prompt: &survey.Input{
+					Message: "Login username:",
+					Help:    "This is the username you use to login to your jira account.",
+				},
+				Validate: func(val interface{}) error {
+					errInvalidUser := fmt.Errorf("not a valid user")
+
+					str, ok := val.(string)
+					if !ok {
+						return errInvalidUser
+					}
+					if len(str) < 3 || len(str) > 254 {
+						return errInvalidUser
+					}
+
+					return nil
+				},
+			})
+		}
 	}
 
-	return c.verifyLoginDetails(ans.Server, ans.Login)
+	if len(qs) > 0 {
+		ans := struct {
+			Server string
+			Login  string
+		}{}
+
+		if err := survey.Ask(qs, &ans); err != nil {
+			return err
+		}
+
+		c.value.server = ans.Server
+		c.value.login = ans.Login
+	}
+
+	return c.verifyLoginDetails(c.value.server, c.value.login)
 }
 
-func (c *JiraCLIConfig) verifyLoginDetails(server, login string) error {
+func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error {
 	s := cmdutil.Info("Verifying login details...")
 	defer s.Stop()
 
@@ -275,19 +295,28 @@ func (c *JiraCLIConfig) verifyLoginDetails(server, login string) error {
 	return nil
 }
 
-func (c *JiraCLIConfig) configureProjectAndBoardDetails() error {
-	var project, board string
+func (c *JiraCLIConfigGenerator) configureProjectAndBoardDetails() error {
+	project := c.usrCfg.Project
+	board := c.usrCfg.Board
 
 	if err := c.getProjectSuggestions(); err != nil {
 		return err
 	}
-	projectPrompt := survey.Select{
-		Message: "Default project:",
-		Help:    "This is your project key that you want to access by default when using the cli.",
-		Options: c.projectSuggestions,
+
+	if c.usrCfg.Project == "" {
+		projectPrompt := survey.Select{
+			Message: "Default project:",
+			Help:    "This is your project key that you want to access by default when using the cli.",
+			Options: c.projectSuggestions,
+		}
+		if err := survey.AskOne(&projectPrompt, &project, survey.WithValidator(survey.Required)); err != nil {
+			return err
+		}
 	}
-	if err := survey.AskOne(&projectPrompt, &project, survey.WithValidator(survey.Required)); err != nil {
-		return err
+	c.value.project = c.projectsMap[strings.ToLower(project)]
+
+	if c.value.project == nil {
+		return fmt.Errorf("project not found\n  Please check the project key and try again")
 	}
 
 	if err := c.getBoardSuggestions(project); err != nil {
@@ -295,56 +324,63 @@ func (c *JiraCLIConfig) configureProjectAndBoardDetails() error {
 	}
 	defaultBoardSuggestions := c.boardSuggestions
 
-	for {
-		boardPrompt := &survey.Question{
-			Name: "",
-			Prompt: &survey.Select{
-				Message: "Default board:",
-				Help:    "This is your default project board that you want to access by default when using the cli.",
-				Options: c.boardSuggestions,
-			},
-			Validate: func(val interface{}) error {
-				errInvalidSelection := fmt.Errorf("invalid selection")
+	if c.usrCfg.Board == "" {
+		for {
+			boardPrompt := &survey.Question{
+				Name: "",
+				Prompt: &survey.Select{
+					Message: "Default board:",
+					Help:    "This is your default project board that you want to access by default when using the cli.",
+					Options: c.boardSuggestions,
+				},
+				Validate: func(val interface{}) error {
+					errInvalidSelection := fmt.Errorf("invalid selection")
 
-				ans, ok := val.(core.OptionAnswer)
-				if !ok {
-					return errInvalidSelection
-				}
-				if ans.Value == "" || ans.Value == lineBreak {
-					return errInvalidSelection
-				}
+					ans, ok := val.(core.OptionAnswer)
+					if !ok {
+						return errInvalidSelection
+					}
+					if ans.Value == "" || ans.Value == lineBreak {
+						return errInvalidSelection
+					}
 
-				return nil
-			},
-		}
+					return nil
+				},
+			}
 
-		if err := survey.Ask([]*survey.Question{boardPrompt}, &board, survey.WithValidator(survey.Required)); err != nil {
-			return err
-		}
-		if board != optionBack && board != optionSearch {
-			break
-		}
-		if board == optionBack {
-			c.boardSuggestions = defaultBoardSuggestions
-		}
-		if board == optionSearch {
-			kw, err := c.getSearchKeyword()
-			if err != nil {
+			if err := survey.Ask([]*survey.Question{boardPrompt}, &board, survey.WithValidator(survey.Required)); err != nil {
 				return err
 			}
-			if err := c.searchAndAssignBoard(project, kw); err != nil {
-				return err
+			if board != optionBack && board != optionSearch {
+				break
+			}
+			if board == optionBack {
+				c.boardSuggestions = defaultBoardSuggestions
+			}
+			if board == optionSearch {
+				kw, err := c.getSearchKeyword()
+				if err != nil {
+					return err
+				}
+				if err := c.searchAndAssignBoard(project, kw); err != nil {
+					return err
+				}
 			}
 		}
 	}
+	c.value.board = c.boardsMap[strings.ToLower(board)]
 
-	c.value.project = c.projectsMap[project]
-	c.value.board = c.boardsMap[board]
-
+	if c.value.board == nil && strings.ToLower(board) != strings.ToLower(optionNone) {
+		return fmt.Errorf(
+			"board not found\n  Boards available for the project '%s' are '%s'",
+			c.value.project.Key,
+			strings.Join(defaultBoardSuggestions[2:], ", "),
+		)
+	}
 	return nil
 }
 
-func (*JiraCLIConfig) getSearchKeyword() (string, error) {
+func (*JiraCLIConfigGenerator) getSearchKeyword() (string, error) {
 	var ans string
 
 	qs := &survey.Question{
@@ -373,7 +409,7 @@ func (*JiraCLIConfig) getSearchKeyword() (string, error) {
 	return ans, nil
 }
 
-func (c *JiraCLIConfig) searchAndAssignBoard(project, keyword string) error {
+func (c *JiraCLIConfigGenerator) searchAndAssignBoard(project, keyword string) error {
 	resp, err := c.jiraClient.BoardSearch(project, keyword)
 	if err != nil {
 		return err
@@ -381,7 +417,7 @@ func (c *JiraCLIConfig) searchAndAssignBoard(project, keyword string) error {
 
 	c.boardSuggestions = []string{}
 	for _, board := range resp.Boards {
-		c.boardsMap[board.Name] = board
+		c.boardsMap[strings.ToLower(board.Name)] = board
 		c.boardSuggestions = append(c.boardSuggestions, board.Name)
 	}
 	c.boardSuggestions = append(c.boardSuggestions, lineBreak, optionSearch, optionBack)
@@ -389,7 +425,7 @@ func (c *JiraCLIConfig) searchAndAssignBoard(project, keyword string) error {
 	return nil
 }
 
-func (c *JiraCLIConfig) configureMetadata() error {
+func (c *JiraCLIConfigGenerator) configureMetadata() error {
 	s := cmdutil.Info("Configuring metadata. Please wait...")
 	defer s.Stop()
 
@@ -457,7 +493,7 @@ func (c *JiraCLIConfig) configureMetadata() error {
 	return nil
 }
 
-func (c *JiraCLIConfig) decipherEpicMeta(epicMeta map[string]jira.IssueTypeField) (string, string) {
+func (c *JiraCLIConfigGenerator) decipherEpicMeta(epicMeta map[string]jira.IssueTypeField) (string, string) {
 	var (
 		temp     string
 		epicName string
@@ -493,7 +529,7 @@ func (c *JiraCLIConfig) decipherEpicMeta(epicMeta map[string]jira.IssueTypeField
 	return epicName, epicLink
 }
 
-func (c *JiraCLIConfig) write(path string) (string, error) {
+func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	config := viper.New()
 	config.AddConfigPath(path)
 	config.SetConfigName(FileName)
@@ -523,7 +559,7 @@ func (c *JiraCLIConfig) write(path string) (string, error) {
 	return fmt.Sprintf("%s/%s.%s", path, FileName, FileType), nil
 }
 
-func (c *JiraCLIConfig) getProjectSuggestions() error {
+func (c *JiraCLIConfigGenerator) getProjectSuggestions() error {
 	s := cmdutil.Info("Fetching projects...")
 	defer s.Stop()
 
@@ -532,7 +568,7 @@ func (c *JiraCLIConfig) getProjectSuggestions() error {
 		return err
 	}
 	for _, project := range projects {
-		c.projectsMap[project.Key] = &projectConf{
+		c.projectsMap[strings.ToLower(project.Key)] = &projectConf{
 			Key:  project.Key,
 			Type: project.Type,
 		}
@@ -542,7 +578,7 @@ func (c *JiraCLIConfig) getProjectSuggestions() error {
 	return nil
 }
 
-func (c *JiraCLIConfig) getBoardSuggestions(project string) error {
+func (c *JiraCLIConfigGenerator) getBoardSuggestions(project string) error {
 	s := cmdutil.Info(fmt.Sprintf("Fetching boards for project '%s'...", project))
 	defer s.Stop()
 
@@ -552,10 +588,10 @@ func (c *JiraCLIConfig) getBoardSuggestions(project string) error {
 	}
 	c.boardSuggestions = append(c.boardSuggestions, optionSearch, lineBreak)
 	for _, board := range resp.Boards {
-		c.boardsMap[board.Name] = board
+		c.boardsMap[strings.ToLower(board.Name)] = board
 		c.boardSuggestions = append(c.boardSuggestions, board.Name)
 	}
-	c.boardSuggestions = append(c.boardSuggestions, "None")
+	c.boardSuggestions = append(c.boardSuggestions, optionNone)
 
 	return nil
 }

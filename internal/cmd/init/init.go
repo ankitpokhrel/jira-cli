@@ -3,14 +3,26 @@ package init
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	jiraConfig "github.com/ankitpokhrel/jira-cli/internal/config"
+	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
+
+type initParams struct {
+	installation string
+	server       string
+	login        string
+	project      string
+	board        string
+	force        bool
+	insecure     bool
+}
 
 // NewCmdInit is an init command.
 func NewCmdInit() *cobra.Command {
@@ -22,19 +34,69 @@ func NewCmdInit() *cobra.Command {
 		Run:     initialize,
 	}
 
+	cmd.Flags().SortFlags = false
+
+	cmd.Flags().String("installation", "", "Is this is a 'cloud' or 'local' jira installation?")
+	cmd.Flags().String("server", "", "Link to your jira server")
+	cmd.Flags().String("login", "", "Jira login username or email based on your setup")
+	cmd.Flags().String("project", "", "Your default project key")
+	cmd.Flags().String("board", "", "Name of your default board in the project")
+	cmd.Flags().Bool("force", false, "Forcefully override existing config if it exist")
 	cmd.Flags().Bool("insecure", false, `If set, the tool will skip TLS certificate verification.
 This can be useful if your server is using self-signed certificates.`)
 
 	return &cmd
 }
 
-func initialize(cmd *cobra.Command, _ []string) {
-	insecure, err := cmd.Flags().GetBool("insecure")
+func parseFlags(flags query.FlagParser) *initParams {
+	installation, err := flags.GetString("installation")
 	cmdutil.ExitIfError(err)
 
-	c := jiraConfig.NewJiraCLIConfig(jiraConfig.WithInsecureTLS(insecure))
+	server, err := flags.GetString("server")
+	cmdutil.ExitIfError(err)
 
-	if insecure {
+	login, err := flags.GetString("login")
+	cmdutil.ExitIfError(err)
+
+	project, err := flags.GetString("project")
+	cmdutil.ExitIfError(err)
+
+	board, err := flags.GetString("board")
+	cmdutil.ExitIfError(err)
+
+	force, err := flags.GetBool("force")
+	cmdutil.ExitIfError(err)
+
+	insecure, err := flags.GetBool("insecure")
+	cmdutil.ExitIfError(err)
+
+	return &initParams{
+		installation: installation,
+		server:       server,
+		login:        login,
+		project:      project,
+		board:        board,
+		force:        force,
+		insecure:     insecure,
+	}
+}
+
+func initialize(cmd *cobra.Command, _ []string) {
+	params := parseFlags(cmd.Flags())
+
+	c := jiraConfig.NewJiraCLIConfigGenerator(
+		&jiraConfig.JiraCLIConfig{
+			Installation: strings.ToLower(params.installation),
+			Server:       params.server,
+			Login:        params.login,
+			Project:      params.project,
+			Board:        params.board,
+			Force:        params.force,
+			Insecure:     params.insecure,
+		},
+	)
+
+	if params.insecure {
 		cmdutil.Warn(`You are using --insecure option. In this mode, the client will NOT verify
 server's certificate chain and host name in requests to the jira server.`)
 		fmt.Println()
