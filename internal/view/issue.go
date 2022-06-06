@@ -95,6 +95,15 @@ func (i Issue) String() string {
 	if desc != "" {
 		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s", i.separator("Description"), desc))
 	}
+	if len(i.Data.Fields.Subtasks) > 0 {
+		s.WriteString(
+			fmt.Sprintf(
+				"\n\n%s\n\n%s\n",
+				i.separator(fmt.Sprintf("%d Subtasks", len(i.Data.Fields.Subtasks))),
+				i.subtasks(),
+			),
+		)
+	}
 	if len(i.Data.Fields.IssueLinks) > 0 {
 		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s\n", i.separator("Linked Issues"), i.linkedIssues()))
 	}
@@ -124,6 +133,17 @@ func (i Issue) fragments() []fragment {
 			fragment{Body: i.separator("Description")},
 			newBlankFragment(2),
 			fragment{Body: desc, Parse: true},
+		)
+	}
+
+	if len(i.Data.Fields.Subtasks) > 0 {
+		scraps = append(
+			scraps,
+			newBlankFragment(1),
+			fragment{Body: i.separator(fmt.Sprintf("%d Subtasks", len(i.Data.Fields.Subtasks)))},
+			newBlankFragment(2),
+			fragment{Body: i.subtasks()},
+			newBlankFragment(1),
 		)
 	}
 
@@ -233,6 +253,52 @@ func (i Issue) description() string {
 	}
 
 	return desc
+}
+
+func (i Issue) subtasks() string {
+	if len(i.Data.Fields.Subtasks) == 0 {
+		return ""
+	}
+
+	var (
+		subtasks       strings.Builder
+		summaryLen     = 73 // +3 is to take '...' into account.
+		maxKeyLen      int
+		maxSummaryLen  int
+		maxStatusLen   int
+		maxPriorityLen int
+	)
+
+	for idx := range i.Data.Fields.Subtasks {
+		task := i.Data.Fields.Subtasks[idx]
+
+		maxKeyLen = max(len(task.Key), maxKeyLen)
+		maxSummaryLen = max(len(task.Fields.Summary), maxSummaryLen)
+		maxStatusLen = max(len(task.Fields.Status.Name), maxStatusLen)
+		maxPriorityLen = max(len(task.Fields.Priority.Name), maxPriorityLen)
+	}
+
+	if maxSummaryLen < summaryLen {
+		summaryLen = maxSummaryLen
+	}
+
+	subtasks.WriteString(
+		fmt.Sprintf("\n %s\n\n", coloredOut("SUBTASKS", color.FgWhite, color.Bold)),
+	)
+	for idx := range i.Data.Fields.Subtasks {
+		task := i.Data.Fields.Subtasks[idx]
+		subtasks.WriteString(
+			fmt.Sprintf(
+				"  %s %s • %s • %s\n",
+				coloredOut(pad(task.Key, maxKeyLen), color.FgGreen, color.Bold),
+				shortenAndPad(task.Fields.Summary, summaryLen),
+				pad(task.Fields.Priority.Name, maxPriorityLen),
+				pad(task.Fields.Status.Name, maxStatusLen),
+			),
+		)
+	}
+
+	return subtasks.String()
 }
 
 func (i Issue) linkedIssues() string {
