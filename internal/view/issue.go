@@ -269,7 +269,9 @@ func (i Issue) subtasks() string {
 		maxPriorityLen int
 	)
 
-	for _, task := range i.Data.Fields.Subtasks {
+	for idx := range i.Data.Fields.Subtasks {
+		task := i.Data.Fields.Subtasks[idx]
+
 		maxKeyLen = max(len(task.Key), maxKeyLen)
 		maxSummaryLen = max(len(task.Fields.Summary), maxSummaryLen)
 		maxStatusLen = max(len(task.Fields.Status.Name), maxStatusLen)
@@ -283,7 +285,8 @@ func (i Issue) subtasks() string {
 	subtasks.WriteString(
 		fmt.Sprintf("\n %s\n\n", coloredOut("SUBTASKS", color.FgWhite, color.Bold)),
 	)
-	for _, task := range i.Data.Fields.Subtasks {
+	for idx := range i.Data.Fields.Subtasks {
+		task := i.Data.Fields.Subtasks[idx]
 		subtasks.WriteString(
 			fmt.Sprintf(
 				"  %s %s • %s • %s\n",
