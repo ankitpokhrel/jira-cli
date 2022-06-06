@@ -36,12 +36,12 @@ func NewCmdInit() *cobra.Command {
 
 	cmd.Flags().SortFlags = false
 
-	cmd.Flags().String("installation", "", "Is this is a 'cloud' or 'local' jira installation?")
+	cmd.Flags().String("installation", "", "Is this a 'cloud' or 'local' jira installation?")
 	cmd.Flags().String("server", "", "Link to your jira server")
 	cmd.Flags().String("login", "", "Jira login username or email based on your setup")
 	cmd.Flags().String("project", "", "Your default project key")
 	cmd.Flags().String("board", "", "Name of your default board in the project")
-	cmd.Flags().Bool("force", false, "Forcefully override existing config if it exist")
+	cmd.Flags().Bool("force", false, "Forcefully override existing config if it exists")
 	cmd.Flags().Bool("insecure", false, `If set, the tool will skip TLS certificate verification.
 This can be useful if your server is using self-signed certificates.`)
 
