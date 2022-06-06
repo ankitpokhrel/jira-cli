@@ -370,7 +370,7 @@ func (c *JiraCLIConfigGenerator) configureProjectAndBoardDetails() error {
 	}
 	c.value.board = c.boardsMap[strings.ToLower(board)]
 
-	if c.value.board == nil && strings.EqualFold(board, optionNone) {
+	if c.value.board == nil && !strings.EqualFold(board, optionNone) {
 		return fmt.Errorf(
 			"board not found\n  Boards available for the project '%s' are '%s'",
 			c.value.project.Key,
