@@ -12,3 +12,4 @@ bin/
 coverage/
 vendor/
 /.gocache
+.vscode/

@@ -169,7 +169,7 @@ func (t *Table) initFooter() {
 
 func (t *Table) initTable() {
 	t.view.SetSelectable(true, false).
-		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true)).
+		SetSelectedStyle(tcell.StyleDefault.Bold(true).Background(tcell.ColorGreen)).
 		SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEsc {
 				t.screen.Stop()
