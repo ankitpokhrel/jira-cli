@@ -48,6 +48,7 @@ func NewCmdClone() *cobra.Command {
 func clone(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
+	projectType := viper.GetString("project.type")
 
 	params := parseFlags(cmd.Flags())
 	client := api.Client(jira.Config{Debug: params.debug})
@@ -85,6 +86,7 @@ func clone(cmd *cobra.Command, args []string) {
 			Labels:         cp.labels,
 			Components:     cp.components,
 		}
+		cr.ForProjectType(projectType)
 
 		resp, err := api.ProxyCreate(client, &cr)
 		if err != nil {
