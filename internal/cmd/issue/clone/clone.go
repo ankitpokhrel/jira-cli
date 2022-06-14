@@ -48,6 +48,7 @@ func NewCmdClone() *cobra.Command {
 func clone(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
+	projectType := viper.GetString("project.type")
 
 	params := parseFlags(cmd.Flags())
 	client := api.Client(jira.Config{Debug: params.debug})
@@ -69,21 +70,23 @@ func clone(cmd *cobra.Command, args []string) {
 	}()
 	cmdutil.ExitIfError(err)
 
-	cp := cc.getActualCreateParams(issue)
+	cp := cc.getActualCreateParams(project, issue)
 
 	clonedIssueKey, err := func() (string, error) {
 		s := cmdutil.Info(fmt.Sprintf("Cloning %s...", key))
 		defer s.Stop()
 
 		cr := jira.CreateRequest{
-			Project:    project,
-			IssueType:  issue.Fields.IssueType.Name,
-			Summary:    cp.summary,
-			Body:       cp.body,
-			Priority:   cp.priority,
-			Labels:     cp.labels,
-			Components: cp.components,
+			Project:        project,
+			IssueType:      issue.Fields.IssueType.Name,
+			ParentIssueKey: cp.parent,
+			Summary:        cp.summary,
+			Body:           cp.body,
+			Priority:       cp.priority,
+			Labels:         cp.labels,
+			Components:     cp.components,
 		}
+		cr.ForProjectType(projectType)
 
 		resp, err := api.ProxyCreate(client, &cr)
 		if err != nil {
@@ -140,6 +143,7 @@ func clone(cmd *cobra.Command, args []string) {
 }
 
 type createParams struct {
+	parent     string
 	summary    string
 	body       interface{}
 	priority   string
@@ -153,8 +157,14 @@ type cloneCmd struct {
 	params *cloneParams
 }
 
-func (cc *cloneCmd) getActualCreateParams(issue *jira.Issue) *createParams {
+func (cc *cloneCmd) getActualCreateParams(project string, issue *jira.Issue) *createParams {
 	cp := createParams{}
+
+	if cc.params.parent != "" {
+		cp.parent = cmdutil.GetJiraIssueKey(project, cc.params.parent)
+	} else if issue.Fields.Parent != nil {
+		cp.parent = issue.Fields.Parent.Key
+	}
 
 	cp.summary = issue.Fields.Summary
 	if cc.params.summary != "" {
@@ -222,6 +232,7 @@ func (cc *cloneCmd) getActualCreateParams(issue *jira.Issue) *createParams {
 }
 
 type cloneParams struct {
+	parent     string
 	summary    string
 	priority   string
 	assignee   string
@@ -232,6 +243,9 @@ type cloneParams struct {
 }
 
 func parseFlags(flags query.FlagParser) *cloneParams {
+	parent, err := flags.GetString("parent")
+	cmdutil.ExitIfError(err)
+
 	summary, err := flags.GetString("summary")
 	cmdutil.ExitIfError(err)
 
@@ -254,6 +268,7 @@ func parseFlags(flags query.FlagParser) *cloneParams {
 	cmdutil.ExitIfError(err)
 
 	return &cloneParams{
+		parent:     parent,
 		summary:    summary,
 		priority:   priority,
 		assignee:   assignee,
@@ -267,6 +282,7 @@ func parseFlags(flags query.FlagParser) *cloneParams {
 func setFlags(cmd *cobra.Command) {
 	cmd.Flags().SortFlags = false
 
+	cmd.Flags().StringP("parent", "P", "", "Parent issue key")
 	cmd.Flags().StringP("summary", "s", "", "Issue summary or title")
 	cmd.Flags().StringP("priority", "y", "", "Issue priority")
 	cmd.Flags().StringP("assignee", "a", "", "Issue assignee (email or display name)")
