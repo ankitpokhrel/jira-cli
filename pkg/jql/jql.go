@@ -24,7 +24,7 @@ type JQL struct {
 
 // NewJQL initializes jql query builder.
 func NewJQL(project string) *JQL {
-	var filterslist = []string{fmt.Sprintf("project=\"%s\"", project)}
+	filterslist := []string{fmt.Sprintf("project=\"%s\"", project)}
 	if project == "" {
 		filterslist = []string{}
 	}
