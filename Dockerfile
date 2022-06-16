@@ -15,7 +15,7 @@ RUN set -eux; \
     env ; \
     ls -la ; \
     apk add -U --no-cache make git ; \
-    make build install
+    make deps install
 
 FROM alpine:3.16
 
