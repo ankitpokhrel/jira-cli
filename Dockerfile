@@ -25,4 +25,4 @@ WORKDIR /root/
 
 COPY --from=builder /go/bin/jira /bin/jira
 
-ENTRYPOINT ["/bin/jira"]
+ENTRYPOINT ["/bin/sh"]
