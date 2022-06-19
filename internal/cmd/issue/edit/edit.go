@@ -96,11 +96,6 @@ func edit(cmd *cobra.Command, args []string) {
 		getAnswers(params, issue)
 	}
 
-	if params.isEmpty() {
-		fmt.Println()
-		cmdutil.Failed("Nothing to update")
-	}
-
 	// Keep body as is if there were no changes.
 	if params.body != "" && params.body == originalBody {
 		params.body = ""
@@ -290,11 +285,6 @@ type editParams struct {
 	customFields map[string]string
 	noInput      bool
 	debug        bool
-}
-
-func (ep *editParams) isEmpty() bool {
-	return ep.summary == "" && ep.body == "" && ep.priority == "" &&
-		ep.assignee == "" && len(ep.labels) == 0 && len(ep.components) == 0
 }
 
 func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *editParams {
