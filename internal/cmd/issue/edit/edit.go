@@ -294,7 +294,8 @@ type editParams struct {
 
 func (ep *editParams) isEmpty() bool {
 	return ep.summary == "" && ep.body == "" && ep.priority == "" &&
-		ep.assignee == "" && len(ep.labels) == 0 && len(ep.components) == 0 && len(ep.customFields) == 0
+		ep.assignee == "" && len(ep.labels) == 0 && len(ep.components) == 0 && len(ep.customFields) == 0 &&
+		len(ep.fixVersions) == 0
 }
 
 func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *editParams {
