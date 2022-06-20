@@ -225,6 +225,20 @@ func TestJQL(t *testing.T) {
 			expected: "project=\"TEST\" AND type=\"Story\" AND resolution=\"Done\" AND summary !~ cli AND priority = high",
 		},
 		{
+			name: "it queries with raw jql and project filter",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+				jql.And(func() {
+					jql.
+						FilterBy("type", "Story").
+						FilterBy("resolution", "Done").
+						Raw("summary !~ cli AND project = TEST1")
+				})
+				return jql
+			},
+			expected: "type=\"Story\" AND resolution=\"Done\" AND summary !~ cli AND project = TEST1",
+		},
+		{
 			name: "it queries with raw jql and or filter",
 			initialize: func() *JQL {
 				jql := NewJQL("TEST")
@@ -235,6 +249,18 @@ func TestJQL(t *testing.T) {
 				return jql
 			},
 			expected: "project=\"TEST\" OR type=\"Story\" OR summary ~ cli",
+		},
+		{
+			name: "it queries with raw jql and project filter in or condition",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+				jql.Or(func() {
+					jql.FilterBy("type", "Story").
+						Raw("summary ~ cli AND project IN (TEST1,TEST2)")
+				})
+				return jql
+			},
+			expected: "type=\"Story\" OR summary ~ cli AND project IN (TEST1,TEST2)",
 		},
 	}
 

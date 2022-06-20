@@ -48,6 +48,11 @@ func (i *Issue) Get() string {
 		(i.params.Created == "" && i.params.CreatedBefore == "" && i.params.CreatedAfter == "") {
 		obf = "updated"
 	}
+
+	if i.params.jql != "" {
+		q.Raw(i.params.jql)
+	}
+
 	q.And(func() {
 		if i.params.Latest {
 			q.History()
@@ -73,14 +78,13 @@ func (i *Issue) Get() string {
 			q.In("labels", i.params.Labels...)
 		}
 	})
+
 	if i.params.Reverse {
 		q.OrderBy(obf, jql.DirectionAscending)
 	} else {
 		q.OrderBy(obf, jql.DirectionDescending)
 	}
-	if i.params.jql != "" {
-		q.And(func() { q.Raw(i.params.jql) })
-	}
+
 	return q.String()
 }
 
