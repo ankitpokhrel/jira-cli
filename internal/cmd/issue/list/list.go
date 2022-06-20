@@ -47,7 +47,10 @@ $ jira issue list --plain --no-truncate
 $ jira issue list -tEpic -sDone
 
 # List issues in status other than "Open" and is assigned to no one
-$ jira issue list -s~Open -ax`
+$ jira issue list -s~Open -ax
+
+# List issues from all projects
+$ jira issue list -q"project IS NOT EMPTY"`
 )
 
 // NewCmdList is a list command.
