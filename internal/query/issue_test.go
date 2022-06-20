@@ -396,9 +396,9 @@ func TestIssueGet(t *testing.T) {
 				assert.NoError(t, err)
 				return i
 			},
-			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+			expected: `project="TEST" AND summary ~ cli OR x = y AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
 				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" ` +
-				`AND assignee="test" AND component="test" AND parent="test" AND summary ~ cli OR x = y ORDER BY lastViewed ASC`,
+				`AND assignee="test" AND component="test" AND parent="test" ORDER BY lastViewed ASC`,
 		},
 	}
 
