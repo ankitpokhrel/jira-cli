@@ -1,8 +1,9 @@
 name: Publish a Docker image
 
 on:
-  push:
-    branches: ['release']
+  workflow_dispatch:
+  release:
+    types: [published, prereleased]
 
 env:
   REGISTRY: ghcr.io
