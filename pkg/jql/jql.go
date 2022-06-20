@@ -2,6 +2,7 @@ package jql
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -158,8 +159,12 @@ func (j *JQL) Or(fn GroupFunc) *JQL {
 
 // Raw sets the passed JQL query along with project context.
 func (j *JQL) Raw(q string) *JQL {
+	q = strings.TrimSpace(q)
 	if q == "" {
 		return j
+	}
+	if hasProjectFilter(q) {
+		j.filters = j.filters[1:]
 	}
 	j.filters = append(j.filters, q)
 	return j
@@ -196,5 +201,12 @@ func (j *JQL) compile() string {
 	if j.orderBy != "" {
 		q += " " + j.orderBy
 	}
+
 	return q
+}
+
+func hasProjectFilter(str string) bool {
+	regx := "(?i)((project)[\\s]*?={0,1}\\b)[^'.']"
+	m, _ := regexp.MatchString(regx, str)
+	return m
 }

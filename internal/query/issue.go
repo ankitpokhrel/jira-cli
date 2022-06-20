@@ -34,6 +34,14 @@ func NewIssue(project string, flags FlagParser) (*Issue, error) {
 
 // Get returns constructed jql query.
 func (i *Issue) Get() string {
+	var q *jql.JQL
+
+	defer func() {
+		if i.params.debug {
+			fmt.Printf("JQL: %s\n", q.String())
+		}
+	}()
+
 	q, obf := jql.NewJQL(i.Project), i.params.OrderBy
 	if obf == "created" &&
 		(i.params.Updated != "" || i.params.UpdatedBefore != "" || i.params.UpdatedAfter != "") &&
@@ -69,9 +77,6 @@ func (i *Issue) Get() string {
 		q.OrderBy(obf, jql.DirectionAscending)
 	} else {
 		q.OrderBy(obf, jql.DirectionDescending)
-	}
-	if i.params.debug {
-		fmt.Printf("JQL: %s\n", q.String())
 	}
 	if i.params.jql != "" {
 		q.And(func() { q.Raw(i.params.jql) })

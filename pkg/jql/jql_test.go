@@ -249,3 +249,73 @@ func TestJQL(t *testing.T) {
 		})
 	}
 }
+
+func TestHasProject(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected bool
+	}{
+		{
+			input:    "project=",
+			expected: true,
+		},
+		{
+			input:    "project = TEST",
+			expected: true,
+		},
+		{
+			input:    "project     =    TEST",
+			expected: true,
+		},
+		{
+			input:    "  assigned = abc and PROJECT =   TEST  ",
+			expected: true,
+		},
+		{
+			input:    "assigned = abc and project =   TEST and project.property=abc",
+			expected: true,
+		},
+		{
+			input:    "PROJECT IS NOT EMPTY AND assignee IN (currentUser())",
+			expected: true,
+		},
+		{
+			input:    "PROJECT IN (TEST, TEST1) AND assignee IN (currentUser())",
+			expected: true,
+		},
+		{
+			input:    "PROJECT NOT IN (TEST,TEST1) AND assignee IN (currentUser())",
+			expected: true,
+		},
+		{
+			input:    "PROJECT != TEST AND projectType=\"classic\" AND assignee IS EMPTY",
+			expected: true,
+		},
+		{
+			input:    "project",
+			expected: false,
+		},
+		{
+			input:    "projectType",
+			expected: false,
+		},
+		{
+			input:    "project.property = ABC",
+			expected: false,
+		},
+		{
+			input:    "projectType=\"classic\" AND type=\"Story\" AND assignee IS EMPTY",
+			expected: false,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run("", func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, hasProjectFilter(tc.input))
+		})
+	}
+}
