@@ -192,7 +192,7 @@ func (cc *createCmd) setIssueTypes() error {
 		return fmt.Errorf("invalid issue types in config")
 	}
 	for _, at := range availableTypes {
-		tp := at.(map[interface{}]interface{})
+		tp := at.(map[string]interface{})
 		name := tp["name"].(string)
 		handle, _ := tp["handle"].(string)
 		if handle == jira.IssueTypeEpic || name == jira.IssueTypeEpic {
