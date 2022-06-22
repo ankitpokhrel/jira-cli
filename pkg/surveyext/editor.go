@@ -40,13 +40,6 @@ type JiraEditor struct {
 	lookPath func(string) ([]string, []string, error)
 }
 
-func (e *JiraEditor) editorCommand() string {
-	if e.EditorCommand == "" {
-		return defaultEditor
-	}
-	return e.EditorCommand
-}
-
 // EditorQuestionTemplate is EXTENDED to change prompt text.
 var EditorQuestionTemplate = `
 {{- if .ShowHelp }}{{- color .Config.Icons.Help.Format }}{{ .Config.Icons.Help.Text }} {{ .Help }}{{color "reset"}}{{"\n"}}{{end}}
