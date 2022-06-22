@@ -11,6 +11,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
+	shellquote "github.com/kballard/go-shellquote"
 )
 
 var (
@@ -21,6 +22,8 @@ var (
 func init() {
 	if runtime.GOOS == "windows" {
 		defaultEditor = "notepad"
+	} else if j := os.Getenv("JIRA_EDITOR"); j != "" {
+		defaultEditor = j
 	} else if v := os.Getenv("VISUAL"); v != "" {
 		defaultEditor = v
 	} else if e := os.Getenv("EDITOR"); e != "" {
@@ -33,13 +36,8 @@ type JiraEditor struct {
 	*survey.Editor
 	EditorCommand string
 	BlankAllowed  bool
-}
 
-func (e *JiraEditor) editorCommand() string {
-	if e.EditorCommand == "" {
-		return defaultEditor
-	}
-	return e.EditorCommand
+	lookPath func(string) ([]string, []string, error)
 }
 
 // EditorQuestionTemplate is EXTENDED to change prompt text.
@@ -75,7 +73,7 @@ func (e *JiraEditor) prompt(initialValue string, config *survey.PromptConfig) (i
 		EditorTemplateData{
 			Editor:        *e.Editor,
 			BlankAllowed:  e.BlankAllowed,
-			EditorCommand: filepath.Base(e.editorCommand()),
+			EditorCommand: EditorName(e.EditorCommand),
 			Config:        config,
 		},
 	)
@@ -89,8 +87,10 @@ func (e *JiraEditor) prompt(initialValue string, config *survey.PromptConfig) (i
 	defer func() { _ = rr.RestoreTermMode() }()
 
 	cursor := e.NewCursor()
-	cursor.Hide()
-	defer cursor.Show()
+	_ = cursor.Hide()
+	defer func() {
+		_ = cursor.Show()
+	}()
 
 	for {
 		// EXTENDED to handle the e to edit / enter to skip behavior + BlankAllowed.
@@ -103,7 +103,7 @@ func (e *JiraEditor) prompt(initialValue string, config *survey.PromptConfig) (i
 		}
 		if r == '\r' || r == '\n' {
 			if e.BlankAllowed {
-				return "", nil
+				return initialValue, nil
 			}
 			continue
 		}
@@ -120,7 +120,7 @@ func (e *JiraEditor) prompt(initialValue string, config *survey.PromptConfig) (i
 					// EXTENDED to support printing editor in prompt, BlankAllowed.
 					Editor:        *e.Editor,
 					BlankAllowed:  e.BlankAllowed,
-					EditorCommand: filepath.Base(e.editorCommand()),
+					EditorCommand: EditorName(e.EditorCommand),
 					ShowHelp:      true,
 					Config:        config,
 				},
@@ -133,7 +133,11 @@ func (e *JiraEditor) prompt(initialValue string, config *survey.PromptConfig) (i
 	}
 
 	stdio := e.Stdio()
-	text, err := Edit(e.editorCommand(), e.FileName, initialValue, stdio.In, stdio.Out, stdio.Err, cursor)
+	lookPath := e.lookPath
+	if lookPath == nil {
+		lookPath = defaultLookPath
+	}
+	text, err := edit(e.EditorCommand, e.FileName, initialValue, stdio.In, stdio.Out, stdio.Err, cursor, lookPath)
 	if err != nil {
 		return "", err
 	}
@@ -153,4 +157,15 @@ func (e *JiraEditor) Prompt(config *survey.PromptConfig) (interface{}, error) {
 		initialValue = e.Default
 	}
 	return e.prompt(initialValue, config)
+}
+
+// EditorName gets editor from the editor command.
+func EditorName(editorCommand string) string {
+	if editorCommand == "" {
+		editorCommand = defaultEditor
+	}
+	if args, err := shellquote.Split(editorCommand); err == nil {
+		editorCommand = args[0]
+	}
+	return filepath.Base(editorCommand)
 }
