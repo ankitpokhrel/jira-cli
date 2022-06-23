@@ -40,7 +40,7 @@ func edit(editorCommand, fn, initialValue string, stdin io.Reader, stdout io.Wri
 	// prepare the temp file
 	pattern := fn
 	if pattern == "" {
-		pattern = "survey*.txt"
+		pattern = "survey*.md"
 	}
 	f, err := os.CreateTemp("", pattern)
 	if err != nil {
