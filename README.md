@@ -92,6 +92,13 @@ or directly from the binary package repository using the command
 pkgin install jira-cli
 ```
 
+#### Docker
+You can use the available docker image to run `jira-cli` inside a docker container.
+
+```sh
+docker run -it --rm ghcr.io/ankitpokhrel/jira-cli:latest
+```
+
 #### Manual
 You can also install the runnable binary to your `$GOPATH/bin` (go1.16+).
 
