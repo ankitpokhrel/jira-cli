@@ -74,6 +74,8 @@ func assign(cmd *cobra.Command, args []string) {
 	if lu != strings.ToLower(optionNone) && lu != "x" && lu != jira.AssigneeDefault {
 		cmdutil.ExitIfError(ac.setAvailableUsers(project))
 		cmdutil.ExitIfError(ac.setAssignee(project))
+
+		lu = strings.ToLower(ac.params.user)
 	}
 
 	u, err := ac.verifyAssignee()
