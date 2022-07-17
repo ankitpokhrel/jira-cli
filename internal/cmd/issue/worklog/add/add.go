@@ -19,8 +19,11 @@ const (
 	helpText = `Add adds worklog to an issue.`
 	examples = `$ jira issue worklog add
 
-	# Pass required parameters and use --no-input to skip prompt
-	$ jira issue worklog add ISSUE-1 "2d 1h 30m" --no-input`
+# Pass required parameters and use --no-input to skip prompt
+$ jira issue worklog add ISSUE-1 "2d 1h 30m" --no-input
+
+# You can add a comment using --comment flag when adding a worklog
+$ jira issue worklog add ISSUE-1 "2d 1h 30m" --comment "This is a comment" --no-input`
 )
 
 // NewCmdWorklogAdd is a worklog add command.
@@ -32,7 +35,7 @@ func NewCmdWorklogAdd() *cobra.Command {
 		Example: examples,
 		Annotations: map[string]string{
 			"help:args": "ISSUE-KEY\tIssue key of the source issue, eg: ISSUE-1\n" +
-				"TIME_SPENT\tTime to log as days (d), hours(h), or minutes(m), separated by space eg: 2d 1h 30m",
+				"TIME_SPENT\tTime to log as days (d), hours (h), or minutes (m), separated by space eg: 2d 1h 30m",
 		},
 		Run: add,
 	}
@@ -159,7 +162,7 @@ func (ac *addCmd) getQuestions() []*survey.Question {
 			Name: "timeSpent",
 			Prompt: &survey.Input{
 				Message: "Time spent",
-				Help:    "Time to log as days (d), hours(h), or minutes(m), separated by space eg: 2d 1h 30m",
+				Help:    "Time to log as days (d), hours (h), or minutes (m), separated by space eg: 2d 1h 30m",
 			},
 			Validate: survey.Required,
 		})

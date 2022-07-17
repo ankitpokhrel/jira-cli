@@ -497,6 +497,23 @@ comment body template
 EOF
 ```
 
+#### Worklog
+The `worklog` command provides a list of sub-commands to manage issue worklog (timelog).
+
+##### Add
+The `add` command lets you add worklog to an issue. The command supports markdown for worklog comments.
+
+```sh
+# Add a worklog using interactive prompt
+$ jira issue worklog add
+
+# Pass required parameters and use --no-input to skip prompt
+$ jira issue worklog add ISSUE-1 "2d 3h 30m" --no-input
+
+# You can add a comment using --comment flag when adding a worklog
+$ jira issue worklog add ISSUE-1 "10m" --comment "This is a comment" --no-input
+```
+
 ### Epic
 Epics are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing epic issues, you can use all filters available for the issue command.
