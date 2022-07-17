@@ -67,7 +67,7 @@ func add(cmd *cobra.Command, args []string) {
 
 	if !params.noInput {
 		answer := struct{ Action string }{}
-		err := survey.Ask([]*survey.Question{ac.getNextAction()}, &answer)
+		err := survey.Ask([]*survey.Question{getNextAction()}, &answer)
 		cmdutil.ExitIfError(err)
 
 		if answer.Action == cmdcommon.ActionCancel {
@@ -182,7 +182,7 @@ func (ac *addCmd) getQuestions() []*survey.Question {
 	return qs
 }
 
-func (ac *addCmd) getNextAction() *survey.Question {
+func getNextAction() *survey.Question {
 	return &survey.Question{
 		Name: "action",
 		Prompt: &survey.Select{
