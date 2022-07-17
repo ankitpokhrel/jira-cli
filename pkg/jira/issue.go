@@ -273,7 +273,6 @@ type issueCommentRequest struct {
 }
 
 // AddIssueComment adds comment to an issue using POST /issue/{key}/comment endpoint.
-// It only supports plain text comments at the moment.
 func (c *Client) AddIssueComment(key, comment string) error {
 	body, err := json.Marshal(&issueCommentRequest{Body: md.ToJiraMD(comment)})
 	if err != nil {
@@ -281,6 +280,40 @@ func (c *Client) AddIssueComment(key, comment string) error {
 	}
 
 	path := fmt.Sprintf("/issue/%s/comment", key)
+	res, err := c.PostV2(context.Background(), path, body, Header{
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	})
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusCreated {
+		return formatUnexpectedResponse(res)
+	}
+	return nil
+}
+
+type issueWorklogRequest struct {
+	TimeSpent string `json:"timeSpent"`
+	Comment   string `json:"comment"`
+}
+
+// AddIssueWorklog adds worklog to an issue using POST /issue/{key}/worklog endpoint.
+func (c *Client) AddIssueWorklog(key, timeSpent, comment string) error {
+	body, err := json.Marshal(&issueWorklogRequest{
+		TimeSpent: timeSpent,
+		Comment:   md.ToJiraMD(comment),
+	})
+	if err != nil {
+		return err
+	}
+
+	path := fmt.Sprintf("/issue/%s/worklog", key)
 	res, err := c.PostV2(context.Background(), path, body, Header{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
