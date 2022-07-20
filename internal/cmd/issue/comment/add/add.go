@@ -81,21 +81,16 @@ func add(cmd *cobra.Command, args []string) {
 
 	qs := ac.getQuestions()
 	if len(qs) > 0 {
-		ans := struct{ IssueKey, Body string }{}
+		ans := struct{ Body string }{}
 		err := survey.Ask(qs, &ans)
 		cmdutil.ExitIfError(err)
 
-		if params.issueKey == "" {
-			params.issueKey = ans.IssueKey
-		}
-		if params.body == "" {
-			params.body = ans.Body
-		}
+		params.body = ans.Body
 	}
 
 	if !params.noInput {
 		answer := struct{ Action string }{}
-		err := survey.Ask([]*survey.Question{ac.getNextAction()}, &answer)
+		err := survey.Ask([]*survey.Question{getNextAction()}, &answer)
 		cmdutil.ExitIfError(err)
 
 		if answer.Action == cmdcommon.ActionCancel {
@@ -186,17 +181,10 @@ func (ac *addCmd) setIssueKey() error {
 }
 
 func (ac *addCmd) getQuestions() []*survey.Question {
-	var qs []*survey.Question
-
-	if ac.params.issueKey == "" {
-		qs = append(qs, &survey.Question{
-			Name:     "issueKey",
-			Prompt:   &survey.Input{Message: "Issue key"},
-			Validate: survey.Required,
-		})
-	}
-
-	var defaultBody string
+	var (
+		qs          []*survey.Question
+		defaultBody string
+	)
 
 	if ac.params.template != "" || cmdutil.StdinHasData() {
 		b, err := cmdutil.ReadFile(ac.params.template)
@@ -229,7 +217,7 @@ func (ac *addCmd) getQuestions() []*survey.Question {
 	return qs
 }
 
-func (ac *addCmd) getNextAction() *survey.Question {
+func getNextAction() *survey.Question {
 	return &survey.Question{
 		Name: "action",
 		Prompt: &survey.Select{
