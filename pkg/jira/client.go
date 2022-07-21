@@ -107,7 +107,7 @@ type Client struct {
 	insecure  bool
 	server    string
 	login     string
-	authType  AuthType
+	AuthType  AuthType
 	token     string
 	timeout   time.Duration
 	debug     bool
@@ -122,7 +122,7 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 		server:   strings.TrimSuffix(c.Server, "/"),
 		login:    c.Login,
 		token:    c.APIToken,
-		authType: c.AuthType,
+		AuthType: c.AuthType,
 		debug:    c.Debug,
 	}
 
@@ -242,7 +242,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		req.Header.Set(k, v)
 	}
 
-	if c.authType == AuthTypeBearer {
+	if c.AuthType == AuthTypeBearer {
 		req.Header.Add("Authorization", "Bearer "+c.token)
 	} else {
 		req.SetBasicAuth(c.login, c.token)

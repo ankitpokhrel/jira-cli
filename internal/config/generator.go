@@ -71,7 +71,7 @@ type JiraCLIConfigGenerator struct {
 		installation string
 		server       string
 		login        string
-		authType     jira.AuthType
+		AuthType     jira.AuthType
 		project      *projectConf
 		board        *jira.Board
 		epic         *jira.Epic
@@ -280,12 +280,12 @@ func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error 
 		Server:   server,
 		Login:    login,
 		Insecure: c.insecure,
-		AuthType: c.value.authType,
+		AuthType: c.value.AuthType,
 		Debug:    viper.GetBool("debug"),
 	})
 	if ret, err := c.jiraClient.Me(); err != nil {
 		return err
-	} else if c.value.authType == jira.AuthTypeBearer {
+	} else if c.value.AuthType == jira.AuthTypeBearer {
 		login = ret.Login
 	}
 
