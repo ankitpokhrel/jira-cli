@@ -78,7 +78,6 @@ type JiraCLIConfigGenerator struct {
 		issueTypes   []*jira.IssueType
 		customFields []*issueTypeFieldConf
 	}
-	insecure           bool
 	jiraClient         *jira.Client
 	projectSuggestions []string
 	boardSuggestions   []string
@@ -279,7 +278,7 @@ func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error 
 	c.jiraClient = api.Client(jira.Config{
 		Server:   server,
 		Login:    login,
-		Insecure: c.insecure,
+		Insecure: c.usrCfg.Insecure,
 		AuthType: c.value.authType,
 		Debug:    viper.GetBool("debug"),
 	})
@@ -535,8 +534,8 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	config.SetConfigName(FileName)
 	config.SetConfigType(FileType)
 
-	if c.insecure {
-		config.Set("insecure", c.insecure)
+	if c.usrCfg.Insecure {
+		config.Set("insecure", c.usrCfg.Insecure)
 	}
 
 	config.Set("installation", c.value.installation)
