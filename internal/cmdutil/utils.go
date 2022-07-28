@@ -200,7 +200,7 @@ func GetSubtaskHandle(issueType string, issueTypes []*jira.IssueType) string {
 func GetTUIStyleConfig() *tui.TableStyle {
 	return &tui.TableStyle{
 		SelectionBackground: viper.GetString("tui.selection.background"),
-		SelectionForeground: viper.GetString("tui.selection.background"),
+		SelectionForeground: viper.GetString("tui.selection.foreground"),
 		SelectionTextIsBold: viper.GetBool("tui.selection.bold"),
 	}
 }
