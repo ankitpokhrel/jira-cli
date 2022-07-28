@@ -46,6 +46,55 @@ help of [outstanding supporters like you](#support-the-project), we evolved, and
 features like issue creation, cloning, linking, ticket transition, and much more.
 
 > The TUI is heavily inspired by the [GitHub CLI](https://github.com/cli/cli).
+---
+
+## Table of Contents
+
+- [Supported platforms](#supported-platforms)
+- [Installation](#installation)
+    + [Homebrew](#homebrew)
+    + [FreeBSD](#freebsd)
+    + [NetBSD](#netbsd)
+    + [Docker](#docker)
+    + [Manual](#manual)
+- [Getting started](#getting-started)
+    + [Cloud server](#cloud-server)
+    + [On-premise installation](#on-premise-installation)
+    + [Authentication types](#authentication-types)
+    + [Shell completion](#shell-completion)
+- [Usage](#usage)
+  * [Navigation](#navigation)
+- [Commands](#commands)
+  * [Issue](#issue)
+    + [List](#list)
+    + [Create](#create)
+    + [Edit](#edit)
+    + [Assign](#assign)
+    + [Move Or Transition](#move-or-transition)
+    + [View](#view)
+    + [Link](#link)
+    + [Unlink](#unlink)
+    + [Clone](#clone)
+    + [Delete](#delete)
+    + [Comment](#comment)
+      - [Add](#add)
+    + [Worklog](#worklog)
+      - [Add](#add-1)
+  * [Epic](#epic)
+    + [List](#list-1)
+    + [Create](#create-1)
+    + [Add](#add-2)
+    + [Remove](#remove)
+  * [Sprint](#sprint)
+    + [List](#list-2)
+    + [Add](#add-3)
+  * [Other commands](#other-commands)
+- [Scripts](#scripts)
+- [Known Issues](#known-issues)
+- [Feature requests](#feature-requests)
+      - [How these requests are usually prioritized?](#how-these-requests-are-usually-prioritized-)
+- [Development](#development)
+- [Support the project](#support-the-project)
 
 ## Supported platforms
 Note that some features might work slightly differently in cloud installation versus on-premise installation due to the
@@ -381,7 +430,7 @@ $ jira issue assign ISSUE-1 x
 
 ![Assign issue to a user](.github/assets/assign.gif)
 
-#### Move/Transition
+#### Move or Transition
 The `move` command lets you transition issue from one state to another.
 
 ```sh
