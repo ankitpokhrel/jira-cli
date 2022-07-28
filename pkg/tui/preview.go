@@ -275,7 +275,7 @@ func (pv *Preview) initFooter() {
 }
 
 func (pv *Preview) initLayout(view *tview.Table) {
-	view.SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true)).
+	view.SetSelectedStyle(customTUIStyle(pv.contents.style)).
 		SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEsc {
 				pv.screen.Stop()
