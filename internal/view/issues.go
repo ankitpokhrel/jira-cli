@@ -24,7 +24,7 @@ type DisplayFormat struct {
 	NoHeaders  bool
 	NoTruncate bool
 	Columns    []string
-	TableStyle *tui.TableStyle
+	TableStyle tui.TableStyle
 }
 
 // IssueList is a list view for issues.

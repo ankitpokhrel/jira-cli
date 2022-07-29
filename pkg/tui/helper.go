@@ -86,17 +86,14 @@ func cmdExists(cmd string) bool {
 	return err == nil
 }
 
-func customTUIStyle(style *TableStyle) tcell.Style {
-	if style == nil {
-		return tcell.StyleDefault.Bold(true).Dim(true)
-	}
+func customTUIStyle(style TableStyle) tcell.Style {
 	bg, ok := tcell.ColorNames[style.SelectionBackground]
 	if !ok {
 		bg = tcell.ColorDefault
 	}
 	fg, ok := tcell.ColorNames[style.SelectionForeground]
 	if !ok {
-		fg = tcell.ColorDefault
+		fg = tcell.ColorDarkOliveGreen
 	}
 	return tcell.StyleDefault.
 		Background(bg).

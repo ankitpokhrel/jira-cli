@@ -46,7 +46,7 @@ type Table struct {
 	painter      *tview.Pages
 	view         *tview.Table
 	footer       *tview.TextView
-	style        *TableStyle
+	style        TableStyle
 	data         TableData
 	colPad       uint
 	maxColWidth  uint
@@ -107,7 +107,7 @@ func WithMaxColWidth(width uint) TableOption {
 }
 
 // WithTableStyle sets the style of the table.
-func WithTableStyle(style *TableStyle) TableOption {
+func WithTableStyle(style TableStyle) TableOption {
 	return func(t *Table) {
 		t.style = style
 	}

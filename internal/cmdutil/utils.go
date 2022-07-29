@@ -197,10 +197,18 @@ func GetSubtaskHandle(issueType string, issueTypes []*jira.IssueType) string {
 }
 
 // GetTUIStyleConfig returns the custom style configured by the user.
-func GetTUIStyleConfig() *tui.TableStyle {
-	return &tui.TableStyle{
+func GetTUIStyleConfig() tui.TableStyle {
+	var bold bool
+
+	if !viper.IsSet("tui.selection.bold") {
+		bold = true
+	} else {
+		bold = viper.GetBool("tui.selection.bold")
+	}
+
+	return tui.TableStyle{
 		SelectionBackground: viper.GetString("tui.selection.background"),
 		SelectionForeground: viper.GetString("tui.selection.foreground"),
-		SelectionTextIsBold: viper.GetBool("tui.selection.bold"),
+		SelectionTextIsBold: bold,
 	}
 }
