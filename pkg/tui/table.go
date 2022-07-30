@@ -33,12 +33,20 @@ type CopyKeyFunc func(row, column int, data interface{})
 // TableData is the data to be displayed in a table.
 type TableData [][]string
 
+// TableStyle sets the style of the table.
+type TableStyle struct {
+	SelectionBackground string
+	SelectionForeground string
+	SelectionTextIsBold bool
+}
+
 // Table is a table layout.
 type Table struct {
 	screen       *Screen
 	painter      *tview.Pages
 	view         *tview.Table
 	footer       *tview.TextView
+	style        TableStyle
 	data         TableData
 	colPad       uint
 	maxColWidth  uint
@@ -95,6 +103,13 @@ func WithColPadding(pad uint) TableOption {
 func WithMaxColWidth(width uint) TableOption {
 	return func(t *Table) {
 		t.maxColWidth = width
+	}
+}
+
+// WithTableStyle sets the style of the table.
+func WithTableStyle(style TableStyle) TableOption {
+	return func(t *Table) {
+		t.style = style
 	}
 }
 
@@ -169,7 +184,7 @@ func (t *Table) initFooter() {
 
 func (t *Table) initTable() {
 	t.view.SetSelectable(true, false).
-		SetSelectedStyle(tcell.StyleDefault.Bold(true).Dim(true)).
+		SetSelectedStyle(customTUIStyle(t.style)).
 		SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEsc {
 				t.screen.Stop()

@@ -160,6 +160,7 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 				}
 				return []string{}
 			}(),
+			TableStyle: cmdutil.GetTUIStyleConfig(),
 		},
 	}
 
@@ -208,6 +209,9 @@ func epicExplorerView(flags query.FlagParser, project, projectType, server strin
 				return []*jira.Issue{}
 			}
 			return resp.Issues
+		},
+		Display: view.DisplayFormat{
+			TableStyle: cmdutil.GetTUIStyleConfig(),
 		},
 	}
 

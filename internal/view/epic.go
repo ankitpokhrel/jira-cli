@@ -19,6 +19,7 @@ type EpicList struct {
 	Server  string
 	Data    []*jira.Issue
 	Issues  EpicIssueFunc
+	Display DisplayFormat
 }
 
 // Render renders the epic explorer view.
@@ -35,6 +36,7 @@ func (el EpicList) Render() error {
 		tui.WithInitialText(helpText),
 		tui.WithSidebarSelectedFunc(navigate(el.Server)),
 		tui.WithContentTableOpts(
+			tui.WithTableStyle(el.Display.TableStyle),
 			tui.WithSelectedFunc(navigate(el.Server)),
 			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) (string, error)) {
 				dataFn := func() interface{} {

@@ -11,9 +11,11 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/browser"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
 // ExitIfError exists with error message if err is not nil.
@@ -192,4 +194,21 @@ func GetSubtaskHandle(issueType string, issueTypes []*jira.IssueType) string {
 	}
 
 	return fallback
+}
+
+// GetTUIStyleConfig returns the custom style configured by the user.
+func GetTUIStyleConfig() tui.TableStyle {
+	var bold bool
+
+	if !viper.IsSet("tui.selection.bold") {
+		bold = true
+	} else {
+		bold = viper.GetBool("tui.selection.bold")
+	}
+
+	return tui.TableStyle{
+		SelectionBackground: viper.GetString("tui.selection.background"),
+		SelectionForeground: viper.GetString("tui.selection.foreground"),
+		SelectionTextIsBold: bold,
+	}
 }

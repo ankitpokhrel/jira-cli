@@ -165,6 +165,7 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 				}
 				return []string{}
 			}(),
+			TableStyle: cmdutil.GetTUIStyleConfig(),
 		},
 	}
 
@@ -226,6 +227,7 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 				}
 				return []string{}
 			}(),
+			TableStyle: cmdutil.GetTUIStyleConfig(),
 		},
 	}
 

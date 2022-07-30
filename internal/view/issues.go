@@ -24,6 +24,7 @@ type DisplayFormat struct {
 	NoHeaders  bool
 	NoTruncate bool
 	Columns    []string
+	TableStyle tui.TableStyle
 }
 
 // IssueList is a list view for issues.
@@ -57,6 +58,7 @@ func (l *IssueList) Render() error {
 	view := tui.NewTable(
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
+		tui.WithTableStyle(l.Display.TableStyle),
 		tui.WithTableFooterText(l.FooterText),
 		tui.WithSelectedFunc(navigate(l.Server)),
 		tui.WithViewModeFunc(func(r, c int, _ interface{}) (func() interface{}, func(interface{}) (string, error)) {

@@ -46,6 +46,7 @@ func (sl SprintList) Render() error {
 		),
 		tui.WithInitialText(helpText),
 		tui.WithContentTableOpts(
+			tui.WithTableStyle(sl.Display.TableStyle),
 			tui.WithSelectedFunc(navigate(sl.Server)),
 			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) (string, error)) {
 				dataFn := func() interface{} {
@@ -83,6 +84,7 @@ func (sl SprintList) RenderInTable() error {
 	view := tui.NewTable(
 		tui.WithColPadding(colPadding),
 		tui.WithMaxColWidth(maxColWidth),
+		tui.WithTableStyle(sl.Display.TableStyle),
 		tui.WithTableFooterText(
 			fmt.Sprintf(
 				"Showing %d results from board \"%s\" of project \"%s\"",
