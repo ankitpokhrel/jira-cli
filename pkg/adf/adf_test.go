@@ -2,7 +2,7 @@ package adf
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -10,7 +10,7 @@ import (
 )
 
 func TestADF(t *testing.T) {
-	data, err := ioutil.ReadFile("./testdata/md.json")
+	data, err := os.ReadFile("./testdata/md.json")
 	assert.NoError(t, err)
 
 	var adf ADF
@@ -24,7 +24,7 @@ func TestADF(t *testing.T) {
 }
 
 func TestADFReplaceAll(t *testing.T) {
-	data, err := ioutil.ReadFile("./testdata/md.json")
+	data, err := os.ReadFile("./testdata/md.json")
 	assert.NoError(t, err)
 
 	var adf ADF

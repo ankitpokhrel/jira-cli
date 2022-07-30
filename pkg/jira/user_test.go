@@ -1,10 +1,10 @@
 package jira
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
@@ -27,7 +27,7 @@ func TestUserSearch(t *testing.T) {
 				"accountId":  []string{"a123b"},
 			}, r.URL.Query())
 
-			resp, err := ioutil.ReadFile("./testdata/users.json")
+			resp, err := os.ReadFile("./testdata/users.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")
@@ -84,7 +84,7 @@ func TestUserSearchV2(t *testing.T) {
 			"accountId":  []string{"a123b"},
 		}, r.URL.Query())
 
-		resp, err := ioutil.ReadFile("./testdata/users.json")
+		resp, err := os.ReadFile("./testdata/users.json")
 		assert.NoError(t, err)
 
 		w.Header().Set("Content-Type", "application/json")

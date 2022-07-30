@@ -1,10 +1,10 @@
 package jira
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
@@ -26,7 +26,7 @@ func TestProjects(t *testing.T) {
 				"expand": []string{"lead"},
 			}, qs)
 
-			resp, err := ioutil.ReadFile("./testdata/projects.json")
+			resp, err := os.ReadFile("./testdata/projects.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")

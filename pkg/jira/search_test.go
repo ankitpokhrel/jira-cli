@@ -2,10 +2,10 @@
 package jira
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
@@ -36,7 +36,7 @@ func TestSearch(t *testing.T) {
 				"maxResults": []string{"100"},
 			}, qs)
 
-			resp, err := ioutil.ReadFile("./testdata/search.json")
+			resp, err := os.ReadFile("./testdata/search.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")

@@ -2,9 +2,9 @@ package jira
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -23,7 +23,7 @@ func TestGetIssue(t *testing.T) {
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
-			resp, err := ioutil.ReadFile("./testdata/issue.json")
+			resp, err := os.ReadFile("./testdata/issue.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")
@@ -104,7 +104,7 @@ func TestGetIssueWithoutDescription(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/rest/api/3/issue/TEST-1", r.URL.Path)
 
-		resp, err := ioutil.ReadFile("./testdata/issue-1.json")
+		resp, err := os.ReadFile("./testdata/issue-1.json")
 		assert.NoError(t, err)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -155,7 +155,7 @@ func TestGetIssueV2(t *testing.T) {
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
-			resp, err := ioutil.ReadFile("./testdata/issue-2.json")
+			resp, err := os.ReadFile("./testdata/issue-2.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")
@@ -252,7 +252,7 @@ func TestGetIssueLinkTypes(t *testing.T) {
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
-			resp, err := ioutil.ReadFile("./testdata/issue-link-types.json")
+			resp, err := os.ReadFile("./testdata/issue-link-types.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")
@@ -352,7 +352,7 @@ func TestGetLinkID(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/rest/api/2/issue/TEST-1", r.URL.Path)
 
-		resp, err := ioutil.ReadFile("./testdata/issue.json")
+		resp, err := os.ReadFile("./testdata/issue.json")
 		assert.NoError(t, err)
 
 		w.Header().Set("Content-Type", "application/json")

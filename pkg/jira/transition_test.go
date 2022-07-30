@@ -2,9 +2,9 @@ package jira
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -30,7 +30,7 @@ func TestTransitions(t *testing.T) {
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
-			resp, err := ioutil.ReadFile("./testdata/transitions.json")
+			resp, err := os.ReadFile("./testdata/transitions.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")

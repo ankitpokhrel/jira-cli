@@ -3,10 +3,10 @@ package jira
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -31,7 +31,7 @@ func TestSprints(t *testing.T) {
 				"maxResults": []string{"10"},
 			}, qs)
 
-			resp, err := ioutil.ReadFile("./testdata/sprints.json")
+			resp, err := os.ReadFile("./testdata/sprints.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")
@@ -123,7 +123,7 @@ func TestSprintsInBoards(t *testing.T) {
 				"maxResults": []string{"3"},
 			}, qs)
 
-			resp, err = ioutil.ReadFile("./testdata/sprints-0.json")
+			resp, err = os.ReadFile("./testdata/sprints-0.json")
 			assert.NoError(t, err)
 
 		case "2":
@@ -133,7 +133,7 @@ func TestSprintsInBoards(t *testing.T) {
 				"maxResults": []string{"3"},
 			}, qs)
 
-			resp, err = ioutil.ReadFile("./testdata/sprints-2.json")
+			resp, err = os.ReadFile("./testdata/sprints-2.json")
 			assert.NoError(t, err)
 
 		case "3":
@@ -143,7 +143,7 @@ func TestSprintsInBoards(t *testing.T) {
 				"maxResults": []string{"3"},
 			}, qs)
 
-			resp, err = ioutil.ReadFile("./testdata/sprints-3.json")
+			resp, err = os.ReadFile("./testdata/sprints-3.json")
 			assert.NoError(t, err)
 		}
 
@@ -203,7 +203,7 @@ func TestSprintIssues(t *testing.T) {
 				"maxResults": []string{"100"},
 			}, qs)
 
-			resp, err := ioutil.ReadFile("./testdata/search.json")
+			resp, err := os.ReadFile("./testdata/search.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")
