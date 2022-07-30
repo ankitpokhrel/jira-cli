@@ -27,7 +27,7 @@ type JQL struct {
 func NewJQL(project string) *JQL {
 	return &JQL{
 		project: project,
-		filters: []string{fmt.Sprintf("project=\"%s\"", project)},
+		filters: []string{fmt.Sprintf("project=%q", project)},
 	}
 }
 
@@ -58,10 +58,10 @@ func (j *JQL) FilterBy(field, value string) *JQL {
 			if value == "x" {
 				q = fmt.Sprintf("%s IS NOT EMPTY", field)
 			} else {
-				q = fmt.Sprintf("%s!=\"%s\"", field, strings.TrimLeft(value, " "))
+				q = fmt.Sprintf("%s!=%q", field, strings.TrimLeft(value, " "))
 			}
 		default:
-			q = fmt.Sprintf("%s=\"%s\"", field, value)
+			q = fmt.Sprintf("%s=%q", field, value)
 		}
 
 		j.filters = append(j.filters, q)
@@ -75,7 +75,7 @@ func (j *JQL) Gt(field, value string, wrap bool) *JQL {
 		var q string
 
 		if wrap {
-			q = fmt.Sprintf("%s>\"%s\"", field, value)
+			q = fmt.Sprintf("%s>%q", field, value)
 		} else {
 			q = fmt.Sprintf("%s>%s", field, value)
 		}
@@ -91,7 +91,7 @@ func (j *JQL) Gte(field, value string, wrap bool) *JQL {
 		var q string
 
 		if wrap {
-			q = fmt.Sprintf("%s>=\"%s\"", field, value)
+			q = fmt.Sprintf("%s>=%q", field, value)
 		} else {
 			q = fmt.Sprintf("%s>=%s", field, value)
 		}
@@ -107,7 +107,7 @@ func (j *JQL) Lt(field, value string, wrap bool) *JQL {
 		var q string
 
 		if wrap {
-			q = fmt.Sprintf("%s<\"%s\"", field, value)
+			q = fmt.Sprintf("%s<%q", field, value)
 		} else {
 			q = fmt.Sprintf("%s<%s", field, value)
 		}
@@ -125,7 +125,7 @@ func (j *JQL) In(field string, value ...string) *JQL {
 
 		q.WriteString(fmt.Sprintf("%s IN (", field))
 		for i, v := range value {
-			q.WriteString(fmt.Sprintf("\"%s\"", v))
+			q.WriteString(fmt.Sprintf("%q", v))
 			if i != n-1 {
 				q.WriteString(", ")
 			}

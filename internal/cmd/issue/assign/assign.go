@@ -100,9 +100,9 @@ func assign(cmd *cobra.Command, args []string) {
 	err = func() error {
 		var s *spinner.Spinner
 		if uname == "unassigned" {
-			s = cmdutil.Info(fmt.Sprintf("Unassigning user from issue \"%s\"...", ac.params.key))
+			s = cmdutil.Info(fmt.Sprintf("Unassigning user from issue %q...", ac.params.key))
 		} else {
-			s = cmdutil.Info(fmt.Sprintf("Assigning issue \"%s\" to user \"%s\"...", ac.params.key, uname))
+			s = cmdutil.Info(fmt.Sprintf("Assigning issue %q to user %q...", ac.params.key, uname))
 		}
 		defer s.Stop()
 
@@ -111,9 +111,9 @@ func assign(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	if uname == "unassigned" {
-		cmdutil.Success("User unassigned from the issue \"%s\"", ac.params.key)
+		cmdutil.Success("User unassigned from the issue %q", ac.params.key)
 	} else {
-		cmdutil.Success("User \"%s\" assigned to issue \"%s\"", uname, ac.params.key)
+		cmdutil.Success("User %q assigned to issue %q", uname, ac.params.key)
 	}
 	fmt.Printf("%s/browse/%s\n", viper.GetString("server"), ac.params.key)
 }
@@ -330,10 +330,10 @@ func (ac *assignCmd) verifyAssignee() (*jira.User, error) {
 	}
 
 	if user == nil {
-		return nil, fmt.Errorf("invalid assignee \"%s\"", ac.params.user)
+		return nil, fmt.Errorf("invalid assignee %q", ac.params.user)
 	}
 	if !user.Active {
-		return nil, fmt.Errorf("user \"%s\" is not active", getQueryableName(user.Name, user.DisplayName))
+		return nil, fmt.Errorf("user %q is not active", getQueryableName(user.Name, user.DisplayName))
 	}
 	return user, nil
 }

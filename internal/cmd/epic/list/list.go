@@ -126,7 +126,7 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 
 	if total == 0 {
 		fmt.Println()
-		cmdutil.Failed("No result found for given query in project \"%s\"", project)
+		cmdutil.Failed("No result found for given query in project %q", project)
 		return
 	}
 
@@ -185,7 +185,7 @@ func epicExplorerView(flags query.FlagParser, project, projectType, server strin
 
 	if total == 0 {
 		fmt.Println()
-		cmdutil.Failed("No result found for given query in project \"%s\"", project)
+		cmdutil.Failed("No result found for given query in project %q", project)
 		return
 	}
 

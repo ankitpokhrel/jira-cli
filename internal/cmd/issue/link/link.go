@@ -79,7 +79,7 @@ func link(cmd *cobra.Command, args []string) {
 
 	server := viper.GetString("server")
 
-	cmdutil.Success("Issues linked as \"%s\"", lc.params.linkType)
+	cmdutil.Success("Issues linked as %q", lc.params.linkType)
 	fmt.Printf("%s/browse/%s\n", server, lc.params.inwardIssueKey)
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
@@ -222,7 +222,7 @@ func (lc *linkCmd) verifyIssueLinkType() (*jira.IssueLinkType, error) {
 
 	if lt == nil {
 		return nil, fmt.Errorf(
-			"invalid issue link type \"%s\"\nAvailable issue link types are: %s",
+			"invalid issue link type %q\nAvailable issue link types are: %s",
 			lc.params.linkType, strings.Join(all, ", "),
 		)
 	}

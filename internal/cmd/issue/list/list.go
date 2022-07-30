@@ -103,7 +103,7 @@ func loadList(cmd *cobra.Command) {
 
 	if total == 0 {
 		fmt.Println()
-		cmdutil.Failed("No result found for given query in project \"%s\"", project)
+		cmdutil.Failed("No result found for given query in project %q", project)
 		return
 	}
 

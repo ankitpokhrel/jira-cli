@@ -53,14 +53,14 @@ func del(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(mc.setIssueKey(project))
 
 	err := func() error {
-		s := cmdutil.Info(fmt.Sprintf("Removing issue \"%s\"", mc.params.key))
+		s := cmdutil.Info(fmt.Sprintf("Removing issue %q", mc.params.key))
 		defer s.Stop()
 
 		return client.DeleteIssue(mc.params.key, mc.params.cascade)
 	}()
 	cmdutil.ExitIfError(err)
 
-	cmdutil.Success(fmt.Sprintf("Issue \"%s\" removed successfully", mc.params.key))
+	cmdutil.Success(fmt.Sprintf("Issue %q removed successfully", mc.params.key))
 }
 
 type deleteParams struct {

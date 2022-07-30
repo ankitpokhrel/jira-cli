@@ -108,7 +108,7 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 
 	if total == 0 {
 		fmt.Println()
-		cmdutil.Failed("No result found for given query in project \"%s\"", project)
+		cmdutil.Failed("No result found for given query in project %q", project)
 		return
 	}
 
@@ -128,12 +128,12 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 	if sprint != nil {
 		if sprint.Status == jira.SprintStateFuture {
 			ft = fmt.Sprintf(
-				"Showing %d of %d results for project \"%s\" in sprint #%d ➤ %s (Future Sprint)",
+				"Showing %d of %d results for project %q in sprint #%d ➤ %s (Future Sprint)",
 				len(issues), total, project, sprint.ID, sprint.Name,
 			)
 		} else {
 			ft = fmt.Sprintf(
-				"Showing %d of %d results for project \"%s\" in sprint #%d ➤ %s (%s - %s)",
+				"Showing %d of %d results for project %q in sprint #%d ➤ %s (%s - %s)",
 				len(issues), total, project, sprint.ID, sprint.Name,
 				cmdutil.FormatDateTimeHuman(sprint.StartDate, time.RFC3339),
 				cmdutil.FormatDateTimeHuman(sprint.EndDate, time.RFC3339),
@@ -141,7 +141,7 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 		}
 	} else {
 		ft = fmt.Sprintf(
-			"Showing %d of %d results for project \"%s\" in sprint #%d",
+			"Showing %d of %d results for project %q in sprint #%d",
 			len(issues), total, project, sprintID,
 		)
 	}
@@ -184,7 +184,7 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 	}()
 	if len(sprints) == 0 {
 		fmt.Println()
-		cmdutil.Failed("No result found for given query in project \"%s\"", project)
+		cmdutil.Failed("No result found for given query in project %q", project)
 		return
 	}
 

@@ -32,7 +32,7 @@ func Info() string {
 		commitDate = time.Unix(i, 0).UTC().Format("2006-01-02T15:04:05-07:00")
 	}
 	return fmt.Sprintf(
-		"(Version=\"%s\", GitCommit=\"%s\", CommitDate=\"%s\", GoVersion=\"%s\", Compiler=\"%s\", Platform=\"%s\")",
+		"(Version=%q, GitCommit=%q, CommitDate=%q, GoVersion=%q, Compiler=%q, Platform=%q)",
 		Version, GitCommit, commitDate, GoVersion, Compiler, Platform,
 	)
 }

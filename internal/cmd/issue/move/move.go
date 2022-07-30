@@ -71,7 +71,7 @@ func move(cmd *cobra.Command, args []string) {
 	}
 
 	err = func() error {
-		s := cmdutil.Info(fmt.Sprintf("Transitioning issue to \"%s\"...", tr.Name))
+		s := cmdutil.Info(fmt.Sprintf("Transitioning issue to %q...", tr.Name))
 		defer s.Stop()
 
 		_, err := client.Transition(mc.params.key, &jira.TransitionRequest{
@@ -83,7 +83,7 @@ func move(cmd *cobra.Command, args []string) {
 
 	server := viper.GetString("server")
 
-	cmdutil.Success("Issue transitioned to state \"%s\"", tr.Name)
+	cmdutil.Success("Issue transitioned to state %q", tr.Name)
 	fmt.Printf("%s/browse/%s\n", server, mc.params.key)
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
@@ -206,7 +206,7 @@ func (mc *moveCmd) verifyTransition(it string) (*jira.Transition, error) {
 
 	if tr == nil {
 		return nil, fmt.Errorf(
-			"invalid transition state \"%s\"\nAvailable states for issue %s: %s",
+			"invalid transition state %q\nAvailable states for issue %s: %s",
 			mc.params.state, mc.params.key, strings.Join(all, ", "),
 		)
 	}
@@ -215,7 +215,7 @@ func (mc *moveCmd) verifyTransition(it string) (*jira.Transition, error) {
 	// So, we will only verify if the transition is available for the cloud installation.
 	if it == jira.InstallationTypeCloud && !tr.IsAvailable {
 		return nil, fmt.Errorf(
-			"transition state \"%s\" for issue \"%s\" is not available",
+			"transition state %q for issue %q is not available",
 			mc.params.state, mc.params.key,
 		)
 	}
