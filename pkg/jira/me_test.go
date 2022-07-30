@@ -1,9 +1,9 @@
 package jira
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -19,7 +19,7 @@ func TestMe(t *testing.T) {
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
-			resp, err := ioutil.ReadFile("./testdata/myself.json")
+			resp, err := os.ReadFile("./testdata/myself.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")

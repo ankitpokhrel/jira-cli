@@ -1,10 +1,10 @@
 package jira
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
@@ -26,7 +26,7 @@ func TestBoards(t *testing.T) {
 				"type":           []string{"scrum"},
 			}, qs)
 
-			resp, err := ioutil.ReadFile("./testdata/boards.json")
+			resp, err := os.ReadFile("./testdata/boards.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")
@@ -38,7 +38,7 @@ func TestBoards(t *testing.T) {
 				"name":           []string{"board"},
 			}, qs)
 
-			resp, err := ioutil.ReadFile("./testdata/boards.json")
+			resp, err := os.ReadFile("./testdata/boards.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")

@@ -2,9 +2,9 @@ package jira
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -27,7 +27,7 @@ func (c *createTestServer) serve(t *testing.T, expectedBody string) *httptest.Se
 		assert.JSONEq(t, expectedBody, actualBody.String())
 
 		if c.code == 201 {
-			resp, err := ioutil.ReadFile("./testdata/create.json")
+			resp, err := os.ReadFile("./testdata/create.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")

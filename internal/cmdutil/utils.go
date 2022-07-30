@@ -2,7 +2,7 @@ package cmdutil
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -132,10 +132,10 @@ func StdinHasData() bool {
 // ReadFile reads contents of the given file.
 func ReadFile(filePath string) ([]byte, error) {
 	if filePath != "-" && filePath != "" {
-		return ioutil.ReadFile(filePath)
+		return os.ReadFile(filePath)
 	}
 	if filePath == "-" || StdinHasData() {
-		b, err := ioutil.ReadAll(os.Stdin)
+		b, err := io.ReadAll(os.Stdin)
 		_ = os.Stdin.Close()
 		return b, err
 	}

@@ -1,10 +1,10 @@
 package jira
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
@@ -28,7 +28,7 @@ func TestGetCreateMeta(t *testing.T) {
 				"expand":         []string{"projects.issuetypes.fields"},
 			}, qs)
 
-			resp, err := ioutil.ReadFile("./testdata/createmeta.json")
+			resp, err := os.ReadFile("./testdata/createmeta.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")
