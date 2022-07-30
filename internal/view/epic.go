@@ -32,7 +32,7 @@ func (el EpicList) Render() error {
 
 	data := el.data()
 	view := tui.NewPreview(
-		tui.WithPreviewFooterText(fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(el.Data), el.Total, el.Project)),
+		tui.WithPreviewFooterText(fmt.Sprintf("Showing %d of %d results for project %q", len(el.Data), el.Total, el.Project)),
 		tui.WithInitialText(helpText),
 		tui.WithSidebarSelectedFunc(navigate(el.Server)),
 		tui.WithContentTableOpts(

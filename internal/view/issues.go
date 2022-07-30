@@ -52,7 +52,7 @@ func (l *IssueList) Render() error {
 
 	data := l.data()
 	if l.FooterText == "" {
-		l.FooterText = fmt.Sprintf("Showing %d of %d results for project \"%s\"", len(data)-1, l.Total, l.Project)
+		l.FooterText = fmt.Sprintf("Showing %d of %d results for project %q", len(data)-1, l.Total, l.Project)
 	}
 
 	view := tui.NewTable(

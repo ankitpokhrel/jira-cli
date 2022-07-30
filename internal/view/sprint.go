@@ -40,7 +40,7 @@ func (sl SprintList) Render() error {
 	view := tui.NewPreview(
 		tui.WithPreviewFooterText(
 			fmt.Sprintf(
-				"Showing %d results from board \"%s\" of project \"%s\"",
+				"Showing %d results from board %q of project %q",
 				len(sl.Data), sl.Board, sl.Project,
 			),
 		),
@@ -87,7 +87,7 @@ func (sl SprintList) RenderInTable() error {
 		tui.WithTableStyle(sl.Display.TableStyle),
 		tui.WithTableFooterText(
 			fmt.Sprintf(
-				"Showing %d results from board \"%s\" of project \"%s\"",
+				"Showing %d results from board %q of project %q",
 				len(sl.Data), sl.Board, sl.Project,
 			),
 		),

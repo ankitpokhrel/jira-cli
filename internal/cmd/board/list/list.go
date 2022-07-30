@@ -49,7 +49,7 @@ func List(cmd *cobra.Command, _ []string) {
 
 	if total == 0 {
 		fmt.Println()
-		cmdutil.Failed("No boards found in project \"%s\"", project)
+		cmdutil.Failed("No boards found in project %q", project)
 		return
 	}
 
