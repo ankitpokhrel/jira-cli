@@ -101,7 +101,7 @@ func (sl *SprintList) renderPlain(w io.Writer) error {
 	return renderPlain(w, sl.tableData())
 }
 
-func (sl SprintList) data() []tui.PreviewData {
+func (sl *SprintList) data() []tui.PreviewData {
 	data := make([]tui.PreviewData, 0, len(sl.Data))
 
 	data = append(data, tui.PreviewData{
