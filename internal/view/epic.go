@@ -24,7 +24,7 @@ type EpicList struct {
 
 // Render renders the epic explorer view.
 //nolint:dupl
-func (el EpicList) Render() error {
+func (el *EpicList) Render() error {
 	renderer, err := MDRenderer()
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func (el EpicList) Render() error {
 	return view.Paint(data)
 }
 
-func (el EpicList) data() []tui.PreviewData {
+func (el *EpicList) data() []tui.PreviewData {
 	data := make([]tui.PreviewData, 0, len(el.Data))
 
 	data = append(data, tui.PreviewData{
@@ -87,7 +87,7 @@ func (el EpicList) data() []tui.PreviewData {
 	return data
 }
 
-func (el EpicList) tabularize(issues []*jira.Issue) tui.TableData {
+func (el *EpicList) tabularize(issues []*jira.Issue) tui.TableData {
 	var data tui.TableData
 
 	data = append(data, []string{
