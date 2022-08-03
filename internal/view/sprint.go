@@ -30,7 +30,7 @@ type SprintList struct {
 
 // Render renders the sprint explorer view.
 //nolint:dupl
-func (sl SprintList) Render() error {
+func (sl *SprintList) Render() error {
 	renderer, err := MDRenderer()
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (sl SprintList) Render() error {
 }
 
 // RenderInTable renders the list in table view.
-func (sl SprintList) RenderInTable() error {
+func (sl *SprintList) RenderInTable() error {
 	if sl.Display.Plain {
 		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
 		return sl.renderPlain(w)
@@ -97,11 +97,11 @@ func (sl SprintList) RenderInTable() error {
 }
 
 // renderPlain renders the issue in plain view.
-func (sl SprintList) renderPlain(w io.Writer) error {
+func (sl *SprintList) renderPlain(w io.Writer) error {
 	return renderPlain(w, sl.tableData())
 }
 
-func (sl SprintList) data() []tui.PreviewData {
+func (sl *SprintList) data() []tui.PreviewData {
 	data := make([]tui.PreviewData, 0, len(sl.Data))
 
 	data = append(data, tui.PreviewData{
@@ -133,7 +133,7 @@ func (sl SprintList) data() []tui.PreviewData {
 	return data
 }
 
-func (sl SprintList) tabularize(issues []*jira.Issue) tui.TableData {
+func (sl *SprintList) tabularize(issues []*jira.Issue) tui.TableData {
 	var data tui.TableData
 
 	data = append(data, ValidIssueColumns())
@@ -155,7 +155,7 @@ func (sl SprintList) tabularize(issues []*jira.Issue) tui.TableData {
 	return data
 }
 
-func (sl SprintList) validColumnsMap() map[string]struct{} {
+func (sl *SprintList) validColumnsMap() map[string]struct{} {
 	columns := ValidSprintColumns()
 	out := make(map[string]struct{}, len(columns))
 
@@ -166,7 +166,7 @@ func (sl SprintList) validColumnsMap() map[string]struct{} {
 	return out
 }
 
-func (sl SprintList) tableHeader() []string {
+func (sl *SprintList) tableHeader() []string {
 	if len(sl.Display.Columns) == 0 {
 		return ValidSprintColumns()
 	}
@@ -184,7 +184,7 @@ func (sl SprintList) tableHeader() []string {
 	return headers
 }
 
-func (sl SprintList) tableData() tui.TableData {
+func (sl *SprintList) tableData() tui.TableData {
 	var data tui.TableData
 
 	headers := sl.tableHeader()
@@ -201,7 +201,7 @@ func (sl SprintList) tableData() tui.TableData {
 	return data
 }
 
-func (sl SprintList) assignColumns(columns []string, sprint *jira.Sprint) []string {
+func (sl *SprintList) assignColumns(columns []string, sprint *jira.Sprint) []string {
 	var bucket []string
 
 	for _, column := range columns {
