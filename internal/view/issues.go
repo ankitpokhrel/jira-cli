@@ -51,7 +51,6 @@ func (l *IssueList) Render() error {
 	}
 
 	view := tui.NewTable(
-		tui.WithColPadding(colPad),
 		tui.WithTableStyle(l.Display.TableStyle),
 		tui.WithTableFooterText(l.FooterText),
 		tui.WithSelectedFunc(navigate(l.Server)),

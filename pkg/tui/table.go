@@ -92,13 +92,6 @@ func NewTable(opts ...TableOption) *Table {
 	return &tbl
 }
 
-// WithColPadding sets column padding property of the table.
-func WithColPadding(pad uint) TableOption {
-	return func(t *Table) {
-		t.colPad = pad
-	}
-}
-
 // WithTableStyle sets the style of the table.
 func WithTableStyle(style TableStyle) TableOption {
 	return func(t *Table) {

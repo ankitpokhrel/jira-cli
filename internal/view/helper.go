@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	colPad   = 1
 	wordWrap = 120
 	tabWidth = 8
 	helpText = `USAGE
