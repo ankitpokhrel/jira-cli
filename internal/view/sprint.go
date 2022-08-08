@@ -82,8 +82,7 @@ func (sl *SprintList) RenderInTable() error {
 
 	data := sl.tableData()
 	view := tui.NewTable(
-		tui.WithColPadding(colPadding),
-		tui.WithMaxColWidth(maxColWidth),
+		tui.WithColPadding(colPad),
 		tui.WithTableStyle(sl.Display.TableStyle),
 		tui.WithTableFooterText(
 			fmt.Sprintf(
