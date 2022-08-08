@@ -128,11 +128,11 @@ See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more 
    - Add these ENVs to your shell configuration file, for instance, `$HOME/.bashrc`, so that they are always available.
    - Alternatively, you can also use `.netrc` file or `keychain` to set the token. Learn
      more [here](https://github.com/ankitpokhrel/jira-cli/discussions/356).
-2. Run `jira init`, select installation type as `Local`, and provide required details to generate a config file required
+2. Run `jira init`, select installation type as `Local`, and provide the required details to generate a config file required
    for the tool.
 
    **Note:** If your on-premise Jira installation is using a language other than `English`, then the issue/epic creation
-   may not work because the older version of Jira API doesn't return untranslated name for `issuetypes`. In that case,
+   may not work because the older version of Jira API doesn't return the untranslated name for `issuetypes`. In that case,
    you will have to fill in `epic.name`, `epic.link` and `issue.types.*.handle` fields manually in the generated config
    to get the expected behavior.
 
@@ -149,7 +149,7 @@ Check `jira completion --help` for more info on setting up a bash/zsh shell comp
 ## Usage
 The tool currently comes with an issue, epic, and sprint explorer. The flags are [POSIX-compliant](https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html).
 You can combine available flags in any order to create a unique query. For example, the command below will give you high priority issues created this month
-with status `To Do` that are assigned to you and has a label `backend`.
+with status `To Do` that are assigned to you and has the label `backend`.
 ```sh
 jira issue list -yHigh -s"To Do" --created month -lbackend -a$(jira me)
 ```
@@ -159,7 +159,7 @@ The lists are displayed in an interactive UI by default.
 - Use arrow keys or `j, k, h, l` characters to navigate through the list.
 - Use `g` and `SHIFT+G` to quickly navigate to the top and bottom respectively.
 - Press `v` to view selected issue details.
-- Press `CTRL+R` or `F5` to refresh issues list.
+- Press `CTRL+R` or `F5` to refresh the issues list.
 - Hit `ENTER` to open the selected issue in the browser.
 - Press `c` to copy issue URL to the system clipboard. This requires `xclip` / `xsel` in linux.
 - Press `CTRL+K` to copy issue key to the system clipboard.
@@ -190,7 +190,7 @@ $ jira issue list --plain
 $ jira issue list --order-by rank --reverse
 
 # You can execute raw JQL within a given project context using `--jql/-q` option.
-# For instance, the following command will list issues in current project whose
+# For instance, the following command will list issues in the current project whose
 # summary has a word cli.
 $ jira issue list -q "summary ~ cli"
 ```
@@ -254,7 +254,7 @@ jira issue list --created -1h --updated -30m
 ```
 </details>
 
-<details><summary>Give me issues that are of high priority, is in progress, was created this month, and has given labels :fire:</summary>
+<details><summary>Give me issues that are of high priority, are in progress, were created this month, and have given labels :fire:</summary>
 
 ```sh
 jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high-prio"
@@ -300,7 +300,7 @@ jira issue list -w -pXYZ
 The `create` command lets you create an issue.
 
 ```sh
-# Create an issue using interactive prompt
+# Create an issue using an interactive prompt
 $ jira issue create
 
 # Pass required parameters and use --no-input option to skip prompt
@@ -357,10 +357,10 @@ $ jira issue edit ISSUE-1 --label -p2 --label p1 --component -FE --component BE 
 ```
 
 #### Assign
-The `assign` command lets you assign user to an issue.
+The `assign` command lets you assign a user to an issue.
 
 ```sh
-# Assign user to an issue using interactive prompt
+# Assign user to an issue using an interactive prompt
 $ jira issue assign
 
 # Pass required parameters to skip prompt
@@ -382,10 +382,10 @@ $ jira issue assign ISSUE-1 x
 ![Assign issue to a user](.github/assets/assign.gif)
 
 #### Move/Transition
-The `move` command lets you transition issue from one state to another.
+The `move` command lets you transition an issue from one state to another.
 
 ```sh
-# Move an issue using interactive prompt
+# Move an issue using an interactive prompt
 $ jira issue move
 
 # Pass required parameters to skip prompt
@@ -404,7 +404,7 @@ $ jira issue view ISSUE-1
 
 ![View an issue](.github/assets/view.gif)
 
-The view screen will display linked issues and the latest comment after description. Note that the displayed comment may
+The view screen will display linked issues and the latest comment after the description. Note that the displayed comment may
 not be the latest one if you for some reason have more than 5k comments in a ticket.
 
 ```sh
@@ -416,7 +416,7 @@ $ jira issue view ISSUE-1 --comments 5
 The `link` command lets you link two issues.
 
 ```sh
-# Link an issue using interactive prompt
+# Link an issue using an interactive prompt
 $ jira issue link
 
 # Pass required parameters to skip prompt
@@ -454,7 +454,7 @@ $ jira issue clone ISSUE-1 -H"find me:replace with me"
 The `delete` command lets you delete an issue.
 
 ```sh
-# Delete an issue using interactive prompt
+# Delete an issue using an interactive prompt
 $ jira issue delete
 
 # Pass required parameters to skip prompt
@@ -468,12 +468,12 @@ $ jira issue delete ISSUE-1 --cascade
 The `comment` command provides a list of sub-commands to manage issue comments.
 
 ##### Add
-The `add` command lets you add comment to an issue. The command supports both [Github-flavored](https://github.github.com/gfm/)
+The `add` command lets you add a comment to an issue. The command supports both [Github-flavored](https://github.github.com/gfm/)
 and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) markdown for writing
 comment. You can load pre-defined templates using `--template` flag.
 
 ```sh
-# Add a comment using interactive prompt
+# Add a comment using an interactive prompt
 $ jira issue comment add
 
 # Pass required parameters to skip prompt
@@ -489,7 +489,7 @@ $ jira issue comment add ISSUE-1 --template -
 $ echo "Comment from stdin" | jira issue comment add ISSUE-1
 ```
 
-Note: For comment body, the positional argument always takes precedence over the `--template` flag if both of them are passed. In the
+Note: For the comment body, the positional argument always takes precedence over the `--template` flag if both of them are passed. In the
 example below, the body will be picked from positional argument instead of the template.
 ```sh
 jira issue comment add ISSUE-42 "comment body positional" --template - <<'EOF'
@@ -501,10 +501,10 @@ EOF
 The `worklog` command provides a list of sub-commands to manage issue worklog (timelog).
 
 ##### Add
-The `add` command lets you add worklog to an issue. The command supports markdown for worklog comments.
+The `add` command lets you add a worklog to an issue. The command supports markdown for worklog comments.
 
 ```sh
-# Add a worklog using interactive prompt
+# Add a worklog using an interactive prompt
 $ jira issue worklog add
 
 # Pass required parameters and use --no-input to skip prompt
@@ -547,10 +547,10 @@ $ jira epic list KEY-1 --order-by rank --reverse
 ```
 
 #### Create
-Creating an epic is same as creating the issue except you also need to provide an epic name.
+Creating an epic is the same as creating the issue except you also need to provide an epic name.
 
 ```sh
-# Create an issue using interactive prompt
+# Create an issue using an interactive prompt
 $ jira epic create
 
 # Pass required parameters to skip prompt or use --no-input flag to skip prompt for non-mandatory params
@@ -561,7 +561,7 @@ $ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Epic de
 The `add` command allows you to add issues to the epic. You can add up to 50 issues to the epic at once.
 
 ```sh
-# Add issues to the epic using interactive prompt
+# Add issues to the epic using an interactive prompt
 $ jira epic add
 
 # Pass required parameters to skip prompt
@@ -572,7 +572,7 @@ $ jira epic add EPIC-KEY ISSUE-1 ISSUE-2
 The `remove` command allows you to remove issues from the epic. You can remove up to 50 issues from the epic at once.
 
 ```sh
-# Remove issues to the epic using interactive prompt
+# Remove issues to the epic using an interactive prompt
 $ jira epic remove
 
 # Pass required parameters to skip prompt
@@ -595,13 +595,13 @@ $ jira sprint list
 # List sprints in a table view
 $ jira sprint list --table
 
-# List issues in current active sprint
+# List issues in the current active sprint
 $ jira sprint list --current
 
-# List issues in current active sprint that are assigned to me
+# List issues in the current active sprint that are assigned to me
 $ jira sprint list --current -a$(jira me)
 
-# List issues in previous sprint
+# List issues in the previous sprint
 $ jira sprint list --prev
 
 # List issues in next planned sprint
@@ -734,7 +734,7 @@ Sprint 1:   3
 ## Known Issues
 
 1. Not all [Atlassian nodes](https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/#nodes) are
-   translated properly at the moment which can cause formatting issue sometimes.
+   translated properly at the moment which can cause formatting issues sometimes.
 
 ## Feature requests
 
@@ -753,7 +753,7 @@ Please [open a discussion](https://github.com/ankitpokhrel/jira-cli/discussions/
    ```
 
 2. Optional: If you want to run a Jira instance locally, you can use the following make recipe.
-   The trial license key can be generated from "Licenses" section in the [atlassian admin](https://my.atlassian.com).
+   The trial license key can be generated from the "Licenses" section in the [atlassian admin](https://my.atlassian.com).
    ```sh
    make jira.server
    ```
@@ -771,7 +771,7 @@ Please [open a discussion](https://github.com/ankitpokhrel/jira-cli/discussions/
 ## Support the project
 Your suggestions and feedbacks are highly appreciated. Feel free
 to [start a discussion](https://github.com/ankitpokhrel/jira-cli/discussions)
-or [create an issue](https://github.com/ankitpokhrel/jira-cli/issues/new) to share your experience about the tool or to
+or [create an issue](https://github.com/ankitpokhrel/jira-cli/issues/new) to share your experience with the tool or to
 discuss a feature/issue.
 
 If you think this tool is useful, saves you a lot of work, and lets you sleep much better, then consider supporting the
