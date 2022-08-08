@@ -13,11 +13,6 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
-const (
-	colPadding  = 1
-	maxColWidth = 60
-)
-
 // DisplayFormat is a issue display type.
 type DisplayFormat struct {
 	Plain      bool
@@ -56,8 +51,6 @@ func (l *IssueList) Render() error {
 	}
 
 	view := tui.NewTable(
-		tui.WithColPadding(colPadding),
-		tui.WithMaxColWidth(maxColWidth),
 		tui.WithTableStyle(l.Display.TableStyle),
 		tui.WithTableFooterText(l.FooterText),
 		tui.WithSelectedFunc(navigate(l.Server)),

@@ -10,7 +10,7 @@ import (
 
 const (
 	defaultColPad   = 1
-	defaultColWidth = 50
+	defaultColWidth = 80
 )
 
 var errNoData = fmt.Errorf("no data")
@@ -90,20 +90,6 @@ func NewTable(opts ...TableOption) *Table {
 		AddPage("secondary", getInfoModal(), true, false)
 
 	return &tbl
-}
-
-// WithColPadding sets column padding property of the table.
-func WithColPadding(pad uint) TableOption {
-	return func(t *Table) {
-		t.colPad = pad
-	}
-}
-
-// WithMaxColWidth sets max column width property of the table.
-func WithMaxColWidth(width uint) TableOption {
-	return func(t *Table) {
-		t.maxColWidth = width
-	}
 }
 
 // WithTableStyle sets the style of the table.
@@ -255,7 +241,6 @@ func renderTableHeader(t *Table, data []string) {
 		cell := tview.NewTableCell(text).
 			SetStyle(style).
 			SetSelectable(false).
-			SetMaxWidth(int(t.maxColWidth)).
 			SetTextColor(tcell.ColorSnow).
 			SetBackgroundColor(tcell.ColorDarkCyan)
 
