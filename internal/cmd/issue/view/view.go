@@ -36,6 +36,7 @@ func NewCmdView() *cobra.Command {
 
 	cmd.Flags().Uint("comments", 1, "Show N comments")
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
+	cmd.Flags().Bool("summary", false, "Display only the summary")
 
 	return &cmd
 }
@@ -59,11 +60,13 @@ func view(cmd *cobra.Command, args []string) {
 
 	plain, err := cmd.Flags().GetBool("plain")
 	cmdutil.ExitIfError(err)
+	summary, err := cmd.Flags().GetBool("summary")
+	cmdutil.ExitIfError(err)
 
 	v := tuiView.Issue{
 		Server:  viper.GetString("server"),
 		Data:    iss,
-		Display: tuiView.DisplayFormat{Plain: plain},
+		Display: tuiView.DisplayFormat{Plain: plain, Summary: summary},
 		Options: tuiView.IssueOption{NumComments: comments},
 	}
 	cmdutil.ExitIfError(v.Render())

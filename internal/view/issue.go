@@ -55,6 +55,8 @@ type Issue struct {
 func (i Issue) Render() error {
 	if i.Display.Plain {
 		return i.renderPlain(os.Stdout)
+	} else if i.Display.Summary {
+		return i.renderSummary(os.Stdout)
 	}
 	r, err := MDRenderer()
 	if err != nil {
@@ -447,5 +449,11 @@ func (i Issue) renderPlain(w io.Writer) error {
 		return err
 	}
 	_, err = fmt.Fprint(w, out)
+	return err
+}
+
+func (i Issue) renderSummary(w io.Writer) error {
+	out := i.Data.Fields.Summary
+	_, err := fmt.Fprintln(w, out)
 	return err
 }

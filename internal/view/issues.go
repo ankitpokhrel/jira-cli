@@ -16,6 +16,7 @@ import (
 // DisplayFormat is a issue display type.
 type DisplayFormat struct {
 	Plain      bool
+	Summary    bool
 	NoHeaders  bool
 	NoTruncate bool
 	Columns    []string
