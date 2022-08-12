@@ -52,7 +52,7 @@ type Issue struct {
 }
 
 // Render renders the view.
-func (i Issue) Render() error {
+func (i *Issue) Render() error {
 	if i.Display.Plain {
 		return i.renderPlain(os.Stdout)
 	} else if i.Display.Summary {
@@ -70,7 +70,7 @@ func (i Issue) Render() error {
 }
 
 // RenderedOut translates raw data to the format we want to display in.
-func (i Issue) RenderedOut(renderer *glamour.TermRenderer) (string, error) {
+func (i *Issue) RenderedOut(renderer *glamour.TermRenderer) (string, error) {
 	var res strings.Builder
 
 	for _, p := range i.fragments() {
@@ -88,7 +88,7 @@ func (i Issue) RenderedOut(renderer *glamour.TermRenderer) (string, error) {
 	return res.String(), nil
 }
 
-func (i Issue) String() string {
+func (i *Issue) String() string {
 	var s strings.Builder
 
 	s.WriteString(i.header())
@@ -122,7 +122,7 @@ func (i Issue) String() string {
 	return s.String()
 }
 
-func (i Issue) fragments() []fragment {
+func (i *Issue) fragments() []fragment {
 	scraps := []fragment{
 		{Body: i.header(), Parse: true},
 	}
@@ -180,7 +180,7 @@ func (i Issue) fragments() []fragment {
 	return append(scraps, newBlankFragment(1), fragment{Body: i.footer()}, newBlankFragment(2))
 }
 
-func (i Issue) separator(msg string) string {
+func (i *Issue) separator(msg string) string {
 	pad := func(m string) string {
 		if m != "" {
 			return fmt.Sprintf(" %s ", m)
@@ -199,7 +199,7 @@ func (i Issue) separator(msg string) string {
 	return gray(fmt.Sprintf("%s%s%s", sep, pad(msg), sep))
 }
 
-func (i Issue) header() string {
+func (i *Issue) header() string {
 	as := i.Data.Fields.Assignee.Name
 	if as == "" {
 		as = "Unassigned"
@@ -240,7 +240,7 @@ func (i Issue) header() string {
 	)
 }
 
-func (i Issue) description() string {
+func (i *Issue) description() string {
 	if i.Data.Fields.Description == nil {
 		return ""
 	}
@@ -257,7 +257,7 @@ func (i Issue) description() string {
 	return desc
 }
 
-func (i Issue) subtasks() string {
+func (i *Issue) subtasks() string {
 	if len(i.Data.Fields.Subtasks) == 0 {
 		return ""
 	}
@@ -303,7 +303,7 @@ func (i Issue) subtasks() string {
 	return subtasks.String()
 }
 
-func (i Issue) linkedIssues() string {
+func (i *Issue) linkedIssues() string {
 	if len(i.Data.Fields.IssueLinks) == 0 {
 		return ""
 	}
@@ -378,7 +378,7 @@ func (i Issue) linkedIssues() string {
 	return linked.String()
 }
 
-func (i Issue) comments() []issueComment {
+func (i *Issue) comments() []issueComment {
 	total := i.Data.Fields.Comment.Total
 	comments := make([]issueComment, 0, total)
 
@@ -417,7 +417,7 @@ func (i Issue) comments() []issueComment {
 	return comments
 }
 
-func (i Issue) footer() string {
+func (i *Issue) footer() string {
 	var out strings.Builder
 
 	nc := int(i.Options.NumComments)
@@ -436,7 +436,7 @@ func (i Issue) footer() string {
 }
 
 // renderPlain renders the issue in plain view.
-func (i Issue) renderPlain(w io.Writer) error {
+func (i *Issue) renderPlain(w io.Writer) error {
 	r, err := glamour.NewTermRenderer(
 		glamour.WithStandardStyle("notty"),
 		glamour.WithWordWrap(wordWrap),
@@ -452,7 +452,7 @@ func (i Issue) renderPlain(w io.Writer) error {
 	return err
 }
 
-func (i Issue) renderSummary(w io.Writer) error {
+func (i *Issue) renderSummary(w io.Writer) error {
 	out := i.Data.Fields.Summary
 	_, err := fmt.Fprintln(w, out)
 	return err
