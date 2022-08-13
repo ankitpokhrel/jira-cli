@@ -166,6 +166,11 @@ The lists are displayed in an interactive UI by default.
 - In an explorer view, press `w` or `Tab` to toggle focus between the sidebar and the contents screen.
 - Press `q` / `ESC` / `CTRL+C` to quit.
 
+### Resources
+- [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs)
+- [Introduction and Motivation](https://medium.com/@ankitpokhrel/introducing-jira-cli-the-missing-command-line-tool-for-atlassian-jira-fe44982cc1de)
+- [Getting Started with JiraCLI](https://www.mslinn.com/blog/2022/08/12/jiracli.html)
+
 ## Commands
 ### Issue
 Issues are displayed in an interactive table view by default. You can output the results in a plain view using the `--plain` flag.
