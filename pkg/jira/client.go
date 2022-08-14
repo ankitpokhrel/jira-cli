@@ -148,7 +148,7 @@ func WithTimeout(to time.Duration) ClientFunc {
 	}
 }
 
-// WithInsecureTLS is a functional opt that allow you to skip TLS certificate verfication.
+// WithInsecureTLS is a functional opt that allow you to skip TLS certificate verification.
 func WithInsecureTLS(ins bool) ClientFunc {
 	return func(c *Client) {
 		c.insecure = ins
