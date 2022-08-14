@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -13,12 +12,6 @@ type Screen struct {
 // NewScreen creates a new screen.
 func NewScreen() *Screen {
 	app := tview.NewApplication()
-
-	app.SetBeforeDrawFunc(func(s tcell.Screen) bool {
-		s.Clear()
-		return false
-	})
-
 	return &Screen{app}
 }
 
