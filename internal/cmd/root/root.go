@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -18,10 +16,12 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/me"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/open"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/project"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/serverinfo"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/sprint"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/version"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	jiraConfig "github.com/ankitpokhrel/jira-cli/internal/config"
+	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
 
 	"github.com/zalando/go-keyring"
 )
@@ -124,6 +124,7 @@ func addChildCommands(cmd *cobra.Command) {
 		project.NewCmdProject(),
 		open.NewCmdOpen(),
 		me.NewCmdMe(),
+		serverinfo.NewCmdServerInfo(),
 		completion.NewCmdCompletion(),
 		version.NewCmdVersion(),
 		man.NewCmdMan(),
