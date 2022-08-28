@@ -17,8 +17,6 @@ func TestGetCreateMeta(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/rest/api/2/issue/createmeta", r.URL.Path)
 
-		qs := r.URL.Query()
-
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
@@ -26,7 +24,7 @@ func TestGetCreateMeta(t *testing.T) {
 				"projectKeys":    []string{"TEST"},
 				"issuetypeNames": []string{"Epic"},
 				"expand":         []string{"projects.issuetypes.fields"},
-			}, qs)
+			}, r.URL.Query())
 
 			resp, err := os.ReadFile("./testdata/createmeta.json")
 			assert.NoError(t, err)
@@ -98,15 +96,13 @@ func TestGetCreateMetaForJiraServerV9(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/rest/api/2/issue/createmeta/TEST/issuetypes", r.URL.Path)
 
-		qs := r.URL.Query()
-
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
 			assert.Equal(t, url.Values{
 				"issuetypeNames": []string{"Epic"},
 				"expand":         []string{"projects.issuetypes.fields"},
-			}, qs)
+			}, r.URL.Query())
 
 			resp, err := os.ReadFile("./testdata/createmetav9.json")
 			assert.NoError(t, err)
