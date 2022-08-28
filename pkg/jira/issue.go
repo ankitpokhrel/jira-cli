@@ -332,7 +332,7 @@ func (c *Client) AddIssueWorklog(key, timeSpent, comment string) error {
 	return nil
 }
 
-// GetField gets all fields configured for a Jira instance.
+// GetField gets all fields configured for a Jira instance using GET /field endpiont.
 func (c *Client) GetField() ([]*Field, error) {
 	res, err := c.GetV2(context.Background(), "/field", Header{
 		"Accept":       "application/json",

@@ -527,7 +527,6 @@ func (c *JiraCLIConfigGenerator) configureIssueTypesForJiraServerV9() error {
 		issueType := jira.IssueType{
 			ID:      it.ID,
 			Name:    it.Name,
-			Handle:  it.Handle,
 			Subtask: it.Subtask,
 		}
 		issueTypes = append(issueTypes, &issueType)
@@ -541,7 +540,6 @@ func (c *JiraCLIConfigGenerator) configureIssueTypesForJiraServerV9() error {
 func (c *JiraCLIConfigGenerator) configureFields() error {
 	customFields := make([]*issueTypeFieldConf, 0)
 
-	// Get fields
 	fields, err := c.jiraClient.GetField()
 	if err != nil {
 		return err

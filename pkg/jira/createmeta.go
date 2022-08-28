@@ -29,7 +29,6 @@ type CreateMetaResponseJiraServerV9 struct {
 	Values []struct {
 		ID      string `json:"id"`
 		Name    string `json:"name"`
-		Handle  string `json:"handle"`
 		Subtask bool   `json:"subtask"`
 	} `json:"values"`
 }

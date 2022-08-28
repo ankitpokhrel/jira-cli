@@ -91,3 +91,70 @@ func TestGetCreateMeta(t *testing.T) {
 	})
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
+
+func TestGetCreateMetaForJiraServerV9(t *testing.T) {
+	var unexpectedStatusCode bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/2/issue/createmeta/TEST/issuetypes", r.URL.Path)
+
+		qs := r.URL.Query()
+
+		if unexpectedStatusCode {
+			w.WriteHeader(400)
+		} else {
+			assert.Equal(t, url.Values{
+				"issuetypeNames": []string{"Epic"},
+				"expand":         []string{"projects.issuetypes.fields"},
+			}, qs)
+
+			resp, err := os.ReadFile("./testdata/createmetav9.json")
+			assert.NoError(t, err)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			_, _ = w.Write(resp)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	actual, err := client.GetCreateMetaForJiraServerV9(&CreateMetaRequest{
+		Projects:       "TEST",
+		IssueTypeNames: "Epic",
+		Expand:         "projects.issuetypes.fields",
+	})
+	assert.NoError(t, err)
+
+	expected := &CreateMetaResponseJiraServerV9{[]struct {
+		ID      string `json:"id"`
+		Name    string `json:"name"`
+		Subtask bool   `json:"subtask"`
+	}{
+		{
+			ID:      "10001",
+			Name:    "Epic",
+			Subtask: false,
+		},
+		{
+			ID:      "10002",
+			Name:    "Task",
+			Subtask: false,
+		},
+		{
+			ID:      "10003",
+			Name:    "Sub-task",
+			Subtask: true,
+		},
+	}}
+	assert.Equal(t, expected, actual)
+
+	unexpectedStatusCode = true
+
+	_, err = client.GetCreateMetaForJiraServerV9(&CreateMetaRequest{
+		Projects: "TEST",
+		Expand:   "projects.issuetypes.fields",
+	})
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}

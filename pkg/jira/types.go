@@ -119,7 +119,7 @@ type Field struct {
 	Schema struct {
 		DataType string `json:"type"`
 		Items    string `json:"items,omitempty"`
-		FieldID  string `json:"custom,omitempty"`
+		FieldID  int    `json:"customId,omitempty"`
 	} `json:"schema"`
 }
 
