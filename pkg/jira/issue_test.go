@@ -408,3 +408,75 @@ func TestAddIssueComment(t *testing.T) {
 	err = client.AddIssueComment("TEST-1", "comment")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
+
+func TestGetField(t *testing.T) {
+	var unexpectedStatusCode bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/2/field", r.URL.Path)
+
+		if unexpectedStatusCode {
+			w.WriteHeader(400)
+		} else {
+			resp, err := os.ReadFile("./testdata/fields.json")
+			assert.NoError(t, err)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			_, _ = w.Write(resp)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	actual, err := client.GetField()
+	assert.NoError(t, err)
+
+	expected := []*Field{
+		{
+			ID:     "fixVersions",
+			Name:   "Fix Version/s",
+			Custom: false,
+			Schema: struct {
+				DataType string `json:"type"`
+				Items    string `json:"items,omitempty"`
+				FieldID  int    `json:"customId,omitempty"`
+			}{
+				DataType: "array",
+				Items:    "version",
+			},
+		},
+		{
+			ID:     "customfield_10111",
+			Name:   "Original story points",
+			Custom: true,
+			Schema: struct {
+				DataType string `json:"type"`
+				Items    string `json:"items,omitempty"`
+				FieldID  int    `json:"customId,omitempty"`
+			}{
+				DataType: "number",
+				FieldID:  10111,
+			},
+		},
+		{
+			ID:     "timespent",
+			Name:   "Time Spent",
+			Custom: false,
+			Schema: struct {
+				DataType string `json:"type"`
+				Items    string `json:"items,omitempty"`
+				FieldID  int    `json:"customId,omitempty"`
+			}{
+				DataType: "number",
+			},
+		},
+	}
+	assert.Equal(t, expected, actual)
+
+	unexpectedStatusCode = true
+
+	_, err = client.GetField()
+	assert.NotNil(t, err)
+}

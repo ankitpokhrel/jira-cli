@@ -70,6 +70,9 @@ type JiraCLIConfigGenerator struct {
 	value  struct {
 		installation string
 		server       string
+		version      struct {
+			major, minor, patch int
+		}
 		login        string
 		authType     jira.AuthType
 		project      *projectConf
@@ -113,6 +116,11 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 	}
 	if err := c.configureServerAndLoginDetails(); err != nil {
 		return "", err
+	}
+	if c.value.installation == jira.InstallationTypeLocal {
+		if err := c.configureServerMeta(c.value.server, c.value.login); err != nil {
+			return "", err
+		}
 	}
 	if err := c.configureProjectAndBoardDetails(); err != nil {
 		return "", err
@@ -294,6 +302,33 @@ func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error 
 	return nil
 }
 
+func (c *JiraCLIConfigGenerator) configureServerMeta(server, login string) error {
+	s := cmdutil.Info("Fetching server details...")
+	defer s.Stop()
+
+	server = strings.TrimRight(server, "/")
+
+	c.jiraClient = api.Client(jira.Config{
+		Server:   server,
+		Login:    login,
+		Insecure: c.usrCfg.Insecure,
+		AuthType: c.value.authType,
+		Debug:    viper.GetBool("debug"),
+	})
+	info, err := c.jiraClient.ServerInfo()
+	if err != nil {
+		return err
+	}
+
+	if len(info.VersionNumbers) == 3 {
+		c.value.version.major = info.VersionNumbers[0]
+		c.value.version.minor = info.VersionNumbers[1]
+		c.value.version.patch = info.VersionNumbers[2]
+	}
+
+	return nil
+}
+
 func (c *JiraCLIConfigGenerator) configureProjectAndBoardDetails() error {
 	project := c.usrCfg.Project
 	board := c.usrCfg.Board
@@ -425,6 +460,21 @@ func (c *JiraCLIConfigGenerator) searchAndAssignBoard(project, keyword string) e
 }
 
 func (c *JiraCLIConfigGenerator) configureMetadata() error {
+	var err error
+
+	if c.value.installation == jira.InstallationTypeLocal && c.value.version.major >= 9 {
+		err = c.configureIssueTypesForJiraServerV9()
+	} else {
+		err = c.configureIssueTypes()
+	}
+	if err != nil {
+		return err
+	}
+
+	return c.configureFields()
+}
+
+func (c *JiraCLIConfigGenerator) configureIssueTypes() error {
 	s := cmdutil.Info("Configuring metadata. Please wait...")
 	defer s.Stop()
 
@@ -439,93 +489,92 @@ func (c *JiraCLIConfigGenerator) configureMetadata() error {
 		return ErrUnexpectedResponseFormat
 	}
 
-	var (
-		epicMeta     map[string]jira.IssueTypeField
-		issueTypes   = make([]*jira.IssueType, 0, len(meta.Projects[0].IssueTypes))
-		customFields = make([]*issueTypeFieldConf, 0)
-		fieldSeen    = make(map[string]struct{})
-	)
+	issueTypes := make([]*jira.IssueType, 0, len(meta.Projects[0].IssueTypes))
 
 	for _, it := range meta.Projects[0].IssueTypes {
-		if it.Handle == jira.IssueTypeEpic || it.Name == jira.IssueTypeEpic {
-			epicMeta = it.Fields
-		}
 		issueType := jira.IssueType{
 			ID:      it.ID,
 			Name:    it.Name,
 			Handle:  it.Handle,
 			Subtask: it.Subtask,
 		}
-		for key, field := range it.Fields {
-			if strings.HasPrefix(key, "customfield_") {
-				if _, ok := fieldSeen[key]; ok {
-					continue
-				}
-				fieldSeen[key] = struct{}{}
+		issueTypes = append(issueTypes, &issueType)
+	}
 
-				fieldKey := field.Key
-				if field.FieldID != "" {
-					fieldKey = field.FieldID
-				}
-				customFields = append(customFields, &issueTypeFieldConf{
-					Name: field.Name,
-					Key:  fieldKey,
-					Schema: struct {
-						DataType string `yaml:"datatype"`
-						Items    string `yaml:"items,omitempty"`
-					}{
-						DataType: field.Schema.DataType,
-						Items:    field.Schema.Items,
-					},
-				})
-			}
+	c.value.issueTypes = issueTypes
+
+	return nil
+}
+
+func (c *JiraCLIConfigGenerator) configureIssueTypesForJiraServerV9() error {
+	s := cmdutil.Info("Configuring metadata. Please wait...")
+	defer s.Stop()
+
+	meta, err := c.jiraClient.GetCreateMetaForJiraServerV9(&jira.CreateMetaRequest{
+		Projects: c.value.project.Key,
+		Expand:   "projects.issuetypes.fields",
+	})
+	if err != nil {
+		return err
+	}
+	if len(meta.Values) == 0 {
+		return ErrUnexpectedResponseFormat
+	}
+
+	issueTypes := make([]*jira.IssueType, 0, len(meta.Values))
+
+	for _, it := range meta.Values {
+		issueType := jira.IssueType{
+			ID:      it.ID,
+			Name:    it.Name,
+			Subtask: it.Subtask,
 		}
 		issueTypes = append(issueTypes, &issueType)
 	}
 
 	c.value.issueTypes = issueTypes
 
-	epicName, epicLink := c.decipherEpicMeta(epicMeta)
-	c.value.epic = &jira.Epic{Name: epicName, Link: epicLink}
-	c.value.customFields = customFields
-
 	return nil
 }
 
-func (c *JiraCLIConfigGenerator) decipherEpicMeta(epicMeta map[string]jira.IssueTypeField) (string, string) {
-	var (
-		temp     string
-		epicName string
-		epicLink string
-	)
+func (c *JiraCLIConfigGenerator) configureFields() error {
+	customFields := make([]*issueTypeFieldConf, 0)
 
-	for field, meta := range epicMeta {
-		if !strings.Contains(field, "customfield") {
+	fields, err := c.jiraClient.GetField()
+	if err != nil {
+		return err
+	}
+	var epic jira.Epic
+
+	for _, field := range fields {
+		if !field.Custom {
 			continue
 		}
-
-		if meta.Name == jira.EpicFieldName || meta.Name == jira.EpicFieldLink {
-			switch c.value.installation {
-			case jira.InstallationTypeCloud:
-				temp = meta.Key
-			case jira.InstallationTypeLocal:
-				if meta.FieldID != "" {
-					temp = meta.FieldID
-				} else {
-					temp = field
-				}
-			}
-
-			if meta.Name == jira.EpicFieldName {
-				epicName = temp
-			}
-			if meta.Name == jira.EpicFieldLink {
-				epicLink = temp
-			}
+		if field.Name == jira.EpicFieldName {
+			epic.Name = field.ID
+			continue
 		}
+		if field.Name == jira.EpicFieldLink {
+			epic.Link = field.ID
+			continue
+		}
+		customFields = append(customFields, &issueTypeFieldConf{
+			Name: field.Name,
+			Key:  field.ID,
+			Schema: struct {
+				DataType string `yaml:"datatype"`
+				Items    string `yaml:"items,omitempty"`
+			}{
+				DataType: field.Schema.DataType,
+				Items:    field.Schema.Items,
+			},
+		})
 	}
 
-	return epicName, epicLink
+	c.value.epic = &epic
+	c.value.customFields = customFields
+
+	return nil
 }
 
 func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
@@ -545,6 +594,12 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	config.Set("epic", c.value.epic)
 	config.Set("issue.types", c.value.issueTypes)
 	config.Set("issue.fields.custom", c.value.customFields)
+
+	if c.value.version.major > 0 {
+		config.Set("version.major", c.value.version.major)
+		config.Set("version.minor", c.value.version.minor)
+		config.Set("version.patch", c.value.version.patch)
+	}
 
 	if c.value.board != nil {
 		config.Set("board", c.value.board)

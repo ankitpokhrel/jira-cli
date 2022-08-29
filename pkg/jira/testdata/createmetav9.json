@@ -1,0 +1,32 @@
+{
+  "maxResults": 50,
+  "startAt": 0,
+  "total": 5,
+  "isLast": true,
+  "values": [
+    {
+      "self": "https://demo.atlassian.net/rest/api/2/issuetype/10000",
+      "id": "10001",
+      "description": "Issue type for a big user story that needs to be broken down.",
+      "iconUrl": "https://demo.atlassian.net/images/icons/issuetypes/epic.svg",
+      "name": "Epic",
+      "subtask": false
+    },
+    {
+      "self": "https://demo.atlassian.net/rest/api/2/issuetype/10002",
+      "id": "10002",
+      "description": "A task that needs to be done.",
+      "iconUrl": "https://demo.atlassian.net/secure/viewavatar?size=xsmall&avatarId=10318&avatarType=issuetype",
+      "name": "Task",
+      "subtask": false
+    },
+    {
+      "self": "https://demo.atlassian.net/rest/api/2/issuetype/10003",
+      "id": "10003",
+      "description": "The sub-task of the issue",
+      "iconUrl": "https://demo.atlassian.net/secure/viewavatar?size=xsmall&avatarId=10316&avatarType=issuetype",
+      "name": "Sub-task",
+      "subtask": true
+    }
+  ]
+}
