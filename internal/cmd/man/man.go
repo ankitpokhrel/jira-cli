@@ -19,7 +19,7 @@ $ jira man --generate --output /path/to/man-pages`
 func NewCmdMan() *cobra.Command {
 	cmd := cobra.Command{
 		Use:     "man",
-		Short:   "Help generate man(7) pages for Jira CLI.",
+		Short:   "Help generate man(7) pages for Jira CLI",
 		Long:    "Help generate man pages for Jira CLI compatible with UNIX style man pages.",
 		Example: examples,
 		RunE:    man,

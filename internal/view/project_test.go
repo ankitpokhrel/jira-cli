@@ -21,8 +21,8 @@ func TestProjectRender(t *testing.T) {
 		{Key: "SCND", Name: "[2] Second", Lead: lead{Name: "Person B"}, Type: jira.ProjectTypeNextGen},
 		{Key: "THIRD", Name: "Third", Lead: lead{Name: "Person C"}, Type: jira.ProjectTypeClassic},
 	}
-	board := NewProject(data, WithProjectWriter(&b))
-	assert.NoError(t, board.Render())
+	project := NewProject(data, WithProjectWriter(&b))
+	assert.NoError(t, project.Render())
 
 	expected := `KEY	NAME	TYPE	LEAD
 FRST	First	classic	Person A
