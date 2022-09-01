@@ -305,6 +305,7 @@ type issueWorklogRequest struct {
 }
 
 // AddIssueWorklog adds worklog to an issue using POST /issue/{key}/worklog endpoint.
+// Leave param `started` empty to use the server's current datetime as start date.
 func (c *Client) AddIssueWorklog(key, started, timeSpent, comment string) error {
 	worklogReq := issueWorklogRequest{
 		TimeSpent: timeSpent,
