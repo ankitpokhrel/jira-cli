@@ -299,16 +299,21 @@ func (c *Client) AddIssueComment(key, comment string) error {
 }
 
 type issueWorklogRequest struct {
+	Started   string `json:"started,omitempty"`
 	TimeSpent string `json:"timeSpent"`
 	Comment   string `json:"comment"`
 }
 
 // AddIssueWorklog adds worklog to an issue using POST /issue/{key}/worklog endpoint.
-func (c *Client) AddIssueWorklog(key, timeSpent, comment string) error {
-	body, err := json.Marshal(&issueWorklogRequest{
+func (c *Client) AddIssueWorklog(key, started, timeSpent, comment string) error {
+	worklogReq := issueWorklogRequest{
 		TimeSpent: timeSpent,
 		Comment:   md.ToJiraMD(comment),
-	})
+	}
+	if started != "" {
+		worklogReq.Started = started
+	}
+	body, err := json.Marshal(&worklogReq)
 	if err != nil {
 		return err
 	}
