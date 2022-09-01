@@ -40,6 +40,10 @@ func NewCmdWorklogAdd() *cobra.Command {
 		Run: add,
 	}
 
+	cmd.Flags().SortFlags = false
+
+	cmd.Flags().String("started", "", "The datetime on which the worklog effort was started\n"+
+		"format: yyyy-MM-ddTHH:mm:ss.SSSZ, eg: 2022-01-01T09:30:00.000+0200")
 	cmd.Flags().String("comment", "", "Comment about the worklog")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 
@@ -82,7 +86,7 @@ func add(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Adding a worklog")
 		defer s.Stop()
 
-		return client.AddIssueWorklog(ac.params.issueKey, ac.params.timeSpent, ac.params.comment)
+		return client.AddIssueWorklog(ac.params.issueKey, ac.params.started, ac.params.timeSpent, ac.params.comment)
 	}()
 	cmdutil.ExitIfError(err)
 
@@ -94,6 +98,7 @@ func add(cmd *cobra.Command, args []string) {
 
 type addParams struct {
 	issueKey  string
+	started   string
 	timeSpent string
 	comment   string
 	noInput   bool
@@ -114,6 +119,9 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 	debug, err := flags.GetBool("debug")
 	cmdutil.ExitIfError(err)
 
+	started, err := flags.GetString("started")
+	cmdutil.ExitIfError(err)
+
 	comment, err := flags.GetString("comment")
 	cmdutil.ExitIfError(err)
 
@@ -122,6 +130,7 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 
 	return &addParams{
 		issueKey:  issueKey,
+		started:   started,
 		timeSpent: timeSpent,
 		comment:   comment,
 		noInput:   noInput,
