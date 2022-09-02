@@ -155,6 +155,8 @@ default. If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.
 
+Set the `PAGER` environment variable to `less -v` for `view` mode to work correctly.
+
 ## Usage
 The tool currently comes with an issue, epic, and sprint explorer. The flags are [POSIX-compliant](https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html).
 You can combine available flags in any order to create a unique query. For example, the command below will give you high priority issues created this month
