@@ -108,6 +108,24 @@ You can use the available docker image to run `jira-cli` inside a docker contain
 docker run -it --rm ghcr.io/ankitpokhrel/jira-cli:latest
 ```
 
+#### Nix
+
+> Maintainer: [@bryanasdev000](https://github.com/bryanasdev000) and [@anthonyroussel](https://github.com/anthonyroussel)
+
+You can use Nix to run `jira-cli`.
+
+```sh
+nix-shell -p jira-cli-go
+```
+
+You can also use Nix to imperatively install `jira-cli`.
+
+```sh
+nix-env -f '<nixpkgs>' -iA jira-cli-go
+```
+
+Alternatively, you can install it the declarative way in NixOS with `environment.systemPackages`/`users.users.<name>.packages` or with Home Manager in any Linux distro with `home.packages`. 
+
 #### Manual
 You can also install the runnable binary to your `$GOPATH/bin` (go1.16+).
 
