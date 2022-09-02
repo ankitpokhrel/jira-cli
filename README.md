@@ -59,6 +59,9 @@ nature of the data. Yet, we've attempted to make the experience as similar as po
 `jira-cli` is available as a downloadable binary for Linux, macOS, and Windows from the [releases page](https://github.com/ankitpokhrel/jira-cli/releases).
 
 #### Homebrew
+
+> Maintainer: [@ankitpokhrel](https://github.com/ankitpokhrel)
+
 You can use Homebrew tap in macOS to install `jira-cli`.
 
 ```sh
@@ -67,6 +70,9 @@ brew install jira-cli
 ```
 
 #### FreeBSD
+
+> Maintainer: [@fraggerfox](https://github.com/fraggerfox)
+
 You can install it from the ports tree using the following command
 
 ```sh
@@ -80,6 +86,9 @@ pkg install jira-cli
 ```
 
 #### NetBSD
+
+> Maintainer: [@fraggerfox](https://github.com/fraggerfox)
+
 You can install it from pkgsrc using the following command
 
 ```sh
