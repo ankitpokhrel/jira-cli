@@ -58,6 +58,13 @@ nature of the data. Yet, we've attempted to make the experience as similar as po
 ## Installation
 `jira-cli` is available as a downloadable binary for Linux, macOS, and Windows from the [releases page](https://github.com/ankitpokhrel/jira-cli/releases).
 
+#### Docker
+You can use the available docker image to run `jira-cli` inside a docker container.
+
+```sh
+docker run -it --rm ghcr.io/ankitpokhrel/jira-cli:latest
+```
+
 #### Homebrew
 
 > Maintainer: [@ankitpokhrel](https://github.com/ankitpokhrel)
@@ -101,13 +108,6 @@ or directly from the binary package repository using the command
 pkgin install jira-cli
 ```
 
-#### Docker
-You can use the available docker image to run `jira-cli` inside a docker container.
-
-```sh
-docker run -it --rm ghcr.io/ankitpokhrel/jira-cli:latest
-```
-
 #### Nix
 
 > Maintainer: [@bryanasdev000](https://github.com/bryanasdev000) and [@anthonyroussel](https://github.com/anthonyroussel)
@@ -124,7 +124,7 @@ You can also use Nix to imperatively install `jira-cli`.
 nix-env -f '<nixpkgs>' -iA jira-cli-go
 ```
 
-Alternatively, you can install it the declarative way in NixOS with `environment.systemPackages`/`users.users.<name>.packages` or with Home Manager in any Linux distro with `home.packages`. 
+Alternatively, you can install it the declarative way in NixOS with `environment.systemPackages`/`users.users.<name>.packages` or with Home Manager in any Linux distro with `home.packages`.
 
 #### Manual
 You can also install the runnable binary to your `$GOPATH/bin` (go1.16+).
@@ -133,7 +133,7 @@ You can also install the runnable binary to your `$GOPATH/bin` (go1.16+).
 go install github.com/ankitpokhrel/jira-cli/cmd/jira@latest
 ```
 
-See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for more info. Other installation options will be available later.
+See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for downloadable packaged binaries.
 
 ## Getting started
 
