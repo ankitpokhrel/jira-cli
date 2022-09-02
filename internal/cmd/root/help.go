@@ -65,7 +65,8 @@ func getEntries(cmd *cobra.Command) []helpEntry {
 	appendIfNotEmpty(cmd.Aliases, "ALIASES")
 	entries = append(entries, helpEntry{
 		"LEARN MORE",
-		`Use 'jira <command> <subcommand> --help' for more information about a command.`,
+		`Use 'jira <command> <subcommand> --help' for more information about a command.
+Read the doc or get help at https://github.com/ankitpokhrel/jira-cli`,
 	})
 
 	return entries
