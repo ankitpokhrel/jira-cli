@@ -64,9 +64,9 @@ func init() {
 // NewCmdRoot is a root command.
 func NewCmdRoot() *cobra.Command {
 	cmd := cobra.Command{
-		Use:   "jira",
+		Use:   "jira <command> <subcommand>",
 		Short: "Interactive Jira CLI",
-		Long:  "Interactive Jira CLI.",
+		Long:  "Interactive Jira command line.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
