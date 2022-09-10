@@ -80,7 +80,7 @@ func TestDateStringToJiraFormatInLocation(t *testing.T) {
 			input:    "2022-01-02 10:10:05",
 			timezone: "invalid",
 			expected: "",
-			err:      "timezone should be a valid IANA timezone, eg: Asia/Kathmandu or Europe/Berlin",
+			err:      "timezone should be a valid IANA timezone, eg: Asia/Kathmandu, Europe/Berlin etc",
 		},
 	}
 

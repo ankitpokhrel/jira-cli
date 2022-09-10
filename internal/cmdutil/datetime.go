@@ -19,7 +19,7 @@ const (
 
 var (
 	// ErrInvlalidTimezone is returned if timezone is not in a valid IANA timezone format.
-	ErrInvlalidTimezone = fmt.Errorf("timezone should be a valid IANA timezone, eg: Asia/Kathmandu or Europe/Berlin")
+	ErrInvlalidTimezone = fmt.Errorf("timezone should be a valid IANA timezone, eg: Asia/Kathmandu, Europe/Berlin etc")
 	// ErrorInvalidDateTime is returned when datetime string is invalid.
 	ErrorInvalidDateTime = fmt.Errorf("datetime string should be in a valid format, eg: 2022-01-02 10:10:05 or 2022-01-02")
 )
@@ -27,12 +27,14 @@ var (
 // DateStringToJiraFormatInLocation parses a standard string to jira compatible RFC3339 datetime format.
 //nolint:gomnd
 func DateStringToJiraFormatInLocation(value string, timezone string) (string, error) {
-	if _, err := time.Parse(jira.RFC3339MilliLayout, value); err == nil {
-		return value, nil
-	}
 	if value == "" || value == "0" || value == "0000-00-00 00:00:00" || value == "0000-00-00" || value == "00:00:00" {
 		return "", nil
 	}
+
+	if _, err := time.Parse(jira.RFC3339MilliLayout, value); err == nil {
+		return value, nil
+	}
+
 	layout := DateTimeLayout
 	if _, err := strconv.ParseInt(value, 10, 64); err == nil {
 		switch {
@@ -44,6 +46,7 @@ func DateStringToJiraFormatInLocation(value string, timezone string) (string, er
 	} else if len(value) == 10 && strings.Count(value, "-") == 2 {
 		layout = DateLayout
 	}
+
 	t, err := parseByLayout(layout, value, timezone)
 	if err != nil {
 		return "", err
