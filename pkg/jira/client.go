@@ -16,6 +16,8 @@ import (
 const (
 	// RFC3339 is jira datetime format.
 	RFC3339 = "2006-01-02T15:04:05-0700"
+	// RFC3339MilliLayout is jira datetime format with milliseconds.
+	RFC3339MilliLayout = "2006-01-02T15:04:05.000-0700"
 
 	// InstallationTypeCloud represents Jira cloud server.
 	InstallationTypeCloud = "Cloud"

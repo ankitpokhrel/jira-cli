@@ -23,7 +23,16 @@ const (
 $ jira issue worklog add ISSUE-1 "2d 1h 30m" --no-input
 
 # You can add a comment using --comment flag when adding a worklog
-$ jira issue worklog add ISSUE-1 "2d 1h 30m" --comment "This is a comment" --no-input`
+$ jira issue worklog add ISSUE-1 "2d 1h 30m" --comment "This is a comment" --no-input
+
+# You can also add a worklog with the specific start date (defaults to UTC timezone)
+$ jira issue worklog add ISSUE-1 "2d 1h 30m" --started "2022-01-01 09:30:00"
+
+# You can specify timezone to use along with the start date in IANA timezone format
+$ jira issue worklog add ISSUE-1 3h --started "2022-01-01 09:30:00" --timezone "Europe/Berlin"
+
+# Or, you can use start date in Jira datetime format and skip the timezone flag
+$ jira issue worklog add ISSUE-1 "1h 30m" --started "2022-01-01T09:30:00.000+0200"`
 )
 
 // NewCmdWorklogAdd is a worklog add command.
@@ -42,8 +51,8 @@ func NewCmdWorklogAdd() *cobra.Command {
 
 	cmd.Flags().SortFlags = false
 
-	cmd.Flags().String("started", "", "The datetime on which the worklog effort was started\n"+
-		"format: yyyy-MM-ddTHH:mm:ss.SSSZ, eg: 2022-01-01T09:30:00.000+0200")
+	cmd.Flags().String("started", "", "The datetime on which the worklog effort was started, eg: 2022-01-01 09:30:00")
+	cmd.Flags().String("timezone", "UTC", "The timezone to use for the started date in IANA timezone format, eg: Europe/Berlin")
 	cmd.Flags().String("comment", "", "Comment about the worklog")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 
@@ -99,6 +108,7 @@ func add(cmd *cobra.Command, args []string) {
 type addParams struct {
 	issueKey  string
 	started   string
+	timezone  string
 	timeSpent string
 	comment   string
 	noInput   bool
@@ -122,6 +132,12 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 	started, err := flags.GetString("started")
 	cmdutil.ExitIfError(err)
 
+	timezone, err := flags.GetString("timezone")
+	cmdutil.ExitIfError(err)
+
+	startedWithTZ, err := cmdutil.DateStringToJiraFormatInLocation(started, timezone)
+	cmdutil.ExitIfError(err)
+
 	comment, err := flags.GetString("comment")
 	cmdutil.ExitIfError(err)
 
@@ -130,7 +146,8 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 
 	return &addParams{
 		issueKey:  issueKey,
-		started:   started,
+		started:   startedWithTZ,
+		timezone:  timezone,
 		timeSpent: timeSpent,
 		comment:   comment,
 		noInput:   noInput,
