@@ -143,7 +143,7 @@ See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for downl
    a `JIRA_API_TOKEN` variable. Add it to your shell configuration file, for instance, `$HOME/.bashrc`, so that the
    variable is always available. Alternatively, you can also use `.netrc` file or `keychain` to set the token. Learn
    more [here](https://github.com/ankitpokhrel/jira-cli/discussions/356).
-2. Run `jira init`, select installation type as `Cloud`, and provide required details to generate a config file required
+2. Run `jira init`, select installation type as `Cloud`, and provide required details to generate a config file (at `$XDG_CONFIG_HOME/.jira/.config.yml`) required
    for the tool.
 
 #### On-premise installation
