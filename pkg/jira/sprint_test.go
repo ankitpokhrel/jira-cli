@@ -190,7 +190,7 @@ func TestSprintIssues(t *testing.T) {
 	var unexpectedStatusCode bool
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/rest/agile/1.0/board/1/sprint/2/issue", r.URL.Path)
+		assert.Equal(t, "/rest/agile/1.0/sprint/2/issue", r.URL.Path)
 
 		qs := r.URL.Query()
 
@@ -215,7 +215,7 @@ func TestSprintIssues(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
-	actual, err := client.SprintIssues(1, 2, "project=TEST AND status=Done ORDER BY created DESC", 0, 100)
+	actual, err := client.SprintIssues(2, "project=TEST AND status=Done ORDER BY created DESC", 0, 100)
 	assert.NoError(t, err)
 
 	expected := &SearchResult{
@@ -304,7 +304,7 @@ func TestSprintIssues(t *testing.T) {
 
 	unexpectedStatusCode = true
 
-	_, err = client.SprintIssues(1, 2, "project=TEST", 0, 100)
+	_, err = client.SprintIssues(2, "project=TEST", 0, 100)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 

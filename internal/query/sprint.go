@@ -54,12 +54,13 @@ func (s *Sprint) Params() *SprintParams {
 
 // SprintParams is sprint command parameters.
 type SprintParams struct {
-	Status  string
-	Current bool
-	Prev    bool
-	Next    bool
-	From    uint
-	Limit   uint
+	Status        string
+	Current       bool
+	Prev          bool
+	Next          bool
+	From          uint
+	Limit         uint
+	ShowAllIssues bool
 
 	debug bool
 }
@@ -88,6 +89,12 @@ func (sp *SprintParams) init(flags FlagParser) error {
 		return err
 	}
 	sp.Next = next
+
+	showAll, err := flags.GetBool("show-all-issues")
+	if err != nil {
+		return err
+	}
+	sp.ShowAllIssues = showAll
 
 	paginate, err := flags.GetString("paginate")
 	if err != nil {

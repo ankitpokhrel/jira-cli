@@ -78,17 +78,20 @@ func sprintList(cmd *cobra.Command, args []string) {
 
 	client := api.Client(jira.Config{Debug: debug})
 
+	sprintQuery, err := query.NewSprint(cmd.Flags())
+	cmdutil.ExitIfError(err)
+
 	if len(args) == 0 {
-		sprintExplorerView(cmd.Flags(), boardID, project, server, client)
+		sprintExplorerView(sprintQuery, cmd.Flags(), boardID, project, server, client)
 	} else {
 		sprintID, err := strconv.Atoi(args[0])
 		cmdutil.ExitIfError(err)
 
-		singleSprintView(cmd.Flags(), boardID, sprintID, project, server, client, nil)
+		singleSprintView(sprintQuery, cmd.Flags(), boardID, sprintID, project, server, client, nil)
 	}
 }
 
-func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, server string, client *jira.Client, sprint *jira.Sprint) {
+func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID, sprintID int, project, server string, client *jira.Client, sprint *jira.Sprint) {
 	issues, total, err := func() ([]*jira.Issue, int, error) {
 		s := cmdutil.Info("Fetching sprint issues...")
 		defer s.Stop()
@@ -97,8 +100,10 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 		if err != nil {
 			return nil, 0, err
 		}
-
-		resp, err := client.SprintIssues(boardID, sprintID, q.Get(), q.Params().From, q.Params().Limit)
+		if sprintQuery.Params().ShowAllIssues {
+			q.Params().JQL = "project IS NOT EMPTY"
+		}
+		resp, err := client.SprintIssues(sprintID, q.Get(), q.Params().From, q.Params().Limit)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -153,7 +158,7 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 		Data:       issues,
 		FooterText: ft,
 		Refresh: func() {
-			singleSprintView(flags, boardID, sprintID, project, server, client, nil)
+			singleSprintView(sprintQuery, flags, boardID, sprintID, project, server, client, nil)
 		},
 		Display: view.DisplayFormat{
 			Plain:      plain,
@@ -172,15 +177,12 @@ func singleSprintView(flags query.FlagParser, boardID, sprintID int, project, se
 	cmdutil.ExitIfError(v.Render())
 }
 
-func sprintExplorerView(flags query.FlagParser, boardID int, project, server string, client *jira.Client) {
-	q, err := query.NewSprint(flags)
-	cmdutil.ExitIfError(err)
-
+func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, boardID int, project, server string, client *jira.Client) {
 	sprints := func() []*jira.Sprint {
 		s := cmdutil.Info("Fetching sprints...")
 		defer s.Stop()
 
-		return client.SprintsInBoards([]int{boardID}, q.Get(), numSprints)
+		return client.SprintsInBoards([]int{boardID}, sprintQuery.Get(), numSprints)
 	}()
 	if len(sprints) == 0 {
 		fmt.Println()
@@ -188,12 +190,12 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 		return
 	}
 
-	if q.Params().Current || q.Params().Prev || q.Params().Next {
+	if sprintQuery.Params().Current || sprintQuery.Params().Prev || sprintQuery.Params().Next {
 		sprint := sprints[0]
-		if q.Params().Next {
+		if sprintQuery.Params().Next {
 			sprint = sprints[len(sprints)-1]
 		}
-		singleSprintView(flags, boardID, sprint.ID, project, server, client, sprint)
+		singleSprintView(sprintQuery, flags, boardID, sprint.ID, project, server, client, sprint)
 		return
 	}
 
@@ -212,7 +214,11 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 		Server:  server,
 		Data:    sprints,
 		Issues: func(boardID, sprintID int) []*jira.Issue {
-			resp, err := client.SprintIssues(boardID, sprintID, "", q.Params().From, q.Params().Limit)
+			iq, err := getIssueQuery(project, flags, sprintQuery.Params().ShowAllIssues)
+			if err != nil {
+				return []*jira.Issue{}
+			}
+			resp, err := client.SprintIssues(sprintID, iq, sprintQuery.Params().From, sprintQuery.Params().Limit)
 			if err != nil {
 				return []*jira.Issue{}
 			}
@@ -241,10 +247,22 @@ func sprintExplorerView(flags query.FlagParser, boardID int, project, server str
 	}
 }
 
+func getIssueQuery(project string, flags query.FlagParser, showAll bool) (string, error) {
+	q, err := query.NewIssue(project, flags)
+	if err != nil {
+		return "", err
+	}
+	if showAll {
+		q.Params().JQL = "project IS NOT EMPTY"
+	}
+	return q.Get(), nil
+}
+
 func setFlags(cmd *cobra.Command) {
 	cmd.Flags().String("state", "", "Filter sprint by its state (comma separated).\n"+
 		"Valid values are future, active and closed.\n"+
 		`Defaults to "active,closed"`)
+	cmd.Flags().Bool("show-all-issues", false, "Show sprint issues from all projects")
 	cmd.Flags().Bool("table", false, "Display sprints in a table view")
 	cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
 		fmt.Sprintf("Accepts (for sprint list): %s", strings.Join(view.ValidSprintColumns(), ", "))+

@@ -49,8 +49,8 @@ func (i *Issue) Get() string {
 		obf = "updated"
 	}
 
-	if i.params.jql != "" {
-		q.Raw(i.params.jql)
+	if i.params.JQL != "" {
+		q.Raw(i.params.JQL)
 	}
 
 	q.And(func() {
@@ -162,8 +162,8 @@ type IssueParams struct {
 	Reverse       bool
 	From          uint
 	Limit         uint
+	JQL           string
 
-	jql   string
 	debug bool
 }
 
@@ -260,7 +260,7 @@ func (ip *IssueParams) setStringParams(paramsMap map[string]string) {
 		case "updated-before":
 			ip.UpdatedBefore = v
 		case "jql":
-			ip.jql = v
+			ip.JQL = v
 		case "order-by":
 			ip.OrderBy = v
 		}
