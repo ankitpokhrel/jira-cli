@@ -1,9 +1,10 @@
 package jira
 
 const (
-	customFieldFormatOption = "option"
-	customFieldFormatArray  = "array"
-	customFieldFormatNumber = "number"
+	customFieldFormatOption  = "option"
+	customFieldFormatArray   = "array"
+	customFieldFormatNumber  = "number"
+	customFieldFormatProject = "project"
 )
 
 type customField map[string]interface{}
@@ -29,4 +30,12 @@ type customFieldTypeOptionSet struct {
 type customFieldTypeOptionAddRemove struct {
 	Add    *customFieldTypeOption `json:"add,omitempty"`
 	Remove *customFieldTypeOption `json:"remove,omitempty"`
+}
+
+type customFieldTypeProject struct {
+	Value string `json:"key"`
+}
+
+type customFieldTypeProjectSet struct {
+	Set customFieldTypeProject `json:"set"`
 }
