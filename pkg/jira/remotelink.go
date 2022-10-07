@@ -9,24 +9,24 @@ import (
 
 type weblinkRequest struct {
 	RemoteObject struct {
-		Url   string `json:"url"`
+		URL   string `json:"url"`
 		Title string `json:"title"`
 	} `json:"object"`
 }
 
-// Add a web link to an issue using POST /issue/{issueId}/remotelink endpoint.
-func (c *Client) WebLinkIssue(issueId, title, url string) error {
+// WebLinkIssue adds a web link to an issue using POST /issue/{issueId}/remotelink endpoint.
+func (c *Client) WebLinkIssue(issueID, title, url string) error {
 	body, err := json.Marshal(weblinkRequest{
 		RemoteObject: struct {
-			Url   string `json:"url"`
+			URL   string `json:"url"`
 			Title string `json:"title"`
-		}{Title: title, Url: url},
+		}{Title: title, URL: url},
 	})
 	if err != nil {
 		return err
 	}
 
-	path := fmt.Sprintf("/issue/%s/transitions", issueId)
+	path := fmt.Sprintf("/issue/%s/remotelink", issueID)
 
 	res, err := c.PostV2(context.Background(), path, body, Header{
 		"Accept":       "application/json",

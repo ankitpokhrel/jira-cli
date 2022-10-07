@@ -11,9 +11,8 @@ import (
 )
 
 const (
-	helpText     = `Connects an issue to a web link.`
-	examples     = `$ jira issue weblink ISSUE-1 http://weblink.com weblink-title`
-	optionCancel = "Cancel"
+	helpText = `Connects an issue to a web link.`
+	examples = `$ jira issue weblink ISSUE-1 http://weblink.com weblink-title`
 )
 
 // NewCmdWeblink is a link command.
@@ -50,31 +49,31 @@ func weblink(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Creating web link for issue")
 		defer s.Stop()
 
-		return client.WebLinkIssue(lc.params.issueId, lc.params.title, lc.params.url)
+		return client.WebLinkIssue(lc.params.issueID, lc.params.title, lc.params.url)
 	}()
 	cmdutil.ExitIfError(err)
 
-	cmdutil.Success("Web link created for Issue %s", lc.params.issueId)
+	cmdutil.Success("Web link created for Issue %s", lc.params.issueID)
 	server := viper.GetString("server")
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
-		err := cmdutil.Navigate(server, lc.params.issueId)
+		err := cmdutil.Navigate(server, lc.params.issueID)
 		cmdutil.ExitIfError(err)
 	}
 }
 
 type linkParams struct {
-	issueId string
+	issueID string
 	url     string
 	title   string
 	debug   bool
 }
 
 func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *linkParams {
-	var issueId, url, title string
+	var issueID, url, title string
 	nargs := len(args)
 	if nargs >= 1 {
-		issueId = cmdutil.GetJiraIssueKey(project, args[0])
+		issueID = cmdutil.GetJiraIssueKey(project, args[0])
 	}
 	if nargs >= 2 {
 		url = args[1]
@@ -87,7 +86,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *l
 	cmdutil.ExitIfError(err)
 
 	return &linkParams{
-		issueId: issueId,
+		issueID: issueID,
 		url:     url,
 		title:   title,
 		debug:   debug,
