@@ -205,6 +205,8 @@ func constructCustomFields(fields map[string]string, data *createRequest) {
 			switch configured.Schema.DataType {
 			case customFieldFormatOption:
 				data.Fields.M.customFields[configured.Key] = customFieldTypeOption{Value: val}
+			case customFieldFormatProject:
+				data.Fields.M.customFields[configured.Key] = customFieldTypeProject{Value: val}
 			case customFieldFormatArray:
 				pieces := strings.Split(strings.TrimSpace(val), ",")
 				if configured.Schema.Items == customFieldFormatOption {

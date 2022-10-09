@@ -323,6 +323,8 @@ func constructCustomFieldsForEdit(fields map[string]string, data *editRequest) {
 			switch configured.Schema.DataType {
 			case customFieldFormatOption:
 				data.Update.M.customFields[configured.Key] = []customFieldTypeOptionSet{{Set: customFieldTypeOption{Value: val}}}
+			case customFieldFormatProject:
+				data.Update.M.customFields[configured.Key] = []customFieldTypeProjectSet{{Set: customFieldTypeProject{Value: val}}}
 			case customFieldFormatArray:
 				pieces := strings.Split(strings.TrimSpace(val), ",")
 				if configured.Schema.Items == customFieldFormatOption {
