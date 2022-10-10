@@ -455,6 +455,17 @@ $ jira issue link
 $ jira issue link ISSUE-1 ISSUE-2 Blocks
 ```
 
+##### Remote
+The `remote` command lets you add a remote web link to an issue.
+
+```sh
+# adds a remote web link using an interactive prompt
+$ jira issue link remote
+
+# Pass required parameters to skip prompt
+$ jira issue link remote ISSUE-1 https://example.com "Example text"
+```
+
 #### Unlink
 The `unlink` command lets you unlink two linked issues.
 
