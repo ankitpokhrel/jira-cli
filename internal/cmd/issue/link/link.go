@@ -39,7 +39,7 @@ func NewCmdLink() *cobra.Command {
 	}
 
 	cmd.AddCommand(remote.NewCmdRemoteLink())
-	cmd.Flags().Bool("web", false, "Open issue in web browser after successful linking")
+	cmd.PersistentFlags().Bool("web", false, "Open issue in web browser after successful linking")
 
 	return &cmd
 }

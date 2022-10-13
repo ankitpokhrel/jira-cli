@@ -1,6 +1,8 @@
 package remote
 
 import (
+	"fmt"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,8 +34,6 @@ func NewCmdRemoteLink() *cobra.Command {
 		Run: remotelink,
 	}
 
-	cmd.PersistentFlags().Bool("web", false, "Open issue in web browser after successful linking")
-
 	return &cmd
 }
 
@@ -58,8 +58,10 @@ func remotelink(cmd *cobra.Command, args []string) {
 	}()
 	cmdutil.ExitIfError(err)
 
-	cmdutil.Success("Remote web link created for Issue %s", lc.params.issueKey)
 	server := viper.GetString("server")
+
+	cmdutil.Success("Remote web link created for Issue %s", lc.params.issueKey)
+	fmt.Printf("%s/browse/%s\n", server, lc.params.issueKey)
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, lc.params.issueKey)
@@ -152,7 +154,7 @@ func (lc *linkCmd) setRemoteLinkTitle() error {
 
 	qs := &survey.Question{
 		Name:     "remoteLinkTitle",
-		Prompt:   &survey.Input{Message: "Remote link Title"},
+		Prompt:   &survey.Input{Message: "Remote link title"},
 		Validate: survey.Required,
 	}
 	if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {

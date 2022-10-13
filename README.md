@@ -459,7 +459,7 @@ $ jira issue link ISSUE-1 ISSUE-2 Blocks
 The `remote` command lets you add a remote web link to an issue.
 
 ```sh
-# adds a remote web link using an interactive prompt
+# Adds a remote web link using an interactive prompt
 $ jira issue link remote
 
 # Pass required parameters to skip prompt
