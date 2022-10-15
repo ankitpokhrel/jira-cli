@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/link/remote"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -37,7 +38,8 @@ func NewCmdLink() *cobra.Command {
 		Run: link,
 	}
 
-	cmd.Flags().Bool("web", false, "Open inward issue in web browser after successful linking")
+	cmd.AddCommand(remote.NewCmdRemoteLink())
+	cmd.PersistentFlags().Bool("web", false, "Open issue in web browser after successful linking")
 
 	return &cmd
 }
