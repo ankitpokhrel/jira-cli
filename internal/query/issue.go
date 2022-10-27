@@ -62,19 +62,26 @@ func (i *Issue) Get() string {
 			q.Watching()
 		}
 
-		q.FilterBy("type", i.params.IssueType).
-			FilterBy("resolution", i.params.Resolution).
-			FilterBy("priority", i.params.Priority).
-			FilterBy("reporter", i.params.Reporter).
-			FilterBy("assignee", i.params.Assignee).
-			FilterBy("component", i.params.Component).
-			FilterBy("parent", i.params.Parent)
-
 		statuses := strings.Split(i.params.Status, ",")
 		if len(statuses) > 1 {
+			q.FilterBy("type", i.params.IssueType).
+				FilterBy("resolution", i.params.Resolution).
+				FilterBy("priority", i.params.Priority).
+				FilterBy("reporter", i.params.Reporter).
+				FilterBy("assignee", i.params.Assignee).
+				FilterBy("component", i.params.Component).
+				FilterBy("parent", i.params.Parent)
+
 			q.In("status", statuses...)
 		} else {
-			q.FilterBy("status", i.params.Status)
+			q.FilterBy("type", i.params.IssueType).
+				FilterBy("resolution", i.params.Resolution).
+				FilterBy("status", i.params.Status).
+				FilterBy("priority", i.params.Priority).
+				FilterBy("reporter", i.params.Reporter).
+				FilterBy("assignee", i.params.Assignee).
+				FilterBy("component", i.params.Component).
+				FilterBy("parent", i.params.Parent)
 		}
 
 		i.setCreatedFilters(q)
