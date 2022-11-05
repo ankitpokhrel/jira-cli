@@ -434,7 +434,7 @@ See [this documentation](https://confluence.atlassian.com/jirakb/how-to-add-a-co
 $ jira issue move ISSUE-1 "In Progress" --comment "Started working on it"
 
 # Set resolution to fixed and assign to self while moving the issue
-$ jira issue move ISSUE-1 Done -rFixed -a$(jira me)
+$ jira issue move ISSUE-1 Done -RFixed -a$(jira me)
 ```
 
 #### View
