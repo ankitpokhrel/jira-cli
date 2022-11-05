@@ -426,6 +426,17 @@ $ jira issue move ISSUE-1 "In Progress"
 
 ![Move an issue](.github/assets/move.gif)
 
+If your workflow allows to add comment, resolution or assignee while moving an issue, you can do so as shown below.
+See [this documentation](https://confluence.atlassian.com/jirakb/how-to-add-a-comment-during-a-transition-779160682.html) on how to setup your workflow to allow these fields.
+
+```sh
+# Move an issue and add comment
+$ jira issue move ISSUE-1 "In Progress" --comment "Started working on it"
+
+# Set resolution to fixed and assign to self while moving the issue
+$ jira issue move ISSUE-1 Done -rFixed -a$(jira me)
+```
+
 #### View
 The `view` command lets you see issue details in a terminal. Atlassian document is roughly converted to a markdown
 and is nicely displayed in the terminal.
