@@ -9,7 +9,28 @@ import (
 
 // TransitionRequest struct holds request data for transition request.
 type TransitionRequest struct {
-	Transition *TransitionRequestData `json:"transition"`
+	Update     *TransitionRequestUpdate `json:"update,omitempty"`
+	Fields     *TransitionRequestFields `json:"fields,omitempty"`
+	Transition *TransitionRequestData   `json:"transition"`
+}
+
+// TransitionRequestUpdate struct holds update request data for transition request.
+type TransitionRequestUpdate struct {
+	Comment []struct {
+		Add struct {
+			Body string `json:"body"`
+		} `json:"add"`
+	} `json:"comment,omitempty"`
+}
+
+// TransitionRequestFields struct holds transition fields to update for transition request.
+type TransitionRequestFields struct {
+	Assignee *struct {
+		Name string `json:"name"`
+	} `json:"assignee,omitempty"`
+	Resolution *struct {
+		Name string `json:"name"`
+	} `json:"resolution,omitempty"`
 }
 
 // TransitionRequestData is a transition request data.
