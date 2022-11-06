@@ -28,10 +28,7 @@ Zsh:
   $ echo "autoload -U compinit; compinit" >> ~/.zshrc
 
   # To load completions for each session, execute once:
-  Linux:
-    $ jira completion zsh > "${fpath[1]}/_jira"
-  macOS:
-    $ jira completion zsh > /usr/local/share/zsh/site-functions/_jira
+  $ jira completion zsh > /usr/local/share/zsh/site-functions/_jira
 
   # You will need to start a new shell for this setup to take effect.
 
