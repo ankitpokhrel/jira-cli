@@ -7,9 +7,30 @@ import (
 	"net/http"
 )
 
-// TransitionRequest struct holds request data for transition request.
+// TransitionRequest struct holds request data for issue transition request.
 type TransitionRequest struct {
-	Transition *TransitionRequestData `json:"transition"`
+	Update     *TransitionRequestUpdate `json:"update,omitempty"`
+	Fields     *TransitionRequestFields `json:"fields,omitempty"`
+	Transition *TransitionRequestData   `json:"transition"`
+}
+
+// TransitionRequestUpdate struct holds a list of operations to perform on the issue screen field.
+type TransitionRequestUpdate struct {
+	Comment []struct {
+		Add struct {
+			Body string `json:"body"`
+		} `json:"add"`
+	} `json:"comment,omitempty"`
+}
+
+// TransitionRequestFields struct holds a list of issue screen fields to update along with sub-fields.
+type TransitionRequestFields struct {
+	Assignee *struct {
+		Name string `json:"name"`
+	} `json:"assignee,omitempty"`
+	Resolution *struct {
+		Name string `json:"name"`
+	} `json:"resolution,omitempty"`
 }
 
 // TransitionRequestData is a transition request data.

@@ -38,6 +38,11 @@ STATE		State you want to transition the issue to`,
 		Run: move,
 	}
 
+	cmd.Flags().SortFlags = false
+
+	cmd.Flags().String("comment", "", "Add comment to the issue")
+	cmd.Flags().StringP("assignee", "a", "", "Assign issue to a user")
+	cmd.Flags().StringP("resolution", "R", "", "Set resolution")
 	cmd.Flags().Bool("web", false, "Open issue in web browser after successful transition")
 
 	return &cmd
@@ -74,8 +79,38 @@ func move(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info(fmt.Sprintf("Transitioning issue to %q...", tr.Name))
 		defer s.Stop()
 
+		trFieldsReq := jira.TransitionRequestFields{}
+		trUpdateReq := jira.TransitionRequestUpdate{}
+
+		if mc.params.assignee != "" {
+			trFieldsReq.Assignee = &struct {
+				Name string `json:"name"`
+			}{Name: mc.params.assignee}
+		}
+		if mc.params.resolution != "" {
+			trFieldsReq.Resolution = &struct {
+				Name string `json:"name"`
+			}{Name: mc.params.resolution}
+		}
+		if mc.params.comment != "" {
+			trUpdateReq.Comment = []struct {
+				Add struct {
+					Body string `json:"body"`
+				} `json:"add"`
+			}{
+				{Add: struct {
+					Body string `json:"body"`
+				}{Body: mc.params.comment}},
+			}
+		}
+
 		_, err := client.Transition(mc.params.key, &jira.TransitionRequest{
-			Transition: &jira.TransitionRequestData{ID: tr.ID.String(), Name: tr.Name},
+			Fields: &trFieldsReq,
+			Update: &trUpdateReq,
+			Transition: &jira.TransitionRequestData{
+				ID:   tr.ID.String(),
+				Name: tr.Name,
+			},
 		})
 		return err
 	}()
@@ -93,9 +128,12 @@ func move(cmd *cobra.Command, args []string) {
 }
 
 type moveParams struct {
-	key   string
-	state string
-	debug bool
+	key        string
+	state      string
+	comment    string
+	assignee   string
+	resolution string
+	debug      bool
 }
 
 func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *moveParams {
@@ -109,13 +147,25 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *m
 		state = args[1]
 	}
 
+	comment, err := flags.GetString("comment")
+	cmdutil.ExitIfError(err)
+
+	assignee, err := flags.GetString("assignee")
+	cmdutil.ExitIfError(err)
+
+	resolution, err := flags.GetString("resolution")
+	cmdutil.ExitIfError(err)
+
 	debug, err := flags.GetBool("debug")
 	cmdutil.ExitIfError(err)
 
 	return &moveParams{
-		key:   key,
-		state: state,
-		debug: debug,
+		key:        key,
+		state:      state,
+		comment:    comment,
+		assignee:   assignee,
+		resolution: resolution,
+		debug:      debug,
 	}
 }
 
