@@ -7,14 +7,14 @@ import (
 	"net/http"
 )
 
-// TransitionRequest struct holds request data for transition request.
+// TransitionRequest struct holds request data for issue transition request.
 type TransitionRequest struct {
 	Update     *TransitionRequestUpdate `json:"update,omitempty"`
 	Fields     *TransitionRequestFields `json:"fields,omitempty"`
 	Transition *TransitionRequestData   `json:"transition"`
 }
 
-// TransitionRequestUpdate struct holds update request data for transition request.
+// TransitionRequestUpdate struct holds a list of operations to perform on the issue screen field.
 type TransitionRequestUpdate struct {
 	Comment []struct {
 		Add struct {
@@ -23,7 +23,7 @@ type TransitionRequestUpdate struct {
 	} `json:"comment,omitempty"`
 }
 
-// TransitionRequestFields struct holds transition fields to update for transition request.
+// TransitionRequestFields struct holds a list of issue screen fields to update along with sub-fields.
 type TransitionRequestFields struct {
 	Assignee *struct {
 		Name string `json:"name"`
