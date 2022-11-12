@@ -126,6 +126,19 @@ nix-env -f '<nixpkgs>' -iA jira-cli-go
 
 Alternatively, you can install it the declarative way in NixOS with `environment.systemPackages`/`users.users.<name>.packages` or with Home Manager in any Linux distro with `home.packages`.
 
+### Scoop (Windows)
+
+You can use Scoop to install `jira-cli`.
+
+[Install Scoop via Powershell](https://scoop.sh/)
+
+Then install `jira-cli` itself:
+
+```
+scoop bucket add extras
+scoop install jira-cli
+```
+
 #### Manual
 You can also install the runnable binary to your `$GOPATH/bin` (go1.16+).
 
