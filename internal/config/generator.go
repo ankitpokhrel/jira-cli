@@ -329,6 +329,7 @@ func (c *JiraCLIConfigGenerator) configureServerMeta(server, login string) error
 	return nil
 }
 
+//nolint:gocyclo
 func (c *JiraCLIConfigGenerator) configureProjectAndBoardDetails() error {
 	project := c.usrCfg.Project
 	board := c.usrCfg.Board
@@ -405,10 +406,16 @@ func (c *JiraCLIConfigGenerator) configureProjectAndBoardDetails() error {
 	c.value.board = c.boardsMap[strings.ToLower(board)]
 
 	if c.value.board == nil && !strings.EqualFold(board, optionNone) {
+		var suggest string
+		if len(defaultBoardSuggestions) > 2 {
+			suggest = strings.Join(defaultBoardSuggestions[2:], ", ")
+		} else {
+			suggest = strings.Join(defaultBoardSuggestions, ", ")
+		}
 		return fmt.Errorf(
 			"board not found\n  Boards available for the project '%s' are '%s'",
 			c.value.project.Key,
-			strings.Join(defaultBoardSuggestions[2:], ", "),
+			suggest,
 		)
 	}
 	return nil
@@ -638,7 +645,13 @@ func (c *JiraCLIConfigGenerator) getBoardSuggestions(project string) error {
 
 	resp, err := c.jiraClient.Boards(project, "")
 	if err != nil {
-		return err
+		if c.value.installation == jira.InstallationTypeCloud {
+			return err
+		}
+		// We don't care about the error in the local instance since board API may not exist if agile-addon is not installed.
+		// The only option available for board selection, in this case, is "None" if not passed directly from the flag.
+		c.boardSuggestions = append(c.boardSuggestions, optionNone)
+		return nil
 	}
 	c.boardSuggestions = append(c.boardSuggestions, optionSearch, lineBreak)
 	for _, board := range resp.Boards {
