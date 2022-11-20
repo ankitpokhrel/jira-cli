@@ -94,6 +94,9 @@ func TestGetPager(t *testing.T) {
 	_ = os.Setenv("PAGER", "")
 	assert.Equal(t, "less", GetPager())
 
+	_ = os.Setenv("TERM", "dumb")
+	assert.Equal(t, "cat", GetPager())
+
 	_ = os.Setenv("PAGER", "more")
 	assert.Equal(t, "more", GetPager())
 
