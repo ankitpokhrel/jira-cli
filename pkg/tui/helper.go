@@ -59,7 +59,7 @@ func getInfoModal() *primitive.Modal {
 // IsDumbTerminal checks TERM environment variable and returns true if it is set to dumb.
 //
 // Dumb terminal indicates terminal with limited capability. It may not provide support
-// for special character sequences, e.g., no  handling of ANSI escape sequences.
+// for special character sequences, e.g., no handling of ANSI escape sequences.
 func IsDumbTerminal() bool {
 	term := strings.ToLower(os.Getenv("TERM"))
 	return term == "" || term == "dumb"
