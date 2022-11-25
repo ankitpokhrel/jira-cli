@@ -211,6 +211,30 @@ func TestJQL(t *testing.T) {
 			expected: "project=\"TEST\" OR type=\"Story\" OR labels IN (\"first\", \"second\", \"third\")",
 		},
 		{
+			name: "it queries with NOT IN and a single label",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+				jql.FilterBy("type", "Story")
+				jql.And(func() {
+					jql.NotIn("labels", "first")
+				})
+				return jql
+			},
+			expected: "project=\"TEST\" AND type=\"Story\" AND labels NOT IN (\"first\")",
+		},
+		{
+			name: "it queries with NOT IN and multiple labels",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+				jql.Or(func() {
+					jql.FilterBy("type", "Story").
+						NotIn("labels", "first", "second", "third")
+				})
+				return jql
+			},
+			expected: "project=\"TEST\" OR type=\"Story\" OR labels NOT IN (\"first\", \"second\", \"third\")",
+		},
+		{
 			name: "it queries with raw jql",
 			initialize: func() *JQL {
 				jql := NewJQL("TEST")

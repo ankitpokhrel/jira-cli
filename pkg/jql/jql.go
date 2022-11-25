@@ -137,6 +137,26 @@ func (j *JQL) In(field string, value ...string) *JQL {
 	return j
 }
 
+// NotIn constructs a query with NOT IN clause.
+func (j *JQL) NotIn(field string, value ...string) *JQL {
+	n := len(value)
+	if field != "" && n > 0 {
+		var q strings.Builder
+
+		q.WriteString(fmt.Sprintf("%s NOT IN (", field))
+		for i, v := range value {
+			q.WriteString(fmt.Sprintf("%q", v))
+			if i != n-1 {
+				q.WriteString(", ")
+			}
+		}
+		q.WriteString(")")
+
+		j.filters = append(j.filters, q.String())
+	}
+	return j
+}
+
 // OrderBy orders the output in given direction.
 func (j *JQL) OrderBy(field, dir string) *JQL {
 	j.orderBy = fmt.Sprintf("ORDER BY %s %s", field, dir)
