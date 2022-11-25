@@ -50,6 +50,7 @@ func TestSprintPreviewLayoutData(t *testing.T) {
 			}{Name: "Done"},
 			Created: "2020-12-13T14:05:20.974+0100",
 			Updated: "2020-12-13T14:07:20.974+0100",
+			Labels:  []string{"urgent"},
 		},
 	}
 	issue2 := jira.Issue{
@@ -68,6 +69,7 @@ func TestSprintPreviewLayoutData(t *testing.T) {
 			}{Name: "Open"},
 			Created: "2020-12-13T14:05:20.974+0100",
 			Updated: "2020-12-13T14:07:20.974+0100",
+			Labels:  []string{"blocked"},
 		},
 	}
 
@@ -100,11 +102,11 @@ func TestSprintPreviewLayoutData(t *testing.T) {
 			Contents: tui.TableData{
 				[]string{
 					"TYPE", "KEY", "SUMMARY", "STATUS", "ASSIGNEE", "REPORTER", "PRIORITY", "RESOLUTION",
-					"CREATED", "UPDATED",
+					"CREATED", "UPDATED", "LABELS",
 				},
 				[]string{
 					"Bug", "ISSUE-1", "This is an issue", "Done", "Person A", "Person Z", "High", "Fixed",
-					"2020-12-13 14:05:20", "2020-12-13 14:07:20",
+					"2020-12-13 14:05:20", "2020-12-13 14:07:20", "urgent",
 				},
 			},
 		},
@@ -114,15 +116,15 @@ func TestSprintPreviewLayoutData(t *testing.T) {
 			Contents: tui.TableData{
 				[]string{
 					"TYPE", "KEY", "SUMMARY", "STATUS", "ASSIGNEE", "REPORTER", "PRIORITY", "RESOLUTION",
-					"CREATED", "UPDATED",
+					"CREATED", "UPDATED", "LABELS",
 				},
 				[]string{
 					"Story", "ISSUE-2", "This is another issue", "Open", "", "Person A", "Normal", "",
-					"2020-12-13 14:05:20", "2020-12-13 14:07:20",
+					"2020-12-13 14:05:20", "2020-12-13 14:07:20", "blocked",
 				},
 				[]string{
 					"Bug", "ISSUE-1", "This is an issue", "Done", "Person A", "Person Z", "High", "Fixed",
-					"2020-12-13 14:05:20", "2020-12-13 14:07:20",
+					"2020-12-13 14:05:20", "2020-12-13 14:07:20", "urgent",
 				},
 			},
 		},

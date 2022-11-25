@@ -170,6 +170,8 @@ func (IssueList) assignColumns(columns []string, issue *jira.Issue) []string {
 			bucket = append(bucket, formatDateTime(issue.Fields.Created, jira.RFC3339))
 		case fieldUpdated:
 			bucket = append(bucket, formatDateTime(issue.Fields.Updated, jira.RFC3339))
+		case fieldLabels:
+			bucket = append(bucket, strings.Join(issue.Fields.Labels, ","))
 		}
 	}
 
