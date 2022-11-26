@@ -286,7 +286,7 @@ func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error 
 	c.jiraClient = api.Client(jira.Config{
 		Server:   server,
 		Login:    login,
-		Insecure: c.usrCfg.Insecure,
+		Insecure: &c.usrCfg.Insecure,
 		AuthType: c.value.authType,
 		Debug:    viper.GetBool("debug"),
 	})
@@ -311,7 +311,7 @@ func (c *JiraCLIConfigGenerator) configureServerMeta(server, login string) error
 	c.jiraClient = api.Client(jira.Config{
 		Server:   server,
 		Login:    login,
-		Insecure: c.usrCfg.Insecure,
+		Insecure: &c.usrCfg.Insecure,
 		AuthType: c.value.authType,
 		Debug:    viper.GetBool("debug"),
 	})
