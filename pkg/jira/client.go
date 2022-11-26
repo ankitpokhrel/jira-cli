@@ -99,7 +99,7 @@ type Config struct {
 	Login    string
 	APIToken string
 	AuthType AuthType
-	Insecure bool
+	Insecure *bool
 	Debug    bool
 }
 
