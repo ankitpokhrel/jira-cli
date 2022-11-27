@@ -49,6 +49,7 @@ type Table struct {
 	style        TableStyle
 	data         TableData
 	colPad       uint
+	colFixed     uint
 	maxColWidth  uint
 	footerText   string
 	selectedFunc SelectedFunc
@@ -141,6 +142,13 @@ func WithCopyKeyFunc(fn CopyKeyFunc) TableOption {
 	}
 }
 
+// WithFixedColumns sets the number of columns that are locked (do not scroll right).
+func WithFixedColumns(cols uint) TableOption {
+	return func(t *Table) {
+		t.colFixed = cols
+	}
+}
+
 // Paint paints the table layout. First row is treated as a table header.
 func (t *Table) Paint(data TableData) error {
 	if len(data) == 0 {
@@ -229,7 +237,7 @@ func (t *Table) initTable() {
 			return ev
 		})
 
-	t.view.SetFixed(1, 1)
+	t.view.SetFixed(1, int(t.colFixed))
 }
 
 func renderTableHeader(t *Table, data []string) {

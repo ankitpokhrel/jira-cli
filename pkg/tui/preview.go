@@ -282,7 +282,7 @@ func (pv *Preview) initLayout(view *tview.Table) {
 			}
 		})
 
-	view.SetFixed(1, 1)
+	view.SetFixed(1, int(pv.contents.colFixed))
 }
 
 func (pv *Preview) printText(s string) {

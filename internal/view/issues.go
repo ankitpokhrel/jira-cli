@@ -15,11 +15,12 @@ import (
 
 // DisplayFormat is a issue display type.
 type DisplayFormat struct {
-	Plain      bool
-	NoHeaders  bool
-	NoTruncate bool
-	Columns    []string
-	TableStyle tui.TableStyle
+	Plain        bool
+	NoHeaders    bool
+	NoTruncate   bool
+	Columns      []string
+	FixedColumns uint
+	TableStyle   tui.TableStyle
 }
 
 // IssueList is a list view for issues.
@@ -73,6 +74,7 @@ func (l *IssueList) Render() error {
 		tui.WithCopyFunc(copyURL(l.Server)),
 		tui.WithCopyKeyFunc(copyKey()),
 		tui.WithRefreshFunc(l.Refresh),
+		tui.WithFixedColumns(l.Display.FixedColumns),
 	)
 
 	return view.Paint(data)

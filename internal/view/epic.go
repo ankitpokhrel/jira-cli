@@ -37,6 +37,7 @@ func (el *EpicList) Render() error {
 		tui.WithSidebarSelectedFunc(navigate(el.Server)),
 		tui.WithContentTableOpts(
 			tui.WithTableStyle(el.Display.TableStyle),
+			tui.WithFixedColumns(el.Display.FixedColumns),
 			tui.WithSelectedFunc(navigate(el.Server)),
 			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) (string, error)) {
 				dataFn := func() interface{} {
