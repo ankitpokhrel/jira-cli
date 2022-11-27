@@ -21,6 +21,7 @@ type DisplayFormat struct {
 	Columns      []string
 	FixedColumns uint
 	TableStyle   tui.TableStyle
+	CustomKeys   map[string]interface{}
 }
 
 // IssueList is a list view for issues.
@@ -52,6 +53,7 @@ func (l *IssueList) Render() error {
 	}
 
 	view := tui.NewTable(
+		tui.WithCustomKeyFunc(customKeyFunc, l.Display.CustomKeys),
 		tui.WithTableStyle(l.Display.TableStyle),
 		tui.WithTableFooterText(l.FooterText),
 		tui.WithSelectedFunc(navigate(l.Server)),

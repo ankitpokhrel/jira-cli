@@ -142,6 +142,7 @@ func loadList(cmd *cobra.Command) {
 				return []string{}
 			}(),
 			TableStyle: cmdutil.GetTUIStyleConfig(),
+			CustomKeys: viper.GetStringMap("custom_keys.issues"),
 		},
 	}
 
