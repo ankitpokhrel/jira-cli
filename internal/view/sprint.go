@@ -147,6 +147,7 @@ func (sl *SprintList) tabularize(issues []*jira.Issue) tui.TableData {
 			issue.Fields.Resolution.Name,
 			formatDateTime(issue.Fields.Created, jira.RFC3339),
 			formatDateTime(issue.Fields.Updated, jira.RFC3339),
+			strings.Join(issue.Fields.Labels, ","),
 		})
 	}
 
