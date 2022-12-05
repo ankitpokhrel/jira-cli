@@ -3,6 +3,7 @@ package jira
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -63,7 +64,10 @@ func (c *Client) CreateV2(req *CreateRequest) (*CreateResponse, error) {
 }
 
 func (c *Client) create(req *CreateRequest, ver string) (*CreateResponse, error) {
-	data := c.getRequestData(req)
+	data, err := c.getRequestData(req)
+	if err != nil {
+		return nil, err
+	}
 
 	body, err := json.Marshal(&data)
 	if err != nil {
@@ -103,7 +107,7 @@ func (c *Client) create(req *CreateRequest, ver string) (*CreateResponse, error)
 	return &out, err
 }
 
-func (*Client) getRequestData(req *CreateRequest) *createRequest {
+func (*Client) getRequestData(req *CreateRequest) (*createRequest, error) {
 	if req.Labels == nil {
 		req.Labels = []string{}
 	}
@@ -176,31 +180,36 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 		}
 		data.Fields.M.FixVersions = versions
 	}
-	constructCustomFields(req.CustomFields, &data)
+	if err := constructCustomFields(req.CustomFields, &data); err != nil {
+		return nil, err
+	}
 
-	return &data
+	return &data, nil
 }
 
-func constructCustomFields(fields map[string]string, data *createRequest) {
+func constructCustomFields(fields map[string]string, data *createRequest) error {
 	if len(fields) == 0 {
-		return
+		return nil
 	}
 
 	var configuredFields []IssueTypeField
 
 	err := viper.UnmarshalKey("issue.fields.custom", &configuredFields)
 	if err != nil || len(configuredFields) == 0 {
-		return
+		return nil
 	}
 
 	data.Fields.M.customFields = make(customField)
 
 	for key, val := range fields {
+		found := false
+
 		for _, configured := range configuredFields {
 			identifier := strings.ReplaceAll(strings.ToLower(strings.TrimSpace(configured.Name)), " ", "-")
 			if identifier != strings.ToLower(key) {
 				continue
 			}
+			found = true
 
 			switch configured.Schema.DataType {
 			case customFieldFormatOption:
@@ -230,7 +239,12 @@ func constructCustomFields(fields map[string]string, data *createRequest) {
 				data.Fields.M.customFields[configured.Key] = val
 			}
 		}
+
+		if !found {
+			return fmt.Errorf("invalid custom field specified: %s", key)
+		}
 	}
+	return nil
 }
 
 type createRequest struct {
