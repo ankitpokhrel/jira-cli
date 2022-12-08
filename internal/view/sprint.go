@@ -46,6 +46,7 @@ func (sl *SprintList) Render() error {
 		),
 		tui.WithInitialText(helpText),
 		tui.WithContentTableOpts(
+			tui.WithFixedColumns(sl.Display.FixedColumns),
 			tui.WithTableStyle(sl.Display.TableStyle),
 			tui.WithSelectedFunc(navigate(sl.Server)),
 			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) (string, error)) {
@@ -82,6 +83,7 @@ func (sl *SprintList) RenderInTable() error {
 
 	data := sl.tableData()
 	view := tui.NewTable(
+		tui.WithFixedColumns(sl.Display.FixedColumns),
 		tui.WithTableStyle(sl.Display.TableStyle),
 		tui.WithTableFooterText(
 			fmt.Sprintf(

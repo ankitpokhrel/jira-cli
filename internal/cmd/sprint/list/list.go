@@ -126,6 +126,9 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 	noTruncate, err := flags.GetBool("no-truncate")
 	cmdutil.ExitIfError(err)
 
+	fixedColumns, err := flags.GetUint("fixed-columns")
+	cmdutil.ExitIfError(err)
+
 	columns, err := flags.GetString("columns")
 	cmdutil.ExitIfError(err)
 
@@ -161,9 +164,10 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 			singleSprintView(sprintQuery, flags, boardID, sprintID, project, server, client, nil)
 		},
 		Display: view.DisplayFormat{
-			Plain:      plain,
-			NoHeaders:  noHeaders,
-			NoTruncate: noTruncate,
+			Plain:        plain,
+			NoHeaders:    noHeaders,
+			NoTruncate:   noTruncate,
+			FixedColumns: fixedColumns,
 			Columns: func() []string {
 				if columns != "" {
 					return strings.Split(columns, ",")
@@ -205,6 +209,9 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 	noHeaders, err := flags.GetBool("no-headers")
 	cmdutil.ExitIfError(err)
 
+	fixedColumns, err := flags.GetUint("fixed-columns")
+	cmdutil.ExitIfError(err)
+
 	columns, err := flags.GetString("columns")
 	cmdutil.ExitIfError(err)
 
@@ -225,8 +232,9 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 			return resp.Issues
 		},
 		Display: view.DisplayFormat{
-			Plain:     plain,
-			NoHeaders: noHeaders,
+			Plain:        plain,
+			NoHeaders:    noHeaders,
+			FixedColumns: fixedColumns,
 			Columns: func() []string {
 				if columns != "" {
 					return strings.Split(columns, ",")

@@ -139,6 +139,9 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 	noTruncate, err := flags.GetBool("no-truncate")
 	cmdutil.ExitIfError(err)
 
+	fixedColumns, err := flags.GetUint("fixed-columns")
+	cmdutil.ExitIfError(err)
+
 	columns, err := flags.GetString("columns")
 	cmdutil.ExitIfError(err)
 
@@ -151,9 +154,10 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 			singleEpicView(flags, key, project, projectType, server, client)
 		},
 		Display: view.DisplayFormat{
-			Plain:      plain,
-			NoHeaders:  noHeaders,
-			NoTruncate: noTruncate,
+			Plain:        plain,
+			NoHeaders:    noHeaders,
+			NoTruncate:   noTruncate,
+			FixedColumns: fixedColumns,
 			Columns: func() []string {
 				if columns != "" {
 					return strings.Split(columns, ",")
@@ -189,6 +193,9 @@ func epicExplorerView(flags query.FlagParser, project, projectType, server strin
 		return
 	}
 
+	fixedColumns, err := flags.GetUint("fixed-columns")
+	cmdutil.ExitIfError(err)
+
 	v := view.EpicList{
 		Total:   total,
 		Project: project,
@@ -211,7 +218,8 @@ func epicExplorerView(flags query.FlagParser, project, projectType, server strin
 			return resp.Issues
 		},
 		Display: view.DisplayFormat{
-			TableStyle: cmdutil.GetTUIStyleConfig(),
+			FixedColumns: fixedColumns,
+			TableStyle:   cmdutil.GetTUIStyleConfig(),
 		},
 	}
 

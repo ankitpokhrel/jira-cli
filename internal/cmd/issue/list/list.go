@@ -116,6 +116,9 @@ func loadList(cmd *cobra.Command) {
 	noTruncate, err := cmd.Flags().GetBool("no-truncate")
 	cmdutil.ExitIfError(err)
 
+	fixedColumns, err := cmd.Flags().GetUint("fixed-columns")
+	cmdutil.ExitIfError(err)
+
 	columns, err := cmd.Flags().GetString("columns")
 	cmdutil.ExitIfError(err)
 
@@ -128,9 +131,10 @@ func loadList(cmd *cobra.Command) {
 			loadList(cmd)
 		},
 		Display: view.DisplayFormat{
-			Plain:      plain,
-			NoHeaders:  noHeaders,
-			NoTruncate: noTruncate,
+			Plain:        plain,
+			NoHeaders:    noHeaders,
+			NoTruncate:   noTruncate,
+			FixedColumns: fixedColumns,
 			Columns: func() []string {
 				if columns != "" {
 					return strings.Split(columns, ",")
@@ -178,6 +182,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
+	cmd.Flags().Uint("fixed-columns", 1, "Number of fixed columns in the interactive mode.")
 
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {
 		cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
