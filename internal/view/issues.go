@@ -36,7 +36,7 @@ type IssueList struct {
 
 // Render renders the view.
 func (l *IssueList) Render() error {
-	if l.Display.Plain {
+	if tui.IsDumbTerminal() || l.Display.Plain {
 		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
 		return l.renderPlain(w)
 	}
@@ -147,7 +147,7 @@ func (l *IssueList) data() tui.TableData {
 	return data
 }
 
-func (IssueList) assignColumns(columns []string, issue *jira.Issue) []string {
+func (*IssueList) assignColumns(columns []string, issue *jira.Issue) []string {
 	var bucket []string
 
 	for _, column := range columns {

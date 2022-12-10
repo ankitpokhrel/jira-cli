@@ -89,13 +89,60 @@ func TestSplitText(t *testing.T) {
 func TestGetPager(t *testing.T) {
 	t.Parallel()
 
+	term := os.Getenv("TERM")
 	pager := os.Getenv("PAGER")
 
-	_ = os.Setenv("PAGER", "")
-	assert.Equal(t, "less -r", GetPager())
+	// TERM is xterm, PAGER is set.
+	{
+		_ = os.Setenv("TERM", "xterm")
 
-	_ = os.Setenv("PAGER", "more")
-	assert.Equal(t, "more", GetPager())
+		_ = os.Setenv("PAGER", "")
+		assert.Equal(t, "less", GetPager())
 
+		_ = os.Setenv("PAGER", "more")
+		assert.Equal(t, "more", GetPager())
+
+		_ = os.Setenv("PAGER", pager)
+	}
+
+	// TERM is set, PAGER is unset.
+	{
+		_ = os.Unsetenv("PAGER")
+
+		_ = os.Setenv("TERM", "dumb")
+		assert.Equal(t, "cat", GetPager())
+
+		_ = os.Setenv("TERM", "")
+		assert.Equal(t, "cat", GetPager())
+
+		_ = os.Setenv("TERM", "xterm")
+		assert.Equal(t, "less", GetPager())
+
+		_ = os.Setenv("TERM", term)
+	}
+
+	// TERM gets precendence if both PAGER and TERM are set.
+	{
+		_ = os.Setenv("PAGER", "")
+		_ = os.Setenv("TERM", "")
+		assert.Equal(t, "cat", GetPager())
+
+		_ = os.Setenv("PAGER", "more")
+		_ = os.Setenv("TERM", "dumb")
+		assert.Equal(t, "cat", GetPager())
+
+		_ = os.Setenv("PAGER", "more")
+		_ = os.Setenv("TERM", "xterm")
+		assert.Equal(t, "more", GetPager())
+	}
+
+	// TERM and PAGER are not set.
+	{
+		_ = os.Unsetenv("PAGER")
+		_ = os.Unsetenv("TERM")
+		assert.Equal(t, "cat", GetPager())
+	}
+
+	_ = os.Setenv("TERM", term)
 	_ = os.Setenv("PAGER", pager)
 }
