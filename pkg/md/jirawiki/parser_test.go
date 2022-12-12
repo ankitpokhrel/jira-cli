@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//nolint:dupl
 func TestParseHeadingTags(t *testing.T) {
 	t.Parallel()
 
@@ -97,7 +98,7 @@ func TestParseTextEffectTags(t *testing.T) {
 			expected: "Line with **bold**, _italic_ and -strikethrough- text. And _italics with **bold** text in it_.\n",
 		},
 		{
-			name:     "bold",
+			name:     "partially closed bold tag",
 			input:    "*bold",
 			expected: "**bold**\n",
 		},
@@ -190,6 +191,7 @@ func TestParseListTags(t *testing.T) {
 	}
 }
 
+//nolint:dupl
 func TestParseReferenceLinks(t *testing.T) {
 	t.Parallel()
 
@@ -202,11 +204,6 @@ func TestParseReferenceLinks(t *testing.T) {
 			name:     "valid link with title",
 			input:    "[title|https://ankit.pl]",
 			expected: "[title](https://ankit.pl)\n",
-		},
-		{
-			name:     "valid link without title",
-			input:    "[https://ankit.pl]",
-			expected: "[](https://ankit.pl)\n",
 		},
 		{
 			name:     "valid link without title",

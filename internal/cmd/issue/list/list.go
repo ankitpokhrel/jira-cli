@@ -182,10 +182,10 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
-	cmd.Flags().Uint("fixed-columns", 1, "Number of fixed columns in the interactive mode.")
 
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {
 		cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
 			fmt.Sprintf("Accepts: %s", strings.Join(view.ValidIssueColumns(), ", ")))
+		cmd.Flags().Uint("fixed-columns", 1, "Number of fixed columns in the interactive mode")
 	}
 }

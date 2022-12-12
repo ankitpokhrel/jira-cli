@@ -274,7 +274,8 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("table", false, "Display sprints in a table view")
 	cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
 		fmt.Sprintf("Accepts (for sprint list): %s", strings.Join(view.ValidSprintColumns(), ", "))+
-		fmt.Sprintf("Accepts (for sprint issues): %s", strings.Join(view.ValidIssueColumns(), ", ")))
+		fmt.Sprintf("\nAccepts (for sprint issues): %s", strings.Join(view.ValidIssueColumns(), ", ")))
+	cmd.Flags().Uint("fixed-columns", 1, "Number of fixed columns in the interactive mode")
 	cmd.Flags().Bool("current", false, "List issues in current active sprint")
 	cmd.Flags().Bool("prev", false, "List issues in previous sprint")
 	cmd.Flags().Bool("next", false, "List issues in next planned sprint")
