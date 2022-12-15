@@ -8,7 +8,7 @@
 <div>
     <p align="center">
         <a href="https://github.com/ankitpokhrel/jira-cli/actions?query=workflow%3Abuild+branch%3Amaster">
-            <img alt="Build" src="https://img.shields.io/github/workflow/status/ankitpokhrel/jira-cli/build?style=flat-square" />
+            <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/ankitpokhrel/jira-cli/ci.yml?branch=main&style=flat-square" />
         </a>
         <a href="https://goreportcard.com/report/github.com/ankitpokhrel/jira-cli">
             <img alt="GO Report-card" src="https://goreportcard.com/badge/github.com/ankitpokhrel/jira-cli?style=flat-square" />
