@@ -56,97 +56,15 @@ nature of the data. Yet, we've attempted to make the experience as similar as po
 | **Jira**  | <a href="#"><img alt="Jira Cloud" src="https://img.shields.io/badge/Jira Cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Jira Server" src="https://img.shields.io/badge/Jira Server-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a> |
 
 ## Installation
-`jira-cli` is available as a downloadable binary for Linux, macOS, and Windows from the [releases page](https://github.com/ankitpokhrel/jira-cli/releases).
+`jira-cli` is available as a downloadable packaged binary for Linux, macOS, and Windows from the [releases page](https://github.com/ankitpokhrel/jira-cli/releases).
 
-#### Docker
-You can use the available docker image to run `jira-cli` inside a docker container.
+You can use Docker to quickly try out `jira-cli`.
 
 ```sh
 docker run -it --rm ghcr.io/ankitpokhrel/jira-cli:latest
 ```
 
-#### Homebrew
-
-> Maintainer: [@ankitpokhrel](https://github.com/ankitpokhrel)
-
-You can use Homebrew tap in macOS to install `jira-cli`.
-
-```sh
-brew tap ankitpokhrel/jira-cli
-brew install jira-cli
-```
-
-#### FreeBSD
-
-> Maintainer: [@fraggerfox](https://github.com/fraggerfox)
-
-You can install it from the ports tree using the following command
-
-```sh
-cd /usr/ports/www/jira-cli/ && make install clean
-```
-
-or directly from the binary package repository using the command
-
-``` sh
-pkg install jira-cli
-```
-
-#### NetBSD
-
-> Maintainer: [@fraggerfox](https://github.com/fraggerfox)
-
-You can install it from pkgsrc using the following command
-
-```sh
-cd /usr/pkgsrc/www/jira-cli/ && make install clean
-```
-
-or directly from the binary package repository using the command
-
-``` sh
-pkgin install jira-cli
-```
-
-#### Nix
-
-> Maintainer: [@bryanasdev000](https://github.com/bryanasdev000) and [@anthonyroussel](https://github.com/anthonyroussel)
-
-You can use Nix to run `jira-cli`.
-
-```sh
-nix-shell -p jira-cli-go
-```
-
-You can also use Nix to imperatively install `jira-cli`.
-
-```sh
-nix-env -f '<nixpkgs>' -iA jira-cli-go
-```
-
-Alternatively, you can install it the declarative way in NixOS with `environment.systemPackages`/`users.users.<name>.packages` or with Home Manager in any Linux distro with `home.packages`.
-
-### Scoop (Windows)
-
-You can use Scoop to install `jira-cli`.
-
-[Install Scoop via Powershell](https://scoop.sh/)
-
-Then install `jira-cli` itself:
-
-```
-scoop bucket add extras
-scoop install jira-cli
-```
-
-#### Manual
-You can also install the runnable binary to your `$GOPATH/bin` (go1.16+).
-
-```sh
-go install github.com/ankitpokhrel/jira-cli/cmd/jira@latest
-```
-
-See [releases page](https://github.com/ankitpokhrel/jira-cli/releases) for downloadable packaged binaries.
+Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/Installation) for other installation methods like `Homebrew`, `Nix`, etc.
 
 ## Getting started
 
