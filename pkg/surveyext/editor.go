@@ -20,14 +20,14 @@ var (
 )
 
 func init() {
-	if runtime.GOOS == "windows" {
-		defaultEditor = "notepad"
-	} else if j := os.Getenv("JIRA_EDITOR"); j != "" {
+	if j := os.Getenv("JIRA_EDITOR"); j != "" {
 		defaultEditor = j
 	} else if v := os.Getenv("VISUAL"); v != "" {
 		defaultEditor = v
 	} else if e := os.Getenv("EDITOR"); e != "" {
 		defaultEditor = e
+	} else if runtime.GOOS == "windows" {
+		defaultEditor = "notepad"
 	}
 }
 
