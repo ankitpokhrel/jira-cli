@@ -3,7 +3,9 @@ package jira
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -196,11 +198,13 @@ func constructCustomFields(fields map[string]string, data *createRequest) {
 	data.Fields.M.customFields = make(customField)
 
 	for key, val := range fields {
+		found := false
 		for _, configured := range configuredFields {
 			identifier := strings.ReplaceAll(strings.ToLower(strings.TrimSpace(configured.Name)), " ", "-")
 			if identifier != strings.ToLower(key) {
 				continue
 			}
+			found = true
 
 			switch configured.Schema.DataType {
 			case customFieldFormatOption:
@@ -229,6 +233,9 @@ func constructCustomFields(fields map[string]string, data *createRequest) {
 			default:
 				data.Fields.M.customFields[configured.Key] = val
 			}
+		}
+		if !found {
+			fmt.Fprintf(os.Stderr, "\nInvalid custom field specified: %s\n", key)
 		}
 	}
 }
