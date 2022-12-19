@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/viper"
-
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 	"github.com/ankitpokhrel/jira-cli/pkg/md"
 )
@@ -44,12 +42,18 @@ type CreateRequest struct {
 	// while creating an issue.
 	CustomFields map[string]string
 
-	projectType string
+	projectType            string
+	configuredCustomFields []IssueTypeField
 }
 
-// ForProjectType set jira project type.
+// ForProjectType sets jira project type.
 func (cr *CreateRequest) ForProjectType(pt string) {
 	cr.projectType = pt
+}
+
+// WithCustomFields sets valid custom fields for the issue.
+func (cr *CreateRequest) WithCustomFields(cf []IssueTypeField) {
+	cr.configuredCustomFields = cf
 }
 
 // Create creates an issue using v3 version of the POST /issue endpoint.
@@ -176,20 +180,13 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 		}
 		data.Fields.M.FixVersions = versions
 	}
-	constructCustomFields(req.CustomFields, &data)
+	constructCustomFields(req.CustomFields, &data, req.configuredCustomFields)
 
 	return &data
 }
 
-func constructCustomFields(fields map[string]string, data *createRequest) {
-	if len(fields) == 0 {
-		return
-	}
-
-	var configuredFields []IssueTypeField
-
-	err := viper.UnmarshalKey("issue.fields.custom", &configuredFields)
-	if err != nil || len(configuredFields) == 0 {
+func constructCustomFields(fields map[string]string, data *createRequest, configuredFields []IssueTypeField) {
+	if len(fields) == 0 || len(configuredFields) == 0 {
 		return
 	}
 

@@ -140,6 +140,9 @@ func edit(cmd *cobra.Command, args []string) {
 			FixVersions:    fixVersions,
 			CustomFields:   params.customFields,
 		}
+		if configuredCustomFields, err := cmdcommon.GetConfiguredCustomFields(); err == nil {
+			edr.WithCustomFields(configuredCustomFields)
+		}
 
 		return client.Edit(params.issueKey, &edr)
 	}()

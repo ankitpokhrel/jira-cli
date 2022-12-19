@@ -145,6 +145,9 @@ func create(cmd *cobra.Command, _ []string) {
 			EpicField:      viper.GetString("epic.link"),
 		}
 		cr.ForProjectType(projectType)
+		if configuredCustomFields, err := cmdcommon.GetConfiguredCustomFields(); err == nil {
+			cr.WithCustomFields(configuredCustomFields)
+		}
 
 		if handle := cmdutil.GetSubtaskHandle(params.issueType, cc.issueTypes); handle != "" {
 			cr.SubtaskField = handle
