@@ -121,7 +121,7 @@ func TestGetPager(t *testing.T) {
 		_ = os.Setenv("TERM", term)
 	}
 
-	// TERM gets precendence if both PAGER and TERM are set.
+	// TERM gets precedence if both PAGER and TERM are set.
 	{
 		_ = os.Setenv("PAGER", "")
 		_ = os.Setenv("TERM", "")
