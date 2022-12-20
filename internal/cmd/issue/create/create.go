@@ -146,6 +146,7 @@ func create(cmd *cobra.Command, _ []string) {
 		}
 		cr.ForProjectType(projectType)
 		if configuredCustomFields, err := cmdcommon.GetConfiguredCustomFields(); err == nil {
+			cmdcommon.ValidateCustomFields(cr.CustomFields, configuredCustomFields)
 			cr.WithCustomFields(configuredCustomFields)
 		}
 

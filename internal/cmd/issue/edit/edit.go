@@ -141,6 +141,7 @@ func edit(cmd *cobra.Command, args []string) {
 			CustomFields:   params.customFields,
 		}
 		if configuredCustomFields, err := cmdcommon.GetConfiguredCustomFields(); err == nil {
+			cmdcommon.ValidateCustomFields(edr.CustomFields, configuredCustomFields)
 			edr.WithCustomFields(configuredCustomFields)
 		}
 

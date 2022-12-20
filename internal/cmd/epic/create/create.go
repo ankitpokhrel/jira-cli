@@ -149,6 +149,11 @@ func create(cmd *cobra.Command, _ []string) {
 		if projectType != jira.ProjectTypeNextGen {
 			cr.Name = params.name
 		}
+		cr.ForProjectType(projectType)
+		if configuredCustomFields, err := cmdcommon.GetConfiguredCustomFields(); err == nil {
+			cmdcommon.ValidateCustomFields(cr.CustomFields, configuredCustomFields)
+			cr.WithCustomFields(configuredCustomFields)
+		}
 
 		resp, err := client.CreateV2(&cr)
 		if err != nil {
