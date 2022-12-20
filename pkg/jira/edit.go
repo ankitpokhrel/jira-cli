@@ -299,12 +299,12 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 		Update: update,
 		Fields: fields,
 	}
-	constructCustomFieldsForEdit(req.CustomFields, &data, req.configuredCustomFields)
+	constructCustomFieldsForEdit(req.CustomFields, req.configuredCustomFields, &data)
 
 	return &data
 }
 
-func constructCustomFieldsForEdit(fields map[string]string, data *editRequest, configuredFields []IssueTypeField) {
+func constructCustomFieldsForEdit(fields map[string]string, configuredFields []IssueTypeField, data *editRequest) {
 	if len(fields) == 0 || len(configuredFields) == 0 {
 		return
 	}

@@ -180,12 +180,12 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 		}
 		data.Fields.M.FixVersions = versions
 	}
-	constructCustomFields(req.CustomFields, &data, req.configuredCustomFields)
+	constructCustomFields(req.CustomFields, req.configuredCustomFields, &data)
 
 	return &data
 }
 
-func constructCustomFields(fields map[string]string, data *createRequest, configuredFields []IssueTypeField) {
+func constructCustomFields(fields map[string]string, configuredFields []IssueTypeField, data *createRequest) {
 	if len(fields) == 0 || len(configuredFields) == 0 {
 		return
 	}
