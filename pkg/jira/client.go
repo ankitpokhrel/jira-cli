@@ -250,7 +250,8 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		req.SetBasicAuth(c.login, c.token)
 	}
 
-	res, err = c.transport.RoundTrip(req.WithContext(ctx))
+	httpClient := &http.Client{Transport: c.transport}
+	res, err = httpClient.Do(req.WithContext(ctx))
 
 	return res, err
 }
