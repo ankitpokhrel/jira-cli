@@ -3,6 +3,9 @@ package cmdcommon
 import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
 const (
@@ -108,4 +111,16 @@ func GetMetadataQuestions(cat []string) []*survey.Question {
 	}
 
 	return qs
+}
+
+// GetConfiguredCustomFields returns the custom fields configured by the user.
+func GetConfiguredCustomFields() ([]jira.IssueTypeField, error) {
+	var configuredFields []jira.IssueTypeField
+
+	err := viper.UnmarshalKey("issue.fields.custom", &configuredFields)
+	if err != nil {
+		return nil, err
+	}
+
+	return configuredFields, nil
 }

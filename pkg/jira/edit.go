@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-
-	"github.com/spf13/viper"
 )
 
 const separatorMinus = "-"
@@ -32,6 +30,13 @@ type EditRequest struct {
 	// CustomFields holds all custom fields passed
 	// while editing the issue.
 	CustomFields map[string]string
+
+	configuredCustomFields []IssueTypeField
+}
+
+// WithCustomFields sets valid custom fields for the issue.
+func (er *EditRequest) WithCustomFields(cf []IssueTypeField) {
+	er.configuredCustomFields = cf
 }
 
 // Edit updates an issue using POST /issue endpoint.
@@ -294,20 +299,13 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 		Update: update,
 		Fields: fields,
 	}
-	constructCustomFieldsForEdit(req.CustomFields, &data)
+	constructCustomFieldsForEdit(req.CustomFields, req.configuredCustomFields, &data)
 
 	return &data
 }
 
-func constructCustomFieldsForEdit(fields map[string]string, data *editRequest) {
-	if len(fields) == 0 {
-		return
-	}
-
-	var configuredFields []IssueTypeField
-
-	err := viper.UnmarshalKey("issue.fields.custom", &configuredFields)
-	if err != nil || len(configuredFields) == 0 {
+func constructCustomFieldsForEdit(fields map[string]string, configuredFields []IssueTypeField, data *editRequest) {
+	if len(fields) == 0 || len(configuredFields) == 0 {
 		return
 	}
 
