@@ -1,4 +1,5 @@
 name: Publish a Docker image
+run-name: Docker image for ${{ github.ref_name }}
 
 on:
   workflow_dispatch:

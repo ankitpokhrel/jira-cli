@@ -1,2 +1,2 @@
-.github
-.gocache
+vendor/
+.gocache/
