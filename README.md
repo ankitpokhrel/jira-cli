@@ -45,7 +45,7 @@ The tool started with the idea of making issue search and navigation as straight
 help of [outstanding supporters like you](#support-the-project), we evolved, and the tool now includes all necessary
 features like issue creation, cloning, linking, ticket transition, and much more.
 
-> The TUI is heavily inspired by the [GitHub CLI](https://github.com/cli/cli).
+> This tool is heavily inspired by the [GitHub CLI](https://github.com/cli/cli)
 
 ## Supported platforms
 Note that some features might work slightly differently in cloud installation versus on-premise installation due to the
