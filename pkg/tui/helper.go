@@ -10,6 +10,7 @@ import (
 
 	"github.com/cli/safeexec"
 	"github.com/gdamore/tcell/v2"
+	"github.com/mattn/go-isatty"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/tui/primitive"
 )
@@ -63,6 +64,11 @@ func getInfoModal() *primitive.Modal {
 func IsDumbTerminal() bool {
 	term := strings.ToLower(os.Getenv("TERM"))
 	return term == "" || term == "dumb"
+}
+
+// IsNotTTY returns true if the stdout file descriptor is not a TTY.
+func IsNotTTY() bool {
+	return !isatty.IsTerminal(os.Stdout.Fd())
 }
 
 // GetPager returns configured pager.

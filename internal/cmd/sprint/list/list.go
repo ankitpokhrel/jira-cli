@@ -15,6 +15,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/internal/view"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
 const (
@@ -248,7 +249,7 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 	table, err := flags.GetBool("table")
 	cmdutil.ExitIfError(err)
 
-	if table {
+	if table || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		cmdutil.ExitIfError(v.RenderInTable())
 	} else {
 		cmdutil.ExitIfError(v.Render())

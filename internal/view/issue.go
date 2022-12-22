@@ -53,7 +53,7 @@ type Issue struct {
 
 // Render renders the view.
 func (i Issue) Render() error {
-	if i.Display.Plain {
+	if i.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		return i.renderPlain(os.Stdout)
 	}
 	r, err := MDRenderer()
