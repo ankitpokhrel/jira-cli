@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
@@ -19,6 +20,24 @@ const (
 	// ActionMetadata is an add metadata action.
 	ActionMetadata = "Add metadata"
 )
+
+// CreateParams holds parameters for create command.
+type CreateParams struct {
+	Name           string
+	IssueType      string
+	ParentIssueKey string
+	Summary        string
+	Body           string
+	Priority       string
+	Assignee       string
+	Labels         []string
+	Components     []string
+	FixVersions    []string
+	CustomFields   map[string]string
+	Template       string
+	NoInput        bool
+	Debug          bool
+}
 
 // SetCreateFlags sets flags supported by create command.
 func SetCreateFlags(cmd *cobra.Command, prefix string) {
@@ -114,6 +133,72 @@ func GetMetadataQuestions(cat []string) []*survey.Question {
 	}
 
 	return qs
+}
+
+// HandleNoInput handles operations for --no-input flag.
+func HandleNoInput(params *CreateParams) error {
+	answer := struct{ Action string }{}
+	for answer.Action != ActionSubmit {
+		err := survey.Ask([]*survey.Question{GetNextAction()}, &answer)
+		if err != nil {
+			return err
+		}
+
+		switch answer.Action {
+		case ActionCancel:
+			cmdutil.Failed("Action aborted")
+		case ActionMetadata:
+			ans := struct{ Metadata []string }{}
+			err := survey.Ask(GetMetadata(), &ans)
+			if err != nil {
+				return err
+			}
+
+			if len(ans.Metadata) > 0 {
+				qs := GetMetadataQuestions(ans.Metadata)
+				ans := struct {
+					Priority    string
+					Labels      string
+					Components  string
+					FixVersions string
+				}{}
+				err := survey.Ask(qs, &ans)
+				if err != nil {
+					return err
+				}
+
+				if ans.Priority != "" {
+					params.Priority = ans.Priority
+				}
+				if len(ans.Labels) > 0 {
+					params.Labels = strings.Split(ans.Labels, ",")
+				}
+				if len(ans.Components) > 0 {
+					params.Components = strings.Split(ans.Components, ",")
+				}
+				if len(ans.FixVersions) > 0 {
+					params.FixVersions = strings.Split(ans.FixVersions, ",")
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// GetAssignee finds and returns assignee based on user input.
+func GetAssignee(client *jira.Client, project string, assignee string) string {
+	if assignee == "" {
+		return ""
+	}
+
+	user, err := api.ProxyUserSearch(client, &jira.UserSearchOptions{
+		Query:   assignee,
+		Project: project,
+	})
+	if err != nil || len(user) == 0 {
+		cmdutil.Failed("Unable to find assignee")
+	}
+	return GetUserKeyForConfiguredInstallation(user[0])
 }
 
 // GetConfiguredCustomFields returns the custom fields configured by the user.
