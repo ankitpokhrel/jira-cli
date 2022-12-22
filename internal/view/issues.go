@@ -36,7 +36,7 @@ type IssueList struct {
 
 // Render renders the view.
 func (l *IssueList) Render() error {
-	if tui.IsDumbTerminal() || l.Display.Plain {
+	if l.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
 		return l.renderPlain(w)
 	}

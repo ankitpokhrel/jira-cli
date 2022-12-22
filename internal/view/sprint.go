@@ -77,7 +77,7 @@ func (sl *SprintList) Render() error {
 
 // RenderInTable renders the list in table view.
 func (sl *SprintList) RenderInTable() error {
-	if tui.IsDumbTerminal() || sl.Display.Plain {
+	if sl.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
 		return sl.renderPlain(w)
 	}

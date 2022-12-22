@@ -13,6 +13,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/internal/view"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
 const (
@@ -54,17 +55,10 @@ func NewCmdList() *cobra.Command {
 		},
 		Args: cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			table, err := cmd.Flags().GetBool("table")
+			err := cmd.Flags().Set("type", "Epic")
 			cmdutil.ExitIfError(err)
 
-			err = cmd.Flags().Set("type", "Epic")
-			cmdutil.ExitIfError(err)
-
-			if table {
-				list.List(cmd, args)
-			} else {
-				epicList(cmd, args)
-			}
+			epicList(cmd, args)
 		},
 	}
 }
@@ -86,7 +80,7 @@ func epicList(cmd *cobra.Command, args []string) {
 	client := api.Client(jira.Config{Debug: debug})
 
 	if len(args) == 0 {
-		epicExplorerView(cmd.Flags(), project, projectType, server, client)
+		epicExplorerView(cmd, cmd.Flags(), project, projectType, server, client)
 	} else {
 		key := cmdutil.GetJiraIssueKey(project, args[0])
 		singleEpicView(cmd.Flags(), key, project, projectType, server, client)
@@ -171,7 +165,7 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 	cmdutil.ExitIfError(v.Render())
 }
 
-func epicExplorerView(flags query.FlagParser, project, projectType, server string, client *jira.Client) {
+func epicExplorerView(cmd *cobra.Command, flags query.FlagParser, project, projectType, server string, client *jira.Client) {
 	q, err := query.NewIssue(project, flags)
 	cmdutil.ExitIfError(err)
 
@@ -223,7 +217,14 @@ func epicExplorerView(flags query.FlagParser, project, projectType, server strin
 		},
 	}
 
-	cmdutil.ExitIfError(v.Render())
+	table, err := flags.GetBool("table")
+	cmdutil.ExitIfError(err)
+
+	if table || tui.IsDumbTerminal() || tui.IsNotTTY() {
+		list.List(cmd, nil)
+	} else {
+		cmdutil.ExitIfError(v.Render())
+	}
 }
 
 func setFlags(cmd *cobra.Command) {
