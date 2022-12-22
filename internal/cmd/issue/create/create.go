@@ -64,6 +64,7 @@ func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
 	projectType := viper.GetString("project.type")
+	installation := viper.GetString("installation")
 
 	params := parseFlags(cmd.Flags())
 	client := api.Client(jira.Config{Debug: params.debug})
@@ -127,6 +128,19 @@ func create(cmd *cobra.Command, _ []string) {
 		}
 	}
 
+	var assignee string
+
+	if params.assignee != "" {
+		user, err := api.ProxyUserSearch(client, &jira.UserSearchOptions{
+			Query:   params.assignee,
+			Project: project,
+		})
+		if err != nil || len(user) == 0 {
+			cmdutil.Failed("Unable to find assignee")
+		}
+		assignee = cmdcommon.GetUserKeyForConfiguredInstallation(user[0])
+	}
+
 	key, err := func() (string, error) {
 		s := cmdutil.Info("Creating an issue...")
 		defer s.Stop()
@@ -137,6 +151,7 @@ func create(cmd *cobra.Command, _ []string) {
 			ParentIssueKey: params.parentIssueKey,
 			Summary:        params.summary,
 			Body:           params.body,
+			Assignee:       assignee,
 			Priority:       params.priority,
 			Labels:         params.labels,
 			Components:     params.components,
@@ -145,6 +160,7 @@ func create(cmd *cobra.Command, _ []string) {
 			EpicField:      viper.GetString("epic.link"),
 		}
 		cr.ForProjectType(projectType)
+		cr.ForInstallationType(installation)
 		if configuredCustomFields, err := cmdcommon.GetConfiguredCustomFields(); err == nil {
 			cmdcommon.ValidateCustomFields(cr.CustomFields, configuredCustomFields)
 			cr.WithCustomFields(configuredCustomFields)
@@ -160,22 +176,9 @@ func create(cmd *cobra.Command, _ []string) {
 		}
 		return resp.Key, nil
 	}()
+
 	cmdutil.ExitIfError(err)
-
 	cmdutil.Success("Issue created\n%s/browse/%s", server, key)
-
-	if params.assignee != "" {
-		user, err := api.ProxyUserSearch(client, &jira.UserSearchOptions{
-			Query:   params.assignee,
-			Project: project,
-		})
-		if err != nil || len(user) == 0 {
-			cmdutil.Failed("Unable to find assignee")
-		}
-		if err = api.ProxyAssignIssue(client, key, user[0], jira.AssigneeDefault); err != nil {
-			cmdutil.Failed("Unable to set assignee: %s", err.Error())
-		}
-	}
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, key)

@@ -27,6 +27,7 @@ type CreateRequest struct {
 	ParentIssueKey string
 	Summary        string
 	Body           interface{} // string in v1/v2 and adf.ADF in v3
+	Assignee       string
 	Priority       string
 	Labels         []string
 	Components     []string
@@ -43,12 +44,18 @@ type CreateRequest struct {
 	CustomFields map[string]string
 
 	projectType            string
+	installationType       string
 	configuredCustomFields []IssueTypeField
 }
 
 // ForProjectType sets jira project type.
 func (cr *CreateRequest) ForProjectType(pt string) {
 	cr.projectType = pt
+}
+
+// ForInstallationType sets jira project type.
+func (cr *CreateRequest) ForInstallationType(it string) {
+	cr.installationType = it
 }
 
 // WithCustomFields sets valid custom fields for the issue.
@@ -151,6 +158,19 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 			data.Fields.M.Name = req.ParentIssueKey
 		}
 	}
+	if req.Assignee != "" {
+		if req.installationType == InstallationTypeLocal {
+			data.Fields.M.Assignee = &struct {
+				Name      *string `json:"name,omitempty"`
+				AccountID *string `json:"accountId,omitempty"`
+			}{Name: &req.Assignee}
+		} else {
+			data.Fields.M.Assignee = &struct {
+				Name      *string `json:"name,omitempty"`
+				AccountID *string `json:"accountId,omitempty"`
+			}{AccountID: &req.Assignee}
+		}
+	}
 	if req.Priority != "" {
 		data.Fields.M.Priority = &struct {
 			Name string `json:"name,omitempty"`
@@ -248,7 +268,11 @@ type createFields struct {
 	Name        string      `json:"name,omitempty"`
 	Summary     string      `json:"summary"`
 	Description interface{} `json:"description,omitempty"`
-	Priority    *struct {
+	Assignee    *struct {
+		Name      *string `json:"name,omitempty"`      // For local installation.
+		AccountID *string `json:"accountId,omitempty"` // For cloud installation.
+	} `json:"assignee,omitempty"`
+	Priority *struct {
 		Name string `json:"name,omitempty"`
 	} `json:"priority,omitempty"`
 	Labels     []string `json:"labels,omitempty"`
