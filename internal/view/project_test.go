@@ -12,6 +12,7 @@ import (
 func TestProjectRender(t *testing.T) {
 	var b bytes.Buffer
 
+	//nolint:unused
 	type lead struct {
 		Name string `json:"displayName"`
 	}

@@ -84,8 +84,8 @@ func Parse(input string) string {
 }
 
 /*
-	First pass:
-		- Fetch all lines from the input while skipping unnecessary line feeds.
+First pass:
+  - Fetch all lines from the input while skipping unnecessary line feeds.
 */
 func firstPass(input string) []string {
 	var (
@@ -112,9 +112,9 @@ func firstPass(input string) []string {
 }
 
 /*
-	Second pass: actual rendering.
-		- Process each line to search and mark tags.
-		- Use replacements to prepare markdown.
+Second pass: actual rendering.
+  - Process each line to search and mark tags.
+  - Use replacements to prepare markdown.
 */
 func secondPass(lines []string) string {
 	var (

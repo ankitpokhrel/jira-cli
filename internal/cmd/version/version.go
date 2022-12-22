@@ -1,3 +1,4 @@
+// Package version prints the version information of the tool.
 package version
 
 import (

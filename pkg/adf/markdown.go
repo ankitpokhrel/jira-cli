@@ -65,6 +65,7 @@ func WithMarkdownCloseHooks(hooks nodeTypeHook) MarkdownTranslatorOption {
 }
 
 // Open implements TagOpener interface.
+//
 //nolint:gocyclo
 func (tr *MarkdownTranslator) Open(n Connector, _ int) string {
 	var tag strings.Builder
@@ -159,6 +160,7 @@ func (tr *MarkdownTranslator) Open(n Connector, _ int) string {
 }
 
 // Close implements TagCloser interface.
+//
 //nolint:gocyclo
 func (tr *MarkdownTranslator) Close(n Connector) string {
 	var tag strings.Builder

@@ -85,6 +85,7 @@ func (m *Modal) HasFocus() bool {
 }
 
 // Draw draws this primitive onto the screen.
+//
 //nolint:gomnd
 func (m *Modal) Draw(screen tcell.Screen) {
 	// Calculate the width of this modal.
