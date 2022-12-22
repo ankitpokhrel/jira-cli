@@ -21,7 +21,7 @@ linters:
     - ineffassign
     - prealloc
     - unparam
-    - varcheck
+    - unused
   fast: false
 linters-settings:
   gofmt:
@@ -30,6 +30,10 @@ linters-settings:
     skip-regexp: ".*"
   gocyclo:
     min-complexity: 20
+  revive:
+    rules:
+      - name: package-comments
+        disabled: true
   gomnd:
     settings:
       mnd:

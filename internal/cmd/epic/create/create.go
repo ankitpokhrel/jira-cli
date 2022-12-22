@@ -46,8 +46,9 @@ func SetFlags(cmd *cobra.Command) {
 	cmdcommon.SetCreateFlags(cmd, "Epic")
 }
 
-//nolint:gocyclo
 // TODO: Reduce cyclomatic complexity.
+//
+//nolint:gocyclo
 func create(cmd *cobra.Command, _ []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
