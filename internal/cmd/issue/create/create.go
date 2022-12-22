@@ -2,7 +2,6 @@ package create
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
@@ -67,14 +66,14 @@ func create(cmd *cobra.Command, _ []string) {
 	installation := viper.GetString("installation")
 
 	params := parseFlags(cmd.Flags())
-	client := api.Client(jira.Config{Debug: params.debug})
+	client := api.Client(jira.Config{Debug: params.Debug})
 	cc := createCmd{
 		client: client,
 		params: params,
 	}
 
 	if cc.isNonInteractive() {
-		cc.params.noInput = true
+		cc.params.NoInput = true
 
 		if cc.isMandatoryParamsMissing() {
 			cmdutil.Failed(
@@ -86,60 +85,12 @@ func create(cmd *cobra.Command, _ []string) {
 	cmdutil.ExitIfError(cc.setIssueTypes())
 	cmdutil.ExitIfError(cc.askQuestions())
 
-	if !params.noInput {
-		answer := struct{ Action string }{}
-		for answer.Action != cmdcommon.ActionSubmit {
-			err := survey.Ask([]*survey.Question{cmdcommon.GetNextAction()}, &answer)
-			cmdutil.ExitIfError(err)
-
-			switch answer.Action {
-			case cmdcommon.ActionCancel:
-				cmdutil.Failed("Action aborted")
-			case cmdcommon.ActionMetadata:
-				ans := struct{ Metadata []string }{}
-				err := survey.Ask(cmdcommon.GetMetadata(), &ans)
-				cmdutil.ExitIfError(err)
-
-				if len(ans.Metadata) > 0 {
-					qs := cmdcommon.GetMetadataQuestions(ans.Metadata)
-					ans := struct {
-						Priority    string
-						Labels      string
-						Components  string
-						FixVersions string
-					}{}
-					err := survey.Ask(qs, &ans)
-					cmdutil.ExitIfError(err)
-
-					if ans.Priority != "" {
-						params.priority = ans.Priority
-					}
-					if len(ans.Labels) > 0 {
-						params.labels = strings.Split(ans.Labels, ",")
-					}
-					if len(ans.Components) > 0 {
-						params.components = strings.Split(ans.Components, ",")
-					}
-					if len(ans.FixVersions) > 0 {
-						params.fixVersions = strings.Split(ans.FixVersions, ",")
-					}
-				}
-			}
-		}
+	if !params.NoInput {
+		err := cmdcommon.HandleNoInput(params)
+		cmdutil.ExitIfError(err)
 	}
 
-	var assignee string
-
-	if params.assignee != "" {
-		user, err := api.ProxyUserSearch(client, &jira.UserSearchOptions{
-			Query:   params.assignee,
-			Project: project,
-		})
-		if err != nil || len(user) == 0 {
-			cmdutil.Failed("Unable to find assignee")
-		}
-		assignee = cmdcommon.GetUserKeyForConfiguredInstallation(user[0])
-	}
+	params.Assignee = cmdcommon.GetAssignee(client, project, params.Assignee)
 
 	key, err := func() (string, error) {
 		s := cmdutil.Info("Creating an issue...")
@@ -147,16 +98,16 @@ func create(cmd *cobra.Command, _ []string) {
 
 		cr := jira.CreateRequest{
 			Project:        project,
-			IssueType:      params.issueType,
-			ParentIssueKey: params.parentIssueKey,
-			Summary:        params.summary,
-			Body:           params.body,
-			Assignee:       assignee,
-			Priority:       params.priority,
-			Labels:         params.labels,
-			Components:     params.components,
-			FixVersions:    params.fixVersions,
-			CustomFields:   params.customFields,
+			IssueType:      params.IssueType,
+			ParentIssueKey: params.ParentIssueKey,
+			Summary:        params.Summary,
+			Body:           params.Body,
+			Assignee:       params.Assignee,
+			Priority:       params.Priority,
+			Labels:         params.Labels,
+			Components:     params.Components,
+			FixVersions:    params.FixVersions,
+			CustomFields:   params.CustomFields,
 			EpicField:      viper.GetString("epic.link"),
 		}
 		cr.ForProjectType(projectType)
@@ -166,7 +117,7 @@ func create(cmd *cobra.Command, _ []string) {
 			cr.WithCustomFields(configuredCustomFields)
 		}
 
-		if handle := cmdutil.GetSubtaskHandle(params.issueType, cc.issueTypes); handle != "" {
+		if handle := cmdutil.GetSubtaskHandle(params.IssueType, cc.issueTypes); handle != "" {
 			cr.SubtaskField = handle
 		}
 
@@ -189,7 +140,7 @@ func create(cmd *cobra.Command, _ []string) {
 type createCmd struct {
 	client     *jira.Client
 	issueTypes []*jira.IssueType
-	params     *createParams
+	params     *cmdcommon.CreateParams
 }
 
 func (cc *createCmd) setIssueTypes() error {
@@ -220,7 +171,7 @@ func (cc *createCmd) setIssueTypes() error {
 func (cc *createCmd) getIssueType() *survey.Question {
 	var qs *survey.Question
 
-	if cc.params.issueType == "" {
+	if cc.params.IssueType == "" {
 		var options []string
 		for _, t := range cc.issueTypes {
 			if t.Handle != "" && t.Handle != t.Name {
@@ -252,12 +203,12 @@ func (cc *createCmd) askQuestions() error {
 			return err
 		}
 
-		if cc.params.issueType == "" {
+		if cc.params.IssueType == "" {
 			for _, t := range cc.issueTypes {
 				if t.Handle != "" && fmt.Sprintf("%s (%s)", t.Name, t.Handle) == ans.IssueType {
-					cc.params.issueType = t.Handle
+					cc.params.IssueType = t.Handle
 				} else if t.Name == ans.IssueType {
-					cc.params.issueType = t.Name
+					cc.params.IssueType = t.Name
 				}
 			}
 		}
@@ -276,17 +227,17 @@ func (cc *createCmd) askQuestions() error {
 
 	project := viper.GetString("project.key")
 
-	if cc.params.parentIssueKey == "" {
-		cc.params.parentIssueKey = cmdutil.GetJiraIssueKey(project, ans.ParentIssueKey)
+	if cc.params.ParentIssueKey == "" {
+		cc.params.ParentIssueKey = cmdutil.GetJiraIssueKey(project, ans.ParentIssueKey)
 	} else {
-		cc.params.parentIssueKey = cmdutil.GetJiraIssueKey(project, cc.params.parentIssueKey)
+		cc.params.ParentIssueKey = cmdutil.GetJiraIssueKey(project, cc.params.ParentIssueKey)
 	}
 
-	if cc.params.summary == "" {
-		cc.params.summary = ans.Summary
+	if cc.params.Summary == "" {
+		cc.params.Summary = ans.Summary
 	}
-	if cc.params.body == "" {
-		cc.params.body = ans.Body
+	if cc.params.Body == "" {
+		cc.params.Body = ans.Body
 	}
 
 	return nil
@@ -295,9 +246,9 @@ func (cc *createCmd) askQuestions() error {
 func (cc *createCmd) getRemainingQuestions() []*survey.Question {
 	var qs []*survey.Question
 
-	if cc.params.parentIssueKey == "" {
+	if cc.params.ParentIssueKey == "" {
 		for _, t := range cc.issueTypes {
-			if t.Subtask && (t.Name == cc.params.issueType || (t.Handle != "" && t.Handle == cc.params.issueType)) {
+			if t.Subtask && (t.Name == cc.params.IssueType || (t.Handle != "" && t.Handle == cc.params.IssueType)) {
 				qs = append(qs, &survey.Question{
 					Name:     "parentIssueKey",
 					Prompt:   &survey.Input{Message: "Parent issue key"},
@@ -307,7 +258,7 @@ func (cc *createCmd) getRemainingQuestions() []*survey.Question {
 		}
 	}
 
-	if cc.params.summary == "" {
+	if cc.params.Summary == "" {
 		qs = append(qs, &survey.Question{
 			Name:     "summary",
 			Prompt:   &survey.Input{Message: "Summary"},
@@ -317,22 +268,22 @@ func (cc *createCmd) getRemainingQuestions() []*survey.Question {
 
 	var defaultBody string
 
-	if cc.params.template != "" || cmdutil.StdinHasData() {
-		b, err := cmdutil.ReadFile(cc.params.template)
+	if cc.params.Template != "" || cmdutil.StdinHasData() {
+		b, err := cmdutil.ReadFile(cc.params.Template)
 		if err != nil {
 			cmdutil.Failed("Error: %s", err)
 		}
 		defaultBody = string(b)
 	}
 
-	if cc.params.noInput {
-		if cc.params.body == "" {
-			cc.params.body = defaultBody
+	if cc.params.NoInput {
+		if cc.params.Body == "" {
+			cc.params.Body = defaultBody
 		}
 		return qs
 	}
 
-	if cc.params.body == "" {
+	if cc.params.Body == "" {
 		qs = append(qs, &survey.Question{
 			Name: "body",
 			Prompt: &surveyext.JiraEditor{
@@ -351,30 +302,14 @@ func (cc *createCmd) getRemainingQuestions() []*survey.Question {
 }
 
 func (cc *createCmd) isNonInteractive() bool {
-	return cmdutil.StdinHasData() || cc.params.template == "-"
+	return cmdutil.StdinHasData() || cc.params.Template == "-"
 }
 
 func (cc *createCmd) isMandatoryParamsMissing() bool {
-	return cc.params.summary == "" || cc.params.issueType == ""
+	return cc.params.Summary == "" || cc.params.IssueType == ""
 }
 
-type createParams struct {
-	issueType      string
-	parentIssueKey string
-	summary        string
-	body           string
-	priority       string
-	assignee       string
-	labels         []string
-	components     []string
-	fixVersions    []string
-	customFields   map[string]string
-	template       string
-	noInput        bool
-	debug          bool
-}
-
-func parseFlags(flags query.FlagParser) *createParams {
+func parseFlags(flags query.FlagParser) *cmdcommon.CreateParams {
 	issueType, err := flags.GetString("type")
 	cmdutil.ExitIfError(err)
 
@@ -414,19 +349,19 @@ func parseFlags(flags query.FlagParser) *createParams {
 	debug, err := flags.GetBool("debug")
 	cmdutil.ExitIfError(err)
 
-	return &createParams{
-		issueType:      issueType,
-		parentIssueKey: parentIssueKey,
-		summary:        summary,
-		body:           body,
-		priority:       priority,
-		assignee:       assignee,
-		labels:         labels,
-		components:     components,
-		fixVersions:    fixVersions,
-		customFields:   custom,
-		template:       template,
-		noInput:        noInput,
-		debug:          debug,
+	return &cmdcommon.CreateParams{
+		IssueType:      issueType,
+		ParentIssueKey: parentIssueKey,
+		Summary:        summary,
+		Body:           body,
+		Priority:       priority,
+		Assignee:       assignee,
+		Labels:         labels,
+		Components:     components,
+		FixVersions:    fixVersions,
+		CustomFields:   custom,
+		Template:       template,
+		NoInput:        noInput,
+		Debug:          debug,
 	}
 }
