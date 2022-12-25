@@ -658,7 +658,7 @@ Some example scripts are listed below.
 ```bash
 #!/usr/bin/env bash
 
-tickets=$(jira issue list --created month --plain --columns created --no-headers | awk '{print $1}' | awk -F'-' '{print $3}' | sort -n | uniq -c)
+tickets=$(jira issue list --created month --plain --columns created --no-headers | awk '{print $2}' | awk -F'-' '{print $3}' | sort -n | uniq -c)
 
 echo "${tickets}" | while IFS=$'\t' read -r line; do
   day=$(echo "${line}" | awk '{print $2}')
@@ -704,7 +704,7 @@ Sprint 1:   30
 sprints=$(jira sprint list --table --plain --columns id,name --no-headers)
 
 echo "${sprints}" | while IFS=$'\t' read -r id name; do
-  count=$(jira sprint list "${id}" --plain --columns assignee --no-headers 2>/dev/null | sort -n | uniq | wc -l)
+  count=$(jira sprint list "${id}" --plain --columns assignee --no-headers 2>/dev/null | awk '{print $2}' | awk NF | sort -n | uniq | wc -l)
 
   printf "%10s: %3d\n" "${name}" $((count))
 done
