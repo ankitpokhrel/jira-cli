@@ -29,6 +29,7 @@ type CreateParams struct {
 	Summary        string
 	Body           string
 	Priority       string
+	Reporter       string
 	Assignee       string
 	Labels         []string
 	Components     []string
@@ -55,7 +56,8 @@ And, this field is mandatory when creating a sub-task.`)
 	cmd.Flags().StringP("summary", "s", "", prefix+" summary or title")
 	cmd.Flags().StringP("body", "b", "", prefix+" description")
 	cmd.Flags().StringP("priority", "y", "", prefix+" priority")
-	cmd.Flags().StringP("assignee", "a", "", prefix+" assignee (email or display name)")
+	cmd.Flags().StringP("reporter", "r", "", prefix+" reporter (username, email or display name)")
+	cmd.Flags().StringP("assignee", "a", "", prefix+" assignee (username, email or display name)")
 	cmd.Flags().StringArrayP("label", "l", []string{}, prefix+" labels")
 	cmd.Flags().StringArrayP("component", "C", []string{}, prefix+" components")
 	cmd.Flags().StringArray("fix-version", []string{}, "Release info (fixVersions)")
@@ -185,20 +187,28 @@ func HandleNoInput(params *CreateParams) error {
 	return nil
 }
 
-// GetAssignee finds and returns assignee based on user input.
-func GetAssignee(client *jira.Client, project string, assignee string) string {
-	if assignee == "" {
+// GetRelevantUser finds and returns a valid user name or account ID based on user input.
+func GetRelevantUser(client *jira.Client, project string, user string) string {
+	if user == "" {
 		return ""
 	}
-
-	user, err := api.ProxyUserSearch(client, &jira.UserSearchOptions{
-		Query:   assignee,
+	u, err := api.ProxyUserSearch(client, &jira.UserSearchOptions{
+		Query:   user,
 		Project: project,
 	})
-	if err != nil || len(user) == 0 {
-		cmdutil.Failed("Unable to find assignee")
+	if err != nil || len(u) == 0 {
+		cmdutil.Failed("Unable to find associated user for %s", user)
 	}
-	return GetUserKeyForConfiguredInstallation(user[0])
+	return GetUserKeyForConfiguredInstallation(u[0])
+}
+
+// GetUserKeyForConfiguredInstallation returns either the user name or account ID based on jira installation type.
+func GetUserKeyForConfiguredInstallation(user *jira.User) string {
+	it := viper.GetString("installation")
+	if it == jira.InstallationTypeLocal {
+		return user.Name
+	}
+	return user.AccountID
 }
 
 // GetConfiguredCustomFields returns the custom fields configured by the user.
@@ -241,13 +251,4 @@ Invalid custom fields used in the command: %s`,
 			strings.Join(invalidCustomFields, ", "),
 		)
 	}
-}
-
-// GetUserKeyForConfiguredInstallation returns either the user name or account ID based on jira installation type.
-func GetUserKeyForConfiguredInstallation(user *jira.User) string {
-	it := viper.GetString("installation")
-	if it == jira.InstallationTypeLocal {
-		return user.Name
-	}
-	return user.AccountID
 }

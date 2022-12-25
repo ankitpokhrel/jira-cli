@@ -89,7 +89,8 @@ func create(cmd *cobra.Command, _ []string) {
 		cmdutil.ExitIfError(err)
 	}
 
-	params.Assignee = cmdcommon.GetAssignee(client, project, params.Assignee)
+	params.Reporter = cmdcommon.GetRelevantUser(client, project, params.Reporter)
+	params.Assignee = cmdcommon.GetRelevantUser(client, project, params.Assignee)
 
 	key, err := func() (string, error) {
 		s := cmdutil.Info("Creating an epic...")
@@ -100,6 +101,7 @@ func create(cmd *cobra.Command, _ []string) {
 			IssueType:    jira.IssueTypeEpic,
 			Summary:      params.Summary,
 			Body:         params.Body,
+			Reporter:     params.Reporter,
 			Assignee:     params.Assignee,
 			Priority:     params.Priority,
 			Labels:       params.Labels,
@@ -211,6 +213,9 @@ func parseFlags(flags query.FlagParser) *cmdcommon.CreateParams {
 	priority, err := flags.GetString("priority")
 	cmdutil.ExitIfError(err)
 
+	reporter, err := flags.GetString("reporter")
+	cmdutil.ExitIfError(err)
+
 	assignee, err := flags.GetString("assignee")
 	cmdutil.ExitIfError(err)
 
@@ -240,6 +245,7 @@ func parseFlags(flags query.FlagParser) *cmdcommon.CreateParams {
 		Summary:      summary,
 		Body:         body,
 		Priority:     priority,
+		Reporter:     reporter,
 		Assignee:     assignee,
 		Labels:       labels,
 		Components:   components,
