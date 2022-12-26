@@ -12,9 +12,9 @@ about: Create a report to help us improve
     ```
     Please paste the output of `jira version` here.
     ```
-2. Are you using Jira cloud or on-premise jira server? Also mention the version for on-premise installation.
+2. Are you using Jira cloud or on-premise jira server?
     ```
-    Please type your answer here. eg: Jira Server 8.20.1
+    Please paste the output of `jira serverinfo` here.
     ```
 3. What operating system are you using? Also mention version.
     ```
