@@ -27,6 +27,7 @@ type CreateRequest struct {
 	ParentIssueKey string
 	Summary        string
 	Body           interface{} // string in v1/v2 and adf.ADF in v3
+	Reporter       string
 	Assignee       string
 	Priority       string
 	Labels         []string
@@ -158,17 +159,18 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 			data.Fields.M.Name = req.ParentIssueKey
 		}
 	}
+	if req.Reporter != "" {
+		if req.installationType == InstallationTypeLocal {
+			data.Fields.M.Reporter = &nameOrAccountID{Name: &req.Reporter}
+		} else {
+			data.Fields.M.Reporter = &nameOrAccountID{AccountID: &req.Reporter}
+		}
+	}
 	if req.Assignee != "" {
 		if req.installationType == InstallationTypeLocal {
-			data.Fields.M.Assignee = &struct {
-				Name      *string `json:"name,omitempty"`
-				AccountID *string `json:"accountId,omitempty"`
-			}{Name: &req.Assignee}
+			data.Fields.M.Assignee = &nameOrAccountID{Name: &req.Assignee}
 		} else {
-			data.Fields.M.Assignee = &struct {
-				Name      *string `json:"name,omitempty"`
-				AccountID *string `json:"accountId,omitempty"`
-			}{AccountID: &req.Assignee}
+			data.Fields.M.Assignee = &nameOrAccountID{AccountID: &req.Assignee}
 		}
 	}
 	if req.Priority != "" {
@@ -255,6 +257,11 @@ type createRequest struct {
 	Fields createFieldsMarshaler `json:"fields"`
 }
 
+type nameOrAccountID struct {
+	Name      *string `json:"name,omitempty"`      // For local installation.
+	AccountID *string `json:"accountId,omitempty"` // For cloud installation.
+}
+
 type createFields struct {
 	Project struct {
 		Key string `json:"key"`
@@ -265,14 +272,12 @@ type createFields struct {
 	Parent *struct {
 		Key string `json:"key"`
 	} `json:"parent,omitempty"`
-	Name        string      `json:"name,omitempty"`
-	Summary     string      `json:"summary"`
-	Description interface{} `json:"description,omitempty"`
-	Assignee    *struct {
-		Name      *string `json:"name,omitempty"`      // For local installation.
-		AccountID *string `json:"accountId,omitempty"` // For cloud installation.
-	} `json:"assignee,omitempty"`
-	Priority *struct {
+	Name        string           `json:"name,omitempty"`
+	Summary     string           `json:"summary"`
+	Description interface{}      `json:"description,omitempty"`
+	Reporter    *nameOrAccountID `json:"reporter,omitempty"`
+	Assignee    *nameOrAccountID `json:"assignee,omitempty"`
+	Priority    *struct {
 		Name string `json:"name,omitempty"`
 	} `json:"priority,omitempty"`
 	Labels     []string `json:"labels,omitempty"`

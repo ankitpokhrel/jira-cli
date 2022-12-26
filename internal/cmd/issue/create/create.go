@@ -90,7 +90,8 @@ func create(cmd *cobra.Command, _ []string) {
 		cmdutil.ExitIfError(err)
 	}
 
-	params.Assignee = cmdcommon.GetAssignee(client, project, params.Assignee)
+	params.Reporter = cmdcommon.GetRelevantUser(client, project, params.Reporter)
+	params.Assignee = cmdcommon.GetRelevantUser(client, project, params.Assignee)
 
 	key, err := func() (string, error) {
 		s := cmdutil.Info("Creating an issue...")
@@ -102,6 +103,7 @@ func create(cmd *cobra.Command, _ []string) {
 			ParentIssueKey: params.ParentIssueKey,
 			Summary:        params.Summary,
 			Body:           params.Body,
+			Reporter:       params.Reporter,
 			Assignee:       params.Assignee,
 			Priority:       params.Priority,
 			Labels:         params.Labels,
@@ -325,6 +327,9 @@ func parseFlags(flags query.FlagParser) *cmdcommon.CreateParams {
 	priority, err := flags.GetString("priority")
 	cmdutil.ExitIfError(err)
 
+	reporter, err := flags.GetString("reporter")
+	cmdutil.ExitIfError(err)
+
 	assignee, err := flags.GetString("assignee")
 	cmdutil.ExitIfError(err)
 
@@ -357,6 +362,7 @@ func parseFlags(flags query.FlagParser) *cmdcommon.CreateParams {
 		Priority:       priority,
 		Assignee:       assignee,
 		Labels:         labels,
+		Reporter:       reporter,
 		Components:     components,
 		FixVersions:    fixVersions,
 		CustomFields:   custom,
