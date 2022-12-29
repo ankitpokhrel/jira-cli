@@ -17,6 +17,8 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
+const defaultSummaryLength = 73 // +1 to take ellipsis '…' into account.
+
 type fragment struct {
 	Body  string
 	Parse bool
@@ -262,7 +264,7 @@ func (i Issue) subtasks() string {
 
 	var (
 		subtasks       strings.Builder
-		summaryLen     = 73 // +3 is to take '...' into account.
+		summaryLen     = defaultSummaryLength
 		maxKeyLen      int
 		maxSummaryLen  int
 		maxStatusLen   int
@@ -310,7 +312,7 @@ func (i Issue) linkedIssues() string {
 		linked         strings.Builder
 		keys           = make([]string, 0)
 		linkMap        = make(map[string][]*jira.Issue, len(i.Data.Fields.IssueLinks))
-		summaryLen     = 73 // +3 is to take '...' into account.
+		summaryLen     = defaultSummaryLength
 		maxKeyLen      int
 		maxSummaryLen  int
 		maxTypeLen     int

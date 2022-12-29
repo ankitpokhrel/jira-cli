@@ -116,9 +116,9 @@ func TestShortenAndPad(t *testing.T) {
 			expected: "Some text",
 		},
 		{
-			name:     "it returns full string if limit is less than 3",
+			name:     "it returns full string if limit is <= 1",
 			input:    "Some text",
-			limit:    2,
+			limit:    1,
 			expected: "Some text",
 		},
 		{
@@ -130,8 +130,8 @@ func TestShortenAndPad(t *testing.T) {
 		{
 			name:     "it returns shortened string",
 			input:    "Some text",
-			limit:    7,
-			expected: "Some...",
+			limit:    5,
+			expected: "Some…",
 		},
 		{
 			name:     "it adds padding if string is shorter than the limit",
