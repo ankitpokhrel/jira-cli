@@ -182,8 +182,8 @@ func gray256(msg string) string {
 }
 
 func shortenAndPad(msg string, limit int) string {
-	if limit >= 3 && len(msg) > limit {
-		return msg[0:limit-3] + "..."
+	if limit > 1 && len(msg) > limit {
+		return msg[0:limit-1] + "…"
 	}
 	return pad(msg, limit)
 }
