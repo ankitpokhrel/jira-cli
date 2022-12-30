@@ -11,8 +11,7 @@ import (
 	"github.com/cli/safeexec"
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-isatty"
-
-	"github.com/ankitpokhrel/jira-cli/pkg/tui/primitive"
+	"github.com/rivo/tview"
 )
 
 func pad(in string, n uint) string {
@@ -49,12 +48,18 @@ func splitText(s string) []string {
 	return lines
 }
 
-func getInfoModal() *primitive.Modal {
-	return primitive.NewModal().
+func getInfoModal() *tview.Modal {
+	return tview.NewModal().
 		SetText("\n\nProcessing. Please wait...").
 		SetBackgroundColor(tcell.ColorSpecial).
-		SetTextColor(tcell.ColorDefault).
-		SetBorderColor(tcell.ColorDefault)
+		SetTextColor(tcell.ColorDefault)
+}
+
+func getActionModal() *tview.Modal {
+	return tview.NewModal().
+		SetText("Select desired state to transistion to:").
+		SetBackgroundColor(tcell.ColorSpecial).
+		SetTextColor(tcell.ColorDefault)
 }
 
 // IsDumbTerminal checks TERM environment variable and returns true if it is set to dumb.
