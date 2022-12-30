@@ -55,13 +55,6 @@ func getInfoModal() *tview.Modal {
 		SetTextColor(tcell.ColorDefault)
 }
 
-func getActionModal() *tview.Modal {
-	return tview.NewModal().
-		SetText("Select desired state to transistion to:").
-		SetBackgroundColor(tcell.ColorSpecial).
-		SetTextColor(tcell.ColorDefault)
-}
-
 // IsDumbTerminal checks TERM environment variable and returns true if it is set to dumb.
 //
 // Dumb terminal indicates terminal with limited capability. It may not provide support
