@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -32,6 +33,34 @@ type CopyKeyFunc func(row, column int, data interface{})
 
 // TableData is the data to be displayed in a table.
 type TableData [][]string
+
+// Get returns the value of the cell at the given row and column.
+func (td TableData) Get(r, c int) string {
+	if r != -1 && c != -1 {
+		return td[r][c]
+	}
+	return ""
+}
+
+// GetIndex returns the index of the specified column.
+func (td TableData) GetIndex(key string) int {
+	if len(td) == 0 {
+		return -1
+	}
+	for i, v := range td[0] {
+		if strings.ToLower(v) == strings.ToLower(key) {
+			return i
+		}
+	}
+	return -1
+}
+
+// Update updates the data at given row and column.
+func (td TableData) Update(r, c int, val string) {
+	if r != -1 && c != -1 {
+		td[r][c] = val
+	}
+}
 
 // TableStyle sets the style of the table.
 type TableStyle struct {
@@ -256,12 +285,12 @@ func renderTableHeader(t *Table, data []string) {
 	}
 }
 
-func renderTableCell(t *Table, data [][]string) {
+func renderTableCell(t *Table, data TableData) {
 	rows, cols := len(data), len(data[0])
 
 	for r := 1; r < rows; r++ {
 		for c := 0; c < cols; c++ {
-			cell := tview.NewTableCell(pad(data[r][c], t.colPad)).
+			cell := tview.NewTableCell(pad(data.Get(r, c), t.colPad)).
 				SetMaxWidth(int(t.maxColWidth)).
 				SetTextColor(tcell.ColorDefault)
 
