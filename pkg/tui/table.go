@@ -48,7 +48,7 @@ func (td TableData) GetIndex(key string) int {
 		return -1
 	}
 	for i, v := range td[0] {
-		if strings.ToLower(v) == strings.ToLower(key) {
+		if strings.EqualFold(v, key) {
 			return i
 		}
 	}
