@@ -103,7 +103,7 @@ func issueKeyFromTuiData(r int, d interface{}) string {
 
 	switch data := d.(type) {
 	case tui.TableData:
-		path = data[r][getKeyColumnIndex(data[0])]
+		path = data.Get(r, data.GetIndex(fieldKey))
 	case tui.PreviewData:
 		path = data.Key
 	}
@@ -149,15 +149,6 @@ func renderPlain(w io.Writer, data tui.TableData) error {
 		return w.(*tabwriter.Writer).Flush()
 	}
 	return nil
-}
-
-func getKeyColumnIndex(cols []string) int {
-	for i, col := range cols {
-		if col == fieldKey {
-			return i
-		}
-	}
-	return 1
 }
 
 func coloredOut(msg string, clr color.Attribute, attrs ...color.Attribute) string {

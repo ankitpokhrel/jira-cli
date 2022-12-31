@@ -57,8 +57,8 @@ func (l *IssueList) Render() error {
 		tui.WithSelectedFunc(navigate(l.Server)),
 		tui.WithViewModeFunc(func(r, c int, _ interface{}) (func() interface{}, func(interface{}) (string, error)) {
 			dataFn := func() interface{} {
-				ci := getKeyColumnIndex(data[0])
-				iss, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data[r][ci], issue.NewNumCommentsFilter(1))
+				ci := data.GetIndex(fieldKey)
+				iss, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data.Get(r, ci), issue.NewNumCommentsFilter(1))
 				return iss
 			}
 			renderFn := func(i interface{}) (string, error) {
