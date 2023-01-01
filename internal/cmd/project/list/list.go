@@ -29,7 +29,7 @@ func List(cmd *cobra.Command, _ []string) {
 		s := cmdutil.Info("Fetching projects...")
 		defer s.Stop()
 
-		projects, err := api.Client(jira.Config{Debug: debug}).Project()
+		projects, err := api.DefaultClient(debug).Project()
 		if err != nil {
 			return nil, 0, err
 		}

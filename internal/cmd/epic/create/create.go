@@ -51,7 +51,7 @@ func create(cmd *cobra.Command, _ []string) {
 	installation := viper.GetString("installation")
 
 	params := parseFlags(cmd.Flags())
-	client := api.Client(jira.Config{Debug: params.Debug})
+	client := api.DefaultClient(params.Debug)
 	cc := createCmd{
 		client: client,
 		params: params,

@@ -34,7 +34,7 @@ func List(cmd *cobra.Command, _ []string) {
 		s := cmdutil.Info(fmt.Sprintf("Fetching boards in project %s...", project))
 		defer s.Stop()
 
-		resp, err := api.Client(jira.Config{Debug: debug}).Boards(project, jira.BoardTypeAll)
+		resp, err := api.DefaultClient(debug).Boards(project, jira.BoardTypeAll)
 		if err != nil {
 			return nil, 0, err
 		}

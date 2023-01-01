@@ -54,7 +54,7 @@ func (sl *SprintList) Render() error {
 				dataFn := func() interface{} {
 					data := d.(tui.TableData)
 					ci := data.GetIndex(fieldKey)
-					iss, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data.Get(r, ci), issue.NewNumCommentsFilter(1))
+					iss, _ := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(1))
 					return iss
 				}
 				renderFn := func(i interface{}) (string, error) {
