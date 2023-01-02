@@ -31,6 +31,9 @@ type CopyFunc func(row, column int, data interface{})
 // CopyKeyFunc is fired when a user press 'CTRL+K' character in the table cell.
 type CopyKeyFunc func(row, column int, data interface{})
 
+// CustomKeyFunc is fired when one of custom keys is pressed in the table cell.
+type CustomKeyFunc func(row, column int, data interface{}, command string)
+
 // TableData is the data to be displayed in a table.
 type TableData [][]string
 
@@ -71,21 +74,23 @@ type TableStyle struct {
 
 // Table is a table layout.
 type Table struct {
-	screen       *Screen
-	painter      *tview.Pages
-	view         *tview.Table
-	footer       *tview.TextView
-	style        TableStyle
-	data         TableData
-	colPad       uint
-	colFixed     uint
-	maxColWidth  uint
-	footerText   string
-	selectedFunc SelectedFunc
-	viewModeFunc ViewModeFunc
-	refreshFunc  RefreshFunc
-	copyFunc     CopyFunc
-	copyKeyFunc  CopyKeyFunc
+	screen        *Screen
+	painter       *tview.Pages
+	view          *tview.Table
+	footer        *tview.TextView
+	style         TableStyle
+	data          TableData
+	colPad        uint
+	colFixed      uint
+	maxColWidth   uint
+	footerText    string
+	selectedFunc  SelectedFunc
+	viewModeFunc  ViewModeFunc
+	customKeys    map[string]interface{}
+	customKeyFunc CustomKeyFunc
+	refreshFunc   RefreshFunc
+	copyFunc      CopyFunc
+	copyKeyFunc   CopyKeyFunc
 }
 
 // TableOption is a functional option to wrap table properties.
@@ -147,6 +152,14 @@ func WithSelectedFunc(fn SelectedFunc) TableOption {
 func WithViewModeFunc(fn ViewModeFunc) TableOption {
 	return func(t *Table) {
 		t.viewModeFunc = fn
+	}
+}
+
+// WithCustomKeyFunc sets a func that is triggered when one of custom keys is pressed.
+func WithCustomKeyFunc(fn CustomKeyFunc, keys map[string]interface{}) TableOption {
+	return func(t *Table) {
+		t.customKeyFunc = fn
+		t.customKeys = keys
 	}
 }
 
@@ -261,6 +274,15 @@ func (t *Table) initTable() {
 						// Refresh the screen.
 						t.screen.Draw()
 					}()
+				default:
+					if t.customKeyFunc != nil && t.customKeys != nil {
+						for k, command := range t.customKeys {
+							if string(ev.Rune()) == k {
+								r, c := t.view.GetSelection()
+								t.customKeyFunc(r, c, t.data, command.(string))
+							}
+						}
+					}
 				}
 			}
 			return ev

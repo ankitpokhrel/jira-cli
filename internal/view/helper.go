@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -113,6 +114,24 @@ func issueKeyFromTuiData(r int, d interface{}) string {
 
 func jiraURLFromTuiData(server string, r int, d interface{}) string {
 	return fmt.Sprintf("%s/browse/%s", server, issueKeyFromTuiData(r, d))
+}
+
+func runInSh(command string) {
+	cmd := exec.Command("sh", "-c", command)
+	_ = cmd.Run()
+}
+
+func customKeyFunc(row, _ int, data interface{}, command string) {
+	i := issueKeyFromTuiData(row, data)
+	expandedCommand := strings.ReplaceAll(command, "%KEY%", i)
+	if strings.HasPrefix(expandedCommand, "&") {
+		go func() {
+			expandedCommand = strings.TrimPrefix(expandedCommand, "&")
+			runInSh(expandedCommand)
+		}()
+	} else {
+		runInSh(expandedCommand)
+	}
 }
 
 func navigate(server string) tui.SelectedFunc {
