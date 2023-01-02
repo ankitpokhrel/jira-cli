@@ -12,6 +12,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-isatty"
 	"github.com/rivo/tview"
+
+	"github.com/ankitpokhrel/jira-cli/pkg/tui/primitive"
 )
 
 func pad(in string, n uint) string {
@@ -52,6 +54,13 @@ func getInfoModal() *tview.Modal {
 	return tview.NewModal().
 		SetText("\n\nProcessing. Please wait...").
 		SetBackgroundColor(tcell.ColorSpecial).
+		SetTextColor(tcell.ColorDefault)
+}
+
+func getActionModal() *primitive.ActionModal {
+	return primitive.NewActionModal().
+		SetBackgroundColor(tcell.ColorSpecial).
+		SetButtonBackgroundColor(tcell.ColorDarkCyan).
 		SetTextColor(tcell.ColorDefault)
 }
 

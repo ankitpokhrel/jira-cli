@@ -7,6 +7,8 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+
+	"github.com/ankitpokhrel/jira-cli/pkg/tui/primitive"
 )
 
 const (
@@ -24,6 +26,15 @@ type ViewModeFunc func(row, col int, data interface{}) (func() interface{}, func
 
 // RefreshFunc is fired when a user press 'CTRL+R' or `F5` character in the table.
 type RefreshFunc func()
+
+// RefreshTableStateFunc is used to refresh the table state.
+type RefreshTableStateFunc func(row, col int, val string)
+
+// MoveHandlerFunc is a handler for move action.
+type MoveHandlerFunc func(state string) error
+
+// MoveFunc is fired when a user press 'm' character in the table cell.
+type MoveFunc func(row, col int) func() (key string, actions []string, handler MoveHandlerFunc, status string, refresh RefreshTableStateFunc)
 
 // CopyFunc is fired when a user press 'c' character in the table cell.
 type CopyFunc func(row, column int, data interface{})
@@ -75,6 +86,8 @@ type Table struct {
 	painter      *tview.Pages
 	view         *tview.Table
 	footer       *tview.TextView
+	secondary    *tview.Modal
+	action       *primitive.ActionModal
 	style        TableStyle
 	data         TableData
 	colPad       uint
@@ -83,6 +96,7 @@ type Table struct {
 	footerText   string
 	selectedFunc SelectedFunc
 	viewModeFunc ViewModeFunc
+	moveFunc     MoveFunc
 	refreshFunc  RefreshFunc
 	copyFunc     CopyFunc
 	copyKeyFunc  CopyKeyFunc
@@ -99,6 +113,8 @@ func NewTable(opts ...TableOption) *Table {
 		screen:      NewScreen(),
 		view:        tview.NewTable(),
 		footer:      tview.NewTextView(),
+		secondary:   getInfoModal(),
+		action:      getActionModal(),
 		colPad:      defaultColPad,
 		maxColWidth: defaultColWidth,
 	}
@@ -115,9 +131,17 @@ func NewTable(opts ...TableOption) *Table {
 		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
 		AddItem(tbl.footer, 2, 0, 1, 1, 0, 0, false)
 
+	tbl.action.SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
+		if ev.Key() == tcell.KeyEsc || (ev.Key() == tcell.KeyRune && ev.Rune() == 'q') {
+			tbl.painter.HidePage("action")
+		}
+		return ev
+	})
+
 	tbl.painter = tview.NewPages().
 		AddPage("primary", grid, true, true).
-		AddPage("secondary", getInfoModal(), true, false)
+		AddPage("secondary", tbl.secondary, true, false).
+		AddPage("action", tbl.action, true, false)
 
 	return &tbl
 }
@@ -147,6 +171,13 @@ func WithSelectedFunc(fn SelectedFunc) TableOption {
 func WithViewModeFunc(fn ViewModeFunc) TableOption {
 	return func(t *Table) {
 		t.viewModeFunc = fn
+	}
+}
+
+// WithMoveFunc sets a func that is triggered when an action button is pressed.
+func WithMoveFunc(fn MoveFunc) TableOption {
+	return func(t *Table) {
+		t.moveFunc = fn
 	}
 }
 
@@ -256,6 +287,65 @@ func (t *Table) initTable() {
 							if err == nil {
 								t.screen.Suspend(func() { _ = PagerOut(out) })
 							}
+						}()
+
+						// Refresh the screen.
+						t.screen.Draw()
+					}()
+				case 'm':
+					if t.moveFunc == nil {
+						break
+					}
+
+					refreshContextInFooter := func() {
+						t.action.GetFooter().SetText("Use TAB or ← → to navigate, ENTER to select, ESC or q to cancel.").SetTextColor(tcell.ColorGray)
+					}
+
+					go func() {
+						func() {
+							t.painter.ShowPage("secondary").SendToFront("secondary")
+							defer func() {
+								t.painter.HidePage("secondary")
+								t.painter.ShowPage("action")
+							}()
+							refreshContextInFooter()
+
+							r, c := t.view.GetSelection()
+							key, actions, handler, currentStatus, refreshFunc := t.moveFunc(r, c)()
+
+							currentStatusIdx := func() int {
+								for i, btn := range actions {
+									if btn == currentStatus {
+										return i
+									}
+								}
+								return 0
+							}
+
+							t.action.ClearButtons().AddButtons(actions).SetFocus(currentStatusIdx())
+							t.action.SetText(
+								fmt.Sprintf("Select desired state to transition %s to:", key),
+							)
+
+							t.action.SetDoneFunc(func(btnIndex int, btnLabel string) {
+								t.action.GetFooter().SetText("Processing. Please wait...").SetTextColor(tcell.ColorGray)
+								t.screen.ForceDraw()
+
+								err := handler(btnLabel)
+								if err != nil {
+									t.action.GetFooter().SetText(
+										fmt.Sprintf("Error: %s", err.Error()),
+									).SetTextColor(tcell.ColorRed)
+									return
+								}
+								t.painter.HidePage("action")
+								refreshContextInFooter()
+
+								if refreshFunc != nil {
+									refreshFunc(r, c, btnLabel)
+									_ = t.Paint(t.data)
+								}
+							})
 						}()
 
 						// Refresh the screen.
