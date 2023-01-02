@@ -92,7 +92,7 @@ func loadList(cmd *cobra.Command) {
 			return nil, 0, err
 		}
 
-		resp, err := api.ProxySearch(api.Client(jira.Config{Debug: debug}), q.Get(), q.Params().From, q.Params().Limit)
+		resp, err := api.ProxySearch(api.DefaultClient(debug), q.Get(), q.Params().From, q.Params().Limit)
 		if err != nil {
 			return nil, 0, err
 		}

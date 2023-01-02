@@ -28,7 +28,7 @@ func serverInfo(cmd *cobra.Command, _ []string) {
 		s := cmdutil.Info("Fetching server info...")
 		defer s.Stop()
 
-		info, err := api.Client(jira.Config{Debug: debug}).ServerInfo()
+		info, err := api.DefaultClient(debug).ServerInfo()
 		if err != nil {
 			return nil, err
 		}

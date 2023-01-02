@@ -38,7 +38,7 @@ func remove(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
 	projectType := viper.GetString("project.type")
 	params := parseFlags(cmd.Flags(), args, project)
-	client := api.Client(jira.Config{Debug: params.debug})
+	client := api.DefaultClient(params.debug)
 
 	qs := getQuestions(params)
 	if len(qs) > 0 {

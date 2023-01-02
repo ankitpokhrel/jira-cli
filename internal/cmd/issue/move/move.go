@@ -52,7 +52,7 @@ func move(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
 	installation := viper.GetString("installation")
 	params := parseArgsAndFlags(cmd.Flags(), args, project)
-	client := api.Client(jira.Config{Debug: params.debug})
+	client := api.DefaultClient(params.debug)
 	mc := moveCmd{
 		client:      client,
 		transitions: nil,
