@@ -117,6 +117,7 @@ The lists are displayed in an interactive UI by default.
 - Use arrow keys or `j, k, h, l` characters to navigate through the list.
 - Use `g` and `SHIFT+G` to quickly navigate to the top and bottom respectively.
 - Press `v` to view selected issue details.
+- Press `m` to transition the selected issue.
 - Press `CTRL+R` or `F5` to refresh the issues list.
 - Hit `ENTER` to open the selected issue in the browser.
 - Press `c` to copy issue URL to the system clipboard. This requires `xclip` / `xsel` in linux.
@@ -367,6 +368,8 @@ $ jira issue move ISSUE-1 "In Progress" --comment "Started working on it"
 # Set resolution to fixed and assign to self while moving the issue
 $ jira issue move ISSUE-1 Done -RFixed -a$(jira me)
 ```
+
+To transition the selected issue from the TUI, press `m`.
 
 #### View
 The `view` command lets you see issue details in a terminal. Atlassian document is roughly converted to a markdown
