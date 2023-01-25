@@ -23,6 +23,7 @@ type issueFlagParser struct {
 	orderDesc     bool
 	emptyType     bool
 	labels        []string
+	issues        []string
 	withCreated   bool
 	withUpdated   bool
 	created       string

@@ -154,7 +154,7 @@ func SetFlags(cmd *cobra.Command) {
 
 	cmd.Flags().StringP("type", "t", "", "Filter issues by type")
 	cmd.Flags().StringP("resolution", "R", "", "Filter issues by resolution type")
-	cmd.Flags().StringP("status", "s", "", "Filter issues by status")
+	cmd.Flags().StringArrayP("status", "s", []string{}, "Filter issues by status")
 	cmd.Flags().StringP("priority", "y", "", "Filter issues by priority")
 	cmd.Flags().StringP("reporter", "r", "", "Filter issues by reporter (email or display name)")
 	cmd.Flags().StringP("assignee", "a", "", "Filter issues by assignee (email or display name)")
