@@ -77,7 +77,6 @@ func (i *Issue) Get() string {
 
 		q.FilterBy("type", i.params.IssueType).
 			FilterBy("resolution", i.params.Resolution).
-			FilterBy("status", i.params.Status).
 			FilterBy("priority", i.params.Priority).
 			FilterBy("reporter", i.params.Reporter).
 			FilterBy("assignee", i.params.Assignee).
@@ -94,6 +93,15 @@ func (i *Issue) Get() string {
 
 		if len(negative) > 0 {
 			q.NotIn("labels", negative...)
+		}
+
+		positive, negative = splitPositiveNegative(i.params.Status)
+		if len(positive) > 0 {
+			q.In("status", positive...)
+		}
+
+		if len(negative) > 0 {
+			q.NotIn("status", negative...)
 		}
 	})
 
@@ -164,7 +172,7 @@ type IssueParams struct {
 	Resolution    string
 	IssueType     string
 	Parent        string
-	Status        string
+	Status        []string
 	Priority      string
 	Reporter      string
 	Assignee      string
@@ -190,7 +198,7 @@ func (ip *IssueParams) init(flags FlagParser) error {
 
 	boolParams := []string{"history", "watching", "reverse", "debug"}
 	stringParams := []string{
-		"resolution", "type", "parent", "status", "priority", "reporter", "assignee", "component",
+		"resolution", "type", "parent", "priority", "reporter", "assignee", "component",
 		"created", "created-after", "created-before", "updated", "updated-after", "updated-before",
 		"jql", "order-by", "paginate",
 	}
@@ -213,6 +221,12 @@ func (ip *IssueParams) init(flags FlagParser) error {
 	if err != nil {
 		return err
 	}
+
+	status, err := flags.GetStringArray("status")
+	if err != nil {
+		return err
+	}
+
 	paginate, err := flags.GetString("paginate")
 	if err != nil {
 		return err
@@ -225,6 +239,7 @@ func (ip *IssueParams) init(flags FlagParser) error {
 	ip.setBoolParams(boolParamsMap)
 	ip.setStringParams(stringParamsMap)
 	ip.Labels = labels
+	ip.Status = status
 	ip.From = from
 	ip.Limit = limit
 
@@ -255,8 +270,6 @@ func (ip *IssueParams) setStringParams(paramsMap map[string]string) {
 			ip.IssueType = v
 		case "parent":
 			ip.Parent = v
-		case "status":
-			ip.Status = v
 		case "priority":
 			ip.Priority = v
 		case "reporter":
