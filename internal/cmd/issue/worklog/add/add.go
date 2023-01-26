@@ -78,7 +78,9 @@ func add(cmd *cobra.Command, args []string) {
 		if params.timeSpent == "" {
 			params.timeSpent = ans.TimeSpent
 		}
-		params.comment = ans.Comment
+		if ans.Comment != "" {
+			params.comment = ans.Comment
+		}
 	}
 
 	if !params.noInput {
