@@ -124,6 +124,7 @@ The lists are displayed in an interactive UI by default.
 - Press `CTRL+K` to copy issue key to the system clipboard.
 - In an explorer view, press `w` or `Tab` to toggle focus between the sidebar and the contents screen.
 - Press `q` / `ESC` / `CTRL+C` to quit.
+- Press `?` to open the help window.
 
 ### Resources
 - [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs)

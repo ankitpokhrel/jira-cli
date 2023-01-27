@@ -37,6 +37,21 @@ const (
 	  - Hit ENTER to open the selected issue in a browser.
 	
 	Press 'q' / ESC / CTRL+C to quit.`
+
+	tableHelpText = `[default]ACTIONS AVAILABLE IN THE TUI
+----------------------------
+
+* [yellow]← → ↑ ↓ / j, k, h, l[default] to navigate through the list
+* [yellow]g[default] to quickly navigate to the top of the list
+* [yellow]SHIFT+G[default] to quickly navigate to the bottom of the list
+* [yellow]v[default] to view selected issue details
+* [yellow]m[default] to move/transition selected issue
+* [yellow]CTRL+R / F5[default] to refresh the issues list
+* [yellow]ENTER[default] to open the selected issue in the browser
+* [yellow]c[default] to copy issue URL to the system clipboard
+* [yellow]CTRL+K[default] to copy issue key to the system clipboard
+* [yellow]q / ESC / CTRL+C[default] to quit the app
+* [yellow]?[default] to view this help page`
 )
 
 // ValidIssueColumns returns valid columns for issue list.

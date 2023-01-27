@@ -87,6 +87,7 @@ type Table struct {
 	view         *tview.Table
 	footer       *tview.TextView
 	secondary    *tview.Modal
+	help         *primitive.InfoModal
 	action       *primitive.ActionModal
 	style        TableStyle
 	data         TableData
@@ -94,6 +95,7 @@ type Table struct {
 	colFixed     uint
 	maxColWidth  uint
 	footerText   string
+	helpText     string
 	selectedFunc SelectedFunc
 	viewModeFunc ViewModeFunc
 	moveFunc     MoveFunc
@@ -113,6 +115,7 @@ func NewTable(opts ...TableOption) *Table {
 		screen:      NewScreen(),
 		view:        tview.NewTable(),
 		footer:      tview.NewTextView(),
+		help:        primitive.NewInfoModal(),
 		secondary:   getInfoModal(),
 		action:      getActionModal(),
 		colPad:      defaultColPad,
@@ -124,6 +127,7 @@ func NewTable(opts ...TableOption) *Table {
 
 	tbl.initTable()
 	tbl.initFooter()
+	tbl.initHelp()
 
 	grid := tview.NewGrid().
 		SetRows(0, 1, 2).
@@ -141,6 +145,7 @@ func NewTable(opts ...TableOption) *Table {
 	tbl.painter = tview.NewPages().
 		AddPage("primary", grid, true, true).
 		AddPage("secondary", tbl.secondary, true, false).
+		AddPage("help", tbl.help, true, false).
 		AddPage("action", tbl.action, true, false)
 
 	return &tbl
@@ -157,6 +162,13 @@ func WithTableStyle(style TableStyle) TableOption {
 func WithTableFooterText(text string) TableOption {
 	return func(t *Table) {
 		t.footerText = text
+	}
+}
+
+// WithTableHelpText sets the help text for the view.
+func WithTableHelpText(text string) TableOption {
+	return func(t *Table) {
+		t.helpText = text
 	}
 }
 
@@ -236,6 +248,21 @@ func (t *Table) initFooter() {
 		SetTextColor(tcell.ColorDefault)
 }
 
+func (t *Table) initHelp() {
+	t.help.
+		SetInfo(t.helpText).
+		SetAlign(tview.AlignLeft).
+		SetTitle("USAGE")
+
+	t.help.SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
+		if ev.Key() == tcell.KeyEsc || (ev.Key() == tcell.KeyRune && ev.Rune() == 'q') {
+			t.painter.HidePage("help")
+		}
+		return ev
+	})
+}
+
+//nolint:gocyclo
 func (t *Table) initTable() {
 	t.view.SetSelectable(true, false).
 		SetSelectedStyle(customTUIStyle(t.style)).
@@ -264,6 +291,8 @@ func (t *Table) initTable() {
 				case 'q':
 					t.screen.Stop()
 					os.Exit(0)
+				case '?':
+					t.painter.ShowPage("help")
 				case 'c':
 					if t.copyFunc == nil {
 						break
