@@ -54,6 +54,7 @@ func (l *IssueList) Render() error {
 	view := tui.NewTable(
 		tui.WithTableStyle(l.Display.TableStyle),
 		tui.WithTableFooterText(l.FooterText),
+		tui.WithTableHelpText(tableHelpText),
 		tui.WithSelectedFunc(navigate(l.Server)),
 		tui.WithViewModeFunc(func(r, c int, _ interface{}) (func() interface{}, func(interface{}) (string, error)) {
 			dataFn := func() interface{} {

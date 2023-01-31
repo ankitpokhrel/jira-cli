@@ -115,15 +115,18 @@ jira issue list -yHigh -s"To Do" --created month -lbackend -a$(jira me)
 ### Navigation
 The lists are displayed in an interactive UI by default.
 - Use arrow keys or `j, k, h, l` characters to navigate through the list.
-- Use `g` and `SHIFT+G` to quickly navigate to the top and bottom respectively.
+- Use `g` and `G` to quickly navigate to the top and bottom respectively.
+- Use `CTRL + f` to scroll through a page downwards direction.
+- Use `CTRL + b` to scroll through a page in upwards direction.
 - Press `v` to view selected issue details.
 - Press `m` to transition the selected issue.
-- Press `CTRL+R` or `F5` to refresh the issues list.
+- Press `CTRL + r` or `F5` to refresh the issues list.
 - Hit `ENTER` to open the selected issue in the browser.
 - Press `c` to copy issue URL to the system clipboard. This requires `xclip` / `xsel` in linux.
-- Press `CTRL+K` to copy issue key to the system clipboard.
-- In an explorer view, press `w` or `Tab` to toggle focus between the sidebar and the contents screen.
-- Press `q` / `ESC` / `CTRL+C` to quit.
+- Press `CTRL + k` to copy issue key to the system clipboard.
+- In an explorer view, press `w` or `TAB` to toggle focus between the sidebar and the contents screen.
+- Press `q` / `ESC` / `CTRL + c` to quit.
+- Press `?` to open the help window.
 
 ### Resources
 - [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs)
