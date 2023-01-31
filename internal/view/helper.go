@@ -43,14 +43,16 @@ const (
 
 * [yellow]← → ↑ ↓ / j, k, h, l[default] to navigate through the list
 * [yellow]g[default] to quickly navigate to the top of the list
-* [yellow]SHIFT+G[default] to quickly navigate to the bottom of the list
+* [yellow]G[default] to quickly navigate to the bottom of the list
+* [yellow]CTRL + f[default] to scroll through a page downwards
+* [yellow]CTRL + b[default] to scroll through a page upwards
 * [yellow]v[default] to view selected issue details
 * [yellow]m[default] to move/transition selected issue
-* [yellow]CTRL+R / F5[default] to refresh the issues list
+* [yellow]CTRL + r / F5[default] to refresh the issues list
 * [yellow]ENTER[default] to open the selected issue in the browser
 * [yellow]c[default] to copy issue URL to the system clipboard
-* [yellow]CTRL+K[default] to copy issue key to the system clipboard
-* [yellow]q / ESC / CTRL+C[default] to quit the app
+* [yellow]CTRL + k[default] to copy issue key to the system clipboard
+* [yellow]q / ESC / CTRL + c[default] to quit the app
 * [yellow]?[default] to view this help page`
 )
 
