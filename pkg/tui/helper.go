@@ -86,9 +86,14 @@ func GetPager() string {
 	if IsDumbTerminal() {
 		return "cat"
 	}
-	pager := os.Getenv("PAGER")
+	pager := os.Getenv("JIRA_PAGER")
 	if pager == "" {
-		pager = "less"
+		pgr := os.Getenv("PAGER")
+		if pgr == "" {
+			pager = "less"
+		} else {
+			pager = pgr
+		}
 	}
 	return pager
 }

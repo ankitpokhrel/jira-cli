@@ -91,8 +91,9 @@ func TestGetPager(t *testing.T) {
 
 	term := os.Getenv("TERM")
 	pager := os.Getenv("PAGER")
+	jiraPager := os.Getenv("JIRA_PAGER")
 
-	// TERM is xterm, PAGER is set.
+	// TERM is xterm, JIRA_PAGER is not set, PAGER is set.
 	{
 		_ = os.Setenv("TERM", "xterm")
 
@@ -105,7 +106,7 @@ func TestGetPager(t *testing.T) {
 		_ = os.Setenv("PAGER", pager)
 	}
 
-	// TERM is set, PAGER is unset.
+	// TERM is set, JIRA_PAGER is not set, PAGER is unset.
 	{
 		_ = os.Unsetenv("PAGER")
 
@@ -121,10 +122,28 @@ func TestGetPager(t *testing.T) {
 		_ = os.Setenv("TERM", term)
 	}
 
+	// TERM is set, JIRA_PAGER is set, PAGER is unset.
+	{
+		_ = os.Unsetenv("PAGER")
+		_ = os.Setenv("JIRA_PAGER", "bat")
+
+		_ = os.Setenv("TERM", "dumb")
+		assert.Equal(t, "cat", GetPager())
+
+		_ = os.Setenv("TERM", "")
+		assert.Equal(t, "cat", GetPager())
+
+		_ = os.Setenv("TERM", "xterm")
+		assert.Equal(t, "bat", GetPager())
+
+		_ = os.Setenv("TERM", term)
+	}
+
 	// TERM gets precedence if both PAGER and TERM are set.
 	{
-		_ = os.Setenv("PAGER", "")
 		_ = os.Setenv("TERM", "")
+		_ = os.Setenv("PAGER", "")
+		_ = os.Setenv("JIRA_PAGER", "")
 		assert.Equal(t, "cat", GetPager())
 
 		_ = os.Setenv("PAGER", "more")
@@ -136,13 +155,15 @@ func TestGetPager(t *testing.T) {
 		assert.Equal(t, "more", GetPager())
 	}
 
-	// TERM and PAGER are not set.
+	// TERM, JIRA_PAGER and PAGER are not set.
 	{
-		_ = os.Unsetenv("PAGER")
 		_ = os.Unsetenv("TERM")
+		_ = os.Unsetenv("PAGER")
+		_ = os.Unsetenv("JIRA_PAGER")
 		assert.Equal(t, "cat", GetPager())
 	}
 
 	_ = os.Setenv("TERM", term)
 	_ = os.Setenv("PAGER", pager)
+	_ = os.Setenv("JIRA_PAGER", jiraPager)
 }

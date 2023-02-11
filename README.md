@@ -378,6 +378,8 @@ To transition the selected issue from the TUI, press `m`.
 The `view` command lets you see issue details in a terminal. Atlassian document is roughly converted to a markdown
 and is nicely displayed in the terminal.
 
+The command uses `less` as a pager by default. To set your own pager, see https://github.com/ankitpokhrel/jira-cli/discussions/569.
+
 ```sh
 $ jira issue view ISSUE-1
 ```
