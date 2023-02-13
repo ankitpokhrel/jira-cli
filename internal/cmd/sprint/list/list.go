@@ -77,7 +77,7 @@ func sprintList(cmd *cobra.Command, args []string) {
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
 
-	client := api.Client(jira.Config{Debug: debug})
+	client := api.DefaultClient(debug)
 
 	sprintQuery, err := query.NewSprint(cmd.Flags())
 	cmdutil.ExitIfError(err)

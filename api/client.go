@@ -57,6 +57,11 @@ func Client(config jira.Config) *jira.Client {
 	return jiraClient
 }
 
+// DefaultClient returns default jira client.
+func DefaultClient(debug bool) *jira.Client {
+	return Client(jira.Config{Debug: debug})
+}
+
 // ProxyCreate uses either a v2 or v3 version of the Jira POST /issue
 // endpoint to create an issue based on configured installation type.
 // Defaults to v3 if installation type is not defined in the config.

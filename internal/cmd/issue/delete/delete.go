@@ -43,7 +43,7 @@ func NewCmdDelete() *cobra.Command {
 func del(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
 	params := parseArgsAndFlags(cmd.Flags(), args, project)
-	client := api.Client(jira.Config{Debug: params.debug})
+	client := api.DefaultClient(params.debug)
 	mc := deleteCmd{
 		client:      client,
 		transitions: nil,

@@ -51,7 +51,7 @@ func clone(cmd *cobra.Command, args []string) {
 	projectType := viper.GetString("project.type")
 
 	params := parseFlags(cmd.Flags())
-	client := api.Client(jira.Config{Debug: params.debug})
+	client := api.DefaultClient(params.debug)
 	cc := cloneCmd{
 		client: client,
 		params: params,

@@ -43,8 +43,8 @@ func (el *EpicList) Render() error {
 			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) (string, error)) {
 				dataFn := func() interface{} {
 					data := d.(tui.TableData)
-					ci := getKeyColumnIndex(data[0])
-					iss, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data[r][ci], issue.NewNumCommentsFilter(1))
+					ci := data.GetIndex(fieldKey)
+					iss, _ := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(1))
 					return iss
 				}
 				renderFn := func(i interface{}) (string, error) {

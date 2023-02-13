@@ -11,6 +11,7 @@ import (
 	"github.com/cli/safeexec"
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-isatty"
+	"github.com/rivo/tview"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/tui/primitive"
 )
@@ -49,12 +50,18 @@ func splitText(s string) []string {
 	return lines
 }
 
-func getInfoModal() *primitive.Modal {
-	return primitive.NewModal().
+func getInfoModal() *tview.Modal {
+	return tview.NewModal().
 		SetText("\n\nProcessing. Please wait...").
 		SetBackgroundColor(tcell.ColorSpecial).
-		SetTextColor(tcell.ColorDefault).
-		SetBorderColor(tcell.ColorDefault)
+		SetTextColor(tcell.ColorDefault)
+}
+
+func getActionModal() *primitive.ActionModal {
+	return primitive.NewActionModal().
+		SetBackgroundColor(tcell.ColorSpecial).
+		SetButtonBackgroundColor(tcell.ColorDarkCyan).
+		SetTextColor(tcell.ColorDefault)
 }
 
 // IsDumbTerminal checks TERM environment variable and returns true if it is set to dumb.

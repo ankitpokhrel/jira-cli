@@ -37,6 +37,23 @@ const (
 	  - Hit ENTER to open the selected issue in a browser.
 	
 	Press 'q' / ESC / CTRL+C to quit.`
+
+	tableHelpText = `[default]ACTIONS AVAILABLE IN THE TUI
+----------------------------
+
+* [yellow]← → ↑ ↓ / j, k, h, l[default] to navigate through the list
+* [yellow]g[default] to quickly navigate to the top of the list
+* [yellow]G[default] to quickly navigate to the bottom of the list
+* [yellow]CTRL + f[default] to scroll through a page downwards
+* [yellow]CTRL + b[default] to scroll through a page upwards
+* [yellow]v[default] to view selected issue details
+* [yellow]m[default] to move/transition selected issue
+* [yellow]CTRL + r / F5[default] to refresh the issues list
+* [yellow]ENTER[default] to open the selected issue in the browser
+* [yellow]c[default] to copy issue URL to the system clipboard
+* [yellow]CTRL + k[default] to copy issue key to the system clipboard
+* [yellow]q / ESC / CTRL + c[default] to quit the app
+* [yellow]?[default] to view this help page`
 )
 
 // ValidIssueColumns returns valid columns for issue list.
@@ -103,7 +120,7 @@ func issueKeyFromTuiData(r int, d interface{}) string {
 
 	switch data := d.(type) {
 	case tui.TableData:
-		path = data[r][getKeyColumnIndex(data[0])]
+		path = data.Get(r, data.GetIndex(fieldKey))
 	case tui.PreviewData:
 		path = data.Key
 	}
@@ -149,15 +166,6 @@ func renderPlain(w io.Writer, data tui.TableData) error {
 		return w.(*tabwriter.Writer).Flush()
 	}
 	return nil
-}
-
-func getKeyColumnIndex(cols []string) int {
-	for i, col := range cols {
-		if col == fieldKey {
-			return i
-		}
-	}
-	return 1
 }
 
 func coloredOut(msg string, clr color.Attribute, attrs ...color.Attribute) string {

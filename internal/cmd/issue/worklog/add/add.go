@@ -61,7 +61,7 @@ func NewCmdWorklogAdd() *cobra.Command {
 
 func add(cmd *cobra.Command, args []string) {
 	params := parseArgsAndFlags(args, cmd.Flags())
-	client := api.Client(jira.Config{Debug: params.debug})
+	client := api.DefaultClient(params.debug)
 	ac := addCmd{
 		client: client,
 		params: params,
@@ -78,7 +78,9 @@ func add(cmd *cobra.Command, args []string) {
 		if params.timeSpent == "" {
 			params.timeSpent = ans.TimeSpent
 		}
-		params.comment = ans.Comment
+		if ans.Comment != "" {
+			params.comment = ans.Comment
+		}
 	}
 
 	if !params.noInput {

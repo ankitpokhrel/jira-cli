@@ -54,11 +54,12 @@ func (l *IssueList) Render() error {
 	view := tui.NewTable(
 		tui.WithTableStyle(l.Display.TableStyle),
 		tui.WithTableFooterText(l.FooterText),
+		tui.WithTableHelpText(tableHelpText),
 		tui.WithSelectedFunc(navigate(l.Server)),
 		tui.WithViewModeFunc(func(r, c int, _ interface{}) (func() interface{}, func(interface{}) (string, error)) {
 			dataFn := func() interface{} {
-				ci := getKeyColumnIndex(data[0])
-				iss, _ := api.ProxyGetIssue(api.Client(jira.Config{}), data[r][ci], issue.NewNumCommentsFilter(1))
+				ci := data.GetIndex(fieldKey)
+				iss, _ := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(1))
 				return iss
 			}
 			renderFn := func(i interface{}) (string, error) {
@@ -73,6 +74,46 @@ func (l *IssueList) Render() error {
 		}),
 		tui.WithCopyFunc(copyURL(l.Server)),
 		tui.WithCopyKeyFunc(copyKey()),
+		tui.WithMoveFunc(func(r, c int) func() (string, []string, tui.MoveHandlerFunc, string, tui.RefreshTableStateFunc) {
+			dataFn := func() (string, []string, tui.MoveHandlerFunc, string, tui.RefreshTableStateFunc) {
+				key := data[r][data.GetIndex(fieldKey)]
+				client := api.DefaultClient(false)
+				transitions, _ := api.ProxyTransitions(client, key)
+
+				var actions []string
+				for _, t := range transitions {
+					actions = append(actions, t.Name)
+				}
+
+				actionHandler := func(state string) error {
+					var tr *jira.Transition
+					for _, t := range transitions {
+						if strings.EqualFold(t.Name, state) {
+							tr = t
+							break
+						}
+					}
+					if tr == nil {
+						return fmt.Errorf("transition '%s' not found", state)
+					}
+					_, err := client.Transition(key, &jira.TransitionRequest{
+						Transition: &jira.TransitionRequestData{
+							ID:   tr.ID.String(),
+							Name: tr.Name,
+						},
+					})
+					return err
+				}
+
+				statusFieldIdx := data.GetIndex(fieldStatus)
+				currentStatus := data.Get(r, statusFieldIdx)
+
+				return key, actions, actionHandler, currentStatus, func(r, c int, val string) {
+					data.Update(r, statusFieldIdx, val)
+				}
+			}
+			return dataFn
+		}),
 		tui.WithRefreshFunc(l.Refresh),
 		tui.WithFixedColumns(l.Display.FixedColumns),
 	)
