@@ -14,6 +14,7 @@ type issueParamsErr struct {
 	resolution bool
 	issueType  bool
 	labels     bool
+	status     bool
 }
 
 type issueFlagParser struct {
@@ -23,7 +24,7 @@ type issueFlagParser struct {
 	orderDesc     bool
 	emptyType     bool
 	labels        []string
-	issues        []string
+	status        []string
 	withCreated   bool
 	withUpdated   bool
 	created       string
@@ -110,6 +111,12 @@ func (tfp *issueFlagParser) GetStringArray(name string) ([]string, error) {
 	if tfp.err.labels && name == "label" {
 		return []string{}, fmt.Errorf("oops! couldn't fetch label flag")
 	}
+	if tfp.err.status && name == "status" {
+		return []string{}, fmt.Errorf("oops! couldn't fetch status flag")
+	}
+	if name == "status" {
+		return tfp.status, nil
+	}
 	return tfp.labels, nil
 }
 
@@ -118,6 +125,8 @@ func (*issueFlagParser) GetUint(string) (uint, error)                        { r
 func (*issueFlagParser) Set(string, string) error                            { return nil }
 
 func TestIssueGet(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name       string
 		initialize func() *Issue
@@ -131,7 +140,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" ` +
 				`AND assignee="test" AND component="test" AND parent="test" ORDER BY lastViewed ASC`,
 		},
 		{
@@ -142,7 +151,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" ` +
 				`AND assignee="test" AND component="test" AND parent="test" ORDER BY created ASC`,
 		},
 		{
@@ -153,7 +162,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" ` +
 				`AND assignee="test" AND component="test" AND parent="test" ORDER BY created ASC`,
 		},
 		{
@@ -201,6 +210,17 @@ func TestIssueGet(t *testing.T) {
 			expected: "",
 		},
 		{
+			name: "query with error when fetching status flag",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{err: issueParamsErr{
+					status: true,
+				}})
+				assert.Error(t, err)
+				return i
+			},
+			expected: "",
+		},
+		{
 			name: "query with error when fetching type flag",
 			initialize: func() *Issue {
 				i, err := NewIssue("TEST", &issueFlagParser{err: issueParamsErr{
@@ -219,7 +239,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`AND component="test" AND parent="test" ORDER BY lastViewed ASC`,
 		},
 		{
@@ -230,7 +250,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" ` +
 				`AND assignee="test" AND component="test" AND parent="test" ORDER BY lastViewed DESC`,
 		},
 		{
@@ -241,8 +261,19 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`AND component="test" AND parent="test" AND labels IN ("first", "second", "third") ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with status",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{status: []string{"first", "second", "~third"}})
+				assert.NoError(t, err)
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND component="test" AND parent="test" AND status IN ("first", "second") AND status NOT IN ("third") ORDER BY lastViewed ASC`,
 		},
 		{
 			name: "query with created and updated today filter",
@@ -252,7 +283,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`AND component="test" AND parent="test" AND createdDate>=startOfDay() AND updatedDate>=startOfDay() ORDER BY lastViewed ASC`,
 		},
 		{
@@ -263,7 +294,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`AND component="test" AND parent="test" AND createdDate>=startOfWeek() AND updatedDate>=startOfWeek() ORDER BY lastViewed ASC`,
 		},
 		{
@@ -274,7 +305,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`AND component="test" AND parent="test" AND createdDate>=startOfMonth() AND updatedDate>=startOfMonth() ORDER BY lastViewed ASC`,
 		},
 		{
@@ -285,7 +316,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`AND component="test" AND parent="test" AND createdDate>=startOfYear() AND updatedDate>=startOfYear() ORDER BY lastViewed ASC`,
 		},
 		{
@@ -296,7 +327,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
 				`AND parent="test" AND createdDate>="2020-12-31" AND createdDate<"2021-01-01" AND updatedDate>="2020-12-31" AND updatedDate<"2021-01-01" ` +
 				`ORDER BY lastViewed ASC`,
 		},
@@ -308,7 +339,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`AND component="test" AND parent="test" AND createdDate>="2020-15-31" AND updatedDate>="2020-12-31 10:30:30" ORDER BY lastViewed ASC`,
 		},
 		{
@@ -319,7 +350,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`AND component="test" AND parent="test" AND createdDate>"2020-12-01" AND createdDate<"2020-12-31" ORDER BY lastViewed ASC`,
 		},
 		{
@@ -330,7 +361,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`AND component="test" AND parent="test" AND updatedDate>"2020-12-01" AND updatedDate<"2020-12-31" ORDER BY lastViewed ASC`,
 		},
 		{
@@ -348,7 +379,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
 				`AND component="test" AND parent="test" AND createdDate>="2020-11-01" AND createdDate<"2020-11-02" AND updatedDate>="-10d" ` +
 				`ORDER BY lastViewed ASC`,
 		},
@@ -368,7 +399,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN watchedIssues() AND type="test" AND resolution="test" ` +
-				`AND status="test" AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
+				`AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
 				`AND parent="test" AND createdDate>="2020-11-01" AND createdDate<"2020-11-02" AND updatedDate>="-10d" ` +
 				`ORDER BY created ASC`,
 		},
@@ -386,7 +417,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND issue IN watchedIssues() AND type="test" AND resolution="test" ` +
-				`AND status="test" AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
+				`AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
 				`AND parent="test" AND updatedDate>"2020-11-31" AND updatedDate<"2020-12-31" ` +
 				`ORDER BY updated ASC`,
 		},
@@ -398,7 +429,7 @@ func TestIssueGet(t *testing.T) {
 				return i
 			},
 			expected: `project="TEST" AND summary ~ cli OR x = y AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
-				`type="test" AND resolution="test" AND status="test" AND priority="test" AND reporter="test" ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" ` +
 				`AND assignee="test" AND component="test" AND parent="test" ORDER BY lastViewed ASC`,
 		},
 	}
