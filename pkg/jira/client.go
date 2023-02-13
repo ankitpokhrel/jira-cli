@@ -230,7 +230,9 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		req.SetBasicAuth(c.login, c.token)
 	}
 
-	return c.transport.RoundTrip(req.WithContext(ctx))
+	httpClient := &http.Client{Transport: c.transport}
+
+	return httpClient.Do(req.WithContext(ctx))
 }
 
 func dump(req *http.Request, res *http.Response) {
