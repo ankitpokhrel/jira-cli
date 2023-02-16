@@ -475,10 +475,10 @@ func (c *JiraCLIConfigGenerator) configureMetadata() error {
 		err = c.configureIssueTypes()
 		if err != nil {
 			switch e := err.(type) {
-				case *url.Error:
-					if e.Err.Error() == "303 response missing Location header" && c.value.version.major == 8 && c.value.version.minor >= 4 {
-						err = c.configureIssueTypesForJiraServerV9()
-					}
+			case *url.Error:
+				if e.Err.Error() == "303 response missing Location header" && c.value.version.major == 8 && c.value.version.minor >= 4 {
+					err = c.configureIssueTypesForJiraServerV9()
+				}
 			}
 		}
 	}
