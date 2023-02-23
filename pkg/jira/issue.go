@@ -419,3 +419,37 @@ func (c *Client) RemoteLinkIssue(issueID, title, url string) error {
 	}
 	return nil
 }
+
+// WatchIssue adds user as a watcher using PUT /issue/{key}/watchers endpoint.
+func (c *Client) WatchIssue(key, watcher string) error {
+	path := fmt.Sprintf("/issue/%s/watchers", key)
+
+	var (
+		res  *http.Response
+		err  error
+		body []byte
+	)
+
+	body, err = json.Marshal(watcher)
+	if err != nil {
+		return err
+	}
+
+	res, err = c.Post(context.Background(), path, body, Header{
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	})
+
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusNoContent {
+		return formatUnexpectedResponse(res)
+	}
+	return nil
+}
