@@ -112,8 +112,9 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 		cfgFile = fmt.Sprintf("%s/%s/%s.%s", home, Dir, FileName, FileType)
 	} else {
 		isExtValid := func() bool {
+			cf := strings.ToLower(cfgFile)
 			for _, ext := range []string{FileType, "yaml"} {
-				if strings.HasSuffix(cfgFile, fmt.Sprintf(".%s", ext)) {
+				if strings.HasSuffix(cf, fmt.Sprintf(".%s", ext)) {
 					return true
 				}
 			}

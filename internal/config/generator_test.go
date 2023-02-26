@@ -9,6 +9,8 @@ import (
 )
 
 func TestExists(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name     string
 		input    string
