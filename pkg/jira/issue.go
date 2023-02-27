@@ -435,7 +435,7 @@ func (c *Client) WatchIssue(key, watcher string) error {
 		return err
 	}
 
-	res, err = c.Post(context.Background(), path, body, Header{
+	res, err = c.PostV2(context.Background(), path, body, Header{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	})

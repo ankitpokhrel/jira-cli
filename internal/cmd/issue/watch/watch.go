@@ -187,7 +187,7 @@ func (ac *watchCmd) setWatcher(project string) error {
 		if err := ac.getSearchKeyword(); err != nil {
 			return err
 		}
-		if err := ac.searchAndWatchUser(project); err != nil {
+		if err := ac.searchAndSetUser(project); err != nil {
 			return err
 		}
 		last = true
@@ -246,7 +246,7 @@ func (ac *watchCmd) getSearchKeyword() error {
 	return survey.Ask([]*survey.Question{qs}, &ac.params.user)
 }
 
-func (ac *watchCmd) searchAndWatchUser(project string) error {
+func (ac *watchCmd) searchAndSetUser(project string) error {
 	u, err := api.ProxyUserSearch(ac.client, &jira.UserSearchOptions{
 		Query:      ac.params.user,
 		Project:    project,
@@ -263,7 +263,7 @@ func (ac *watchCmd) setAvailableUsers(project string) error {
 	s := cmdutil.Info("Fetching available users. Please wait...")
 	defer s.Stop()
 
-	return ac.searchAndWatchUser(project)
+	return ac.searchAndSetUser(project)
 }
 
 func (ac *watchCmd) verifyWatcher() (*jira.User, error) {

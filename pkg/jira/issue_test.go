@@ -563,8 +563,7 @@ func TestWatchIssue(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
-		assert.Equal(t, "/rest/api/3/issue/TEST-1/watchers", r.URL.Path)
-
+		assert.Equal(t, "/rest/api/2/issue/TEST-1/watchers", r.URL.Path)
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
