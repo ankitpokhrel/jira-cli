@@ -420,8 +420,17 @@ func (c *Client) RemoteLinkIssue(issueID, title, url string) error {
 	return nil
 }
 
-// WatchIssue adds user as a watcher using PUT /issue/{key}/watchers endpoint.
+// WatchIssue adds user as a watcher using v2 version of the POST /issue/{key}/watchers endpoint.
 func (c *Client) WatchIssue(key, watcher string) error {
+	return c.watchIssue(key, watcher, apiVersion3)
+}
+
+// WatchIssueV2 adds user as a watcher using using v2 version of the POST /issue/{key}/watchers endpoint.
+func (c *Client) WatchIssueV2(key, watcher string) error {
+	return c.watchIssue(key, watcher, apiVersion2)
+}
+
+func (c *Client) watchIssue(key, watcher, ver string) error {
 	path := fmt.Sprintf("/issue/%s/watchers", key)
 
 	var (
@@ -435,10 +444,17 @@ func (c *Client) WatchIssue(key, watcher string) error {
 		return err
 	}
 
-	res, err = c.PostV2(context.Background(), path, body, Header{
+	header := Header{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
-	})
+	}
+
+	switch ver {
+	case apiVersion2:
+		res, err = c.PostV2(context.Background(), path, body, header)
+	default:
+		res, err = c.Post(context.Background(), path, body, header)
+	}
 
 	if err != nil {
 		return err

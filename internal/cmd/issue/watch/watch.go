@@ -76,7 +76,7 @@ func watch(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info(fmt.Sprintf("Adding user %q as watcher of issue %q...", uname, ac.params.key))
 		defer s.Stop()
 
-		return client.WatchIssue(ac.params.key, u.AccountID)
+		return api.ProxyWatchIssue(client, ac.params.key, u)
 	}()
 	cmdutil.ExitIfError(err)
 
