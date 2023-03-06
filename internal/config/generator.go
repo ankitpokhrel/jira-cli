@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -101,14 +102,38 @@ func NewJiraCLIConfigGenerator(cfg *JiraCLIConfig) *JiraCLIConfigGenerator {
 
 // Generate generates the config file.
 func (c *JiraCLIConfigGenerator) Generate() (string, error) {
-	ce := func() bool {
+	var cfgFile string
+
+	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
+		home, err := cmdutil.GetConfigHome()
+		if err != nil {
+			return "", err
+		}
+		cfgFile = fmt.Sprintf("%s/%s/%s.%s", home, Dir, FileName, FileType)
+	} else {
+		isExtValid := func() bool {
+			cf := strings.ToLower(cfgFile)
+			for _, ext := range []string{FileType, "yaml"} {
+				if strings.HasSuffix(cf, fmt.Sprintf(".%s", ext)) {
+					return true
+				}
+			}
+			return false
+		}
+		// Enforce .yml extension.
+		if !isExtValid() {
+			cfgFile = fmt.Sprintf("%s.%s", cfgFile, FileType)
+		}
+	}
+
+	cfgExists := func() bool {
 		s := cmdutil.Info("Checking configuration...")
 		defer s.Stop()
 
-		return Exists(viper.ConfigFileUsed())
+		return Exists(cfgFile)
 	}()
 
-	if !c.usrCfg.Force && ce && !shallOverwrite() {
+	if !c.usrCfg.Force && cfgExists && !shallOverwrite() {
 		return "", ErrSkip
 	}
 	if err := c.configureInstallationType(); err != nil {
@@ -129,22 +154,15 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 		return "", err
 	}
 
-	home, err := cmdutil.GetConfigHome()
-	if err != nil {
-		return "", err
-	}
-	cfgDir := fmt.Sprintf("%s/%s", home, Dir)
-
 	if err := func() error {
 		s := cmdutil.Info("Creating new configuration...")
 		defer s.Stop()
 
-		return create(cfgDir, fmt.Sprintf("%s.%s", FileName, FileType))
+		return create(cfgFile)
 	}(); err != nil {
 		return "", err
 	}
-
-	return c.write(cfgDir)
+	return c.write(cfgFile)
 }
 
 func (c *JiraCLIConfigGenerator) configureInstallationType() error {
@@ -586,9 +604,17 @@ func (c *JiraCLIConfigGenerator) configureFields() error {
 }
 
 func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
+	name := func() string {
+		ext := filepath.Ext(path)
+		if ext == "" {
+			return path
+		}
+		return strings.TrimSuffix(filepath.Base(path), ext)
+	}
+
 	config := viper.New()
-	config.AddConfigPath(path)
-	config.SetConfigName(FileName)
+	config.AddConfigPath(filepath.Dir(path))
+	config.SetConfigName(name())
 	config.SetConfigType(FileType)
 
 	if c.usrCfg.Insecure {
@@ -618,7 +644,7 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	if err := config.WriteConfig(); err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s/%s.%s", path, FileName, FileType), nil
+	return path, nil
 }
 
 func (c *JiraCLIConfigGenerator) getProjectSuggestions() error {
@@ -688,16 +714,16 @@ func shallOverwrite() bool {
 	return ans
 }
 
-func create(path, name string) error {
+func create(file string) error {
 	const perm = 0o700
 
+	path := filepath.Dir(file)
 	if !Exists(path) {
 		if err := os.MkdirAll(path, perm); err != nil {
 			return err
 		}
 	}
 
-	file := fmt.Sprintf("%s/%s", path, name)
 	if Exists(file) {
 		if err := os.Rename(file, file+".bkp"); err != nil {
 			return err

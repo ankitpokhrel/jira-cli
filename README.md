@@ -19,9 +19,6 @@
         <a href="https://opencollective.com/jira-cli#backers">
             <img alt="Financial Contributors" src="https://img.shields.io/opencollective/backers/jira-cli?style=flat-square" />
         </a>
-        <a href="#">
-            <img alt="Project Status" src="https://img.shields.io/badge/status-WIP-yellow?style=flat-square&color=orange" />
-        </a>
     </p>
     <p align="center">
         <i>Feature-rich Interactive Jira Command Line</i>
@@ -39,7 +36,7 @@
 </div>
 
 JiraCLI is an interactive command line tool for Atlassian Jira that will help you avoid Jira UI to some extent. This
-tool is not yet considered complete but has all the essential features required to improve your workflow with Jira.
+tool may not be able to do everything, but it has all the essential features required to improve your day-to-day workflow with Jira.
 
 The tool started with the idea of making issue search and navigation as straightforward as possible. However, with the
 help of [outstanding supporters like you](#support-the-project), we evolved, and the tool now includes all necessary
@@ -762,7 +759,7 @@ Please [open a discussion](https://github.com/ankitpokhrel/jira-cli/discussions/
    ```
 
 ## Support the project
-Your suggestions and feedbacks are highly appreciated. Feel free
+Your suggestions and feedbacks are highly appreciated. Please feel free
 to [start a discussion](https://github.com/ankitpokhrel/jira-cli/discussions)
 or [create an issue](https://github.com/ankitpokhrel/jira-cli/issues/new) to share your experience with the tool or to
 discuss a feature/issue.

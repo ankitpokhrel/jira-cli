@@ -2,12 +2,15 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestExists(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name     string
 		input    string
@@ -53,17 +56,16 @@ func TestCreate(t *testing.T) {
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
 
-	path := cwd + "/testdata/.tmp/"
-	file := ".jira.yml"
+	file := cwd + "/testdata/.tmp/.jira.yml"
 
 	// case: file doesn't exist
-	assert.NoError(t, create(path, file))
+	assert.NoError(t, create(file))
 
 	// case: file exists, will create .bkp file
-	assert.NoError(t, create(path, file))
+	assert.NoError(t, create(file))
 
 	// Remove created file. Fails if those files were not created.
-	assert.NoError(t, os.Remove(path+file))
-	assert.NoError(t, os.Remove(path+file+".bkp"))
-	assert.NoError(t, os.Remove(path))
+	assert.NoError(t, os.Remove(file))
+	assert.NoError(t, os.Remove(file+".bkp"))
+	assert.NoError(t, os.Remove(filepath.Dir(file)))
 }

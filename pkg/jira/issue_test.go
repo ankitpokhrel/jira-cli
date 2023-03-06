@@ -554,3 +554,41 @@ func TestRemoteLinkIssue(t *testing.T) {
 	err = client.RemoteLinkIssue("TEST-1", "weblink title", "https://weblink.com")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
+
+func TestWatchIssue(t *testing.T) {
+	var (
+		apiVersion2          bool
+		unexpectedStatusCode bool
+	)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "POST", r.Method)
+		assert.Equal(t, "application/json", r.Header.Get("Accept"))
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+		if apiVersion2 {
+			assert.Equal(t, "/rest/api/2/issue/TEST-1/watchers", r.URL.Path)
+		} else {
+			assert.Equal(t, "/rest/api/3/issue/TEST-1/watchers", r.URL.Path)
+		}
+
+		if unexpectedStatusCode {
+			w.WriteHeader(400)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(204)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	err := client.WatchIssue("TEST-1", "a12b3")
+	assert.NoError(t, err)
+
+	apiVersion2 = true
+	unexpectedStatusCode = true
+
+	err = client.WatchIssueV2("TEST-1", "a12b3")
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}

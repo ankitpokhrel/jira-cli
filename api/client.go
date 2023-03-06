@@ -183,3 +183,26 @@ func ProxyTransitions(c *jira.Client, key string) ([]*jira.Transition, error) {
 
 	return transitions, err
 }
+
+// ProxyWatchIssue uses either a v2 or v3 version of the PUT /issue/{key}/watchers
+// endpoint to assign an issue to the user. Defaults to v3 if installation type is
+// not defined in the config.
+func ProxyWatchIssue(c *jira.Client, key string, user *jira.User) error {
+	it := viper.GetString("installation")
+
+	var assignee string
+
+	if user != nil {
+		switch it {
+		case jira.InstallationTypeLocal:
+			assignee = user.Name
+		default:
+			assignee = user.AccountID
+		}
+	}
+
+	if it == jira.InstallationTypeLocal {
+		return c.WatchIssueV2(key, assignee)
+	}
+	return c.WatchIssue(key, assignee)
+}
