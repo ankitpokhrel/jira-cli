@@ -469,17 +469,11 @@ func (c *JiraCLIConfigGenerator) searchAndAssignBoard(project, keyword string) e
 func (c *JiraCLIConfigGenerator) configureMetadata() error {
 	var err error
 
-	if c.value.installation == jira.InstallationTypeLocal && c.value.version.major >= 9 {
+	isV9Compatible := c.value.version.major >= 9 || (c.value.version.major == 8 && c.value.version.minor > 4)
+	if c.value.installation == jira.InstallationTypeLocal && isV9Compatible {
 		err = c.configureIssueTypesForJiraServerV9()
 	} else {
 		err = c.configureIssueTypes()
-		if err != nil {
-			if e, ok := err.(*url.Error); ok {
-				if e.Err.Error() == "303 response missing Location header" && c.value.version.major == 8 && c.value.version.minor >= 4 {
-					err = c.configureIssueTypesForJiraServerV9()
-				}
-			}
-		}
 	}
 	if err != nil {
 		return err
