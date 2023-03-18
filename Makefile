@@ -44,12 +44,12 @@ install:
 lint:
 	@if ! command -v golangci-lint > /dev/null 2>&1; then \
 		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
-		sh -s -- -b "$$(go env GOPATH)/bin" v1.50.1 ; \
+		sh -s -- -b "$$(go env GOPATH)/bin" v1.51.2 ; \
 	fi
 	golangci-lint run ./...
 
 test:
-	@go clean -testcache ./...
+	@go clean -testcache
 	CGO_ENABLED=1 go test -race ./...
 
 ci: lint test
