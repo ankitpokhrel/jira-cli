@@ -190,6 +190,7 @@ func (c *JiraCLIConfigGenerator) configureInstallationType() error {
 	return nil
 }
 
+//nolint:gocyclo
 func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 	var qs []*survey.Question
 
