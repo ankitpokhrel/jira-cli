@@ -288,8 +288,12 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 			return err
 		}
 
-		c.value.server = ans.Server
-		c.value.login = ans.Login
+		if ans.Server != "" {
+			c.value.server = ans.Server
+		}
+		if ans.Login != "" {
+			c.value.login = ans.Login
+		}
 	}
 
 	return c.verifyLoginDetails(c.value.server, c.value.login)
