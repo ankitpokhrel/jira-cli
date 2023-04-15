@@ -3,7 +3,6 @@ package jira
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -82,8 +81,6 @@ func (c *Client) create(req *CreateRequest, ver string) (*CreateResponse, error)
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("\n%+v\n", string(body))
 
 	header := Header{
 		"Accept":       "application/json",
