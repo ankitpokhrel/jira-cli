@@ -3,6 +3,7 @@ package jira
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -81,6 +82,8 @@ func (c *Client) create(req *CreateRequest, ver string) (*CreateResponse, error)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("\n%+v\n", string(body))
 
 	header := Header{
 		"Accept":       "application/json",
@@ -309,10 +312,12 @@ func (cfm *createFieldsMarshaler) MarshalJSON() ([]byte, error) {
 	}
 	dm := temp.(map[string]interface{})
 
-	if cfm.M.epicField != "" {
-		dm[cfm.M.epicField] = dm["name"]
+	if epic, ok := dm["name"]; ok {
+		if cfm.M.epicField != "" {
+			dm[cfm.M.epicField] = epic
+		}
+		delete(dm, "name")
 	}
-	delete(dm, "name")
 
 	for key, val := range cfm.M.customFields {
 		dm[key] = val
