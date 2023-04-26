@@ -20,7 +20,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/rivo/tview v0.0.0-20221217182043-ccce554c3803
 	github.com/russross/blackfriday/v2 v2.1.0
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
 	github.com/zalando/go-keyring v0.2.1
