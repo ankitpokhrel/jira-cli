@@ -96,7 +96,7 @@ func clone(cmd *cobra.Command, args []string) {
 	}()
 	cmdutil.ExitIfError(err)
 
-	cmdutil.Success("Issue cloned\n%s/browse/%s", server, clonedIssueKey)
+	cmdutil.Success("Issue cloned\n%s", cmdutil.GenerateServerURL(server, clonedIssueKey))
 
 	var wg sync.WaitGroup
 	wg.Add(1)

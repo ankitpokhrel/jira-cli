@@ -81,7 +81,7 @@ func watch(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	cmdutil.Success("User %q added as watcher of issue %q", uname, ac.params.key)
-	fmt.Printf("%s/browse/%s\n", viper.GetString("server"), ac.params.key)
+	fmt.Printf("%s\n", cmdutil.GenerateServerURL(viper.GetString("server"), ac.params.key))
 }
 
 type watchParams struct {

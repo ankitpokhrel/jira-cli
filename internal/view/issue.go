@@ -430,7 +430,7 @@ func (i Issue) footer() string {
 	if i.Display.Plain {
 		out.WriteString("\n")
 	}
-	out.WriteString(gray(fmt.Sprintf("View this issue on Jira: %s/browse/%s", i.Server, i.Data.Key)))
+	out.WriteString(gray(fmt.Sprintf("View this issue on Jira: %s", cmdutil.GenerateServerURL(i.Server, i.Data.Key))))
 
 	return out.String()
 }

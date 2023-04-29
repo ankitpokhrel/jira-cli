@@ -119,7 +119,7 @@ func move(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 
 	cmdutil.Success("Issue transitioned to state %q", tr.Name)
-	fmt.Printf("%s/browse/%s\n", server, mc.params.key)
+	fmt.Printf("%s\n", cmdutil.GenerateServerURL(server, mc.params.key))
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, mc.params.key)

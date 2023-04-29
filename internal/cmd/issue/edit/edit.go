@@ -149,7 +149,7 @@ func edit(cmd *cobra.Command, args []string) {
 	}()
 	cmdutil.ExitIfError(err)
 
-	cmdutil.Success("Issue updated\n%s/browse/%s", server, params.issueKey)
+	cmdutil.Success("Issue updated\n%s", cmdutil.GenerateServerURL(server, params.issueKey))
 
 	handleUserAssign(project, params.issueKey, params.assignee, client)
 

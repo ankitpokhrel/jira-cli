@@ -13,6 +13,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/mgutz/ansi"
 
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/browser"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
@@ -129,7 +130,7 @@ func issueKeyFromTuiData(r int, d interface{}) string {
 }
 
 func jiraURLFromTuiData(server string, r int, d interface{}) string {
-	return fmt.Sprintf("%s/browse/%s", server, issueKeyFromTuiData(r, d))
+	return fmt.Sprintf("%s", cmdutil.GenerateServerURL(server, issueKeyFromTuiData(r, d)))
 }
 
 func navigate(server string) tui.SelectedFunc {

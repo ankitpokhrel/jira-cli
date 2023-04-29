@@ -70,7 +70,7 @@ func add(cmd *cobra.Command, args []string) {
 	}()
 	cmdutil.ExitIfError(err)
 
-	cmdutil.Success(fmt.Sprintf("Issues added to the sprint %s\n%s/browse/%s", params.sprintID, server, project))
+	cmdutil.Success(fmt.Sprintf("Issues added to the sprint %s\n%s", params.sprintID, cmdutil.GenerateServerURL(server, project)))
 }
 
 func parseFlags(flags query.FlagParser, args []string, project string) *addParams {

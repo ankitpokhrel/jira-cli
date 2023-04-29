@@ -131,7 +131,7 @@ func create(cmd *cobra.Command, _ []string) {
 	}()
 
 	cmdutil.ExitIfError(err)
-	cmdutil.Success("Issue created\n%s/browse/%s", server, key)
+	cmdutil.Success("Issue created\n%s", cmdutil.GenerateServerURL(server, key))
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, key)

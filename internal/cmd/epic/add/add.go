@@ -96,7 +96,7 @@ func add(cmd *cobra.Command, args []string) {
 		return nil
 	}()
 
-	msg := fmt.Sprintf("Issues added to the epic %s\n%s/browse/%s", params.epicKey, server, params.epicKey)
+	msg := fmt.Sprintf("Issues added to the epic %s\n%s", params.epicKey, cmdutil.GenerateServerURL(server, params.epicKey))
 
 	if projectType != jira.ProjectTypeNextGen {
 		cmdutil.ExitIfError(err)

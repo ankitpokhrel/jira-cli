@@ -82,7 +82,7 @@ func link(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 
 	cmdutil.Success("Issues linked as %q", lc.params.linkType)
-	fmt.Printf("%s/browse/%s\n", server, lc.params.inwardIssueKey)
+	fmt.Printf("%s\n", cmdutil.GenerateServerURL(server, lc.params.inwardIssueKey))
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
 		err := cmdutil.Navigate(server, lc.params.inwardIssueKey)

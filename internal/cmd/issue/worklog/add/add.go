@@ -104,7 +104,7 @@ func add(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 
 	cmdutil.Success("Worklog added to issue %q", ac.params.issueKey)
-	fmt.Printf("%s/browse/%s\n", server, ac.params.issueKey)
+	fmt.Printf("%s\n", cmdutil.GenerateServerURL(server, ac.params.issueKey))
 }
 
 type addParams struct {
