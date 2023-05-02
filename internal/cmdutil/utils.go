@@ -96,7 +96,7 @@ func Navigate(server, path string) error {
 }
 
 // GenerateServerBrowseURL will return the `browse` URL for a given key.
-// The server section can be overridden via `view_server` in config.
+// The server section can be overridden via `browse_server` in config.
 // This is useful if your API endpoint is separate from the web client endpoint.
 func GenerateServerBrowseURL(server, key string) string {
 	if viper.GetString("browse_server") != "" {
