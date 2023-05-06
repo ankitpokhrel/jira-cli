@@ -43,9 +43,9 @@ func open(cmd *cobra.Command, args []string) {
 	var url string
 
 	if len(args) == 0 {
-		url = fmt.Sprintf("%s/browse/%s", server, project)
+		url = cmdutil.GenerateServerBrowseURL(server, project)
 	} else {
-		url = fmt.Sprintf("%s/browse/%s", server, cmdutil.GetJiraIssueKey(project, args[0]))
+		url = cmdutil.GenerateServerBrowseURL(server, cmdutil.GetJiraIssueKey(project, args[0]))
 	}
 
 	fmt.Println(url)
