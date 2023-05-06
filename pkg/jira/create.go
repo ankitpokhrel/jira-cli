@@ -309,10 +309,12 @@ func (cfm *createFieldsMarshaler) MarshalJSON() ([]byte, error) {
 	}
 	dm := temp.(map[string]interface{})
 
-	if cfm.M.epicField != "" {
-		dm[cfm.M.epicField] = dm["name"]
+	if epic, ok := dm["name"]; ok {
+		if cfm.M.epicField != "" {
+			dm[cfm.M.epicField] = epic
+		}
+		delete(dm, "name")
 	}
-	delete(dm, "name")
 
 	for key, val := range cfm.M.customFields {
 		dm[key] = val
