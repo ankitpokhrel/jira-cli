@@ -9,6 +9,8 @@ const (
 	AuthTypeBasic AuthType = "basic"
 	// AuthTypeBearer is a bearer auth.
 	AuthTypeBearer AuthType = "bearer"
+	// AuthTypeMTLS is a mTLS auth.
+	AuthTypeMTLS AuthType = "mtls"
 )
 
 // AuthType is a jira authentication type.

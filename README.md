@@ -85,6 +85,7 @@ Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/In
      more [here](https://github.com/ankitpokhrel/jira-cli/discussions/356).
 2. Run `jira init`, select installation type as `Local`, and provide the required details to generate a config file required
    for the tool.
+   - If you want to use `mtls` (client certificates), select auth type `mtls` and provide the CA Cert, client Key, and client cert.
 
    **Note:** If your on-premise Jira installation is using a language other than `English`, then the issue/epic creation
    may not work because the older version of Jira API doesn't return the untranslated name for `issuetypes`. In that case,
@@ -95,8 +96,11 @@ See [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs)
 
 #### Authentication types
 
-The tool supports `basic` and `bearer` (Personal Access Token) authentication types at the moment. Basic auth is used by
-default. If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
+The tool supports `basic`, `bearer` (Personal Access Token), and `mtls` (Client Certificates) authentication types. Basic auth is used by
+default.
+
+* If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`. 
+* If you want to use `mtls` run `jira init`. Select installation type `Local`, and then select authentication type as `mtls`.
 
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.
