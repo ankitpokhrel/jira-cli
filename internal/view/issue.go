@@ -400,9 +400,15 @@ func (i Issue) comments() []issueComment {
 			body = c.Body.(string)
 			body = md.FromJiraMD(body)
 		}
+		authorName := func() string {
+			if c.Author.DisplayName != "" {
+				return c.Author.DisplayName
+			}
+			return c.Author.Name
+		}
 		meta := fmt.Sprintf(
 			"\n %s • %s",
-			coloredOut(c.Author.Name, color.FgWhite, color.Bold),
+			coloredOut(authorName(), color.FgWhite, color.Bold),
 			coloredOut(cmdutil.FormatDateTimeHuman(c.Created, jira.RFC3339), color.FgWhite, color.Bold),
 		)
 		if idx == total-1 {
