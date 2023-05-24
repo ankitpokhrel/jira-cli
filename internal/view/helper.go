@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
+	"encoding/json"
 
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/glamour"
@@ -167,6 +168,12 @@ func renderPlain(w io.Writer, data tui.TableData) error {
 		return w.(*tabwriter.Writer).Flush()
 	}
 	return nil
+}
+
+func renderJSON(w io.Writer, data any) error {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "")
+	return enc.Encode(data)
 }
 
 func coloredOut(msg string, clr color.Attribute, attrs ...color.Attribute) string {

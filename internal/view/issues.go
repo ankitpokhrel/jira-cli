@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil/output"
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter/issue"
@@ -16,6 +17,7 @@ import (
 // DisplayFormat is a issue display type.
 type DisplayFormat struct {
 	Plain        bool
+	Format       output.Format
 	NoHeaders    bool
 	NoTruncate   bool
 	Columns      []string
@@ -36,7 +38,12 @@ type IssueList struct {
 
 // Render renders the view.
 func (l *IssueList) Render() error {
-	if l.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
+	switch l.Display.Format {
+	case output.JSON:
+		return l.renderJSON(os.Stdout)
+	}
+
+	if l.Display.Plain || l.Display.Format == output.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
 		return l.renderPlain(w)
 	}
@@ -124,6 +131,11 @@ func (l *IssueList) Render() error {
 // renderPlain renders the issue in plain view.
 func (l *IssueList) renderPlain(w io.Writer) error {
 	return renderPlain(w, l.data())
+}
+
+// renderJSON renders the issue in JSON format.
+func (l *IssueList) renderJSON(w io.Writer) error {
+	return renderJSON(w, l.Data)
 }
 
 func (*IssueList) validColumnsMap() map[string]struct{} {

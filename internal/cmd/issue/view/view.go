@@ -6,6 +6,7 @@ import (
 
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil/output"
 	tuiView "github.com/ankitpokhrel/jira-cli/internal/view"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter/issue"
@@ -19,8 +20,11 @@ const (
 $ jira issue view ISSUE-1 --comments 5`
 )
 
+var format output.Format = output.Fancy
+
 // NewCmdView is a view command.
 func NewCmdView() *cobra.Command {
+
 	cmd := cobra.Command{
 		Use:     "view ISSUE-KEY",
 		Short:   "View displays contents of an issue",
@@ -35,10 +39,12 @@ func NewCmdView() *cobra.Command {
 	}
 
 	cmd.Flags().Uint("comments", 1, "Show N comments")
-	cmd.Flags().Bool("plain", false, "Display output in plain mode")
-
+	cmd.Flags().Bool("plain", false, "Deprecated: use --output=plain")
+	cmd.Flags().Var(&format, "format", format.Help())
 	return &cmd
 }
+
+
 
 func view(cmd *cobra.Command, args []string) {
 	debug, err := cmd.Flags().GetBool("debug")
@@ -63,7 +69,7 @@ func view(cmd *cobra.Command, args []string) {
 	v := tuiView.Issue{
 		Server:  viper.GetString("server"),
 		Data:    iss,
-		Display: tuiView.DisplayFormat{Plain: plain},
+		Display: tuiView.DisplayFormat{Plain: plain, Format: format},
 		Options: tuiView.IssueOption{NumComments: comments},
 	}
 	cmdutil.ExitIfError(v.Render())

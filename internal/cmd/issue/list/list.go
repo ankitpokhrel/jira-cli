@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil/output"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/internal/view"
@@ -52,6 +53,7 @@ $ jira issue list -s~Open -ax
 # List issues from all projects
 $ jira issue list -q"project IS NOT EMPTY"`
 )
+var format output.Format = output.Fancy
 
 // NewCmdList is a list command.
 func NewCmdList() *cobra.Command {
@@ -132,6 +134,7 @@ func loadList(cmd *cobra.Command) {
 		},
 		Display: view.DisplayFormat{
 			Plain:        plain,
+			Format:       format,
 			NoHeaders:    noHeaders,
 			NoTruncate:   noTruncate,
 			FixedColumns: fixedColumns,
@@ -179,9 +182,10 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().String("order-by", "created", "Field to order the list with")
 	cmd.Flags().Bool("reverse", false, "Reverse the display order (default \"DESC\")")
 	cmd.Flags().String("paginate", "0:100", "Paginate the result. Max 100 at a time, format: <from>:<limit> where <from> is optional")
-	cmd.Flags().Bool("plain", false, "Display output in plain mode")
+	cmd.Flags().Bool("plain", false, "Deprecated: use --output=plain")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
+	cmd.Flags().Var(&format, "format", format.Help())
 
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {
 		cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+

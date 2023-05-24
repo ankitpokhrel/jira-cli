@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/fatih/color"
 
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil/output"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -55,7 +56,11 @@ type Issue struct {
 
 // Render renders the view.
 func (i Issue) Render() error {
-	if i.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
+	switch i.Display.Format {
+	case output.JSON:
+		return i.renderJSON(os.Stdout)
+	}
+	if i.Display.Plain || i.Display.Format == output.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		return i.renderPlain(os.Stdout)
 	}
 	r, err := MDRenderer()
@@ -439,6 +444,11 @@ func (i Issue) footer() string {
 	out.WriteString(gray(fmt.Sprintf("View this issue on Jira: %s", cmdutil.GenerateServerBrowseURL(i.Server, i.Data.Key))))
 
 	return out.String()
+}
+
+// renderJSON renders the issue in JSON format.
+func (i Issue) renderJSON(w io.Writer) error {
+	return renderJSON(w, i.Data)
 }
 
 // renderPlain renders the issue in plain view.
