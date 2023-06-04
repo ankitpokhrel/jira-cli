@@ -12,6 +12,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
+	"golang.org/x/term"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/browser"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -129,14 +130,7 @@ func GetConfigHome() (string, error) {
 
 // StdinHasData checks if standard input has any data to be processed.
 func StdinHasData() bool {
-	fi, err := os.Stdin.Stat()
-	if err != nil {
-		return false
-	}
-	if fi.Mode()&os.ModeNamedPipe == 0 {
-		return false
-	}
-	return true
+	return !term.IsTerminal(int(os.Stdin.Fd()))
 }
 
 // ReadFile reads contents of the given file.
