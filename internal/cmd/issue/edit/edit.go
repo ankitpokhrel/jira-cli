@@ -28,6 +28,9 @@ $ jira issue edit ISSUE-1 -s"New Bug" -yHigh -lbug -lurgent -CBackend -b"Bug des
 # Use --no-input option to disable interactive prompt
 $ jira issue edit ISSUE-1 -s"New updated summary" --no-input
 
+# Use pipe to read the description body directly from standard input
+$ echo "Description from stdin" | jira issue edit ISSUE-1 -s"New updated summary"  --no-input
+
 # Use minus (-) to remove label, component or fixVersion
 $ jira issue edit ISSUE-1 --label -urgent --component -BE --fix-version -v1.0`
 )
@@ -96,6 +99,14 @@ func edit(cmd *cobra.Command, args []string) {
 		getAnswers(params, issue)
 	}
 
+	// Use stdin only if nothing is passed to --body
+	if params.body == "" && cmdutil.StdinHasData() {
+		b, err := cmdutil.ReadFile("-")
+		if err != nil {
+			cmdutil.Failed("Error: %s", err)
+		}
+		params.body = string(b)
+	}
 	// Keep body as is if there were no changes.
 	if params.body != "" && params.body == originalBody {
 		params.body = ""
