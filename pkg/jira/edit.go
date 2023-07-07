@@ -19,14 +19,15 @@ type EditResponse struct {
 // EditRequest struct holds request data for edit request.
 // Setting an Assignee requires an account ID.
 type EditRequest struct {
-	IssueType      string
-	ParentIssueKey string
-	Summary        string
-	Body           string
-	Priority       string
-	Labels         []string
-	Components     []string
-	FixVersions    []string
+	IssueType       string
+	ParentIssueKey  string
+	Summary         string
+	Body            string
+	Priority        string
+	Labels          []string
+	Components      []string
+	FixVersions     []string
+	AffectsVersions []string
 	// CustomFields holds all custom fields passed
 	// while editing the issue.
 	CustomFields map[string]string
@@ -99,6 +100,14 @@ type editFields struct {
 			Name string `json:"name,omitempty"`
 		} `json:"remove,omitempty"`
 	} `json:"fixVersions,omitempty"`
+	AffectsVersions []struct {
+		Add *struct {
+			Name string `json:"name,omitempty"`
+		} `json:"add,omitempty"`
+		Remove *struct {
+			Name string `json:"name,omitempty"`
+		} `json:"remove,omitempty"`
+	} `json:"versions,omitempty"`
 
 	customFields customField
 }
@@ -274,6 +283,46 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 		}
 
 		update.M.FixVersions = versions
+	}
+
+	if len(req.AffectsVersions) > 0 {
+		add, sub := splitAddAndRemove(req.AffectsVersions)
+
+		versions := make([]struct {
+			Add *struct {
+				Name string `json:"name,omitempty"`
+			} `json:"add,omitempty"`
+			Remove *struct {
+				Name string `json:"name,omitempty"`
+			} `json:"remove,omitempty"`
+		}, 0, len(req.AffectsVersions))
+
+		for _, v := range sub {
+			versions = append(versions, struct {
+				Add *struct {
+					Name string `json:"name,omitempty"`
+				} `json:"add,omitempty"`
+				Remove *struct {
+					Name string `json:"name,omitempty"`
+				} `json:"remove,omitempty"`
+			}{Remove: &struct {
+				Name string `json:"name,omitempty"`
+			}{Name: v}})
+		}
+		for _, v := range add {
+			versions = append(versions, struct {
+				Add *struct {
+					Name string `json:"name,omitempty"`
+				} `json:"add,omitempty"`
+				Remove *struct {
+					Name string `json:"name,omitempty"`
+				} `json:"remove,omitempty"`
+			}{Add: &struct {
+				Name string `json:"name,omitempty"`
+			}{Name: v}})
+		}
+
+		update.M.AffectsVersions = versions
 	}
 
 	fields := struct {

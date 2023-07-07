@@ -23,21 +23,22 @@ const (
 
 // CreateParams holds parameters for create command.
 type CreateParams struct {
-	Name           string
-	IssueType      string
-	ParentIssueKey string
-	Summary        string
-	Body           string
-	Priority       string
-	Reporter       string
-	Assignee       string
-	Labels         []string
-	Components     []string
-	FixVersions    []string
-	CustomFields   map[string]string
-	Template       string
-	NoInput        bool
-	Debug          bool
+	Name            string
+	IssueType       string
+	ParentIssueKey  string
+	Summary         string
+	Body            string
+	Priority        string
+	Reporter        string
+	Assignee        string
+	Labels          []string
+	Components      []string
+	FixVersions     []string
+	AffectsVersions []string
+	CustomFields    map[string]string
+	Template        string
+	NoInput         bool
+	Debug           bool
 }
 
 // SetCreateFlags sets flags supported by create command.
@@ -61,6 +62,7 @@ And, this field is mandatory when creating a sub-task.`)
 	cmd.Flags().StringArrayP("label", "l", []string{}, prefix+" labels")
 	cmd.Flags().StringArrayP("component", "C", []string{}, prefix+" components")
 	cmd.Flags().StringArray("fix-version", []string{}, "Release info (fixVersions)")
+	cmd.Flags().StringArray("affects-version", []string{}, "Release info (affectsVersions)")
 	cmd.Flags().StringToString("custom", custom, "Set custom fields")
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read body/description from")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful creation")
@@ -90,7 +92,7 @@ func GetMetadata() []*survey.Question {
 			Name: "metadata",
 			Prompt: &survey.MultiSelect{
 				Message: "What would you like to add?",
-				Options: []string{"Priority", "Components", "Labels", "FixVersions"},
+				Options: []string{"Priority", "Components", "Labels", "FixVersions", "AffectsVersions"},
 			},
 		},
 	}
@@ -131,6 +133,14 @@ func GetMetadataQuestions(cat []string) []*survey.Question {
 					Help:    "Comma separated list of fixVersions. For eg: v1.0-beta,v2.0",
 				},
 			})
+		case "AffectsVersions":
+			qs = append(qs, &survey.Question{
+				Name: "affectsversions",
+				Prompt: &survey.Input{
+					Message: "Affects Versions",
+					Help:    "Comma separated list of affectsVersions. For eg: v1.0-beta,v2.0",
+				},
+			})
 		}
 	}
 
@@ -159,10 +169,11 @@ func HandleNoInput(params *CreateParams) error {
 			if len(ans.Metadata) > 0 {
 				qs := GetMetadataQuestions(ans.Metadata)
 				ans := struct {
-					Priority    string
-					Labels      string
-					Components  string
-					FixVersions string
+					Priority        string
+					Labels          string
+					Components      string
+					FixVersions     string
+					AffectsVersions string
 				}{}
 				err := survey.Ask(qs, &ans)
 				if err != nil {
@@ -180,6 +191,9 @@ func HandleNoInput(params *CreateParams) error {
 				}
 				if len(ans.FixVersions) > 0 {
 					params.FixVersions = strings.Split(ans.FixVersions, ",")
+				}
+				if len(ans.AffectsVersions) > 0 {
+					params.AffectsVersions = strings.Split(ans.AffectsVersions, ",")
 				}
 			}
 		}
