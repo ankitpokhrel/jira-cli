@@ -16,6 +16,7 @@ import (
 // DisplayFormat is a issue display type.
 type DisplayFormat struct {
 	Plain        bool
+	Delimiter    string		
 	NoHeaders    bool
 	NoTruncate   bool
 	Columns      []string
@@ -37,8 +38,13 @@ type IssueList struct {
 // Render renders the view.
 func (l *IssueList) Render() error {
 	if l.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
+		// custom delimiter is used only in plain mode, otherwise \t is used
+		delimeter := "\t"
+		if (l.Display.Plain) {
+			delimeter = l.Display.Delimiter
+		}
 		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
-		return l.renderPlain(w)
+		return l.renderPlain(w, delimeter)
 	}
 
 	renderer, err := MDRenderer()
@@ -122,8 +128,8 @@ func (l *IssueList) Render() error {
 }
 
 // renderPlain renders the issue in plain view.
-func (l *IssueList) renderPlain(w io.Writer) error {
-	return renderPlain(w, l.data())
+func (l *IssueList) renderPlain(w io.Writer, delimeter string) error {
+	return renderPlain(w, l.data(), delimeter)
 }
 
 func (*IssueList) validColumnsMap() map[string]struct{} {

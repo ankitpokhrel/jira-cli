@@ -43,6 +43,9 @@ $ jira issue list --plain --columns key,assignee,status
 # List issues in a plain table view and show all fields
 $ jira issue list --plain --no-truncate
 
+# List issues in a plain table view using custom delimiter (default is "\t")
+$ jira issue list --plain --delimeter "|"
+
 # List issues of type "Epic" in status "Done"
 $ jira issue list -tEpic -sDone
 
@@ -110,6 +113,9 @@ func loadList(cmd *cobra.Command) {
 	plain, err := cmd.Flags().GetBool("plain")
 	cmdutil.ExitIfError(err)
 
+	delimiter, err := cmd.Flags().GetString("delimiter")
+	cmdutil.ExitIfError(err)
+
 	noHeaders, err := cmd.Flags().GetBool("no-headers")
 	cmdutil.ExitIfError(err)
 
@@ -132,6 +138,7 @@ func loadList(cmd *cobra.Command) {
 		},
 		Display: view.DisplayFormat{
 			Plain:        plain,
+			Delimiter:    delimiter,
 			NoHeaders:    noHeaders,
 			NoTruncate:   noTruncate,
 			FixedColumns: fixedColumns,
@@ -182,6 +189,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
+	cmd.Flags().String("delimiter", "\t", "Custom delimeter for columns in plain mode. Works only with --plain")
 
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {
 		cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
