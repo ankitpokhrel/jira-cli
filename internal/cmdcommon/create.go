@@ -252,6 +252,9 @@ func ValidateCustomFields(fields map[string]string, configuredFields []jira.Issu
 
 	invalidCustomFields := make([]string, 0, len(fields))
 	for key := range fields {
+		if strings.HasPrefix(key, "json:") {
+			key = key[5:]
+		}
 		if _, ok := fieldsMap[key]; !ok {
 			invalidCustomFields = append(invalidCustomFields, key)
 		}

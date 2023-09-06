@@ -39,3 +39,11 @@ type customFieldTypeProject struct {
 type customFieldTypeProjectSet struct {
 	Set customFieldTypeProject `json:"set"`
 }
+
+type customFieldTypeJson struct {
+	Json string
+}
+
+func (field customFieldTypeJson) MarshalJSON() ([]byte, error) {
+	return []byte(field.Json), nil
+}
