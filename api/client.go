@@ -48,6 +48,18 @@ func Client(config jira.Config) *jira.Client {
 		config.Insecure = &insecure
 	}
 
+	// MTLS
+
+	if config.MTLSConfig.CaCert == "" {
+		config.MTLSConfig.CaCert = viper.GetString("mtls.ca_cert")
+	}
+	if config.MTLSConfig.ClientCert == "" {
+		config.MTLSConfig.ClientCert = viper.GetString("mtls.client_cert")
+	}
+	if config.MTLSConfig.ClientKey == "" {
+		config.MTLSConfig.ClientKey = viper.GetString("mtls.client_key")
+	}
+
 	jiraClient = jira.NewClient(
 		config,
 		jira.WithTimeout(clientTimeout),

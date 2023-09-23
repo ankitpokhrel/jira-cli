@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"os"
 	"strings"
 	"time"
 )
@@ -93,14 +96,22 @@ func (e Errors) String() string {
 // Header is a key, value pair for request headers.
 type Header map[string]string
 
+// MTLS authtype specific config.
+type MTLSConfig struct {
+	CaCert     string
+	ClientCert string
+	ClientKey  string
+}
+
 // Config is a jira config.
 type Config struct {
-	Server   string
-	Login    string
-	APIToken string
-	AuthType AuthType
-	Insecure *bool
-	Debug    bool
+	Server     string
+	Login      string
+	APIToken   string
+	AuthType   AuthType
+	Insecure   *bool
+	Debug      bool
+	MTLSConfig MTLSConfig
 }
 
 // Client is a jira client.
@@ -132,13 +143,39 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 		opt(&client)
 	}
 
-	client.transport = &http.Transport{
-		Proxy:           http.ProxyFromEnvironment,
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: client.insecure},
+	transport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		TLSClientConfig: &tls.Config{
+			MinVersion:         tls.VersionTLS12,
+			InsecureSkipVerify: client.insecure,
+		},
 		DialContext: (&net.Dialer{
 			Timeout: client.timeout,
 		}).DialContext,
 	}
+
+	if c.AuthType == AuthTypeMTLS {
+		// Create a CA certificate pool and add cert.pem to it
+		caCert, err := os.ReadFile(c.MTLSConfig.CaCert)
+		if err != nil {
+			log.Fatalf("%s, %s", err, c.MTLSConfig.CaCert)
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		// Read the key pair to create the certificate.
+		cert, err := tls.LoadX509KeyPair(c.MTLSConfig.ClientCert, c.MTLSConfig.ClientKey)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Add the MTLS specific configuration.
+		transport.TLSClientConfig.RootCAs = caCertPool
+		transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
+		transport.TLSClientConfig.Renegotiation = tls.RenegotiateFreelyAsClient
+	}
+
+	client.transport = transport
 
 	return &client
 }
@@ -226,7 +263,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 
 	if c.authType == AuthTypeBearer {
 		req.Header.Add("Authorization", "Bearer "+c.token)
-	} else {
+	} else if c.authType == AuthTypeBasic {
 		req.SetBasicAuth(c.login, c.token)
 	}
 
