@@ -5,6 +5,7 @@ const (
 	customFieldFormatArray   = "array"
 	customFieldFormatNumber  = "number"
 	customFieldFormatProject = "project"
+	customFieldFormatJson    = "json"
 )
 
 type customField map[string]interface{}
@@ -42,6 +43,10 @@ type customFieldTypeProjectSet struct {
 
 type customFieldTypeJson struct {
 	Json string
+}
+
+type customFieldTypeJsonSet struct {
+	Set customFieldTypeJson `json:"set"`
 }
 
 func (field customFieldTypeJson) MarshalJSON() ([]byte, error) {

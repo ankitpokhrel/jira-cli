@@ -361,19 +361,9 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 	data.Update.M.customFields = make(customField)
 
 	for key, val := range fields {
-		rawJson := false
-		if strings.HasPrefix(key, "json:") {
-			key = key[5:]
-			rawJson = true
-		}
 		for _, configured := range configuredFields {
 			identifier := strings.ReplaceAll(strings.ToLower(strings.TrimSpace(configured.Name)), " ", "-")
 			if identifier != strings.ToLower(key) {
-				continue
-			}
-
-			if rawJson {
-				data.Update.M.customFields[configured.Key] = []customFieldTypeJson{{Json: val}}
 				continue
 			}
 
@@ -405,6 +395,8 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 				} else {
 					data.Update.M.customFields[configured.Key] = []customFieldTypeNumberSet{{Set: customFieldTypeNumber(num)}}
 				}
+			case customFieldFormatJson:
+				data.Update.M.customFields[configured.Key] = []customFieldTypeJsonSet{{Set: customFieldTypeJson{Json: val}}}
 			default:
 				data.Update.M.customFields[configured.Key] = []customFieldTypeStringSet{{Set: val}}
 			}
