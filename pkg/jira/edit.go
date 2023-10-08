@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -366,39 +365,21 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 			if identifier != strings.ToLower(key) {
 				continue
 			}
-
-			switch configured.Schema.DataType {
-			case customFieldFormatOption:
-				data.Update.M.customFields[configured.Key] = []customFieldTypeOptionSet{{Set: customFieldTypeOption{Value: val}}}
-			case customFieldFormatProject:
-				data.Update.M.customFields[configured.Key] = []customFieldTypeProjectSet{{Set: customFieldTypeProject{Value: val}}}
-			case customFieldFormatArray:
+			if configured.Schema.DataType == customFieldFormatArray {
 				pieces := strings.Split(strings.TrimSpace(val), ",")
-				if configured.Schema.Items == customFieldFormatOption {
-					items := make([]customFieldTypeOptionAddRemove, 0)
-					for _, p := range pieces {
-						if strings.HasPrefix(p, separatorMinus) {
-							items = append(items, customFieldTypeOptionAddRemove{Remove: &customFieldTypeOption{Value: strings.TrimPrefix(p, separatorMinus)}})
-						} else {
-							items = append(items, customFieldTypeOptionAddRemove{Add: &customFieldTypeOption{Value: p}})
-						}
+				items := make([]customFieldEditTypeAddRemove, len(pieces))
+				for idx, piece := range pieces {
+					field := constructCustomField(configured.Schema.Items, "", strings.TrimPrefix(piece, separatorMinus))
+					if strings.HasPrefix(piece, separatorMinus) {
+						items[idx] = customFieldEditTypeAddRemove{Remove: &field}
+					} else {
+						items[idx] = customFieldEditTypeAddRemove{Add: &field}
 					}
-					data.Update.M.customFields[configured.Key] = items
-				} else {
-					data.Update.M.customFields[configured.Key] = pieces
 				}
-			case customFieldFormatNumber:
-				num, err := strconv.ParseFloat(val, 64) //nolint:gomnd
-				if err != nil {
-					// Let Jira API handle data type error for now.
-					data.Update.M.customFields[configured.Key] = []customFieldTypeStringSet{{Set: val}}
-				} else {
-					data.Update.M.customFields[configured.Key] = []customFieldTypeNumberSet{{Set: customFieldTypeNumber(num)}}
-				}
-			case customFieldFormatJson:
-				data.Update.M.customFields[configured.Key] = []customFieldTypeJsonSet{{Set: customFieldTypeJson{Json: val}}}
-			default:
-				data.Update.M.customFields[configured.Key] = []customFieldTypeStringSet{{Set: val}}
+				data.Update.M.customFields[configured.Key] = items
+			} else {
+				field := constructCustomField(configured.Schema.DataType, "", val)
+				data.Update.M.customFields[configured.Key] = []customFieldEditTypeSet{{Set: field}}
 			}
 		}
 	}
