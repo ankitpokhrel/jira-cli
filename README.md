@@ -35,6 +35,22 @@
     </p>
 </div>
 
+<div>
+   <h2 align="center">Supporters</h2>
+   <p align="center">
+      <a href="https://www.atlassian.com?from=ankitpokhrel/jira-cli" target="_blank">
+         <img alt="Atlassian Logo" src=".github/assets/supporters/atlassian.png" />
+      </a><br/>
+      <a href="https://www.jetbrains.com/?from=ankitpokhrel/jira-cli" target="_blank">
+         <img alt="JetBrains Logo" src=".github/assets/supporters/jetbrains.png" />
+      </a>
+      <span style="margin-right: 20px"></span>
+      <a href="https://captionai.co?from=ankitpokhrel/jira-cli" target="_blank">
+         <img alt="CaptionAI Logo" src=".github/assets/supporters/captionai.png" />
+      </a>
+   </p>
+</div>
+
 JiraCLI is an interactive command line tool for Atlassian Jira that will help you avoid Jira UI to some extent. This
 tool may not be able to do everything, but it has all the essential features required to improve your day-to-day workflow with Jira.
 
@@ -99,7 +115,7 @@ See [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs)
 The tool supports `basic`, `bearer` (Personal Access Token), and `mtls` (Client Certificates) authentication types. Basic auth is used by
 default.
 
-* If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`. 
+* If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
 * If you want to use `mtls` run `jira init`. Select installation type `Local`, and then select authentication type as `mtls`.
 
 #### Shell completion
