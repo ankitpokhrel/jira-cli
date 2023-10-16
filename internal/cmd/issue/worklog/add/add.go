@@ -32,7 +32,10 @@ $ jira issue worklog add ISSUE-1 "2d 1h 30m" --started "2022-01-01 09:30:00"
 $ jira issue worklog add ISSUE-1 3h --started "2022-01-01 09:30:00" --timezone "Europe/Berlin"
 
 # Or, you can use start date in Jira datetime format and skip the timezone flag
-$ jira issue worklog add ISSUE-1 "1h 30m" --started "2022-01-01T09:30:00.000+0200"`
+$ jira issue worklog add ISSUE-1 "1h 30m" --started "2022-01-01T09:30:00.000+0200"
+
+# Or, you can update a worklogs remaining estimate
+$ jira issue worklog add ISSUE-1 "1h 30m" --started "2022-01-01T09:30:00.000+0200" --new-estimate 0h`
 )
 
 // NewCmdWorklogAdd is a worklog add command.
@@ -54,6 +57,7 @@ func NewCmdWorklogAdd() *cobra.Command {
 	cmd.Flags().String("started", "", "The datetime on which the worklog effort was started, eg: 2022-01-01 09:30:00")
 	cmd.Flags().String("timezone", "UTC", "The timezone to use for the started date in IANA timezone format, eg: Europe/Berlin")
 	cmd.Flags().String("comment", "", "Comment about the worklog")
+	cmd.Flags().String("new-estimate", "", "the new estimate for the backlog to be completed by")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 
 	return &cmd
@@ -97,7 +101,7 @@ func add(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Adding a worklog")
 		defer s.Stop()
 
-		return client.AddIssueWorklog(ac.params.issueKey, ac.params.started, ac.params.timeSpent, ac.params.comment)
+		return client.AddIssueWorklog(ac.params.issueKey, ac.params.started, ac.params.timeSpent, ac.params.comment, ac.params.newEstimate)
 	}()
 	cmdutil.ExitIfError(err)
 
@@ -108,13 +112,14 @@ func add(cmd *cobra.Command, args []string) {
 }
 
 type addParams struct {
-	issueKey  string
-	started   string
-	timezone  string
-	timeSpent string
-	comment   string
-	noInput   bool
-	debug     bool
+	issueKey    string
+	started     string
+	timezone    string
+	timeSpent   string
+	comment     string
+	newEstimate string
+	noInput     bool
+	debug       bool
 }
 
 func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
@@ -146,14 +151,18 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 	noInput, err := flags.GetBool("no-input")
 	cmdutil.ExitIfError(err)
 
+	newEstimate, err := flags.GetString("new-estimate")
+	cmdutil.ExitIfError(err)
+
 	return &addParams{
-		issueKey:  issueKey,
-		started:   startedWithTZ,
-		timezone:  timezone,
-		timeSpent: timeSpent,
-		comment:   comment,
-		noInput:   noInput,
-		debug:     debug,
+		issueKey:    issueKey,
+		started:     startedWithTZ,
+		timezone:    timezone,
+		timeSpent:   timeSpent,
+		comment:     comment,
+		newEstimate: newEstimate,
+		noInput:     noInput,
+		debug:       debug,
 	}
 }
 
