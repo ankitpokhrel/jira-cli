@@ -54,7 +54,7 @@ type issueTypeFieldConf struct {
 	}
 }
 
-// MTLS authtype specific config.
+// JiraCLIMTLSConfig is an authtype specific config.
 type JiraCLIMTLSConfig struct {
 	CaCert     string
 	ClientCert string
@@ -232,7 +232,7 @@ func (c *JiraCLIConfigGenerator) configureLocalAuthType() error {
 		}
 	}
 
-	if authType == strings.ToLower(jira.AuthTypeMTLS.String()) {
+	if authType == jira.AuthTypeMTLS.String() {
 		c.value.authType = jira.AuthTypeMTLS
 	} else {
 		c.value.authType = jira.AuthTypeBasic
