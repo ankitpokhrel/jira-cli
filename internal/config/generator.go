@@ -222,19 +222,21 @@ func (c *JiraCLIConfigGenerator) configureLocalAuthType() error {
 	if c.usrCfg.AuthType == "" {
 		qs := &survey.Select{
 			Message: "Authentication type:",
-			Help:    "basic (login) or mtls (client certs)?",
-			Options: []string{"basic", "mtls"},
+			Help:    "basic (login), bearer (PAT) or mtls (client certs)?",
+			Options: []string{"basic", "bearer", "mtls"},
 			Default: "basic",
 		}
-
 		if err := survey.AskOne(qs, &authType); err != nil {
 			return err
 		}
 	}
 
-	if authType == jira.AuthTypeMTLS.String() {
+	switch authType {
+	case jira.AuthTypeBearer.String():
+		c.value.authType = jira.AuthTypeBearer
+	case jira.AuthTypeMTLS.String():
 		c.value.authType = jira.AuthTypeMTLS
-	} else {
+	default:
 		c.value.authType = jira.AuthTypeBasic
 	}
 
