@@ -176,6 +176,7 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 				return []string{}
 			}(),
 			TableStyle: cmdutil.GetTUIStyleConfig(),
+			Timezone:   viper.GetString("timezone"),
 		},
 	}
 
@@ -243,6 +244,7 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 				return []string{}
 			}(),
 			TableStyle: cmdutil.GetTUIStyleConfig(),
+			Timezone:   viper.GetString("timezone"),
 		},
 	}
 
