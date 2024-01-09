@@ -93,6 +93,7 @@ type JiraCLIConfigGenerator struct {
 		mtls         struct {
 			caCert, clientCert, clientKey string
 		}
+		timezone string
 	}
 	jiraClient         *jira.Client
 	projectSuggestions []string
@@ -420,14 +421,17 @@ func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error 
 			ClientKey:  c.value.mtls.clientKey,
 		},
 	})
-	if ret, err := c.jiraClient.Me(); err != nil {
+	ret, err := c.jiraClient.Me()
+	if err != nil {
 		return err
-	} else if c.value.authType == jira.AuthTypeBearer {
+	}
+	if c.value.authType == jira.AuthTypeBearer {
 		login = ret.Login
 	}
 
 	c.value.server = server
 	c.value.login = login
+	c.value.timezone = ret.Timezone
 
 	return nil
 }
@@ -747,6 +751,7 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	config.Set("issue.types", c.value.issueTypes)
 	config.Set("issue.fields.custom", c.value.customFields)
 	config.Set("auth_type", c.value.authType)
+	config.Set("timezone", c.value.timezone)
 
 	// MTLS
 	config.Set("mtls.ca_cert", c.value.mtls.caCert)

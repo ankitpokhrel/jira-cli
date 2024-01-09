@@ -159,6 +159,7 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 				return []string{}
 			}(),
 			TableStyle: cmdutil.GetTUIStyleConfig(),
+			Timezone:   viper.GetString("timezone"),
 		},
 	}
 
@@ -214,6 +215,7 @@ func epicExplorerView(cmd *cobra.Command, flags query.FlagParser, project, proje
 		Display: view.DisplayFormat{
 			FixedColumns: fixedColumns,
 			TableStyle:   cmdutil.GetTUIStyleConfig(),
+			Timezone:     viper.GetString("timezone"),
 		},
 	}
 

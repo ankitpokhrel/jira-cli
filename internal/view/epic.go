@@ -114,8 +114,8 @@ func (el *EpicList) tabularize(issues []*jira.Issue) tui.TableData {
 			issue.Fields.Reporter.Name,
 			issue.Fields.Priority.Name,
 			issue.Fields.Resolution.Name,
-			formatDateTime(issue.Fields.Created, jira.RFC3339),
-			formatDateTime(issue.Fields.Updated, jira.RFC3339),
+			formatDateTime(issue.Fields.Created, jira.RFC3339, el.Display.Timezone),
+			formatDateTime(issue.Fields.Updated, jira.RFC3339, el.Display.Timezone),
 		})
 	}
 
