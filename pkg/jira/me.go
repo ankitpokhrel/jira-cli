@@ -8,9 +8,10 @@ import (
 
 // Me struct holds response from /myself endpoint.
 type Me struct {
-	Login string `json:"name"`
-	Name  string `json:"displayName"`
-	Email string `json:"emailAddress"`
+	Login    string `json:"name"`
+	Name     string `json:"displayName"`
+	Email    string `json:"emailAddress"`
+	Timezone string `json:"timeZone"`
 }
 
 // Me fetches response from /myself endpoint.

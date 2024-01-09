@@ -21,30 +21,37 @@ func TestFormatDateTime(t *testing.T) {
 		{
 			name: "it returns input date for invalid date input",
 			format: func() string {
-				return formatDateTime("2020-12-03 10:00:00", jira.RFC3339)
+				return formatDateTime("2020-12-03 10:00:00", jira.RFC3339, "UTC")
 			},
 			expected: "2020-12-03 10:00:00",
 		},
 		{
 			name: "it returns input date for invalid input format",
 			format: func() string {
-				return formatDateTime("2020-12-03 10:00:00", "invalid")
+				return formatDateTime("2020-12-03 10:00:00", "invalid", "UTC")
 			},
 			expected: "2020-12-03 10:00:00",
 		},
 		{
 			name: "it format input date from jira date format",
 			format: func() string {
-				return formatDateTime("2020-12-03T14:05:20.974+0100", jira.RFC3339)
+				return formatDateTime("2020-12-03T14:05:20.974+0100", jira.RFC3339, "UTC")
 			},
-			expected: "2020-12-03 14:05:20",
+			expected: "2020-12-03 13:05:20",
 		},
 		{
 			name: "it format input date from RFC3339 date format",
 			format: func() string {
-				return formatDateTime("2020-12-13T16:12:00.000Z", time.RFC3339)
+				return formatDateTime("2020-12-13T16:12:00.000Z", time.RFC3339, "UTC")
 			},
 			expected: "2020-12-13 16:12:00",
+		},
+		{
+			name: "it format input date using proper timezone",
+			format: func() string {
+				return formatDateTime("2020-12-13T16:12:00.000Z", time.RFC3339, "Asia/Kathmandu")
+			},
+			expected: "2020-12-13 21:57:00",
 		},
 	}
 

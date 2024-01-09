@@ -96,7 +96,7 @@ func (e Errors) String() string {
 // Header is a key, value pair for request headers.
 type Header map[string]string
 
-// MTLS authtype specific config.
+// MTLSConfig is MTLS authtype specific config.
 type MTLSConfig struct {
 	CaCert     string
 	ClientCert string
@@ -261,9 +261,12 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		req.Header.Set(k, v)
 	}
 
-	if c.authType == AuthTypeBearer {
+	// When need to compare using `String()` here, it is used to handle cases where the
+	// authentication type might be empty, ensuring it defaults to the appropriate value.
+	switch c.authType.String() {
+	case string(AuthTypeBearer):
 		req.Header.Add("Authorization", "Bearer "+c.token)
-	} else if c.authType == AuthTypeBasic {
+	case string(AuthTypeBasic):
 		req.SetBasicAuth(c.login, c.token)
 	}
 
