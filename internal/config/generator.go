@@ -114,6 +114,8 @@ func NewJiraCLIConfigGenerator(cfg *JiraCLIConfig) *JiraCLIConfigGenerator {
 }
 
 // Generate generates the config file.
+//
+//nolint:gocyclo
 func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 	var cfgFile string
 
@@ -157,6 +159,10 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 		if err := c.configureLocalAuthType(); err != nil {
 			return "", err
 		}
+	}
+
+	if c.usrCfg.AuthType != "" {
+		c.value.authType = jira.AuthType(c.usrCfg.AuthType)
 	}
 
 	if c.value.authType == jira.AuthTypeMTLS {
@@ -218,12 +224,14 @@ func (c *JiraCLIConfigGenerator) configureInstallationType() error {
 }
 
 func (c *JiraCLIConfigGenerator) configureLocalAuthType() error {
-	var authType string
+	authType := c.usrCfg.AuthType
 
 	if c.usrCfg.AuthType == "" {
 		qs := &survey.Select{
 			Message: "Authentication type:",
-			Help:    "basic (login), bearer (PAT) or mtls (client certs)?",
+			Help: `Authentication type coud be: basic (login), bearer (PAT) or mtls (client certs)
+? If you are using your login credentials, the auth type is probably 'basic' (most common for local installation)
+? If you are using a personal access token, the auth type is probably 'bearer'`,
 			Options: []string{"basic", "bearer", "mtls"},
 			Default: "basic",
 		}
@@ -413,7 +421,7 @@ func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error 
 		Server:   server,
 		Login:    login,
 		Insecure: &c.usrCfg.Insecure,
-		AuthType: c.value.authType,
+		AuthType: &c.value.authType,
 		Debug:    viper.GetBool("debug"),
 		MTLSConfig: jira.MTLSConfig{
 			CaCert:     c.value.mtls.caCert,
@@ -446,7 +454,7 @@ func (c *JiraCLIConfigGenerator) configureServerMeta(server, login string) error
 		Server:   server,
 		Login:    login,
 		Insecure: &c.usrCfg.Insecure,
-		AuthType: c.value.authType,
+		AuthType: &c.value.authType,
 		Debug:    viper.GetBool("debug"),
 		MTLSConfig: jira.MTLSConfig{
 			CaCert:     c.value.mtls.caCert,
@@ -750,14 +758,17 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	config.Set("epic", c.value.epic)
 	config.Set("issue.types", c.value.issueTypes)
 	config.Set("issue.fields.custom", c.value.customFields)
-	config.Set("auth_type", c.value.authType)
+	config.Set("auth_type", c.value.authType.String())
 	config.Set("timezone", c.value.timezone)
 
-	// MTLS
-	config.Set("mtls.ca_cert", c.value.mtls.caCert)
-	config.Set("mtls.client_cert", c.value.mtls.clientCert)
-	config.Set("mtls.client_key", c.value.mtls.clientKey)
+	// MTLS.
+	if c.value.mtls.caCert != "" {
+		config.Set("mtls.ca_cert", c.value.mtls.caCert)
+		config.Set("mtls.client_cert", c.value.mtls.clientCert)
+		config.Set("mtls.client_key", c.value.mtls.clientKey)
+	}
 
+	// Jira version.
 	if c.value.version.major > 0 {
 		config.Set("version.major", c.value.version.major)
 		config.Set("version.minor", c.value.version.minor)

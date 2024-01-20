@@ -101,6 +101,8 @@ Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/In
      more [here](https://github.com/ankitpokhrel/jira-cli/discussions/356).
 2. Run `jira init`, select installation type as `Local`, and provide the required details to generate a config file required
    for the tool.
+   - The most common auth type for on-premise installation is `basic`. If you are using your jira login credentials (
+     username and password), select the `basic` auth type.
    - If you want to use `mtls` (client certificates), select auth type `mtls` and provide the CA Cert, client Key, and client cert.
 
    **Note:** If your on-premise Jira installation is using a language other than `English`, then the issue/epic creation
