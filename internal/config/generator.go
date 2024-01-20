@@ -858,7 +858,8 @@ func create(file string) error {
 			return err
 		}
 	}
-	_, err := os.Create(file)
+	f, err := os.Create(file)
+	defer func() { _ = f.Close() }()
 
 	return err
 }
