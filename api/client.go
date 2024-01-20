@@ -40,8 +40,9 @@ func Client(config jira.Config) *jira.Client {
 		secret, _ := keyring.Get("jira-cli", config.Login)
 		config.APIToken = secret
 	}
-	if config.AuthType == "" {
-		config.AuthType = jira.AuthType(viper.GetString("auth_type"))
+	if config.AuthType == nil {
+		authType := jira.AuthType(viper.GetString("auth_type"))
+		config.AuthType = &authType
 	}
 	if config.Insecure == nil {
 		insecure := viper.GetBool("insecure")

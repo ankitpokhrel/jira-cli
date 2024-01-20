@@ -108,7 +108,7 @@ type Config struct {
 	Server     string
 	Login      string
 	APIToken   string
-	AuthType   AuthType
+	AuthType   *AuthType
 	Insecure   *bool
 	Debug      bool
 	MTLSConfig MTLSConfig
@@ -120,7 +120,7 @@ type Client struct {
 	insecure  bool
 	server    string
 	login     string
-	authType  AuthType
+	authType  *AuthType
 	token     string
 	timeout   time.Duration
 	debug     bool
@@ -154,8 +154,8 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 		}).DialContext,
 	}
 
-	if c.AuthType == AuthTypeMTLS {
-		// Create a CA certificate pool and add cert.pem to it
+	if c.AuthType != nil && *c.AuthType == AuthTypeMTLS {
+		// Create a CA certificate pool and add cert.pem to it.
 		caCert, err := os.ReadFile(c.MTLSConfig.CaCert)
 		if err != nil {
 			log.Fatalf("%s, %s", err, c.MTLSConfig.CaCert)
@@ -259,6 +259,12 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 
 	for k, v := range headers {
 		req.Header.Set(k, v)
+	}
+
+	// Set default auth type to `basic`.
+	if c.authType == nil {
+		basic := AuthTypeBasic
+		c.authType = &basic
 	}
 
 	// When need to compare using `String()` here, it is used to handle cases where the
