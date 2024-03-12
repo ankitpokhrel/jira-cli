@@ -68,13 +68,15 @@ type IssueFields struct {
 		Key string `json:"key"`
 	} `json:"parent,omitempty"`
 	Assignee struct {
-		Name string `json:"displayName"`
+		Name  string `json:"displayName"`
+		Email string `json:"emailAddress"`
 	} `json:"assignee"`
 	Priority struct {
 		Name string `json:"name"`
 	} `json:"priority"`
 	Reporter struct {
-		Name string `json:"displayName"`
+		Name  string `json:"displayName"`
+		Email string `json:"emailAddress"`
 	} `json:"reporter"`
 	Watches struct {
 		IsWatching bool `json:"isWatching"`

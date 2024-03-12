@@ -37,13 +37,15 @@ func TestSprintPreviewLayoutData(t *testing.T) {
 			}{Name: "Fixed"},
 			IssueType: jira.IssueType{Name: "Bug"},
 			Assignee: struct {
-				Name string `json:"displayName"`
+				Name  string `json:"displayName"`
+				Email string `json:"emailAddress"`
 			}{Name: "Person A"},
 			Priority: struct {
 				Name string `json:"name"`
 			}{Name: "High"},
 			Reporter: struct {
-				Name string `json:"displayName"`
+				Name  string `json:"displayName"`
+				Email string `json:"emailAddress"`
 			}{Name: "Person Z"},
 			Status: struct {
 				Name string `json:"name"`
@@ -62,7 +64,8 @@ func TestSprintPreviewLayoutData(t *testing.T) {
 				Name string `json:"name"`
 			}{Name: "Normal"},
 			Reporter: struct {
-				Name string `json:"displayName"`
+				Name  string `json:"displayName"`
+				Email string `json:"emailAddress"`
 			}{Name: "Person A"},
 			Status: struct {
 				Name string `json:"name"`

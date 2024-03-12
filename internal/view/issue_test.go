@@ -37,14 +37,16 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 			},
 			IssueType: jira.IssueType{Name: "Bug"},
 			Assignee: struct {
-				Name string `json:"displayName"`
-			}{Name: "Person A"},
+				Name  string `json:"displayName"`
+				Email string `json:"emailAddress"`
+			}{Name: "Person A", Email: "person.a@test.com"},
 			Priority: struct {
 				Name string `json:"name"`
 			}{Name: "High"},
 			Reporter: struct {
-				Name string `json:"displayName"`
-			}{Name: "Person Z"},
+				Name  string `json:"displayName"`
+				Email string `json:"emailAddress"`
+			}{Name: "Person Z", Email: "person.z@test.com"},
 			Status: struct {
 				Name string `json:"name"`
 			}{Name: "Done"},
@@ -75,7 +77,7 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 		Display: DisplayFormat{Plain: true},
 	}
 
-	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  💭 0 comments  \U0001F9F5 0 linked\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 You + 3 watchers\n\n------------------------ Description ------------------------\n\nTest description\n\n\n"
+	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A (person.a@test.com)  🔑️ TEST-1  💭 0 comments  \U0001F9F5 0 linked\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z (person.z@test.com)  🚀 High  📦 BE, FE  🏷️  None  👀 You + 3 watchers\n\n------------------------ Description ------------------------\n\nTest description\n\n\n"
 	if xterm256() {
 		expected += "\x1b[38;5;242mView this issue on Jira: https://test.local/browse/TEST-1\x1b[m"
 	} else {
@@ -102,13 +104,15 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 			Description: "h1. Title\nh2. Subtitle\n\nThis is a *bold* and _italic_ text with [a link|https://ankit.pl] in between.",
 			IssueType:   jira.IssueType{Name: "Bug"},
 			Assignee: struct {
-				Name string `json:"displayName"`
+				Name  string `json:"displayName"`
+				Email string `json:"emailAddress"`
 			}{Name: "Person A"},
 			Priority: struct {
 				Name string `json:"name"`
 			}{Name: "High"},
 			Reporter: struct {
-				Name string `json:"displayName"`
+				Name  string `json:"displayName"`
+				Email string `json:"emailAddress"`
 			}{Name: "Person Z"},
 			Status: struct {
 				Name string `json:"name"`

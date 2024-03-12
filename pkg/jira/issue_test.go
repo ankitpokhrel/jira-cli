@@ -60,7 +60,8 @@ func TestGetIssue(t *testing.T) {
 				Name string `json:"name"`
 			}{Name: "Medium"},
 			Reporter: struct {
-				Name string `json:"displayName"`
+				Name  string `json:"displayName"`
+				Email string `json:"emailAddress"`
 			}{Name: "Person A"},
 			Watches: struct {
 				IsWatching bool `json:"isWatching"`
@@ -130,7 +131,8 @@ func TestGetIssueWithoutDescription(t *testing.T) {
 				Name string `json:"name"`
 			}{Name: "Medium"},
 			Reporter: struct {
-				Name string `json:"displayName"`
+				Name  string `json:"displayName"`
+				Email string `json:"emailAddress"`
 			}{Name: "Person A"},
 			Watches: struct {
 				IsWatching bool `json:"isWatching"`
@@ -181,7 +183,8 @@ func TestGetIssueV2(t *testing.T) {
 				Name string `json:"name"`
 			}{Name: "Medium"},
 			Reporter: struct {
-				Name string `json:"displayName"`
+				Name  string `json:"displayName"`
+				Email string `json:"emailAddress"`
 			}{Name: "Person A"},
 			Watches: struct {
 				IsWatching bool `json:"isWatching"`

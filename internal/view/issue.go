@@ -200,9 +200,11 @@ func (i Issue) separator(msg string) string {
 }
 
 func (i Issue) header() string {
-	as := i.Data.Fields.Assignee.Name
-	if as == "" {
-		as = "Unassigned"
+	as := "Unassigned"
+	if i.Data.Fields.Assignee.Name != "" && i.Data.Fields.Assignee.Email != "" {
+		as = fmt.Sprintf("%s (%s)", i.Data.Fields.Assignee.Name, i.Data.Fields.Assignee.Email)
+	} else if i.Data.Fields.Assignee.Name != "" {
+		as = i.Data.Fields.Assignee.Name
 	}
 	st, sti := i.Data.Fields.Status.Name, "🚧"
 	if st == "Done" {
@@ -215,6 +217,10 @@ func (i Issue) header() string {
 	components := make([]string, 0, len(i.Data.Fields.Components))
 	for _, c := range i.Data.Fields.Components {
 		components = append(components, c.Name)
+	}
+	rep := i.Data.Fields.Reporter.Name
+	if i.Data.Fields.Reporter.Email != "" {
+		rep = fmt.Sprintf("%s (%s)", rep, i.Data.Fields.Reporter.Email)
 	}
 	cmpt := "None"
 	if len(components) > 0 {
@@ -235,7 +241,7 @@ func (i Issue) header() string {
 		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as, i.Data.Key,
 		i.Data.Fields.Comment.Total, len(i.Data.Fields.IssueLinks),
 		i.Data.Fields.Summary,
-		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
+		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), rep,
 		i.Data.Fields.Priority.Name, cmpt, lbl, wch,
 	)
 }

@@ -66,7 +66,8 @@ func TestSearch(t *testing.T) {
 						Name string `json:"name"`
 					}{Name: "Medium"},
 					Reporter: struct {
-						Name string `json:"displayName"`
+						Name  string `json:"displayName"`
+						Email string `json:"emailAddress"`
 					}{Name: "Person A"},
 					Watches: struct {
 						IsWatching bool `json:"isWatching"`
@@ -89,7 +90,8 @@ func TestSearch(t *testing.T) {
 						Name string `json:"name"`
 					}{Name: "High"},
 					Reporter: struct {
-						Name string `json:"displayName"`
+						Name  string `json:"displayName"`
+						Email string `json:"emailAddress"`
 					}{Name: "Person B"},
 					Watches: struct {
 						IsWatching bool `json:"isWatching"`
@@ -112,13 +114,15 @@ func TestSearch(t *testing.T) {
 					}{Name: "Done"},
 					IssueType: IssueType{Name: "Task"},
 					Assignee: struct {
-						Name string `json:"displayName"`
+						Name  string `json:"displayName"`
+						Email string `json:"emailAddress"`
 					}{Name: "Person A"},
 					Priority: struct {
 						Name string `json:"name"`
 					}{Name: "Low"},
 					Reporter: struct {
-						Name string `json:"displayName"`
+						Name  string `json:"displayName"`
+						Email string `json:"emailAddress"`
 					}{Name: "Person C"},
 					Watches: struct {
 						IsWatching bool `json:"isWatching"`
