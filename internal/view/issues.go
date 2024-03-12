@@ -202,6 +202,12 @@ func (l *IssueList) assignColumns(columns []string, issue *jira.Issue) []string 
 			bucket = append(bucket, prepareTitle(issue.Fields.Summary))
 		case fieldStatus:
 			bucket = append(bucket, issue.Fields.Status.Name)
+		case fieldParent:
+            if issue.Fields.Parent != nil {
+                bucket = append(bucket, issue.Fields.Parent.Key)
+            } else {
+                bucket = append(bucket, "No parent")
+            }
 		case fieldAssignee:
 			bucket = append(bucket, issue.Fields.Assignee.Name)
 		case fieldReporter:
