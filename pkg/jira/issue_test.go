@@ -419,8 +419,8 @@ func TestAddIssueWorklog(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
 		var (
-			expectedBody string
-			actualBody   = new(strings.Builder)
+			expectedBody, expectedQuery string
+			actualBody                  = new(strings.Builder)
 		)
 
 		_, _ = io.Copy(actualBody, r.Body)
@@ -433,6 +433,11 @@ func TestAddIssueWorklog(t *testing.T) {
 
 		assert.Equal(t, expectedBody, actualBody.String())
 
+		if r.URL.RawQuery != "" {
+			expectedQuery = `adjustEstimate=new&newEstimate=1d`
+		}
+		assert.Equal(t, expectedQuery, r.URL.RawQuery)
+
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
@@ -443,15 +448,18 @@ func TestAddIssueWorklog(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
-	err := client.AddIssueWorklog("TEST-1", "2022-01-01T01:02:02.000+0200", "1h", "comment")
+	err := client.AddIssueWorklog("TEST-1", "2022-01-01T01:02:02.000+0200", "1h", "comment", "")
 	assert.NoError(t, err)
 
-	err = client.AddIssueWorklog("TEST-1", "", "1h", "comment")
+	err = client.AddIssueWorklog("TEST-1", "", "1h", "comment", "")
+	assert.NoError(t, err)
+
+	err = client.AddIssueWorklog("TEST-1", "", "1h", "comment", "1d")
 	assert.NoError(t, err)
 
 	unexpectedStatusCode = true
 
-	err = client.AddIssueWorklog("TEST-1", "", "1h", "comment")
+	err = client.AddIssueWorklog("TEST-1", "", "1h", "comment", "")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 

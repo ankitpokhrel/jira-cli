@@ -40,12 +40,25 @@ func Client(config jira.Config) *jira.Client {
 		secret, _ := keyring.Get("jira-cli", config.Login)
 		config.APIToken = secret
 	}
-	if config.AuthType == "" {
-		config.AuthType = jira.AuthType(viper.GetString("auth_type"))
+	if config.AuthType == nil {
+		authType := jira.AuthType(viper.GetString("auth_type"))
+		config.AuthType = &authType
 	}
 	if config.Insecure == nil {
 		insecure := viper.GetBool("insecure")
 		config.Insecure = &insecure
+	}
+
+	// MTLS
+
+	if config.MTLSConfig.CaCert == "" {
+		config.MTLSConfig.CaCert = viper.GetString("mtls.ca_cert")
+	}
+	if config.MTLSConfig.ClientCert == "" {
+		config.MTLSConfig.ClientCert = viper.GetString("mtls.client_cert")
+	}
+	if config.MTLSConfig.ClientKey == "" {
+		config.MTLSConfig.ClientKey = viper.GetString("mtls.client_key")
 	}
 
 	jiraClient = jira.NewClient(

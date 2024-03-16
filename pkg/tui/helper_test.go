@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,6 +44,39 @@ func TestColumnPadding(t *testing.T) {
 
 			assert.Equal(t, tc.expected, pad(tc.input, tc.numPad))
 		})
+	}
+}
+
+func TestIsDumbTerminal(t *testing.T) {
+	// Store initial values & cleanup
+	t.Setenv("TERM", "")
+	t.Setenv("WT_SESSION", "")
+
+	empty := ""
+	foo := "foo"
+	setTermEnv(&empty, nil)
+	assert.True(t, IsDumbTerminal())
+
+	setTermEnv(nil, nil)
+	assert.True(t, IsDumbTerminal())
+
+	setTermEnv(&foo, nil)
+	assert.False(t, IsDumbTerminal())
+
+	setTermEnv(nil, &foo)
+	assert.False(t, IsDumbTerminal())
+}
+
+func setTermEnv(term *string, wtSession *string) {
+	if term != nil {
+		_ = os.Setenv("TERM", *term)
+	} else {
+		_ = os.Unsetenv("TERM")
+	}
+	if wtSession != nil {
+		_ = os.Setenv("WT_SESSION", *wtSession)
+	} else {
+		_ = os.Unsetenv("WT_SESSION")
 	}
 }
 

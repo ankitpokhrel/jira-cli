@@ -94,12 +94,19 @@ func MDRenderer() (*glamour.TermRenderer, error) {
 	)
 }
 
-func formatDateTime(dt, format string) string {
+func formatDateTime(dt, format, tz string) string {
 	t, err := time.Parse(format, dt)
 	if err != nil {
 		return dt
 	}
-	return t.Format("2006-01-02 15:04:05")
+	if tz == "" {
+		return t.Format("2006-01-02 15:04:05")
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return dt
+	}
+	return t.In(loc).Format("2006-01-02 15:04:05")
 }
 
 func prepareTitle(text string) string {

@@ -54,15 +54,24 @@ type issueTypeFieldConf struct {
 	}
 }
 
+// JiraCLIMTLSConfig is an authtype specific config.
+type JiraCLIMTLSConfig struct {
+	CaCert     string
+	ClientCert string
+	ClientKey  string
+}
+
 // JiraCLIConfig is a Jira CLI config.
 type JiraCLIConfig struct {
 	Installation string
 	Server       string
+	AuthType     string
 	Login        string
 	Project      string
 	Board        string
 	Force        bool
 	Insecure     bool
+	MTLS         JiraCLIMTLSConfig
 }
 
 // JiraCLIConfigGenerator is a Jira CLI config generator.
@@ -81,6 +90,10 @@ type JiraCLIConfigGenerator struct {
 		epic         *jira.Epic
 		issueTypes   []*jira.IssueType
 		customFields []*issueTypeFieldConf
+		mtls         struct {
+			caCert, clientCert, clientKey string
+		}
+		timezone string
 	}
 	jiraClient         *jira.Client
 	projectSuggestions []string
@@ -101,6 +114,8 @@ func NewJiraCLIConfigGenerator(cfg *JiraCLIConfig) *JiraCLIConfigGenerator {
 }
 
 // Generate generates the config file.
+//
+//nolint:gocyclo
 func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 	var cfgFile string
 
@@ -139,9 +154,27 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 	if err := c.configureInstallationType(); err != nil {
 		return "", err
 	}
+
+	if c.value.installation == jira.InstallationTypeLocal {
+		if err := c.configureLocalAuthType(); err != nil {
+			return "", err
+		}
+	}
+
+	if c.usrCfg.AuthType != "" {
+		c.value.authType = jira.AuthType(c.usrCfg.AuthType)
+	}
+
+	if c.value.authType == jira.AuthTypeMTLS {
+		if err := c.configureMTLS(); err != nil {
+			return "", err
+		}
+	}
+
 	if err := c.configureServerAndLoginDetails(); err != nil {
 		return "", err
 	}
+
 	if c.value.installation == jira.InstallationTypeLocal {
 		if err := c.configureServerMeta(c.value.server, c.value.login); err != nil {
 			return "", err
@@ -185,6 +218,84 @@ func (c *JiraCLIConfigGenerator) configureInstallationType() error {
 		}
 
 		c.value.installation = installation
+	}
+
+	return nil
+}
+
+func (c *JiraCLIConfigGenerator) configureLocalAuthType() error {
+	authType := c.usrCfg.AuthType
+
+	if c.usrCfg.AuthType == "" {
+		qs := &survey.Select{
+			Message: "Authentication type:",
+			Help: `Authentication type coud be: basic (login), bearer (PAT) or mtls (client certs)
+? If you are using your login credentials, the auth type is probably 'basic' (most common for local installation)
+? If you are using a personal access token, the auth type is probably 'bearer'`,
+			Options: []string{"basic", "bearer", "mtls"},
+			Default: "basic",
+		}
+		if err := survey.AskOne(qs, &authType); err != nil {
+			return err
+		}
+	}
+
+	switch authType {
+	case jira.AuthTypeBearer.String():
+		c.value.authType = jira.AuthTypeBearer
+	case jira.AuthTypeMTLS.String():
+		c.value.authType = jira.AuthTypeMTLS
+	default:
+		c.value.authType = jira.AuthTypeBasic
+	}
+
+	return nil
+}
+
+func (c *JiraCLIConfigGenerator) configureMTLS() error {
+	var qs []*survey.Question
+
+	c.value.mtls.caCert = c.usrCfg.MTLS.CaCert
+	c.value.mtls.clientCert = c.usrCfg.MTLS.ClientCert
+	c.value.mtls.clientKey = c.usrCfg.MTLS.ClientKey
+
+	getIfEmpty := func(conf, name, msg, help string) {
+		if conf != "" {
+			return
+		}
+		qs = append(qs, &survey.Question{
+			Name: name,
+			Prompt: &survey.Input{
+				Message: msg,
+				Help:    help,
+			},
+		})
+	}
+
+	getIfEmpty(c.value.mtls.caCert, "cacert", "CA Certificate", "Local path to CA Certificate for your `server`")
+	getIfEmpty(c.value.mtls.clientCert, "clientcert", "Client Certificate", "Local path to your client certificate")
+	getIfEmpty(c.value.mtls.clientKey, "clientkey", "Client Key", "Local path to your client key")
+
+	if len(qs) > 0 {
+		ans := struct {
+			CaCert     string
+			ClientCert string
+			ClientKey  string
+		}{}
+
+		if err := survey.Ask(qs, &ans); err != nil {
+			return err
+		}
+
+		if ans.CaCert != "" {
+			c.value.mtls.caCert = ans.CaCert
+		}
+		if ans.ClientCert != "" {
+			c.value.mtls.clientCert = ans.ClientCert
+		}
+		if ans.ClientKey != "" {
+			c.value.mtls.clientKey = ans.ClientKey
+		}
 	}
 
 	return nil
@@ -310,17 +421,25 @@ func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error 
 		Server:   server,
 		Login:    login,
 		Insecure: &c.usrCfg.Insecure,
-		AuthType: c.value.authType,
+		AuthType: &c.value.authType,
 		Debug:    viper.GetBool("debug"),
+		MTLSConfig: jira.MTLSConfig{
+			CaCert:     c.value.mtls.caCert,
+			ClientCert: c.value.mtls.clientCert,
+			ClientKey:  c.value.mtls.clientKey,
+		},
 	})
-	if ret, err := c.jiraClient.Me(); err != nil {
+	ret, err := c.jiraClient.Me()
+	if err != nil {
 		return err
-	} else if c.value.authType == jira.AuthTypeBearer {
+	}
+	if c.value.authType == jira.AuthTypeBearer {
 		login = ret.Login
 	}
 
 	c.value.server = server
 	c.value.login = login
+	c.value.timezone = ret.Timezone
 
 	return nil
 }
@@ -335,8 +454,13 @@ func (c *JiraCLIConfigGenerator) configureServerMeta(server, login string) error
 		Server:   server,
 		Login:    login,
 		Insecure: &c.usrCfg.Insecure,
-		AuthType: c.value.authType,
+		AuthType: &c.value.authType,
 		Debug:    viper.GetBool("debug"),
+		MTLSConfig: jira.MTLSConfig{
+			CaCert:     c.value.mtls.caCert,
+			ClientCert: c.value.mtls.clientCert,
+			ClientKey:  c.value.mtls.clientKey,
+		},
 	})
 	info, err := c.jiraClient.ServerInfo()
 	if err != nil {
@@ -634,7 +758,17 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	config.Set("epic", c.value.epic)
 	config.Set("issue.types", c.value.issueTypes)
 	config.Set("issue.fields.custom", c.value.customFields)
+	config.Set("auth_type", c.value.authType.String())
+	config.Set("timezone", c.value.timezone)
 
+	// MTLS.
+	if c.value.mtls.caCert != "" {
+		config.Set("mtls.ca_cert", c.value.mtls.caCert)
+		config.Set("mtls.client_cert", c.value.mtls.clientCert)
+		config.Set("mtls.client_key", c.value.mtls.clientKey)
+	}
+
+	// Jira version.
 	if c.value.version.major > 0 {
 		config.Set("version.major", c.value.version.major)
 		config.Set("version.minor", c.value.version.minor)
@@ -735,7 +869,8 @@ func create(file string) error {
 			return err
 		}
 	}
-	_, err := os.Create(file)
+	f, err := os.Create(file)
+	defer func() { _ = f.Close() }()
 
 	return err
 }

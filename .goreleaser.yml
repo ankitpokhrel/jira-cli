@@ -39,12 +39,9 @@ archives:
   - id: nix
     builds: [macOS, linux]
     <<: &archive_defaults
-      name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+      name_template: >-
+        {{ .ProjectName }}_{{ .Version }}_{{- if eq .Os "darwin" }}macOS{{- else }}{{ .Os }}{{- end }}_{{- if eq .Arch "amd64" }}x86_64{{- else if eq .Arch "386" }}i386{{- else }}{{ .Arch }}{{- end }}{{- if .Arm }}v{{ .Arm }}{{ end -}}
     wrap_in_directory: true
-    replacements:
-      darwin: macOS
-      386: i386
-      amd64: x86_64
     format: tar.gz
     files:
       - LICENSE
@@ -70,7 +67,7 @@ brews:
     ids:
       - nix
 
-    tap:
+    repository:
       owner: ankitpokhrel
       name: homebrew-jira-cli
 
@@ -94,7 +91,7 @@ brews:
 
     commit_author:
       name: ankitpokhrel
-      email: hello@ankit.pl
+      email: oss@ankit.pl
 
     commit_msg_template: "Formula update for version {{ .Tag }}"
 
