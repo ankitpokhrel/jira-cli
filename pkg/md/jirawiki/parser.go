@@ -3,6 +3,7 @@ package jirawiki
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 )
 
 // Supported Jira wiki tags.
@@ -130,35 +131,38 @@ func secondPass(lines []string) string {
 			out.WriteString(line)
 
 			lineNum++
-			if lineNum < len(lines)-1 {
+			if lineNum < len(lines) {
 				out.WriteRune(newLine)
 			}
 			continue
 		}
 
-		var beg int
+		var beg int = 0
+		runes := []rune(line)
 
 	out:
-		for beg < len(line) {
+		for beg < len(runes) {
 			end := beg
 
 			if token, ok := tokenStarts(beg, tokens); ok {
 				switch token.family {
 				case typeTagTextEffect:
-					end = token.handleTextEffects(line, &out)
+					end = token.handleTextEffects(runes, &out, beg)
 				case typeTagHeading:
-					end = token.handleHeadings(line, &out)
+					end = token.handleHeadings(runes, &out, beg)
 				case typeTagInlineQuote:
-					end = token.handleInlineBlockQuote(line, &out)
+					end = token.handleInlineBlockQuote(runes, &out, beg)
 				case typeTagList:
-					end = token.handleList(line, &out)
+					end = token.handleList(runes, &out, beg)
 				case typeTagFencedCode:
-					lineNum = token.handleFencedCodeBlock(lineNum, lines, &out)
-					break out
+					lineNum, end = token.handleFencedCodeBlock(lineNum, lines, &out, beg)
+					if lineNum >= len(lines) {
+						break out
+					}
 				case typeTagReferenceLink:
-					end = token.handleReferenceLink(line, &out)
+					end = token.handleReferenceLink(runes, &out, beg)
 				case typeTagTable:
-					end = token.handleTable(line, &out)
+					end = token.handleTable(runes, &out, beg)
 				case typeTagOther:
 					if token.tag == TagQuote {
 						// If end is same as size of the input, it implies that
@@ -183,15 +187,16 @@ func secondPass(lines []string) string {
 					end = token.endIdx
 				}
 			} else {
-				out.WriteRune(rune(line[beg]))
+				out.WriteRune(runes[beg])
 			}
 
-			end++
-			beg = end
+			beg = end + 1
 		}
 
 		lineNum++
-		out.WriteRune(newLine)
+		if lineNum < len(lines) {
+			out.WriteRune(newLine)
+		}
 	}
 
 	return out.String()
@@ -365,75 +370,81 @@ type Token struct {
 	endIdx   int
 }
 
-func (t *Token) handleTextEffects(line string, out *strings.Builder) int {
-	word := line[t.startIdx+1 : t.endIdx]
+func (t *Token) handleTextEffects(runes []rune, out *strings.Builder, beg int) int {
+	word := string(runes[t.startIdx+1 : t.endIdx])
+	effectChar := string(runes[t.startIdx])
+	effectReplacement, exists := replacements[effectChar]
+	if !exists {
+		effectReplacement = effectChar
+	}
 
-	out.WriteString(replacements[string(line[t.startIdx])])
-	out.WriteString(word)
-	out.WriteString(replacements[string(line[t.startIdx])])
+	out.WriteString(effectReplacement + word + effectReplacement)
 
-	if t.endIdx == len(line)-1 {
+	if t.endIdx == len(runes)-1 {
 		out.WriteRune(newLine)
 	}
 
 	return t.endIdx
 }
 
-func (t *Token) handleHeadings(line string, out *strings.Builder) int {
-	word := line[t.endIdx+1:]
+func (t *Token) handleHeadings(runes []rune, out *strings.Builder, beg int) int {
+	headingLevel := strings.Repeat("#", utf8.RuneCountInString(string(runes[t.startIdx:t.endIdx+1])))
 
-	out.WriteString(replacements[t.tag])
-	out.WriteString(word)
+	if runes[t.endIdx+1] != ' ' {
+		headingLevel += " "
+	}
 
-	return t.endIdx + len(word)
+	headingText := string(runes[t.endIdx+1:])
+
+	out.WriteString(headingLevel + headingText)
+
+	return len(runes) - 1
 }
 
-func (t *Token) handleInlineBlockQuote(line string, out *strings.Builder) int {
-	word := line[t.endIdx+1:]
+func (t *Token) handleInlineBlockQuote(runes []rune, out *strings.Builder, beg int) int {
+	quoteText := string(runes[t.endIdx+1:])
 
 	out.WriteString(fmt.Sprintf("\n%s", replacements[t.tag]))
-	out.WriteString(word)
+	out.WriteString(quoteText)
 
-	return t.endIdx + len(word)
+	return t.endIdx + utf8.RuneCountInString(quoteText)
 }
 
-func (t *Token) handleList(line string, out *strings.Builder) int {
+func (t *Token) handleList(runes []rune, out *strings.Builder, beg int) int {
 	end := t.endIdx + 1
 
-	for i := t.startIdx; i < t.endIdx-1; i++ {
-		out.WriteRune('\t')
+	for i := 0; i < t.startIdx; i++ {
+		out.WriteString("\t")
 	}
 
-	if end >= len(line) {
+	if end >= len(runes) {
 		out.WriteString("-")
-		return t.endIdx
+		return len(runes) - 1
 	}
 
-	rem := strings.TrimSpace(line[end:])
+	rem := strings.TrimSpace(string(runes[end:]))
 	out.WriteString(fmt.Sprintf("- %s", rem))
 
-	end += len(rem) + 1
+	end += utf8.RuneCountInString(rem) // Обновляем end, используя количество рун в rem
 
 	return end
 }
 
-func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Builder) int {
-	if idx == len(lines)-1 {
-		return t.endIdx
+func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Builder, runeIndex int) (int, int) {
+	if idx >= len(lines)-1 {
+		return idx, runeIndex
 	}
 
-	out.WriteString(fmt.Sprintf("\n%s", replacements[t.tag]))
+	out.WriteString(fmt.Sprintf("\n%s\n", replacements[t.tag]))
 
-	if t, ok := t.attrs[attrTitle]; ok {
-		pieces := strings.Split(t, ".")
+	if title, ok := t.attrs[attrTitle]; ok {
+		pieces := strings.Split(title, ".")
 		if len(pieces) == 2 {
-			out.WriteString(pieces[1])
+			out.WriteString(pieces[1] + "\n")
 		} else {
-			out.WriteString(t)
+			out.WriteString(title + "\n")
 		}
 	}
-
-	out.WriteRune(newLine)
 
 	i := idx + 1
 	for ; i < len(lines); i++ {
@@ -443,30 +454,29 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 		}
 
 		if x := checkForInlineClose(line); x > 0 {
-			out.WriteString(line[:x])
-			out.WriteRune(newLine)
+			out.WriteString(line[:x] + "\n")
 			break
 		} else {
-			// Write everything as is.
-			out.WriteString(lines[i])
+			out.WriteString(lines[i] + "\n")
 		}
-		out.WriteRune(newLine)
 	}
-	out.WriteString(replacements[t.tag])
 
-	return i
+	out.WriteString(replacements[t.tag] + "\n")
+
+	return i + 1, 0
 }
 
-func (t *Token) handleReferenceLink(line string, out *strings.Builder) int {
-	if len(line) < 2 {
+func (t *Token) handleReferenceLink(runes []rune, out *strings.Builder, runeIndex int) int {
+	runesLength := len(runes)
+
+	if t.startIdx+1 > runesLength || t.endIdx > runesLength || t.startIdx+1 > t.endIdx {
 		return t.endIdx
 	}
 
-	body := line[t.startIdx+1 : t.endIdx]
+	body := string(runes[t.startIdx+1 : t.endIdx])
 	pieces := strings.Split(body, "|")
 
 	var link string
-
 	if len(pieces) == 2 {
 		link = fmt.Sprintf("[%s](%s)", pieces[0], pieces[1])
 	} else {
@@ -478,8 +488,10 @@ func (t *Token) handleReferenceLink(line string, out *strings.Builder) int {
 	return t.endIdx
 }
 
-func (t *Token) handleTable(line string, out *strings.Builder) int {
-	if line[1] != '|' {
+func (t *Token) handleTable(runes []rune, out *strings.Builder, runeIndex int) int {
+	line := string(runes)
+
+	if len(runes) < 2 || runes[1] != '|' {
 		out.WriteString(line)
 		return t.endIdx
 	}
@@ -493,7 +505,6 @@ func (t *Token) handleTable(line string, out *strings.Builder) int {
 	}
 
 	row := fmt.Sprintf("%s\n%s|", headers, sep.String())
-
 	out.WriteString(row)
 
 	return t.endIdx
