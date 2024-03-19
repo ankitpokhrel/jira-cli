@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter/issue"
 
@@ -26,15 +28,55 @@ const (
 
 // GetIssue fetches issue details using GET /issue/{key} endpoint.
 func (c *Client) GetIssue(key string, opts ...filter.Filter) (*Issue, error) {
-	return c.getIssue(key, apiVersion3, opts)
+	iss, err := c.getIssue(key, apiVersion3)
+	if err != nil {
+		return nil, err
+	}
+
+	iss.Fields.Description = ifaceToADF(iss.Fields.Description)
+
+	total := iss.Fields.Comment.Total
+	limit := filter.Collection(opts).GetInt(issue.KeyIssueNumComments)
+	if limit > total {
+		limit = total
+	}
+	for i := total - 1; i >= total-limit; i-- {
+		body := iss.Fields.Comment.Comments[i].Body
+		iss.Fields.Comment.Comments[i].Body = ifaceToADF(body)
+	}
+	return iss, nil
 }
 
 // GetIssueV2 fetches issue details using v2 version of Jira GET /issue/{key} endpoint.
-func (c *Client) GetIssueV2(key string, opts ...filter.Filter) (*Issue, error) {
-	return c.getIssue(key, apiVersion2, opts)
+func (c *Client) GetIssueV2(key string, _ ...filter.Filter) (*Issue, error) {
+	return c.getIssue(key, apiVersion2)
 }
 
-func (c *Client) getIssue(key, ver string, opts filter.Collection) (*Issue, error) {
+func (c *Client) getIssue(key, ver string) (*Issue, error) {
+	rawOut, err := c.getIssueRaw(key, ver)
+	if err != nil {
+		return nil, err
+	}
+
+	var iss Issue
+	err = json.Unmarshal([]byte(rawOut), &iss)
+	if err != nil {
+		return nil, err
+	}
+	return &iss, nil
+}
+
+// GetIssueRaw fetches issue details same as GetIssue but returns the raw API response body string.
+func (c *Client) GetIssueRaw(key string) (string, error) {
+	return c.getIssueRaw(key, apiVersion3)
+}
+
+// GetIssueV2Raw fetches issue details same as GetIssueV2 but returns the raw API response body string.
+func (c *Client) GetIssueV2Raw(key string) (string, error) {
+	return c.getIssueRaw(key, apiVersion2)
+}
+
+func (c *Client) getIssueRaw(key, ver string) (string, error) {
 	path := fmt.Sprintf("/issue/%s", key)
 
 	var (
@@ -50,37 +92,23 @@ func (c *Client) getIssue(key, ver string, opts filter.Collection) (*Issue, erro
 	}
 
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if res == nil {
-		return nil, ErrEmptyResponse
+		return "", ErrEmptyResponse
 	}
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, formatUnexpectedResponse(res)
+		return "", formatUnexpectedResponse(res)
 	}
 
-	var out Issue
-	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
-		return nil, err
+	var b strings.Builder
+	_, err = io.Copy(&b, res.Body)
+	if err != nil {
+		return "", err
 	}
-
-	if ver == apiVersion3 {
-		out.Fields.Description = ifaceToADF(out.Fields.Description)
-
-		total := out.Fields.Comment.Total
-		limit := opts.GetInt(issue.KeyIssueNumComments)
-		if limit > total {
-			limit = total
-		}
-		for i := total - 1; i >= total-limit; i-- {
-			body := out.Fields.Comment.Comments[i].Body
-			out.Fields.Comment.Comments[i].Body = ifaceToADF(body)
-		}
-	}
-
-	return &out, nil
+	return b.String(), nil
 }
 
 // AssignIssue assigns issue to the user using v3 version of the PUT /issue/{key}/assignee endpoint.

@@ -14,6 +14,11 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 )
 
+const (
+	_testdataPathIssue   = "./testdata/issue.json"
+	_testdataPathIssueV2 = "./testdata/issue-2.json"
+)
+
 func TestGetIssue(t *testing.T) {
 	var unexpectedStatusCode bool
 
@@ -23,7 +28,7 @@ func TestGetIssue(t *testing.T) {
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
-			resp, err := os.ReadFile("./testdata/issue.json")
+			resp, err := os.ReadFile(_testdataPathIssue)
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")
@@ -155,7 +160,7 @@ func TestGetIssueV2(t *testing.T) {
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
-			resp, err := os.ReadFile("./testdata/issue-2.json")
+			resp, err := os.ReadFile(_testdataPathIssueV2)
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")
@@ -200,6 +205,146 @@ func TestGetIssueV2(t *testing.T) {
 
 	_, err = client.GetIssueV2("TEST-1")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
+func TestGetIssueRaw(t *testing.T) {
+	cases := []struct {
+		title              string
+		givePayloadFile    string
+		giveClientCallFunc func(c *Client) (string, error)
+		wantReqURL         string
+		wantOut            string
+	}{
+		{
+			title:           "v3",
+			givePayloadFile: _testdataPathIssue,
+			giveClientCallFunc: func(c *Client) (string, error) {
+				return c.GetIssueRaw("KAN-1")
+			},
+			wantReqURL: "/rest/api/3/issue/KAN-1",
+			wantOut: `{
+  "key": "TEST-1",
+  "fields": {
+    "issuetype": {
+      "name": "Bug"
+    },
+    "resolution": null,
+    "created": "2020-12-03T14:05:20.974+0100",
+    "priority": {
+      "name": "Medium"
+    },
+    "labels": [],
+    "assignee": null,
+    "updated": "2020-12-03T14:05:20.974+0100",
+    "status": {
+      "name": "To Do"
+    },
+    "summary": "Bug summary",
+    "description": {
+      "version": 1,
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Test description"
+            }
+          ]
+        }
+      ]
+    },
+    "issuelinks": [
+      {
+        "id": "10001",
+        "outwardIssue": {
+          "key": "TEST-2"
+        }
+      },
+      {
+        "id": "10002",
+        "outwardIssue": {}
+      }
+    ],
+    "reporter": {
+      "displayName": "Person A"
+    },
+    "watches": {
+      "watchCount": 1,
+      "isWatching": true
+    }
+  }
+}
+`,
+		},
+		{
+			title:           "v2",
+			givePayloadFile: _testdataPathIssueV2,
+			giveClientCallFunc: func(c *Client) (string, error) {
+				return c.GetIssueV2Raw("KAN-1")
+			},
+			wantReqURL: "/rest/api/2/issue/KAN-1",
+			wantOut: `{
+  "key": "TEST-1",
+  "fields": {
+    "issuetype": {
+      "name": "Bug"
+    },
+    "resolution": null,
+    "created": "2020-12-03T14:05:20.974+0100",
+    "priority": {
+      "name": "Medium"
+    },
+    "labels": [],
+    "assignee": null,
+    "updated": "2020-12-03T14:05:20.974+0100",
+    "status": {
+      "name": "To Do"
+    },
+    "summary": "Bug summary",
+    "description": "Test description",
+    "reporter": {
+      "displayName": "Person A"
+    },
+    "watches": {
+      "watchCount": 1,
+      "isWatching": true
+    }
+  }
+}
+`,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.title, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, c.wantReqURL, r.URL.Path)
+
+				respContent, err := os.ReadFile(c.givePayloadFile)
+				if !assert.NoError(t, err) {
+					return
+				}
+
+				w.Header().Set("Content-Type", "application/json")
+				_, err = w.Write(respContent)
+				if !assert.NoError(t, err) {
+					return
+				}
+				w.WriteHeader(http.StatusOK)
+			}))
+			defer server.Close()
+
+			client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+			out, err := c.giveClientCallFunc(client)
+			if !assert.NoError(t, err) {
+				return
+			}
+
+			assert.Equal(t, c.wantOut, out)
+		})
+	}
 }
 
 func TestAssignIssue(t *testing.T) {
@@ -352,7 +497,7 @@ func TestGetLinkID(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/rest/api/2/issue/TEST-1", r.URL.Path)
 
-		resp, err := os.ReadFile("./testdata/issue.json")
+		resp, err := os.ReadFile(_testdataPathIssue)
 		assert.NoError(t, err)
 
 		w.Header().Set("Content-Type", "application/json")
