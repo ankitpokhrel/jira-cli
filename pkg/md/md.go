@@ -1,9 +1,10 @@
 package md
 
 import (
-	"github.com/ankitpokhrel/jira-cli/pkg/md/jirawiki"
 	cf "github.com/kentaro-m/blackfriday-confluence"
 	bf "github.com/russross/blackfriday/v2"
+
+	"github.com/ankitpokhrel/jira-cli/pkg/md/jirawiki"
 )
 
 // ToJiraMD translates CommonMark to Jira flavored markdown.
