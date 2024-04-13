@@ -8,8 +8,8 @@ require (
 	github.com/briandowns/spinner v1.23.0
 	github.com/charmbracelet/glamour v0.7.0
 	github.com/cli/safeexec v1.0.1
-	github.com/fatih/color v1.15.0
-	github.com/gdamore/tcell/v2 v2.6.0
+	github.com/fatih/color v1.16.0
+	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/kentaro-m/blackfriday-confluence v0.0.0-20220126124413-8e85477b49b3
@@ -18,7 +18,7 @@ require (
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/rivo/tview v0.0.0-20230621164836-6cc0565babaf
+	github.com/rivo/tview v0.0.0-20240406141410-79d4cc321256
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
@@ -38,7 +38,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/gdamore/encoding v1.0.0 // indirect
+	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect

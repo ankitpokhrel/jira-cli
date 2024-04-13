@@ -163,9 +163,7 @@ func (pv *Preview) init() {
 		SetRows(0, 1, 2).
 		SetColumns(sidebarMaxWidth, 1, 0).
 		AddItem(pv.sidebar, 0, 0, 2, 1, 0, 0, true).
-		AddItem(tview.NewTextView(), 0, 1, 1, 1, 0, 0, false). // Dummy view to fake col padding.
 		AddItem(pv.contents.view, 0, 2, 2, 1, 0, 0, false).
-		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
 		AddItem(pv.footer, 2, 0, 1, 3, 0, 0, false)
 
 	pv.painter = tview.NewPages().
