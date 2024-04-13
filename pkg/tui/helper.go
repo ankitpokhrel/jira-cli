@@ -51,10 +51,12 @@ func splitText(s string) []string {
 }
 
 func getInfoModal() *tview.Modal {
-	return tview.NewModal().
-		SetText("\n\nProcessing. Please wait...").
+	modal := tview.NewModal()
+	modal.SetText("\n\nProcessing. Please wait...").
 		SetBackgroundColor(tcell.ColorSpecial).
 		SetTextColor(tcell.ColorDefault)
+	modal.Box.SetBackgroundColor(tcell.ColorSpecial)
+	return modal
 }
 
 func getActionModal() *primitive.ActionModal {
