@@ -25,9 +25,13 @@ type JQL struct {
 
 // NewJQL initializes jql query builder.
 func NewJQL(project string) *JQL {
+	var filters []string
+	if project != "" {
+		filters = []string{fmt.Sprintf("project=%q", project)}
+	}
 	return &JQL{
 		project: project,
-		filters: []string{fmt.Sprintf("project=%q", project)},
+		filters: filters,
 	}
 }
 
