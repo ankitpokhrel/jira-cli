@@ -82,7 +82,6 @@ func TestIssueRenderInPlainViewWithCustomDelimiter(t *testing.T) {
 	assert.Equal(t, expected, b.String())
 }
 
-
 func TestIssueRenderInPlainViewAndNoTruncate(t *testing.T) {
 	var b bytes.Buffer
 

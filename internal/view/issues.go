@@ -16,7 +16,7 @@ import (
 // DisplayFormat is a issue display type.
 type DisplayFormat struct {
 	Plain        bool
-	Delimiter    string		
+	Delimiter    string
 	NoHeaders    bool
 	NoTruncate   bool
 	Columns      []string
@@ -41,7 +41,7 @@ func (l *IssueList) Render() error {
 	if l.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		// custom delimiter is used only in plain mode, otherwise \t is used
 		delimeter := "\t"
-		if (l.Display.Plain) {
+		if l.Display.Plain {
 			delimeter = l.Display.Delimiter
 		}
 		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
