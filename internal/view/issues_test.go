@@ -77,8 +77,10 @@ func TestIssueRenderInPlainViewWithCustomDelimiter(t *testing.T) {
 	}
 	assert.NoError(t, issue.renderPlain(&b, "|"))
 
-	expected := `TYPE|KEY|SUMMARY|STATUS|Bug|TEST-1|This is a test|Done
-	Story|TEST-2|This is another test|Open`
+	expected := `TYPE|KEY|SUMMARY|STATUS
+	Bug|TEST-1|This is a test|Done
+	Story|TEST-2|This is another test|Open
+`
 	assert.Equal(t, expected, b.String())
 }
 
