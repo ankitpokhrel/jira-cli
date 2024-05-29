@@ -22,6 +22,7 @@ type DisplayFormat struct {
 	Columns      []string
 	FixedColumns uint
 	TableStyle   tui.TableStyle
+	Timezone     string
 }
 
 // IssueList is a list view for issues.
@@ -194,7 +195,7 @@ func (l *IssueList) data() tui.TableData {
 	return data
 }
 
-func (*IssueList) assignColumns(columns []string, issue *jira.Issue) []string {
+func (l *IssueList) assignColumns(columns []string, issue *jira.Issue) []string {
 	var bucket []string
 
 	for _, column := range columns {
@@ -216,9 +217,9 @@ func (*IssueList) assignColumns(columns []string, issue *jira.Issue) []string {
 		case fieldResolution:
 			bucket = append(bucket, issue.Fields.Resolution.Name)
 		case fieldCreated:
-			bucket = append(bucket, formatDateTime(issue.Fields.Created, jira.RFC3339))
+			bucket = append(bucket, formatDateTime(issue.Fields.Created, jira.RFC3339, l.Display.Timezone))
 		case fieldUpdated:
-			bucket = append(bucket, formatDateTime(issue.Fields.Updated, jira.RFC3339))
+			bucket = append(bucket, formatDateTime(issue.Fields.Updated, jira.RFC3339, l.Display.Timezone))
 		case fieldLabels:
 			bucket = append(bucket, strings.Join(issue.Fields.Labels, ","))
 		}

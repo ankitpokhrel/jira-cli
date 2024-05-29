@@ -21,6 +21,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/version"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	jiraConfig "github.com/ankitpokhrel/jira-cli/internal/config"
+	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
 
 	"github.com/zalando/go-keyring"
@@ -76,7 +77,10 @@ func NewCmdRoot() *cobra.Command {
 				return
 			}
 
-			checkForJiraToken(viper.GetString("server"), viper.GetString("login"))
+			// mTLS doesn't need Jira API Token.
+			if viper.GetString("auth_type") != string(jira.AuthTypeMTLS) {
+				checkForJiraToken(viper.GetString("server"), viper.GetString("login"))
+			}
 
 			configFile := viper.ConfigFileUsed()
 			if !jiraConfig.Exists(configFile) {

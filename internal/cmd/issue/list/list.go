@@ -149,6 +149,7 @@ func loadList(cmd *cobra.Command) {
 				return []string{}
 			}(),
 			TableStyle: cmdutil.GetTUIStyleConfig(),
+			Timezone:   viper.GetString("timezone"),
 		},
 	}
 

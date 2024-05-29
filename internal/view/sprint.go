@@ -149,8 +149,8 @@ func (sl *SprintList) tabularize(issues []*jira.Issue) tui.TableData {
 			issue.Fields.Reporter.Name,
 			issue.Fields.Priority.Name,
 			issue.Fields.Resolution.Name,
-			formatDateTime(issue.Fields.Created, jira.RFC3339),
-			formatDateTime(issue.Fields.Updated, jira.RFC3339),
+			formatDateTime(issue.Fields.Created, jira.RFC3339, sl.Display.Timezone),
+			formatDateTime(issue.Fields.Updated, jira.RFC3339, sl.Display.Timezone),
 			strings.Join(issue.Fields.Labels, ","),
 		})
 	}
@@ -214,11 +214,11 @@ func (sl *SprintList) assignColumns(columns []string, sprint *jira.Sprint) []str
 		case fieldName:
 			bucket = append(bucket, sprint.Name)
 		case fieldStartDate:
-			bucket = append(bucket, formatDateTime(sprint.StartDate, time.RFC3339))
+			bucket = append(bucket, formatDateTime(sprint.StartDate, time.RFC3339, sl.Display.Timezone))
 		case fieldEndDate:
-			bucket = append(bucket, formatDateTime(sprint.EndDate, time.RFC3339))
+			bucket = append(bucket, formatDateTime(sprint.EndDate, time.RFC3339, sl.Display.Timezone))
 		case fieldCompleteDate:
-			bucket = append(bucket, formatDateTime(sprint.CompleteDate, time.RFC3339))
+			bucket = append(bucket, formatDateTime(sprint.CompleteDate, time.RFC3339, sl.Display.Timezone))
 		case fieldState:
 			bucket = append(bucket, sprint.Status)
 		}

@@ -18,6 +18,7 @@ type initParams struct {
 	installation string
 	server       string
 	login        string
+	authType     string
 	project      string
 	board        string
 	force        bool
@@ -39,6 +40,7 @@ func NewCmdInit() *cobra.Command {
 	cmd.Flags().String("installation", "", "Is this a 'cloud' or 'local' jira installation?")
 	cmd.Flags().String("server", "", "Link to your jira server")
 	cmd.Flags().String("login", "", "Jira login username or email based on your setup")
+	cmd.Flags().String("auth-type", "", "Authentication type can be basic, bearer or mtls")
 	cmd.Flags().String("project", "", "Your default project key")
 	cmd.Flags().String("board", "", "Name of your default board in the project")
 	cmd.Flags().Bool("force", false, "Forcefully override existing config if it exists")
@@ -58,6 +60,15 @@ func parseFlags(flags query.FlagParser) *initParams {
 	login, err := flags.GetString("login")
 	cmdutil.ExitIfError(err)
 
+	authType, err := flags.GetString("auth-type")
+	cmdutil.ExitIfError(err)
+
+	// If auth type is not provided, check if it's set in env.
+	if authType == "" {
+		authType = os.Getenv("JIRA_AUTH_TYPE")
+	}
+	authType = strings.ToLower(authType)
+
 	project, err := flags.GetString("project")
 	cmdutil.ExitIfError(err)
 
@@ -74,6 +85,7 @@ func parseFlags(flags query.FlagParser) *initParams {
 		installation: installation,
 		server:       server,
 		login:        login,
+		authType:     authType,
 		project:      project,
 		board:        board,
 		force:        force,
@@ -89,6 +101,7 @@ func initialize(cmd *cobra.Command, _ []string) {
 			Installation: strings.ToLower(params.installation),
 			Server:       params.server,
 			Login:        params.login,
+			AuthType:     params.authType,
 			Project:      params.project,
 			Board:        params.board,
 			Force:        params.force,

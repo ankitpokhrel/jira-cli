@@ -51,10 +51,12 @@ func splitText(s string) []string {
 }
 
 func getInfoModal() *tview.Modal {
-	return tview.NewModal().
-		SetText("\n\nProcessing. Please wait...").
+	modal := tview.NewModal()
+	modal.SetText("\n\nProcessing. Please wait...").
 		SetBackgroundColor(tcell.ColorSpecial).
 		SetTextColor(tcell.ColorDefault)
+	modal.Box.SetBackgroundColor(tcell.ColorSpecial)
+	return modal
 }
 
 func getActionModal() *primitive.ActionModal {
@@ -64,13 +66,14 @@ func getActionModal() *primitive.ActionModal {
 		SetTextColor(tcell.ColorDefault)
 }
 
-// IsDumbTerminal checks TERM environment variable and returns true if it is set to dumb.
+// IsDumbTerminal checks TERM/WT_SESSION environment variable and returns true if they indicate a dumb terminal.
 //
 // Dumb terminal indicates terminal with limited capability. It may not provide support
 // for special character sequences, e.g., no handling of ANSI escape sequences.
 func IsDumbTerminal() bool {
 	term := strings.ToLower(os.Getenv("TERM"))
-	return term == "" || term == "dumb"
+	_, wtSession := os.LookupEnv("WT_SESSION")
+	return !wtSession && (term == "" || term == "dumb")
 }
 
 // IsNotTTY returns true if the stdout file descriptor is not a TTY.

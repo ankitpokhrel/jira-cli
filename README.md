@@ -35,6 +35,22 @@
     </p>
 </div>
 
+<div>
+   <h2 align="center">Supporters</h2>
+   <p align="center">
+      <a href="https://www.atlassian.com?from=ankitpokhrel/jira-cli" target="_blank">
+         <img alt="Atlassian Logo" src=".github/assets/supporters/atlassian.png" />
+      </a><br/>
+      <a href="https://www.jetbrains.com/?from=ankitpokhrel/jira-cli" target="_blank">
+         <img alt="JetBrains Logo" src=".github/assets/supporters/jetbrains.png" />
+      </a>
+      <span style="margin-right: 20px"></span>
+      <a href="https://captionai.co?from=ankitpokhrel/jira-cli" target="_blank">
+         <img alt="CaptionAI Logo" src=".github/assets/supporters/captionai.png" />
+      </a>
+   </p>
+</div>
+
 JiraCLI is an interactive command line tool for Atlassian Jira that will help you avoid Jira UI to some extent. This
 tool may not be able to do everything, but it has all the essential features required to improve your day-to-day workflow with Jira.
 
@@ -85,6 +101,9 @@ Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/In
      more [here](https://github.com/ankitpokhrel/jira-cli/discussions/356).
 2. Run `jira init`, select installation type as `Local`, and provide the required details to generate a config file required
    for the tool.
+   - The most common auth type for on-premise installation is `basic`. If you are using your jira login credentials
+     (username and password), select the `basic` auth type.
+   - If you want to use `mtls` (client certificates), select auth type `mtls` and provide the CA Cert, client Key, and client cert.
 
    **Note:** If your on-premise Jira installation is using a language other than `English`, then the issue/epic creation
    may not work because the older version of Jira API doesn't return the untranslated name for `issuetypes`. In that case,
@@ -95,8 +114,11 @@ See [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs)
 
 #### Authentication types
 
-The tool supports `basic` and `bearer` (Personal Access Token) authentication types at the moment. Basic auth is used by
-default. If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
+The tool supports `basic`, `bearer` (Personal Access Token), and `mtls` (Client Certificates) authentication types. Basic auth is used by
+default.
+
+* If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
+* If you want to use `mtls` run `jira init`. Select installation type `Local`, and then select authentication type as `mtls`.
 
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.

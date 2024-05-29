@@ -40,12 +40,25 @@ func Client(config jira.Config) *jira.Client {
 		secret, _ := keyring.Get("jira-cli", config.Login)
 		config.APIToken = secret
 	}
-	if config.AuthType == "" {
-		config.AuthType = jira.AuthType(viper.GetString("auth_type"))
+	if config.AuthType == nil {
+		authType := jira.AuthType(viper.GetString("auth_type"))
+		config.AuthType = &authType
 	}
 	if config.Insecure == nil {
 		insecure := viper.GetBool("insecure")
 		config.Insecure = &insecure
+	}
+
+	// MTLS
+
+	if config.MTLSConfig.CaCert == "" {
+		config.MTLSConfig.CaCert = viper.GetString("mtls.ca_cert")
+	}
+	if config.MTLSConfig.ClientCert == "" {
+		config.MTLSConfig.ClientCert = viper.GetString("mtls.client_cert")
+	}
+	if config.MTLSConfig.ClientKey == "" {
+		config.MTLSConfig.ClientKey = viper.GetString("mtls.client_key")
 	}
 
 	jiraClient = jira.NewClient(
@@ -80,6 +93,15 @@ func ProxyCreate(c *jira.Client, cr *jira.CreateRequest) (*jira.CreateResponse, 
 	}
 
 	return resp, err
+}
+
+// ProxyGetIssueRaw executes the same request as ProxyGetIssue but returns raw API response body string.
+func ProxyGetIssueRaw(c *jira.Client, key string) (string, error) {
+	it := viper.GetString("installation")
+	if it == jira.InstallationTypeLocal {
+		return c.GetIssueV2Raw(key)
+	}
+	return c.GetIssueRaw(key)
 }
 
 // ProxyGetIssue uses either a v2 or v3 version of the Jira GET /issue/{key}
