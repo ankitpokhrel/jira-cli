@@ -46,7 +46,8 @@ func (c *createTestServer) statusCode(code int) {
 func TestCreate(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Bug"},` +
 		`"summary":"Test bug","description":"Test description","priority":{"name":"Normal"},"labels":["test","dev"],` +
-		`"components":[{"name":"BE"},{"name":"FE"}],"fixVersions":[{"name":"v2.0"},{"name":"v2.1-hotfix"}],"versions":[{"name":"v3.0"},{"name":"v3.1-hotfix"}]}}`
+		`"components":[{"name":"BE"},{"name":"FE"}],"fixVersions":[{"name":"v2.0"},{"name":"v2.1-hotfix"}],"versions":[{"name":"v3.0"},{"name":"v3.1-hotfix"}],` +
+		`"timetracking":{"originalEstimate":"2d"}}}`
 	testServer := createTestServer{code: 201}
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
@@ -54,15 +55,16 @@ func TestCreate(t *testing.T) {
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	requestData := CreateRequest{
-		Project:         "TEST",
-		IssueType:       "Bug",
-		Summary:         "Test bug",
-		Body:            "Test description",
-		Priority:        "Normal",
-		Labels:          []string{"test", "dev"},
-		Components:      []string{"BE", "FE"},
-		FixVersions:     []string{"v2.0", "v2.1-hotfix"},
-		AffectsVersions: []string{"v3.0", "v3.1-hotfix"},
+		Project:          "TEST",
+		IssueType:        "Bug",
+		Summary:          "Test bug",
+		Body:             "Test description",
+		Priority:         "Normal",
+		Labels:           []string{"test", "dev"},
+		Components:       []string{"BE", "FE"},
+		FixVersions:      []string{"v2.0", "v2.1-hotfix"},
+		AffectsVersions:  []string{"v3.0", "v3.1-hotfix"},
+		OriginalEstimate: "2d",
 	}
 	actual, err := client.CreateV2(&requestData)
 	assert.NoError(t, err)
@@ -82,7 +84,7 @@ func TestCreate(t *testing.T) {
 
 func TestCreateSubtask(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Sub-task"},` +
-		`"parent":{"key":"TEST-123"},"summary":"Test sub-task","description":"Test description"}}`
+		`"parent":{"key":"TEST-123"},"summary":"Test sub-task","description":"Test description","timetracking":{}}}`
 	testServer := createTestServer{code: 201}
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
@@ -114,7 +116,7 @@ func TestCreateSubtask(t *testing.T) {
 
 func TestCreateEpic(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"customfield_10001":"CLI","description":"Test description","issuetype":{"name":` +
-		`"Bug"},"priority":{"name":"Normal"},"project":{"key":"TEST"},"summary":"Test bug"}}`
+		`"Bug"},"priority":{"name":"Normal"},"project":{"key":"TEST"},"summary":"Test bug", "timetracking":{}}}`
 	testServer := createTestServer{code: 201}
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
@@ -146,7 +148,7 @@ func TestCreateEpic(t *testing.T) {
 
 func TestCreateEpicNextGen(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"description":"Test description","issuetype":{"name":"Bug"},` +
-		`"parent":{"key":"TEST-123"},"project":{"key":"TEST"},"summary":"Test bug"}}`
+		`"parent":{"key":"TEST-123"},"project":{"key":"TEST"},"summary":"Test bug","timetracking":{}}}`
 	testServer := createTestServer{code: 201}
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
