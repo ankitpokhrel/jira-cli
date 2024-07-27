@@ -24,16 +24,17 @@ type CreateRequest struct {
 	IssueType string
 	// ParentIssueKey is required when creating a sub-task for classic project.
 	// This can also be used to attach epic for next-gen project.
-	ParentIssueKey  string
-	Summary         string
-	Body            interface{} // string in v1/v2 and adf.ADF in v3
-	Reporter        string
-	Assignee        string
-	Priority        string
-	Labels          []string
-	Components      []string
-	FixVersions     []string
-	AffectsVersions []string
+	ParentIssueKey   string
+	Summary          string
+	Body             interface{} // string in v1/v2 and adf.ADF in v3
+	Reporter         string
+	Assignee         string
+	Priority         string
+	Labels           []string
+	Components       []string
+	FixVersions      []string
+	AffectsVersions  []string
+	OriginalEstimate string
 	// EpicField is the dynamic epic field name
 	// that changes per jira installation.
 	EpicField string
@@ -132,6 +133,9 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 		Summary:   req.Summary,
 		Labels:    req.Labels,
 		epicField: req.EpicField,
+		TimeTracking: struct {
+			OriginalEstimate string `json:"originalEstimate,omitempty"`
+		}{OriginalEstimate: req.OriginalEstimate},
 	}
 
 	switch v := req.Body.(type) {
@@ -303,6 +307,9 @@ type createFields struct {
 	AffectsVersions []struct {
 		Name string `json:"name,omitempty"`
 	} `json:"versions,omitempty"`
+	TimeTracking struct {
+		OriginalEstimate string `json:"originalEstimate,omitempty"`
+	} `json:"timetracking,omitempty"`
 	epicField    string
 	customFields customField
 }

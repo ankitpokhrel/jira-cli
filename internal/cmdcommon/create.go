@@ -23,22 +23,23 @@ const (
 
 // CreateParams holds parameters for create command.
 type CreateParams struct {
-	Name            string
-	IssueType       string
-	ParentIssueKey  string
-	Summary         string
-	Body            string
-	Priority        string
-	Reporter        string
-	Assignee        string
-	Labels          []string
-	Components      []string
-	FixVersions     []string
-	AffectsVersions []string
-	CustomFields    map[string]string
-	Template        string
-	NoInput         bool
-	Debug           bool
+	Name             string
+	IssueType        string
+	ParentIssueKey   string
+	Summary          string
+	Body             string
+	Priority         string
+	Reporter         string
+	Assignee         string
+	Labels           []string
+	Components       []string
+	FixVersions      []string
+	AffectsVersions  []string
+	OriginalEstimate string
+	CustomFields     map[string]string
+	Template         string
+	NoInput          bool
+	Debug            bool
 }
 
 // SetCreateFlags sets flags supported by create command.
@@ -63,6 +64,7 @@ And, this field is mandatory when creating a sub-task.`)
 	cmd.Flags().StringArrayP("component", "C", []string{}, prefix+" components")
 	cmd.Flags().StringArray("fix-version", []string{}, "Release info (fixVersions)")
 	cmd.Flags().StringArray("affects-version", []string{}, "Release info (affectsVersions)")
+	cmd.Flags().StringP("original-estimate", "e", "", prefix+" Original estimate")
 	cmd.Flags().StringToString("custom", custom, "Set custom fields")
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read body/description from")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful creation")
