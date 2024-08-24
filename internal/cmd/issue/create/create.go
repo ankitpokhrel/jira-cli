@@ -99,20 +99,21 @@ func create(cmd *cobra.Command, _ []string) {
 		defer s.Stop()
 
 		cr := jira.CreateRequest{
-			Project:         project,
-			IssueType:       params.IssueType,
-			ParentIssueKey:  params.ParentIssueKey,
-			Summary:         params.Summary,
-			Body:            params.Body,
-			Reporter:        params.Reporter,
-			Assignee:        params.Assignee,
-			Priority:        params.Priority,
-			Labels:          params.Labels,
-			Components:      params.Components,
-			FixVersions:     params.FixVersions,
-			AffectsVersions: params.AffectsVersions,
-			CustomFields:    params.CustomFields,
-			EpicField:       viper.GetString("epic.link"),
+			Project:          project,
+			IssueType:        params.IssueType,
+			ParentIssueKey:   params.ParentIssueKey,
+			Summary:          params.Summary,
+			Body:             params.Body,
+			Reporter:         params.Reporter,
+			Assignee:         params.Assignee,
+			Priority:         params.Priority,
+			Labels:           params.Labels,
+			Components:       params.Components,
+			FixVersions:      params.FixVersions,
+			AffectsVersions:  params.AffectsVersions,
+			OriginalEstimate: params.OriginalEstimate,
+			CustomFields:     params.CustomFields,
+			EpicField:        viper.GetString("epic.link"),
 		}
 		cr.ForProjectType(projectType)
 		cr.ForInstallationType(installation)
@@ -347,6 +348,9 @@ func parseFlags(flags query.FlagParser) *cmdcommon.CreateParams {
 	affectsVersions, err := flags.GetStringArray("affects-version")
 	cmdutil.ExitIfError(err)
 
+	originalEstimate, err := flags.GetString("original-estimate")
+	cmdutil.ExitIfError(err)
+
 	custom, err := flags.GetStringToString("custom")
 	cmdutil.ExitIfError(err)
 
@@ -360,20 +364,21 @@ func parseFlags(flags query.FlagParser) *cmdcommon.CreateParams {
 	cmdutil.ExitIfError(err)
 
 	return &cmdcommon.CreateParams{
-		IssueType:       issueType,
-		ParentIssueKey:  parentIssueKey,
-		Summary:         summary,
-		Body:            body,
-		Priority:        priority,
-		Assignee:        assignee,
-		Labels:          labels,
-		Reporter:        reporter,
-		Components:      components,
-		FixVersions:     fixVersions,
-		AffectsVersions: affectsVersions,
-		CustomFields:    custom,
-		Template:        template,
-		NoInput:         noInput,
-		Debug:           debug,
+		IssueType:        issueType,
+		ParentIssueKey:   parentIssueKey,
+		Summary:          summary,
+		Body:             body,
+		Priority:         priority,
+		Assignee:         assignee,
+		Labels:           labels,
+		Reporter:         reporter,
+		Components:       components,
+		FixVersions:      fixVersions,
+		AffectsVersions:  affectsVersions,
+		OriginalEstimate: originalEstimate,
+		CustomFields:     custom,
+		Template:         template,
+		NoInput:          noInput,
+		Debug:            debug,
 	}
 }

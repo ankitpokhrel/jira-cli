@@ -167,7 +167,9 @@ func (cc *createCmd) getQuestions(projectType string) []*survey.Question {
 	}
 
 	if cc.params.NoInput {
-		cc.params.Body = defaultBody
+		if cc.params.Body == "" {
+			cc.params.Body = defaultBody
+		}
 		return qs
 	}
 
