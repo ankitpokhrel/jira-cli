@@ -133,9 +133,6 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 		Summary:   req.Summary,
 		Labels:    req.Labels,
 		epicField: req.EpicField,
-		TimeTracking: struct {
-			OriginalEstimate string `json:"originalEstimate,omitempty"`
-		}{OriginalEstimate: req.OriginalEstimate},
 	}
 
 	switch v := req.Body.(type) {
@@ -218,6 +215,12 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 			}{v})
 		}
 		data.Fields.M.AffectsVersions = versions
+	}
+
+	if req.OriginalEstimate != "" {
+		data.Fields.M.TimeTracking = &struct {
+			OriginalEstimate string `json:"originalEstimate,omitempty"`
+		}{OriginalEstimate: req.OriginalEstimate}
 	}
 	constructCustomFields(req.CustomFields, req.configuredCustomFields, &data)
 
@@ -307,7 +310,8 @@ type createFields struct {
 	AffectsVersions []struct {
 		Name string `json:"name,omitempty"`
 	} `json:"versions,omitempty"`
-	TimeTracking struct {
+	// Use pointer to avoid marshalling `timetracking` field even when estimate is an empty string
+	TimeTracking *struct {
 		OriginalEstimate string `json:"originalEstimate,omitempty"`
 	} `json:"timetracking,omitempty"`
 	epicField    string
