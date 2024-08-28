@@ -142,8 +142,8 @@ func edit(cmd *cobra.Command, args []string) {
 			body = md.ToJiraMD(body)
 		}
 
-		var parent string
-		if issue.Fields.Parent != nil {
+		parent := cmdutil.GetJiraIssueKey(project, params.parentIssueKey)
+		if parent == "" && issue.Fields.Parent != nil {
 			parent = issue.Fields.Parent.Key
 		}
 
@@ -301,6 +301,7 @@ func (ec *editCmd) askQuestions(issue *jira.Issue, originalBody string) error {
 
 type editParams struct {
 	issueKey        string
+	parentIssueKey  string
 	summary         string
 	body            string
 	priority        string
@@ -315,6 +316,9 @@ type editParams struct {
 }
 
 func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *editParams {
+	parentIssueKey, err := flags.GetString("parent")
+	cmdutil.ExitIfError(err)
+
 	summary, err := flags.GetString("summary")
 	cmdutil.ExitIfError(err)
 
@@ -350,6 +354,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 
 	return &editParams{
 		issueKey:        cmdutil.GetJiraIssueKey(project, args[0]),
+		parentIssueKey:  parentIssueKey,
 		summary:         summary,
 		body:            body,
 		priority:        priority,
@@ -430,6 +435,7 @@ func setFlags(cmd *cobra.Command) {
 
 	cmd.Flags().SortFlags = false
 
+	cmd.Flags().StringP("parent", "P", "", `Link to a parent key`)
 	cmd.Flags().StringP("summary", "s", "", "Edit summary or title")
 	cmd.Flags().StringP("body", "b", "", "Edit description")
 	cmd.Flags().StringP("priority", "y", "", "Edit priority")
