@@ -57,7 +57,7 @@ func constructCustomField(dataType string, itemType string, value string) any {
 		pieces := strings.Split(strings.TrimSpace(value), ",")
 		items := make([]any, len(pieces))
 		for idx, piece := range pieces {
-			items[idx] = constructCustomField(itemType, piece, "")
+			items[idx] = constructCustomField(itemType, "", piece)
 		}
 		return items
 	case customFieldFormatNumber:
