@@ -84,7 +84,7 @@ func TestCreate(t *testing.T) {
 
 func TestCreateSubtask(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Sub-task"},` +
-		`"parent":{"key":"TEST-123"},"summary":"Test sub-task","description":"Test description","timetracking":{}}}`
+		`"parent":{"key":"TEST-123"},"summary":"Test sub-task","description":"Test description"}}`
 	testServer := createTestServer{code: 201}
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
@@ -116,7 +116,7 @@ func TestCreateSubtask(t *testing.T) {
 
 func TestCreateEpic(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"customfield_10001":"CLI","description":"Test description","issuetype":{"name":` +
-		`"Bug"},"priority":{"name":"Normal"},"project":{"key":"TEST"},"summary":"Test bug", "timetracking":{}}}`
+		`"Bug"},"priority":{"name":"Normal"},"project":{"key":"TEST"},"summary":"Test bug"}}`
 	testServer := createTestServer{code: 201}
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
@@ -148,7 +148,7 @@ func TestCreateEpic(t *testing.T) {
 
 func TestCreateEpicNextGen(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"description":"Test description","issuetype":{"name":"Bug"},` +
-		`"parent":{"key":"TEST-123"},"project":{"key":"TEST"},"summary":"Test bug","timetracking":{}}}`
+		`"parent":{"key":"TEST-123"},"project":{"key":"TEST"},"summary":"Test bug"}}`
 	testServer := createTestServer{code: 201}
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
