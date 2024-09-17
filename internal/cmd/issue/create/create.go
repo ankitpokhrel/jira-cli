@@ -128,7 +128,7 @@ func create(cmd *cobra.Command, _ []string) {
 
 		resp, err := client.CreateV2(&cr)
 		if err != nil {
-			fmt.Printf("\nCreation failed. Text dump follows.\nSummary:\n--------\n%s\n\nBody:\n-----\n%s\n\n", params.summary, params.body)
+			fmt.Printf("\nCreation failed. Text dump follows.\nSummary:\n--------\n%s\n\nBody:\n-----\n%s\n\n", params.Summary, params.Body)
 			return "", err
 		}
 		return resp.Key, nil
