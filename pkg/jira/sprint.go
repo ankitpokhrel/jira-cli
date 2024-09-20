@@ -88,8 +88,11 @@ func (c *Client) EndSprint(sprintID int) error {
 	if err != nil {
 		return err
 	}
+	if sprint.Status == SprintStateClosed {
+		return fmt.Errorf("sprint %d is already closed", sprintID)
+	}
 
-	// update to closed and format for PUT
+	// Update to closed and format for PUT.
 	sprint.Status = SprintStateClosed
 	body, err := json.Marshal(sprint)
 	if err != nil {
