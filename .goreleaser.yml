@@ -84,6 +84,7 @@ brews:
       else
         bin.install File.exist?("bin/jira") ? "bin/jira" : "jira"
       end
+      generate_completions_from_executable(bin/"jira", "completion", shells: [:bash, :zsh, :fish])
 
     test: |
       help_text = shell_output("#{bin}/jira version")
