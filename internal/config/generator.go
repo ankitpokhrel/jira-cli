@@ -442,7 +442,7 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 			}
 		}
 
-		if err := keyring.Set("jira-cli", c.value.login, c.value.apiToken); err != nil {
+		if err := keyring.Set("jira-cli", strings.ToLower(c.value.login), c.value.apiToken); err != nil {
 			cmdutil.Warn("Failed to store API token in keyring: %v", err)
 		}
 	}
@@ -801,6 +801,7 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	config.Set("issue.fields.custom", c.value.customFields)
 	config.Set("auth_type", c.value.authType.String())
 	config.Set("timezone", c.value.timezone)
+	config.Set("use_keyring", c.usrCfg.UseKeyring)
 
 	// MTLS.
 	if c.value.mtls.caCert != "" {

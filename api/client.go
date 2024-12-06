@@ -2,6 +2,7 @@ package api
 
 import (
 	"time"
+	"strings"
 
 	"github.com/spf13/viper"
 	"github.com/zalando/go-keyring"
@@ -43,13 +44,13 @@ func Client(config jira.Config) *jira.Client {
 	useKeyring := viper.GetBool("use_keyring")
 	if config.APIToken == "" && useKeyring {
 		// Try to get API token from keyring
-		secret, err := keyring.Get("jira-cli", config.Login)
+		secret, err := keyring.Get("jira-cli", strings.ToLower(config.Login))
 		if err == nil {
 			config.APIToken = secret
 		}
 	} else if useKeyring && config.APIToken != "" {
 		// Save valid API token to keyring for future use
-		if err := keyring.Set("jira-cli", config.Login, config.APIToken); err != nil {
+		if err := keyring.Set("jira-cli", strings.ToLower(config.Login), config.APIToken); err != nil {
 			// Non-fatal error, just continue without saving to keyring
 			// The API token will still work for this session
 		}

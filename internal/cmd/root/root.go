@@ -3,6 +3,7 @@ package root
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -164,7 +165,7 @@ func checkForJiraToken(server string, login string) {
 		return
 	}
 
-	secret, _ := keyring.Get("jira-cli", login)
+	secret, _ := keyring.Get("jira-cli", strings.ToLower(login))
 	if secret != "" {
 		return
 	}
