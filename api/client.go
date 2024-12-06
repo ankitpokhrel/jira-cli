@@ -2,6 +2,7 @@ package api
 
 import (
 	"time"
+	"strings"
 
 	"github.com/spf13/viper"
 	"github.com/zalando/go-keyring"
@@ -30,16 +31,31 @@ func Client(config jira.Config) *jira.Client {
 	if config.APIToken == "" {
 		config.APIToken = viper.GetString("api_token")
 	}
+
+	// Try netrc first if no API token provided
 	if config.APIToken == "" {
 		netrcConfig, _ := netrc.Read(config.Server, config.Login)
 		if netrcConfig != nil {
 			config.APIToken = netrcConfig.Password
 		}
 	}
-	if config.APIToken == "" {
-		secret, _ := keyring.Get("jira-cli", config.Login)
-		config.APIToken = secret
+
+	// Only try keyring if explicitly enabled in config
+	useKeyring := viper.GetBool("use_keyring")
+	if config.APIToken == "" && useKeyring {
+		// Try to get API token from keyring
+		secret, err := keyring.Get("jira-cli", strings.ToLower(config.Login))
+		if err == nil {
+			config.APIToken = secret
+		}
+	} else if useKeyring && config.APIToken != "" {
+		// Save valid API token to keyring for future use
+		if err := keyring.Set("jira-cli", strings.ToLower(config.Login), config.APIToken); err != nil {
+			// Non-fatal error, just continue without saving to keyring
+			// The API token will still work for this session
+		}
 	}
+
 	if config.AuthType == nil {
 		authType := jira.AuthType(viper.GetString("auth_type"))
 		config.AuthType = &authType

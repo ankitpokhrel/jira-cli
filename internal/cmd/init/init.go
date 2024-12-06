@@ -18,9 +18,11 @@ type initParams struct {
 	installation string
 	server       string
 	login        string
+	apiToken     string
 	authType     string
 	project      string
 	board        string
+	useKeyring   bool
 	force        bool
 	insecure     bool
 }
@@ -46,6 +48,8 @@ func NewCmdInit() *cobra.Command {
 	cmd.Flags().Bool("force", false, "Forcefully override existing config if it exists")
 	cmd.Flags().Bool("insecure", false, `If set, the tool will skip TLS certificate verification.
 This can be useful if your server is using self-signed certificates.`)
+	cmd.Flags().Bool("use-keyring", false, "Store API token securely in system keyring")
+	cmd.Flags().String("api-token", "", "API token or password for authentication")
 
 	return &cmd
 }
@@ -81,6 +85,12 @@ func parseFlags(flags query.FlagParser) *initParams {
 	insecure, err := flags.GetBool("insecure")
 	cmdutil.ExitIfError(err)
 
+	useKeyring, err := flags.GetBool("use-keyring")
+	cmdutil.ExitIfError(err)
+
+	apiToken, err := flags.GetString("api-token")
+	cmdutil.ExitIfError(err)
+
 	return &initParams{
 		installation: installation,
 		server:       server,
@@ -90,6 +100,8 @@ func parseFlags(flags query.FlagParser) *initParams {
 		board:        board,
 		force:        force,
 		insecure:     insecure,
+		useKeyring:   useKeyring,
+		apiToken:     apiToken,
 	}
 }
 
