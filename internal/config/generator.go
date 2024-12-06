@@ -15,6 +15,8 @@ import (
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/zalando/go-keyring"
+
 )
 
 const (
@@ -67,8 +69,10 @@ type JiraCLIConfig struct {
 	Server       string
 	AuthType     string
 	Login        string
+	APIToken     string
 	Project      string
 	Board        string
+	UseKeyring   bool
 	Force        bool
 	Insecure     bool
 	MTLS         JiraCLIMTLSConfig
@@ -94,6 +98,7 @@ type JiraCLIConfigGenerator struct {
 			caCert, clientCert, clientKey string
 		}
 		timezone string
+		apiToken string
 	}
 	jiraClient         *jira.Client
 	projectSuggestions []string
@@ -186,6 +191,8 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 	if err := c.configureMetadata(); err != nil {
 		return "", err
 	}
+
+	viper.Set("use_keyring", c.usrCfg.UseKeyring)
 
 	if err := func() error {
 		s := cmdutil.Info("Creating new configuration...")
@@ -390,23 +397,49 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 		}
 	}
 
-	if len(qs) > 0 {
-		ans := struct {
-			Server string
-			Login  string
-		}{}
-
-		if err := survey.Ask(qs, &ans); err != nil {
+	if !c.usrCfg.UseKeyring {
+		var useKeyring bool
+		prompt := &survey.Confirm{
+			Message: "Would you like to store API token securely in system keyring?",
+			Help:    "The API token will be stored securely using your system's keyring/keychain",
+			Default: false,
+		}
+		if err := survey.AskOne(prompt, &useKeyring); err != nil {
 			return err
 		}
+		c.usrCfg.UseKeyring = useKeyring
+	}
 
-		if ans.Server != "" {
-			c.value.server = ans.Server
+	if c.usrCfg.UseKeyring {
+		if c.usrCfg.APIToken == "" {
+			qs = append(qs, &survey.Question{
+				Name: "apiToken",
+				Prompt: &survey.Password{
+					Message: "API Token:",
+					Help:    "Enter your API token",
+				},
+				Validate: survey.Required,
+			})
 		}
-		if ans.Login != "" {
-			c.value.login = ans.Login
+
+		if len(qs) > 0 {
+			ans := struct {
+				APIToken string
+			}{}
+			if err := survey.Ask(qs, &ans); err != nil {
+				return err
+			}
+			if ans.APIToken != "" {
+				c.value.apiToken = ans.APIToken
+			}
+		}
+
+		if err := keyring.Set("jira-cli", c.value.login, c.value.apiToken); err != nil {
+			cmdutil.Warn("Failed to store API token in keyring: %v", err)
 		}
 	}
+
+	viper.Set("use_keyring", c.usrCfg.UseKeyring)
 
 	return c.verifyLoginDetails(c.value.server, c.value.login)
 }
