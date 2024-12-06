@@ -424,10 +424,18 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 
 		if len(qs) > 0 {
 			ans := struct {
+				Server   string
+				Login    string
 				APIToken string
 			}{}
 			if err := survey.Ask(qs, &ans); err != nil {
 				return err
+			}
+			if ans.Server != "" {
+				c.value.server = ans.Server
+			}
+			if ans.Login != "" {
+				c.value.login = ans.Login
 			}
 			if ans.APIToken != "" {
 				c.value.apiToken = ans.APIToken
