@@ -13,7 +13,7 @@ linters:
     - revive
     - godot
     - gofumpt
-    - gomnd
+    - mnd
     - gosimple
     - govet
     - ineffassign
