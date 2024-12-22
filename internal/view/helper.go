@@ -141,19 +141,19 @@ func jiraURLFromTuiData(server string, r int, d interface{}) string {
 }
 
 func navigate(server string) tui.SelectedFunc {
-	return func(r, c int, d interface{}) {
+	return func(r, _ int, d interface{}) {
 		_ = browser.Browse(jiraURLFromTuiData(server, r, d))
 	}
 }
 
 func copyURL(server string) tui.CopyFunc {
-	return func(r, c int, d interface{}) {
+	return func(r, _ int, d interface{}) {
 		_ = clipboard.WriteAll(jiraURLFromTuiData(server, r, d))
 	}
 }
 
 func copyKey() tui.CopyKeyFunc {
-	return func(r, c int, d interface{}) {
+	return func(r, _ int, d interface{}) {
 		_ = clipboard.WriteAll(issueKeyFromTuiData(r, d))
 	}
 }
