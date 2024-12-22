@@ -26,7 +26,7 @@ var (
 
 // DateStringToJiraFormatInLocation parses a standard string to jira compatible RFC3339 datetime format.
 //
-//nolint:gomnd
+//nolint:mnd
 func DateStringToJiraFormatInLocation(value string, timezone string) (string, error) {
 	if value == "" || value == "0" || value == "0000-00-00 00:00:00" || value == "0000-00-00" || value == "00:00:00" {
 		return "", nil
