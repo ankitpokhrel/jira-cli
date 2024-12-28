@@ -119,6 +119,7 @@ default.
 
 * If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
 * If you want to use `mtls` run `jira init`. Select installation type `Local`, and then select authentication type as `mtls`.
+  * In case `JIRA_API_TOKEN` variable is set it will be used together with `mtls`.
 
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.
