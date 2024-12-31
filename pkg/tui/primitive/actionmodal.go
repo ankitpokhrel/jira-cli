@@ -161,7 +161,7 @@ func (m *ActionModal) HasFocus() bool {
 
 // Draw draws this primitive onto the screen.
 //
-//nolint:gomnd
+//nolint:mnd
 func (m *ActionModal) Draw(screen tcell.Screen) {
 	// Calculate the width of this modal.
 	buttonsWidth := 0

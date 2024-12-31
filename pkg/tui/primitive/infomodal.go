@@ -60,7 +60,7 @@ func (i *InfoModal) SetAlign(align int) *InfoModal {
 
 // Draw draws this primitive onto the screen.
 //
-//nolint:gomnd
+//nolint:mnd
 func (i *InfoModal) Draw(screen tcell.Screen) {
 	screenWidth, screenHeight := screen.Size()
 	width := screenWidth / 3
