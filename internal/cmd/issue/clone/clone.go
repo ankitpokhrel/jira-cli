@@ -209,20 +209,22 @@ func (cc *cloneCmd) getActualCreateParams(project string, issue *jira.Issue) *cr
 		body = ""
 	}
 
-	if cc.params.replace != "" {
-		pieces := strings.Split(cc.params.replace, ":")
-		if len(pieces) != 2 {
-			fmt.Println()
-			cmdutil.Fail("Invalid replace string, must be in format <find>:<replace>. Skipping replacement...")
-		} else {
-			from, to := pieces[0], pieces[1]
-
-			cp.summary = strings.ReplaceAll(cp.summary, from, to)
-
-			if isADF {
-				body.(*adf.ADF).ReplaceAll(from, to)
+	if len(cc.params.replace) > 0 {
+		for _, r := range cc.params.replace {
+			pieces := strings.Split(r, ":")
+			if len(pieces) != 2 {
+				fmt.Println()
+				cmdutil.Fail("Invalid replace string, must be in format <find>:<replace>. Skipping replacement...")
 			} else {
-				body = strings.ReplaceAll(body.(string), from, to)
+				from, to := pieces[0], pieces[1]
+
+				cp.summary = strings.ReplaceAll(cp.summary, from, to)
+
+				if isADF {
+					body.(*adf.ADF).ReplaceAll(from, to)
+				} else {
+					body = strings.ReplaceAll(body.(string), from, to)
+				}
 			}
 		}
 	}
@@ -238,7 +240,7 @@ type cloneParams struct {
 	assignee   string
 	labels     []string
 	components []string
-	replace    string
+	replace    []string
 	debug      bool
 }
 
@@ -261,7 +263,7 @@ func parseFlags(flags query.FlagParser) *cloneParams {
 	components, err := flags.GetStringArray("component")
 	cmdutil.ExitIfError(err)
 
-	replace, err := flags.GetString("replace")
+	replace, err := flags.GetStringArray("replace")
 	cmdutil.ExitIfError(err)
 
 	debug, err := flags.GetBool("debug")
@@ -288,6 +290,6 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("assignee", "a", "", "Issue assignee (email or display name)")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Issue labels")
 	cmd.Flags().StringArrayP("component", "C", []string{}, "Issue components")
-	cmd.Flags().StringP("replace", "H", "", "Replace strings in summary and body. Format <search>:<replace>, eg: \"find me:replace with me\"")
+	cmd.Flags().StringArrayP("replace", "H", []string{}, "Replace strings in summary and body. Format <search>:<replace>, eg: \"find me:replace with me\"")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful cloning")
 }
