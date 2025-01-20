@@ -5,6 +5,9 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdcommon"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
@@ -12,8 +15,6 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/surveyext"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 const (
