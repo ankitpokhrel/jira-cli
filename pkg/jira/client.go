@@ -234,6 +234,11 @@ func (c *Client) PutV2(ctx context.Context, path string, body []byte, headers He
 	return c.request(ctx, http.MethodPut, c.server+baseURLv2+path, body, headers)
 }
 
+// PutV1 sends PUT request to v1 version of the jira api.
+func (c *Client) PutV1(ctx context.Context, path string, body []byte, headers Header) (*http.Response, error) {
+	return c.request(ctx, http.MethodPut, c.server+baseURLv1+path, body, headers)
+}
+
 // DeleteV2 sends DELETE request to v2 version of the jira api.
 func (c *Client) DeleteV2(ctx context.Context, path string, headers Header) (*http.Response, error) {
 	return c.request(ctx, http.MethodDelete, c.server+baseURLv2+path, nil, headers)
@@ -270,6 +275,10 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 	// When need to compare using `String()` here, it is used to handle cases where the
 	// authentication type might be empty, ensuring it defaults to the appropriate value.
 	switch c.authType.String() {
+	case string(AuthTypeMTLS):
+		if c.token != "" {
+			req.Header.Add("Authorization", "Bearer "+c.token)
+		}
 	case string(AuthTypeBearer):
 		req.Header.Add("Authorization", "Bearer "+c.token)
 	case string(AuthTypeBasic):

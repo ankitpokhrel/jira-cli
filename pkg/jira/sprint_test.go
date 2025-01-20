@@ -342,3 +342,77 @@ func TestSprintIssuesAdd(t *testing.T) {
 	err = client.SprintIssuesAdd("5", "TEST-1")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
+
+func TestGetSprint(t *testing.T) {
+	var unexpectedStatusCode bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/agile/1.0/sprint/5", r.URL.Path)
+
+		if unexpectedStatusCode {
+			w.WriteHeader(400)
+		} else {
+			assert.Equal(t, "GET", r.Method)
+
+			resp, err := os.ReadFile("./testdata/sprint-get.json")
+			assert.NoError(t, err)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			_, _ = w.Write(resp)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	sprint, err := client.GetSprint(5)
+	assert.NoError(t, err)
+	assert.Equal(t, sprint.ID, 5)
+	assert.Equal(t, sprint.Status, "active")
+
+	unexpectedStatusCode = true
+
+	_, err = client.GetSprint(5)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
+func TestEndSprint(t *testing.T) {
+	var unexpectedStatusCode bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.NotNilf(t, r.Method, "invalid request method")
+
+		if r.Method == "GET" {
+			assert.Equal(t, "/rest/agile/1.0/sprint/5", r.URL.Path)
+
+			resp, err := os.ReadFile("./testdata/sprint-get.json")
+			assert.NoError(t, err)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			_, _ = w.Write(resp)
+		} else {
+			if unexpectedStatusCode {
+				w.WriteHeader(400)
+			} else if r.Method == "PUT" {
+				assert.Equal(t, "PUT", r.Method)
+				assert.Equal(t, "application/json", r.Header.Get("Accept"))
+				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+				w.WriteHeader(200)
+			}
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	err := client.EndSprint(5)
+	assert.NoError(t, err)
+
+	unexpectedStatusCode = true
+
+	err = client.EndSprint(5)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}

@@ -616,7 +616,7 @@ func (c *JiraCLIConfigGenerator) searchAndAssignBoard(project, keyword string) e
 func (c *JiraCLIConfigGenerator) configureMetadata() error {
 	var err error
 
-	//nolint:gomnd
+	//nolint:mnd
 	isV9Compatible := c.value.version.major >= 9 || (c.value.version.major == 8 && c.value.version.minor > 4)
 	if c.value.installation == jira.InstallationTypeLocal && isV9Compatible {
 		err = c.configureIssueTypesForJiraServerV9()
