@@ -36,6 +36,9 @@ $ jira issue create --template /path/to/template.tmpl
 # Get description from standard input
 $ jira issue create --template -
 
+# Create issue in the configured project with JSON output
+$ jira issue create --raw
+
 # Or, use pipe to read input directly from standard input
 $ echo "Description from stdin" | jira issue create -s"Summary" -tTask
 
@@ -43,7 +46,7 @@ $ echo "Description from stdin" | jira issue create -s"Summary" -tTask
 # The example below will add "Body from flag" as an issue description
 $ jira issue create -tTask -sSummary -b"Body from flag" --template /path/to/template.tpl`
 
-	flagJson = "json"
+	flagRaw = "raw"
 )
 
 // NewCmdCreate is a create command.
@@ -56,7 +59,7 @@ func NewCmdCreate() *cobra.Command {
 		Run:     create,
 	}
 
-	cmd.Flags().Bool(flagJson, false, "Print output in JSON format")
+	cmd.Flags().Bool(flagRaw, false, "Print output in JSON format")
 
 	return &cmd
 }
@@ -137,7 +140,7 @@ func create(cmd *cobra.Command, _ []string) {
 
 	cmdutil.ExitIfError(err)
 
-	jsonFlag, err := cmd.Flags().GetBool(flagJson)
+	jsonFlag, err := cmd.Flags().GetBool(flagRaw)
 	cmdutil.ExitIfError(err)
 	if jsonFlag {
 		jsonData, err := json.Marshal(issue)
