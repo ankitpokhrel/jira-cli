@@ -296,13 +296,22 @@ func (c *Client) GetLinkID(inwardIssue, outwardIssue string) (string, error) {
 	return "", fmt.Errorf("no link found between provided issues")
 }
 
+type issueCommentPropertyValue struct {
+	Internal bool `json:"internal"`
+}
+
+type issueCommentProperty struct {
+	Key   string                    `json:"key"`
+	Value issueCommentPropertyValue `json:"value"`
+}
 type issueCommentRequest struct {
-	Body string `json:"body"`
+	Body       string                 `json:"body"`
+	Properties []issueCommentProperty `json:"properties"`
 }
 
 // AddIssueComment adds comment to an issue using POST /issue/{key}/comment endpoint.
-func (c *Client) AddIssueComment(key, comment string) error {
-	body, err := json.Marshal(&issueCommentRequest{Body: md.ToJiraMD(comment)})
+func (c *Client) AddIssueComment(key, comment string, internal bool) error {
+	body, err := json.Marshal(&issueCommentRequest{Body: md.ToJiraMD(comment), Properties: []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: internal}}}})
 	if err != nil {
 		return err
 	}
