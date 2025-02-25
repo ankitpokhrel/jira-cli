@@ -492,7 +492,7 @@ $ jira issue comment add
 $ jira issue comment add ISSUE-1 "My comment body"
 
 # Same as above but as an internal comment
-$ jira issue comment add ISSUE-1 "My comment body" -internal
+$ jira issue comment add ISSUE-1 "My comment body" --internal
 
 # Load comment from template file
 $ jira issue comment add ISSUE-1 --template /path/to/template.tmpl
