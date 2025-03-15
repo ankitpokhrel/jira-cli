@@ -1,6 +1,7 @@
 module github.com/ankitpokhrel/jira-cli
 
-go 1.21
+go 1.24.0
+
 toolchain go1.24.1
 
 require (
