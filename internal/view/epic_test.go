@@ -135,7 +135,7 @@ func TestEpicData(t *testing.T) {
 		},
 		{
 			Key:  "TEST-2",
-			Menu: "➤ TEST-2: ⦗EPIC⦘ This is another test",
+			Menu: "➤ TEST-2: [EPIC[] This is another test",
 			Contents: tui.TableData{
 				[]string{
 					"TYPE", "KEY", "SUMMARY", "STATUS", "ASSIGNEE", "REPORTER", "PRIORITY", "RESOLUTION",

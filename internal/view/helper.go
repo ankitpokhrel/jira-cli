@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/fatih/color"
 	"github.com/mgutz/ansi"
+	"github.com/rivo/tview"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/browser"
@@ -111,16 +112,7 @@ func formatDateTime(dt, format, tz string) string {
 
 func prepareTitle(text string) string {
 	text = strings.TrimSpace(text)
-
-	// Single word within big brackets like [BE] is treated as a
-	// tag and is not parsed by tview creating a gap in the text.
-	//
-	// We will handle this with a little trick by replacing
-	// big brackets with similar-looking unicode characters.
-	text = strings.ReplaceAll(text, "[", "⦗")
-	text = strings.ReplaceAll(text, "]", "⦘")
-
-	return text
+	return tview.Escape(text)
 }
 
 func issueKeyFromTuiData(r int, d interface{}) string {
