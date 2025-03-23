@@ -92,7 +92,7 @@ func TestPrepareTitle(t *testing.T) {
 		{
 			name:     "it replace big brackets in title",
 			input:    "[BUG] This is a bug",
-			expected: "⦗BUG⦘ This is a bug",
+			expected: "[BUG[] This is a bug",
 		},
 	}
 

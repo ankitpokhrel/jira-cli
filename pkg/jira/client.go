@@ -275,6 +275,10 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 	// When need to compare using `String()` here, it is used to handle cases where the
 	// authentication type might be empty, ensuring it defaults to the appropriate value.
 	switch c.authType.String() {
+	case string(AuthTypeMTLS):
+		if c.token != "" {
+			req.Header.Add("Authorization", "Bearer "+c.token)
+		}
 	case string(AuthTypeBearer):
 		req.Header.Add("Authorization", "Bearer "+c.token)
 	case string(AuthTypeBasic):

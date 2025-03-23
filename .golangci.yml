@@ -13,7 +13,7 @@ linters:
     - revive
     - godot
     - gofumpt
-    - gomnd
+    - mnd
     - gosimple
     - govet
     - ineffassign
@@ -32,7 +32,7 @@ linters-settings:
     rules:
       - name: package-comments
         disabled: true
-  gomnd:
+  mnd:
     ignored-numbers: ['0', '1', '2', '3']
 issues:
   exclude-use-default: false

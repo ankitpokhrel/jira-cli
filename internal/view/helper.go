@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/fatih/color"
 	"github.com/mgutz/ansi"
+	"github.com/rivo/tview"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/browser"
@@ -111,16 +112,7 @@ func formatDateTime(dt, format, tz string) string {
 
 func prepareTitle(text string) string {
 	text = strings.TrimSpace(text)
-
-	// Single word within big brackets like [BE] is treated as a
-	// tag and is not parsed by tview creating a gap in the text.
-	//
-	// We will handle this with a little trick by replacing
-	// big brackets with similar-looking unicode characters.
-	text = strings.ReplaceAll(text, "[", "⦗")
-	text = strings.ReplaceAll(text, "]", "⦘")
-
-	return text
+	return tview.Escape(text)
 }
 
 func issueKeyFromTuiData(r int, d interface{}) string {
@@ -141,19 +133,19 @@ func jiraURLFromTuiData(server string, r int, d interface{}) string {
 }
 
 func navigate(server string) tui.SelectedFunc {
-	return func(r, c int, d interface{}) {
+	return func(r, _ int, d interface{}) {
 		_ = browser.Browse(jiraURLFromTuiData(server, r, d))
 	}
 }
 
 func copyURL(server string) tui.CopyFunc {
-	return func(r, c int, d interface{}) {
+	return func(r, _ int, d interface{}) {
 		_ = clipboard.WriteAll(jiraURLFromTuiData(server, r, d))
 	}
 }
 
 func copyKey() tui.CopyKeyFunc {
-	return func(r, c int, d interface{}) {
+	return func(r, _ int, d interface{}) {
 		_ = clipboard.WriteAll(issueKeyFromTuiData(r, d))
 	}
 }
@@ -162,12 +154,12 @@ func renderPlain(w io.Writer, data tui.TableData) error {
 	for _, items := range data {
 		n := len(items)
 		for j, v := range items {
-			fmt.Fprintf(w, "%s", v)
+			_, _ = fmt.Fprintf(w, "%s", v)
 			if j != n-1 {
-				fmt.Fprintf(w, "\t")
+				_, _ = fmt.Fprintf(w, "\t")
 			}
 		}
-		fmt.Fprintln(w)
+		_, _ = fmt.Fprintln(w)
 	}
 
 	if _, ok := w.(*tabwriter.Writer); ok {

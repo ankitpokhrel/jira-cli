@@ -14,7 +14,7 @@ func TestBoardRender(t *testing.T) {
 
 	data := []*jira.Board{
 		{ID: 1, Name: "First", Type: "scrum"},
-		{ID: 2, Name: "⦗2⦘ Second", Type: "kanban"},
+		{ID: 2, Name: "[2] Second", Type: "kanban"},
 		{ID: 3, Name: "Third", Type: "nextgen"},
 	}
 	board := NewBoard(data, WithBoardWriter(&b))
@@ -22,7 +22,7 @@ func TestBoardRender(t *testing.T) {
 
 	expected := `ID	NAME	TYPE
 1	First	scrum
-2	⦗2⦘ Second	kanban
+2	[2[] Second	kanban
 3	Third	nextgen
 `
 	assert.Equal(t, expected, b.String())

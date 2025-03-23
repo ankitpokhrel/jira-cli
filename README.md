@@ -16,6 +16,9 @@
         <a href="https://github.com/ankitpokhrel/jira-cli/blob/master/LICENSE">
             <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square" />
         </a>
+        <a href="#">
+            <img alt="Downloads" src="https://img.shields.io/github/downloads/ankitpokhrel/jira-cli/total?style=flat-square" />
+        </a>
         <a href="https://opencollective.com/jira-cli#backers">
             <img alt="Financial Contributors" src="https://img.shields.io/opencollective/backers/jira-cli?style=flat-square" />
         </a>
@@ -43,10 +46,6 @@
       </a><br/>
       <a href="https://www.jetbrains.com/?from=ankitpokhrel/jira-cli" target="_blank">
          <img alt="JetBrains Logo" src=".github/assets/supporters/jetbrains.png" />
-      </a>
-      <span style="margin-right: 20px"></span>
-      <a href="https://captionai.co?from=ankitpokhrel/jira-cli" target="_blank">
-         <img alt="CaptionAI Logo" src=".github/assets/supporters/captionai.png" />
       </a>
    </p>
 </div>
@@ -119,6 +118,7 @@ default.
 
 * If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
 * If you want to use `mtls` run `jira init`. Select installation type `Local`, and then select authentication type as `mtls`.
+  * In case `JIRA_API_TOKEN` variable is set it will be used together with `mtls`.
 
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.
@@ -336,8 +336,8 @@ $ jira issue edit ISSUE-1 -s"New Bug" -yHigh -lbug -lurgent -CBackend -b"Bug des
 $ jira issue edit ISSUE-1 -s"New updated summary" --no-input
 
 # Use minus (-) to remove label, component or fixVersion
-# For instance, to edit issue to 
-#   - remove label p2, component FE, fixVersion v1.0 
+# For instance, to edit issue to
+#   - remove label p2, component FE, fixVersion v1.0
 #   - add label p1, component BE, fixVersion v2.0
 $ jira issue edit ISSUE-1 --label -p2 --label p1 --component -FE --component BE --fix-version -v1.0 --fix-version v2.0
 ```
