@@ -153,7 +153,7 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 			subtaskField = req.SubtaskField
 		}
 
-		if req.projectType == ProjectTypeNextGen || data.Fields.M.IssueType.Name == subtaskField {
+		if req.projectType == ProjectTypeNextGen || strings.EqualFold(data.Fields.M.IssueType.Name, subtaskField) {
 			data.Fields.M.Parent = &struct {
 				Key string `json:"key"`
 			}{Key: req.ParentIssueKey}
