@@ -20,7 +20,10 @@ const (
 You can combine different flags to create a unique query. For instance,
 	
 # Issues that are of high priority, is in progress, was created this month, and has given labels
-jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high prio"
+$ jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high prio"
+
+You can also add an optional search query as a positional argument, which functions the same
+as entering a search query into the Jira UI's search box.
 
 Issues are displayed in an interactive list view by default. You can use a --plain flag
 to display output in a plain text mode. A --no-headers flag will hide the table headers
@@ -33,6 +36,9 @@ $ jira issue list --paginate 20
 
 # Get 50 items starting from 10
 $ jira issue list --paginate 10:50
+
+# Search for issues containing specific text
+$ jira issue list "Feature Request"
 
 # List issues in a plain table view without headers
 $ jira issue list --plain --no-headers
@@ -56,21 +62,22 @@ $ jira issue list -q"project IS NOT EMPTY"`
 // NewCmdList is a list command.
 func NewCmdList() *cobra.Command {
 	return &cobra.Command{
-		Use:     "list",
+		Use:     "list [optional text to query]",
 		Short:   "List lists issues in a project",
 		Long:    helpText,
 		Example: examples,
-		Aliases: []string{"lists", "ls"},
+		Aliases: []string{"lists", "ls", "search"},
+		Args:    cobra.RangeArgs(0, 1),
 		Run:     List,
 	}
 }
 
 // List displays a list view.
-func List(cmd *cobra.Command, _ []string) {
-	loadList(cmd)
+func List(cmd *cobra.Command, args []string) {
+	loadList(cmd, args)
 }
 
-func loadList(cmd *cobra.Command) {
+func loadList(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
 
@@ -82,6 +89,17 @@ func loadList(cmd *cobra.Command) {
 
 	err = cmd.Flags().Set("parent", cmdutil.GetJiraIssueKey(project, pk))
 	cmdutil.ExitIfError(err)
+
+	if len(args) > 0 {
+		searchQuery := fmt.Sprintf(`text ~ "%s"`, strings.Join(args, " "))
+
+		jqlFlag, err := cmd.Flags().GetString("jql")
+		cmdutil.ExitIfError(err)
+		if len(jqlFlag) > 0 {
+			searchQuery = fmt.Sprintf(`%s AND %s`, jqlFlag, searchQuery)
+		}
+		cmdutil.ExitIfError(cmd.Flags().Set("jql", searchQuery))
+	}
 
 	issues, total, err := func() ([]*jira.Issue, int, error) {
 		s := cmdutil.Info("Fetching issues...")
@@ -128,7 +146,7 @@ func loadList(cmd *cobra.Command) {
 		Total:   total,
 		Data:    issues,
 		Refresh: func() {
-			loadList(cmd)
+			loadList(cmd, args)
 		},
 		Display: view.DisplayFormat{
 			Plain:        plain,
