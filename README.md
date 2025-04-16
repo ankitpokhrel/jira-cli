@@ -152,6 +152,8 @@ The lists are displayed in an interactive UI by default.
 - [Introduction and Motivation](https://medium.com/@ankitpokhrel/introducing-jira-cli-the-missing-command-line-tool-for-atlassian-jira-fe44982cc1de)
 - [Getting Started with JiraCLI](https://www.mslinn.com/blog/2022/08/12/jiracli.html)
 
+> Like the tool? Checkout [similar tool but for Shopify!](https://github.com/ankitpokhrel/shopctl)
+
 ## Commands
 ### Issue
 Issues are displayed in an interactive table view by default. You can output the results in a plain view using the `--plain` flag.
