@@ -1,3 +1,4 @@
+version: 2
 project_name: jira
 
 release:
@@ -37,20 +38,20 @@ builds:
 
 archives:
   - id: nix
-    builds: [macOS, linux]
+    ids: [macOS, linux]
     <<: &archive_defaults
       name_template: >-
         {{ .ProjectName }}_{{ .Version }}_{{- if eq .Os "darwin" }}macOS{{- else }}{{ .Os }}{{- end }}_{{- if eq .Arch "amd64" }}x86_64{{- else if eq .Arch "386" }}i386{{- else }}{{ .Arch }}{{- end }}{{- if .Arm }}v{{ .Arm }}{{ end -}}
     wrap_in_directory: true
-    format: tar.gz
+    formats: [tar.gz]
     files:
       - LICENSE
 
   - id: windows
-    builds: [windows]
+    ids: [windows]
     <<: *archive_defaults
     wrap_in_directory: false
-    format: zip
+    formats: [zip]
     files:
       - LICENSE
 
@@ -97,14 +98,14 @@ brews:
     commit_msg_template: "Formula update for version {{ .Tag }}"
 
     # Folder inside the repository to put the formula to.
-    folder: Formula
+    directory: Formula
 
     # This will prevent goreleaser to actually try to commit the updated
     # formula - leaving the responsibility of publishing it to the user.
     skip_upload: true
 
 changelog:
-  skip: true
+  disable: true
   use: github
   sort: desc
   filters:
