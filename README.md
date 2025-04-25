@@ -60,7 +60,8 @@ features like issue creation, cloning, linking, ticket transition, and much more
 > This tool is heavily inspired by the [GitHub CLI](https://github.com/cli/cli)
 
 ## Supported platforms
-Note that some features might work slightly differently in cloud installation versus on-premise installation due to the
+> [!NOTE]
+> Some features might work slightly differently in cloud installation versus on-premise installation due to the
 nature of the data. Yet, we've attempted to make the experience as similar as possible.
 
 | Platform | <a href="#"><img alt="Linux" src="https://img.shields.io/badge/Linux-%E2%9C%93-dark--green?logo=linux&logoColor=white&style=flat-square" /></a><a href="#"><img alt="macOS" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=apple&style=flat-square" /></a><a href="#"><img alt="FreeBSD" src="https://img.shields.io/badge/FreeBSD-%E2%9C%93-dark--green?logo=freebsd&style=flat-square" /></a><a href="#"><img alt="NetBSD" src="https://img.shields.io/badge/NetBSD-%E2%9C%93-dark--green?logo=netbsd&logoColor=white&style=flat-square" /></a><a href="#"><img alt="Windows" src="https://img.shields.io/badge/Windows-partial-yellow?logo=windows&style=flat-square" /></a> |
@@ -104,7 +105,8 @@ Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/In
      (username and password), select the `basic` auth type.
    - If you want to use `mtls` (client certificates), select auth type `mtls` and provide the CA Cert, client Key, and client cert.
 
-   **Note:** If your on-premise Jira installation is using a language other than `English`, then the issue/epic creation
+> [!IMPORTANT]
+> If your on-premise Jira installation is using a language other than `English`, then the issue/epic creation
    may not work because the older version of Jira API doesn't return the untranslated name for `issuetypes`. In that case,
    you will have to fill in `epic.name`, `epic.link` and `issue.types.*.handle` fields manually in the generated config
    to get the expected behavior.
@@ -152,7 +154,8 @@ The lists are displayed in an interactive UI by default.
 - [Introduction and Motivation](https://medium.com/@ankitpokhrel/introducing-jira-cli-the-missing-command-line-tool-for-atlassian-jira-fe44982cc1de)
 - [Getting Started with JiraCLI](https://www.mslinn.com/blog/2022/08/12/jiracli.html)
 
-> Like the tool? Checkout [similar tool but for Shopify!](https://github.com/ankitpokhrel/shopctl)
+> [!TIP]
+> Like this tool? Checkout [similar tool for Shopify!](https://github.com/ankitpokhrel/shopctl)
 
 ## Commands
 ### Issue
@@ -506,7 +509,8 @@ $ jira issue comment add ISSUE-1 --template -
 $ echo "Comment from stdin" | jira issue comment add ISSUE-1
 ```
 
-Note: For the comment body, the positional argument always takes precedence over the `--template` flag if both of them are passed. In the
+> [!NOTE]
+> For the comment body, the positional argument always takes precedence over the `--template` flag if both of them are passed. In the
 example below, the body will be picked from positional argument instead of the template.
 ```sh
 jira issue comment add ISSUE-42 "comment body positional" --template - <<'EOF'
