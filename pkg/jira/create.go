@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
@@ -240,34 +239,7 @@ func constructCustomFields(fields map[string]string, configuredFields []IssueTyp
 			if identifier != strings.ToLower(key) {
 				continue
 			}
-
-			switch configured.Schema.DataType {
-			case customFieldFormatOption:
-				data.Fields.M.customFields[configured.Key] = customFieldTypeOption{Value: val}
-			case customFieldFormatProject:
-				data.Fields.M.customFields[configured.Key] = customFieldTypeProject{Value: val}
-			case customFieldFormatArray:
-				pieces := strings.Split(strings.TrimSpace(val), ",")
-				if configured.Schema.Items == customFieldFormatOption {
-					items := make([]customFieldTypeOption, 0)
-					for _, p := range pieces {
-						items = append(items, customFieldTypeOption{Value: p})
-					}
-					data.Fields.M.customFields[configured.Key] = items
-				} else {
-					data.Fields.M.customFields[configured.Key] = pieces
-				}
-			case customFieldFormatNumber:
-				num, err := strconv.ParseFloat(val, 64) //nolint:gomnd
-				if err != nil {
-					// Let Jira API handle data type error for now.
-					data.Fields.M.customFields[configured.Key] = val
-				} else {
-					data.Fields.M.customFields[configured.Key] = customFieldTypeNumber(num)
-				}
-			default:
-				data.Fields.M.customFields[configured.Key] = val
-			}
+			data.Fields.M.customFields[configured.Key] = constructCustomField(configured.Schema.DataType, configured.Schema.Items, val)
 		}
 	}
 }
