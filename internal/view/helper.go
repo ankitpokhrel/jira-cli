@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -154,7 +155,7 @@ func renderPlain(w io.Writer, data tui.TableData) error {
 	for _, items := range data {
 		n := len(items)
 		for j, v := range items {
-			_, _ = fmt.Fprintf(w, "%s", v)
+			_, _ = fmt.Fprintf(w, "%s", unescape(v))
 			if j != n-1 {
 				_, _ = fmt.Fprintf(w, "\t")
 			}
@@ -166,6 +167,11 @@ func renderPlain(w io.Writer, data tui.TableData) error {
 		return w.(*tabwriter.Writer).Flush()
 	}
 	return nil
+}
+
+func unescape(s string) string {
+	pattern := regexp.MustCompile(`(\[[a-zA-Z0-9_,;: \-\."#]+\[*)\[\]`)
+	return pattern.ReplaceAllString(s, "$1]")
 }
 
 func coloredOut(msg string, clr color.Attribute, attrs ...color.Attribute) string {
