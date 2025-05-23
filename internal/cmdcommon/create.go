@@ -94,7 +94,7 @@ func GetMetadata() []*survey.Question {
 			Name: "metadata",
 			Prompt: &survey.MultiSelect{
 				Message: "What would you like to add?",
-				Options: []string{"Priority", "Components", "Labels", "FixVersions", "AffectsVersions"},
+				Options: []string{"Priority", "Components", "Labels", "OriginalEstimate", "FixVersions", "AffectsVersions"},
 			},
 		},
 	}
@@ -248,13 +248,13 @@ func ValidateCustomFields(fields map[string]string, configuredFields []jira.Issu
 
 	fieldsMap := make(map[string]string)
 	for _, configured := range configuredFields {
-		identifier := strings.ReplaceAll(strings.ToLower(strings.TrimSpace(configured.Name)), " ", "-")
+		identifier := strings.ToLower(strings.TrimSpace(strings.ReplaceAll(configured.Name, " ", "-")))
 		fieldsMap[identifier] = configured.Name
 	}
 
 	invalidCustomFields := make([]string, 0, len(fields))
 	for key := range fields {
-		if _, ok := fieldsMap[key]; !ok {
+		if _, ok := fieldsMap[strings.ToLower(strings.TrimSpace(key))]; !ok {
 			invalidCustomFields = append(invalidCustomFields, key)
 		}
 	}
