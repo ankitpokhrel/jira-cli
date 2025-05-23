@@ -653,6 +653,21 @@ $ jira sprint add
 $ jira sprint add SPRINT_ID ISSUE-1 ISSUE-2
 ```
 
+### Releases
+
+Interact with releases (project versions).  
+Ensure the [feature is enabled](https://support.atlassian.com/jira-software-cloud/docs/enable-releases-and-versions/) on your instance.
+
+#### List
+
+```sh
+# List releases for default project
+$ jira release list
+
+# List releases for specific project
+$ jira release list --project 1000
+```
+
 ### Other commands
 
 <details><summary>Navigate to the project</summary>
