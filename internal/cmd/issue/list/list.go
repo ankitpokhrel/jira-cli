@@ -1,6 +1,7 @@
 package list
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -48,6 +49,9 @@ $ jira issue list --plain --columns key,assignee,status
 
 # List issues in a plain table view and show all fields
 $ jira issue list --plain --no-truncate
+
+# List issues as raw JSON data
+$ jira issue list --raw
 
 # List issues of type "Epic" in status "Done"
 $ jira issue list -tEpic -sDone
@@ -125,6 +129,14 @@ func loadList(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	raw, err := cmd.Flags().GetBool("raw")
+	cmdutil.ExitIfError(err)
+
+	if raw {
+		outputRawJSON(issues)
+		return
+	}
+
 	plain, err := cmd.Flags().GetBool("plain")
 	cmdutil.ExitIfError(err)
 
@@ -167,6 +179,15 @@ func loadList(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(v.Render())
 }
 
+func outputRawJSON(issues []*jira.Issue) {
+	data, err := json.MarshalIndent(issues, "", "  ")
+	if err != nil {
+		cmdutil.Failed("Failed to marshal issues to JSON: %s", err)
+		return
+	}
+	fmt.Println(string(data))
+}
+
 // SetFlags sets flags supported by a list command.
 func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().SortFlags = false
@@ -201,6 +222,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
+	cmd.Flags().Bool("raw", false, "Print raw JSON output")
 
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {
 		cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
