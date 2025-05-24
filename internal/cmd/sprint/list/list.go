@@ -121,6 +121,9 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 	plain, err := flags.GetBool("plain")
 	cmdutil.ExitIfError(err)
 
+	csv, err := flags.GetBool("csv")
+	cmdutil.ExitIfError(err)
+
 	noHeaders, err := flags.GetBool("no-headers")
 	cmdutil.ExitIfError(err)
 
@@ -166,6 +169,7 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 		},
 		Display: view.DisplayFormat{
 			Plain:        plain,
+			CSV:          csv,
 			NoHeaders:    noHeaders,
 			NoTruncate:   noTruncate,
 			FixedColumns: fixedColumns,
