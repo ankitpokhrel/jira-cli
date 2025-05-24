@@ -132,7 +132,7 @@ func secondPass(lines []string) string {
 
 			lineNum++
 			if lineNum < len(lines)-1 {
-				out.WriteRune(newLine)
+				out.WriteByte(newLine)
 			}
 			continue
 		}
@@ -177,7 +177,7 @@ func secondPass(lines []string) string {
 						}
 
 						if token.endIdx != len(line)-1 {
-							out.WriteRune(newLine)
+							out.WriteByte(newLine)
 						}
 					}
 
@@ -192,7 +192,7 @@ func secondPass(lines []string) string {
 		}
 
 		lineNum++
-		out.WriteRune(newLine)
+		out.WriteByte(newLine)
 	}
 
 	return out.String()
@@ -374,7 +374,7 @@ func (t *Token) handleTextEffects(line string, out *strings.Builder) int {
 	out.WriteString(replacements[string(line[t.startIdx])])
 
 	if t.endIdx == len(line)-1 {
-		out.WriteRune(newLine)
+		out.WriteByte(newLine)
 	}
 
 	return t.endIdx
@@ -402,7 +402,7 @@ func (t *Token) handleList(line string, out *strings.Builder) int {
 	end := t.endIdx + 1
 
 	for i := t.startIdx; i < t.endIdx-1; i++ {
-		out.WriteRune('\t')
+		out.WriteByte('\t')
 	}
 
 	if end >= len(line) {
@@ -434,7 +434,7 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 		}
 	}
 
-	out.WriteRune(newLine)
+	out.WriteByte(newLine)
 
 	i := idx + 1
 	for ; i < len(lines); i++ {
@@ -445,13 +445,12 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 
 		if x := checkForInlineClose(line); x > 0 {
 			out.WriteString(line[:x])
-			out.WriteRune(newLine)
-			break
+			out.WriteByte(newLine)
 		} else {
 			// Write everything as is.
 			out.WriteString(lines[i])
+			out.WriteByte(newLine)
 		}
-		out.WriteRune(newLine)
 	}
 	out.WriteString(replacements[t.tag])
 
