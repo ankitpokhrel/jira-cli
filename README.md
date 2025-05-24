@@ -177,7 +177,7 @@ $ jira issue list -s"To Do"
 # List recent issues in plain mode
 $ jira issue list --plain
 
-# List recent issues in raw json format
+# List recent issues in raw JSON format
 $ jira issue list --raw
 
 # List recent issues in csv format
