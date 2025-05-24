@@ -2,6 +2,7 @@ package jirawiki
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -391,7 +392,7 @@ func (t *Token) handleHeadings(line string, out *strings.Builder) int {
 func (t *Token) handleInlineBlockQuote(line string, out *strings.Builder) int {
 	word := line[t.endIdx+1:]
 
-	out.WriteString(fmt.Sprintf("\n%s", replacements[t.tag]))
+	fmt.Fprintf(out, "\n%s", replacements[t.tag])
 	out.WriteString(word)
 
 	return t.endIdx + len(word)
@@ -410,7 +411,7 @@ func (t *Token) handleList(line string, out *strings.Builder) int {
 	}
 
 	rem := strings.TrimSpace(line[end:])
-	out.WriteString(fmt.Sprintf("- %s", rem))
+	fmt.Fprintf(out, "- %s", rem)
 
 	end += len(rem) + 1
 
@@ -422,7 +423,7 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 		return t.endIdx
 	}
 
-	out.WriteString(fmt.Sprintf("\n%s", replacements[t.tag]))
+	fmt.Fprintf(out, "\n%s", replacements[t.tag])
 
 	if t, ok := t.attrs[attrTitle]; ok {
 		pieces := strings.Split(t, ".")
@@ -488,7 +489,7 @@ func (t *Token) handleTable(line string, out *strings.Builder) int {
 	cols := strings.Split(headers, "|")
 
 	var sep strings.Builder
-	for i := 0; i < len(cols)-2; i++ {
+	for range len(cols) - 2 {
 		sep.WriteString("|---")
 	}
 
@@ -500,12 +501,7 @@ func (t *Token) handleTable(line string, out *strings.Builder) int {
 }
 
 func isToken(inp string) bool {
-	for _, tag := range validTags {
-		if inp == tag {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(validTags, inp)
 }
 
 func tokenStarts(idx int, tokens []*Token) (*Token, bool) {

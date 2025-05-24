@@ -10,17 +10,17 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
-// ProjectOption is a functional option to wrap project properties.
+// ProjectVersionOptions is a functional option to wrap project version properties.
 type ProjectVersionOptions func(*Release)
 
-// Project is a project view.
+// Release is a release view.
 type Release struct {
 	data   []*jira.ProjectVersion
 	writer io.Writer
 	buf    *bytes.Buffer
 }
 
-// NewProject initializes a project.
+// NewRelease constructs a project release command.
 func NewRelease(data []*jira.ProjectVersion, opts ...ProjectVersionOptions) *Release {
 	r := Release{
 		data: data,
@@ -34,14 +34,14 @@ func NewRelease(data []*jira.ProjectVersion, opts ...ProjectVersionOptions) *Rel
 	return &r
 }
 
-// WithProjectWriter sets a writer for the project.
+// WithReleaseWriter sets a writer for the project release.
 func WithReleaseWriter(w io.Writer) ProjectVersionOptions {
 	return func(r *Release) {
 		r.writer = w
 	}
 }
 
-// Render renders the project view.
+// Render renders the project release view.
 func (r Release) Render() error {
 	r.printHeader()
 

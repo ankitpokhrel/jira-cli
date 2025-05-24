@@ -8,7 +8,7 @@ import (
 
 const helpText = `Release manages Jira Project versions. See available commands below.`
 
-// NewCmdRelease is a project command.
+// NewCmdRelease is a release command.
 func NewCmdRelease() *cobra.Command {
 	cmd := cobra.Command{
 		Use:         "release",
