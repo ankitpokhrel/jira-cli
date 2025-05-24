@@ -666,6 +666,7 @@ $ jira release list
 
 # List releases for specific project
 $ jira release list --project 1000
+$ jira release list --project KEY
 ```
 
 ### Other commands

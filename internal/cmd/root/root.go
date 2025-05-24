@@ -3,6 +3,7 @@ package root
 import (
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -146,14 +147,7 @@ func cmdRequireToken(cmd string) bool {
 		"completion",
 		"man",
 	}
-
-	for _, item := range allowList {
-		if item == cmd {
-			return false
-		}
-	}
-
-	return true
+	return !slices.Contains(allowList, cmd)
 }
 
 func checkForJiraToken(server string, login string) {

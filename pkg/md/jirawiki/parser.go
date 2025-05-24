@@ -2,6 +2,7 @@ package jirawiki
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -131,7 +132,7 @@ func secondPass(lines []string) string {
 
 			lineNum++
 			if lineNum < len(lines)-1 {
-				out.WriteRune(newLine)
+				out.WriteByte(newLine)
 			}
 			continue
 		}
@@ -176,7 +177,7 @@ func secondPass(lines []string) string {
 						}
 
 						if token.endIdx != len(line)-1 {
-							out.WriteRune(newLine)
+							out.WriteByte(newLine)
 						}
 					}
 
@@ -191,7 +192,7 @@ func secondPass(lines []string) string {
 		}
 
 		lineNum++
-		out.WriteRune(newLine)
+		out.WriteByte(newLine)
 	}
 
 	return out.String()
@@ -373,7 +374,7 @@ func (t *Token) handleTextEffects(line string, out *strings.Builder) int {
 	out.WriteString(replacements[string(line[t.startIdx])])
 
 	if t.endIdx == len(line)-1 {
-		out.WriteRune(newLine)
+		out.WriteByte(newLine)
 	}
 
 	return t.endIdx
@@ -391,7 +392,7 @@ func (t *Token) handleHeadings(line string, out *strings.Builder) int {
 func (t *Token) handleInlineBlockQuote(line string, out *strings.Builder) int {
 	word := line[t.endIdx+1:]
 
-	out.WriteString(fmt.Sprintf("\n%s", replacements[t.tag]))
+	fmt.Fprintf(out, "\n%s", replacements[t.tag])
 	out.WriteString(word)
 
 	return t.endIdx + len(word)
@@ -401,7 +402,7 @@ func (t *Token) handleList(line string, out *strings.Builder) int {
 	end := t.endIdx + 1
 
 	for i := t.startIdx; i < t.endIdx-1; i++ {
-		out.WriteRune('\t')
+		out.WriteByte('\t')
 	}
 
 	if end >= len(line) {
@@ -410,7 +411,7 @@ func (t *Token) handleList(line string, out *strings.Builder) int {
 	}
 
 	rem := strings.TrimSpace(line[end:])
-	out.WriteString(fmt.Sprintf("- %s", rem))
+	fmt.Fprintf(out, "- %s", rem)
 
 	end += len(rem) + 1
 
@@ -422,7 +423,7 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 		return t.endIdx
 	}
 
-	out.WriteString(fmt.Sprintf("\n%s", replacements[t.tag]))
+	fmt.Fprintf(out, "\n%s", replacements[t.tag])
 
 	if t, ok := t.attrs[attrTitle]; ok {
 		pieces := strings.Split(t, ".")
@@ -433,7 +434,7 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 		}
 	}
 
-	out.WriteRune(newLine)
+	out.WriteByte(newLine)
 
 	i := idx + 1
 	for ; i < len(lines); i++ {
@@ -444,13 +445,13 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 
 		if x := checkForInlineClose(line); x > 0 {
 			out.WriteString(line[:x])
-			out.WriteRune(newLine)
+			out.WriteByte(newLine)
 			break
-		} else {
-			// Write everything as is.
-			out.WriteString(lines[i])
 		}
-		out.WriteRune(newLine)
+
+		// Write everything as is.
+		out.WriteString(lines[i])
+		out.WriteByte(newLine)
 	}
 	out.WriteString(replacements[t.tag])
 
@@ -488,7 +489,7 @@ func (t *Token) handleTable(line string, out *strings.Builder) int {
 	cols := strings.Split(headers, "|")
 
 	var sep strings.Builder
-	for i := 0; i < len(cols)-2; i++ {
+	for range len(cols) - 2 {
 		sep.WriteString("|---")
 	}
 
@@ -500,12 +501,7 @@ func (t *Token) handleTable(line string, out *strings.Builder) int {
 }
 
 func isToken(inp string) bool {
-	for _, tag := range validTags {
-		if inp == tag {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(validTags, inp)
 }
 
 func tokenStarts(idx int, tokens []*Token) (*Token, bool) {
