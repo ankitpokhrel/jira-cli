@@ -446,11 +446,12 @@ func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Buil
 		if x := checkForInlineClose(line); x > 0 {
 			out.WriteString(line[:x])
 			out.WriteByte(newLine)
-		} else {
-			// Write everything as is.
-			out.WriteString(lines[i])
-			out.WriteByte(newLine)
+			break
 		}
+
+		// Write everything as is.
+		out.WriteString(lines[i])
+		out.WriteByte(newLine)
 	}
 	out.WriteString(replacements[t.tag])
 
