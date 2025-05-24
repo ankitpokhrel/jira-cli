@@ -45,7 +45,8 @@ func (l *IssueList) Render() error {
 	}
 
 	if l.Display.CSV {
-		return l.renderCSV(os.Stdout)
+		w := os.Stdout
+		return l.renderCSV(w)
 	}
 
 	renderer, err := MDRenderer()
