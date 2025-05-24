@@ -89,8 +89,14 @@ func viewPretty(cmd *cobra.Command, args []string) {
 	debug, err := cmd.Flags().GetBool(flagDebug)
 	cmdutil.ExitIfError(err)
 
-	comments, err := cmd.Flags().GetUint(flagComments)
-	cmdutil.ExitIfError(err)
+	var comments uint
+	if cmd.Flags().Changed(flagComments) {
+		comments, err = cmd.Flags().GetUint(flagComments)
+		cmdutil.ExitIfError(err)
+	} else {
+		numComments := viper.GetUint("num_comments")
+		comments = max(numComments, 1)
+	}
 
 	key := cmdutil.GetJiraIssueKey(viper.GetString(configProject), args[0])
 	iss, err := func() (*jira.Issue, error) {

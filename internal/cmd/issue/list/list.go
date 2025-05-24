@@ -84,6 +84,7 @@ func List(cmd *cobra.Command, args []string) {
 func loadList(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
+	numComments := viper.GetUint("num_comments")
 
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
@@ -152,8 +153,13 @@ func loadList(cmd *cobra.Command, args []string) {
 	columns, err := cmd.Flags().GetString("columns")
 	cmdutil.ExitIfError(err)
 
-	comments, err := cmd.Flags().GetUint("comments")
-	cmdutil.ExitIfError(err)
+	var comments uint
+	if cmd.Flags().Changed("comments") {
+		comments, err = cmd.Flags().GetUint("comments")
+		cmdutil.ExitIfError(err)
+	} else {
+		comments = max(numComments, 1)
+	}
 
 	v := view.IssueList{
 		Project: project,
