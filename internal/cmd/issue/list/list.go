@@ -141,6 +141,9 @@ func loadList(cmd *cobra.Command, args []string) {
 	plain, err := cmd.Flags().GetBool("plain")
 	cmdutil.ExitIfError(err)
 
+	csv, err := cmd.Flags().GetBool("csv")
+	cmdutil.ExitIfError(err)
+
 	noHeaders, err := cmd.Flags().GetBool("no-headers")
 	cmdutil.ExitIfError(err)
 
@@ -171,6 +174,7 @@ func loadList(cmd *cobra.Command, args []string) {
 		},
 		Display: view.DisplayFormat{
 			Plain:        plain,
+			CSV:          csv,
 			NoHeaders:    noHeaders,
 			NoTruncate:   noTruncate,
 			FixedColumns: fixedColumns,
@@ -234,6 +238,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
 	cmd.Flags().Uint("comments", 1, "Show N comments when viewing the issue")
 	cmd.Flags().Bool("raw", false, "Print raw JSON output")
+	cmd.Flags().Bool("csv", false, "Print output in csv")
 
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {
 		cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+

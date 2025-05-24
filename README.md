@@ -177,6 +177,12 @@ $ jira issue list -s"To Do"
 # List recent issues in plain mode
 $ jira issue list --plain
 
+# List recent issues in raw json format
+$ jira issue list --raw
+
+# List recent issues in csv format
+$ jira issue list --csv
+
 # List issue in the same order as you see in the UI
 $ jira issue list --order-by rank --reverse
 

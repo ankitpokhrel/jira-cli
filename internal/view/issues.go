@@ -16,6 +16,7 @@ import (
 // DisplayFormat is a issue display type.
 type DisplayFormat struct {
 	Plain        bool
+	CSV          bool
 	NoHeaders    bool
 	NoTruncate   bool
 	Columns      []string
@@ -41,6 +42,10 @@ func (l *IssueList) Render() error {
 	if l.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
 		return l.renderPlain(w)
+	}
+
+	if l.Display.CSV {
+		return l.renderCSV(os.Stdout)
 	}
 
 	renderer, err := MDRenderer()
@@ -123,9 +128,14 @@ func (l *IssueList) Render() error {
 	return view.Paint(data)
 }
 
-// renderPlain renders the issue in plain view.
+// renderPlain renders issues in plain formatted view.
 func (l *IssueList) renderPlain(w io.Writer) error {
 	return renderPlain(w, l.data())
+}
+
+// renderCSV renders issues in csv format.
+func (l *IssueList) renderCSV(w io.Writer) error {
+	return renderCSV(w, l.data())
 }
 
 func (*IssueList) validColumnsMap() map[string]struct{} {
@@ -177,11 +187,8 @@ func (l *IssueList) data() tui.TableData {
 	var data tui.TableData
 
 	headers := l.header()
-	if !l.Display.Plain || !l.Display.NoHeaders {
+	if (!l.Display.Plain && !l.Display.CSV) || !l.Display.NoHeaders {
 		data = append(data, headers)
-	}
-	if len(headers) == 0 {
-		headers = ValidIssueColumns()
 	}
 	for _, iss := range l.Data {
 		data = append(data, l.assignColumns(headers, iss))
