@@ -95,11 +95,11 @@ func loadList(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	if len(args) > 0 {
-		searchQuery := fmt.Sprintf(`text ~ "%s"`, strings.Join(args, " "))
+		searchQuery := fmt.Sprintf(`text ~ %q`, strings.Join(args, " "))
 
 		jqlFlag, err := cmd.Flags().GetString("jql")
 		cmdutil.ExitIfError(err)
-		if len(jqlFlag) > 0 {
+		if jqlFlag != "" {
 			searchQuery = fmt.Sprintf(`%s AND %s`, jqlFlag, searchQuery)
 		}
 		cmdutil.ExitIfError(cmd.Flags().Set("jql", searchQuery))

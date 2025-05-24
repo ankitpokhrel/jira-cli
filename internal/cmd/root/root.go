@@ -73,7 +73,7 @@ func NewCmdRoot() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			subCmd := cmd.Name()
 			if !cmdRequireToken(subCmd) {
 				return
