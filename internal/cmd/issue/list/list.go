@@ -238,7 +238,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
 	cmd.Flags().Uint("comments", 1, "Show N comments when viewing the issue")
 	cmd.Flags().Bool("raw", false, "Print raw JSON output")
-	cmd.Flags().Bool("csv", false, "Print output in csv")
+	cmd.Flags().Bool("csv", false, "Print output in CSV format")
 
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {
 		cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+
