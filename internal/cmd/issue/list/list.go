@@ -152,6 +152,9 @@ func loadList(cmd *cobra.Command, args []string) {
 	columns, err := cmd.Flags().GetString("columns")
 	cmdutil.ExitIfError(err)
 
+	comments, err := cmd.Flags().GetUint("comments")
+	cmdutil.ExitIfError(err)
+
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
@@ -165,6 +168,7 @@ func loadList(cmd *cobra.Command, args []string) {
 			NoHeaders:    noHeaders,
 			NoTruncate:   noTruncate,
 			FixedColumns: fixedColumns,
+			Comments:     comments,
 			Columns: func() []string {
 				if columns != "" {
 					return strings.Split(columns, ",")
@@ -222,6 +226,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
+	cmd.Flags().Uint("comments", 1, "Show N comments when viewing the issue")
 	cmd.Flags().Bool("raw", false, "Print raw JSON output")
 
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {

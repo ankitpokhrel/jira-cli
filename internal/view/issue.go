@@ -26,7 +26,7 @@ type fragment struct {
 
 func newBlankFragment(n int) fragment {
 	var buf strings.Builder
-	for i := 0; i < n; i++ {
+	for range n {
 		buf.WriteRune('\n')
 	}
 	return fragment{
@@ -386,10 +386,7 @@ func (i Issue) comments() []issueComment {
 		return comments
 	}
 
-	limit := int(i.Options.NumComments)
-	if limit > total {
-		limit = total
-	}
+	limit := min(int(i.Options.NumComments), total)
 
 	for idx := total - 1; idx >= total-limit; idx-- {
 		c := i.Data.Fields.Comment.Comments[idx]
