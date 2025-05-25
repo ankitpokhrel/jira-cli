@@ -157,6 +157,7 @@ func edit(cmd *cobra.Command, args []string) {
 			FixVersions:     fixVersions,
 			AffectsVersions: affectsVersions,
 			CustomFields:    params.customFields,
+			SkipNotify:      params.skipNotify,
 		}
 		if configuredCustomFields, err := cmdcommon.GetConfiguredCustomFields(); err == nil {
 			cmdcommon.ValidateCustomFields(edr.CustomFields, configuredCustomFields)
@@ -311,6 +312,7 @@ type editParams struct {
 	fixVersions     []string
 	affectsVersions []string
 	customFields    map[string]string
+	skipNotify      bool
 	noInput         bool
 	debug           bool
 }
@@ -346,6 +348,9 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	custom, err := flags.GetStringToString("custom")
 	cmdutil.ExitIfError(err)
 
+	skipNotify, err := flags.GetBool("skip-notify")
+	cmdutil.ExitIfError(err)
+
 	noInput, err := flags.GetBool("no-input")
 	cmdutil.ExitIfError(err)
 
@@ -364,6 +369,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 		fixVersions:     fixVersions,
 		affectsVersions: affectsVersions,
 		customFields:    custom,
+		skipNotify:      skipNotify,
 		noInput:         noInput,
 		debug:           debug,
 	}
@@ -445,6 +451,7 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringArray("fix-version", []string{}, "Add/Append release info (fixVersions)")
 	cmd.Flags().StringArray("affects-version", []string{}, "Add/Append release info (affectsVersions)")
 	cmd.Flags().StringToString("custom", custom, "Edit custom fields")
+	cmd.Flags().Bool("skip-notify", false, "Do not notify watchers about the issue update")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful update")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
