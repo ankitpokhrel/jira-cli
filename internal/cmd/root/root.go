@@ -42,8 +42,13 @@ var (
 func init() {
 	cobra.OnInitialize(func() {
 		if config != "" {
+			// 1. Command line flag has the highest priority
 			viper.SetConfigFile(config)
+		} else if configFile := os.Getenv("JIRA_CONFIG_FILE"); configFile != "" {
+			// 2. Environment variable has second priority
+			viper.SetConfigFile(configFile)
 		} else {
+			// 3. Default location has the lowest priority
 			home, err := cmdutil.GetConfigHome()
 			if err != nil {
 				cmdutil.Failed("Error: %s", err)
@@ -98,7 +103,7 @@ func NewCmdRoot() *cobra.Command {
 
 	cmd.PersistentFlags().StringVarP(
 		&config, "config", "c", "",
-		fmt.Sprintf("Config file (default is %s/%s/%s.yml)", configHome, jiraConfig.Dir, jiraConfig.FileName),
+		fmt.Sprintf("Config file (default is %s/%s/%s.yml, can be overridden with JIRA_CONFIG_FILE env var)", configHome, jiraConfig.Dir, jiraConfig.FileName),
 	)
 	cmd.PersistentFlags().StringP(
 		"project", "p", "",
