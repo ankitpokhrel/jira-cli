@@ -127,11 +127,13 @@ Check `jira completion --help` for more info on setting up a bash/zsh shell comp
 
 #### Multiple projects
 
-The tool honors the `JIRA_CONFIG_FILE` environment variable, which specifies the location of the configuration file:
+You can load a specific configuration file by using the `--config/-c` flag, or by setting the `JIRA_CONFIG_FILE` environment variable to specify the file's location.
 
 ```sh
-JIRA_CONFIG_FILE=./local_jira_config.yaml jira issue list 
+$ JIRA_CONFIG_FILE=./local_jira_config.yaml jira issue list
 
+// Or, you can use `--config/-c` flag
+$ jira issue list -c ./local_jira_config.yaml
 ```
 
 ## Usage
