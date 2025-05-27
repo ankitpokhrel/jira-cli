@@ -142,8 +142,8 @@ func edit(cmd *cobra.Command, args []string) {
 			body = md.ToJiraMD(body)
 		}
 
-		var parent string
-		if issue.Fields.Parent != nil {
+		parent := cmdutil.GetJiraIssueKey(project, params.parentIssueKey)
+		if parent == "" && issue.Fields.Parent != nil {
 			parent = issue.Fields.Parent.Key
 		}
 
@@ -157,6 +157,7 @@ func edit(cmd *cobra.Command, args []string) {
 			FixVersions:     fixVersions,
 			AffectsVersions: affectsVersions,
 			CustomFields:    params.customFields,
+			SkipNotify:      params.skipNotify,
 		}
 		if configuredCustomFields, err := cmdcommon.GetConfiguredCustomFields(); err == nil {
 			cmdcommon.ValidateCustomFields(edr.CustomFields, configuredCustomFields)
@@ -301,6 +302,7 @@ func (ec *editCmd) askQuestions(issue *jira.Issue, originalBody string) error {
 
 type editParams struct {
 	issueKey        string
+	parentIssueKey  string
 	summary         string
 	body            string
 	priority        string
@@ -310,11 +312,15 @@ type editParams struct {
 	fixVersions     []string
 	affectsVersions []string
 	customFields    map[string]string
+	skipNotify      bool
 	noInput         bool
 	debug           bool
 }
 
 func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *editParams {
+	parentIssueKey, err := flags.GetString("parent")
+	cmdutil.ExitIfError(err)
+
 	summary, err := flags.GetString("summary")
 	cmdutil.ExitIfError(err)
 
@@ -342,6 +348,9 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	custom, err := flags.GetStringToString("custom")
 	cmdutil.ExitIfError(err)
 
+	skipNotify, err := flags.GetBool("skip-notify")
+	cmdutil.ExitIfError(err)
+
 	noInput, err := flags.GetBool("no-input")
 	cmdutil.ExitIfError(err)
 
@@ -350,6 +359,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 
 	return &editParams{
 		issueKey:        cmdutil.GetJiraIssueKey(project, args[0]),
+		parentIssueKey:  parentIssueKey,
 		summary:         summary,
 		body:            body,
 		priority:        priority,
@@ -359,6 +369,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 		fixVersions:     fixVersions,
 		affectsVersions: affectsVersions,
 		customFields:    custom,
+		skipNotify:      skipNotify,
 		noInput:         noInput,
 		debug:           debug,
 	}
@@ -430,6 +441,7 @@ func setFlags(cmd *cobra.Command) {
 
 	cmd.Flags().SortFlags = false
 
+	cmd.Flags().StringP("parent", "P", "", `Link to a parent key`)
 	cmd.Flags().StringP("summary", "s", "", "Edit summary or title")
 	cmd.Flags().StringP("body", "b", "", "Edit description")
 	cmd.Flags().StringP("priority", "y", "", "Edit priority")
@@ -439,6 +451,7 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringArray("fix-version", []string{}, "Add/Append release info (fixVersions)")
 	cmd.Flags().StringArray("affects-version", []string{}, "Add/Append release info (affectsVersions)")
 	cmd.Flags().StringToString("custom", custom, "Edit custom fields")
+	cmd.Flags().Bool("skip-notify", false, "Do not notify watchers about the issue update")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful update")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }

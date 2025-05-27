@@ -133,9 +133,6 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 		Summary:   req.Summary,
 		Labels:    req.Labels,
 		epicField: req.EpicField,
-		TimeTracking: struct {
-			OriginalEstimate string `json:"originalEstimate,omitempty"`
-		}{OriginalEstimate: req.OriginalEstimate},
 	}
 
 	switch v := req.Body.(type) {
@@ -156,7 +153,7 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 			subtaskField = req.SubtaskField
 		}
 
-		if req.projectType == ProjectTypeNextGen || data.Fields.M.IssueType.Name == subtaskField {
+		if req.projectType == ProjectTypeNextGen || strings.EqualFold(data.Fields.M.IssueType.Name, subtaskField) {
 			data.Fields.M.Parent = &struct {
 				Key string `json:"key"`
 			}{Key: req.ParentIssueKey}
@@ -219,6 +216,12 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 		}
 		data.Fields.M.AffectsVersions = versions
 	}
+	if req.OriginalEstimate != "" {
+		data.Fields.M.TimeTracking = &struct {
+			OriginalEstimate string `json:"originalEstimate,omitempty"`
+		}{OriginalEstimate: req.OriginalEstimate}
+	}
+
 	constructCustomFields(req.CustomFields, req.configuredCustomFields, &data)
 
 	return &data
@@ -307,7 +310,7 @@ type createFields struct {
 	AffectsVersions []struct {
 		Name string `json:"name,omitempty"`
 	} `json:"versions,omitempty"`
-	TimeTracking struct {
+	TimeTracking *struct {
 		OriginalEstimate string `json:"originalEstimate,omitempty"`
 	} `json:"timetracking,omitempty"`
 	epicField    string

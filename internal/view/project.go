@@ -46,7 +46,7 @@ func (p Project) Render() error {
 	p.printHeader()
 
 	for _, d := range p.data {
-		fmt.Fprintf(p.writer, "%s\t%s\t%s\t%s\n", d.Key, prepareTitle(d.Name), d.Type, d.Lead.Name)
+		_, _ = fmt.Fprintf(p.writer, "%s\t%s\t%s\t%s\n", d.Key, prepareTitle(d.Name), d.Type, d.Lead.Name)
 	}
 	if _, ok := p.writer.(*tabwriter.Writer); ok {
 		err := p.writer.(*tabwriter.Writer).Flush()
@@ -71,10 +71,10 @@ func (p Project) printHeader() {
 	headers := p.header()
 	end := len(headers) - 1
 	for i, h := range headers {
-		fmt.Fprintf(p.writer, "%s", h)
+		_, _ = fmt.Fprintf(p.writer, "%s", h)
 		if i != end {
-			fmt.Fprintf(p.writer, "\t")
+			_, _ = fmt.Fprintf(p.writer, "\t")
 		}
 	}
-	fmt.Fprintln(p.writer)
+	_, _ = fmt.Fprintln(p.writer)
 }

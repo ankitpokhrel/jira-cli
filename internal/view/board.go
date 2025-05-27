@@ -46,7 +46,7 @@ func (b Board) Render() error {
 	b.printHeader()
 
 	for _, d := range b.data {
-		fmt.Fprintf(b.writer, "%d\t%s\t%s\n", d.ID, prepareTitle(d.Name), d.Type)
+		_, _ = fmt.Fprintf(b.writer, "%d\t%s\t%s\n", d.ID, prepareTitle(d.Name), d.Type)
 	}
 	if _, ok := b.writer.(*tabwriter.Writer); ok {
 		err := b.writer.(*tabwriter.Writer).Flush()
@@ -69,10 +69,10 @@ func (b Board) header() []string {
 func (b Board) printHeader() {
 	n := len(b.header())
 	for i, h := range b.header() {
-		fmt.Fprintf(b.writer, "%s", h)
+		_, _ = fmt.Fprintf(b.writer, "%s", h)
 		if i != n-1 {
-			fmt.Fprintf(b.writer, "\t")
+			_, _ = fmt.Fprintf(b.writer, "\t")
 		}
 	}
-	fmt.Fprintln(b.writer, "")
+	_, _ = fmt.Fprintln(b.writer, "")
 }

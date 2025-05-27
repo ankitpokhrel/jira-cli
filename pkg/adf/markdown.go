@@ -2,6 +2,7 @@ package adf
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -83,7 +84,7 @@ func (tr *MarkdownTranslator) Open(n Connector, _ int) string {
 
 			nl := true
 			if attrs != nil {
-				a := attrs.(map[string]interface{})
+				a := attrs.(map[string]any)
 				for k := range a {
 					if k == "language" {
 						nl = false
@@ -108,13 +109,13 @@ func (tr *MarkdownTranslator) Open(n Connector, _ int) string {
 			tr.list.ol[tr.list.depthO] = true
 		case ChildNodeListItem:
 			if tr.list.ol[tr.list.depthO] {
-				for i := 0; i < tr.list.depthO-1; i++ {
+				for range tr.list.depthO - 1 {
 					tag.WriteString("\t")
 				}
 				tr.list.counter[tr.list.depthO]++
 				tag.WriteString(fmt.Sprintf("%d. ", tr.list.counter[tr.list.depthO]))
 			} else {
-				for i := 0; i < tr.list.depthU-1; i++ {
+				for range tr.list.depthU - 1 {
 					tag.WriteString("\t")
 				}
 				tag.WriteString("- ")
@@ -229,7 +230,7 @@ func (tr *MarkdownTranslator) Close(n Connector) string {
 	return tag.String()
 }
 
-func (tr *MarkdownTranslator) setOpenTagAttributes(a interface{}) string {
+func (tr *MarkdownTranslator) setOpenTagAttributes(a any) string {
 	if a == nil {
 		return ""
 	}
@@ -239,7 +240,7 @@ func (tr *MarkdownTranslator) setOpenTagAttributes(a interface{}) string {
 		nl  bool
 	)
 
-	attrs := a.(map[string]interface{})
+	attrs := a.(map[string]any)
 	for k, v := range attrs {
 		if tr.isValidAttr(k) {
 			switch k {
@@ -247,7 +248,7 @@ func (tr *MarkdownTranslator) setOpenTagAttributes(a interface{}) string {
 				tag.WriteString(fmt.Sprintf("%s", v))
 				nl = true
 			case "level":
-				for i := 0; i < int(v.(float64)); i++ {
+				for range int(v.(float64)) {
 					tag.WriteString("#")
 				}
 				tag.WriteString(" ")
@@ -264,14 +265,14 @@ func (tr *MarkdownTranslator) setOpenTagAttributes(a interface{}) string {
 	return tag.String()
 }
 
-func (*MarkdownTranslator) setCloseTagAttributes(a interface{}) string {
+func (*MarkdownTranslator) setCloseTagAttributes(a any) string {
 	if a == nil {
 		return ""
 	}
 
 	var tag strings.Builder
 
-	attrs := a.(map[string]interface{})
+	attrs := a.(map[string]any)
 	if h, ok := attrs["href"]; ok {
 		tag.WriteString(fmt.Sprintf("(%s) ", h))
 	} else if h, ok := attrs["url"]; ok {
@@ -283,10 +284,5 @@ func (*MarkdownTranslator) setCloseTagAttributes(a interface{}) string {
 
 func (*MarkdownTranslator) isValidAttr(attr string) bool {
 	known := []string{"language", "level", "text"}
-	for _, k := range known {
-		if k == attr {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(known, attr)
 }

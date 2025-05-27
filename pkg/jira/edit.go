@@ -3,7 +3,9 @@ package jira
 import (
 	"context"
 	"encoding/json"
+	"maps"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -31,6 +33,7 @@ type EditRequest struct {
 	// CustomFields holds all custom fields passed
 	// while editing the issue.
 	CustomFields map[string]string
+	SkipNotify   bool
 
 	configuredCustomFields []IssueTypeField
 }
@@ -49,7 +52,12 @@ func (c *Client) Edit(key string, req *EditRequest) error {
 		return err
 	}
 
-	res, err := c.PutV2(context.Background(), "/issue/"+key, body, Header{
+	endpoint := "/issue/" + key
+	if req.SkipNotify {
+		endpoint += "?notifyUsers=false"
+	}
+
+	res, err := c.PutV2(context.Background(), endpoint, body, Header{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	})
@@ -78,7 +86,7 @@ type editFields struct {
 	Priority []struct {
 		Set struct {
 			Name string `json:"name,omitempty"`
-		} `json:"set,omitempty"`
+		} `json:"set"`
 	} `json:"priority,omitempty"`
 	Labels []struct {
 		Add    string `json:"add,omitempty"`
@@ -139,16 +147,13 @@ func (cfm *editFieldsMarshaler) MarshalJSON() ([]byte, error) {
 		return m, err
 	}
 
-	var temp interface{}
+	var temp any
 	if err := json.Unmarshal(m, &temp); err != nil {
 		return nil, err
 	}
-	dm := temp.(map[string]interface{})
+	dm := temp.(map[string]any)
 
-	for key, val := range cfm.M.customFields {
-		dm[key] = val
-	}
-
+	maps.Copy(dm, cfm.M.customFields)
 	return json.Marshal(dm)
 }
 
@@ -177,7 +182,7 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 		Priority: []struct {
 			Set struct {
 				Name string `json:"name,omitempty"`
-			} `json:"set,omitempty"`
+			} `json:"set"`
 		}{{Set: struct {
 			Name string `json:"name,omitempty"`
 		}{Name: req.Priority}}},
@@ -412,19 +417,10 @@ func splitAddAndRemove(input []string) ([]string, []string) {
 		}
 	}
 	for _, inp := range input {
-		if !strings.HasPrefix(inp, separatorMinus) && !inArray(sub, inp) {
+		if !strings.HasPrefix(inp, separatorMinus) && !slices.Contains(sub, inp) {
 			add = append(add, inp)
 		}
 	}
 
 	return add, sub
-}
-
-func inArray(array []string, item string) bool {
-	for _, i := range array {
-		if i == item {
-			return true
-		}
-	}
-	return false
 }

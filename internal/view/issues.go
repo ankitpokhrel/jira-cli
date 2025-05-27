@@ -17,10 +17,12 @@ import (
 type DisplayFormat struct {
 	Plain        bool
 	Delimiter    string
+	CSV          bool
 	NoHeaders    bool
 	NoTruncate   bool
 	Columns      []string
 	FixedColumns uint
+	Comments     uint
 	TableStyle   tui.TableStyle
 	Timezone     string
 }
@@ -48,6 +50,11 @@ func (l *IssueList) Render() error {
 		return l.renderPlain(w, delimeter)
 	}
 
+	if l.Display.CSV {
+		w := os.Stdout
+		return l.renderCSV(w)
+	}
+
 	renderer, err := MDRenderer()
 	if err != nil {
 		return err
@@ -63,17 +70,17 @@ func (l *IssueList) Render() error {
 		tui.WithTableFooterText(l.FooterText),
 		tui.WithTableHelpText(tableHelpText),
 		tui.WithSelectedFunc(navigate(l.Server)),
-		tui.WithViewModeFunc(func(r, c int, _ interface{}) (func() interface{}, func(interface{}) (string, error)) {
-			dataFn := func() interface{} {
+		tui.WithViewModeFunc(func(r, c int, _ any) (func() any, func(any) (string, error)) {
+			dataFn := func() any {
 				ci := data.GetIndex(fieldKey)
-				iss, _ := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(1))
+				iss, _ := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(l.Display.Comments))
 				return iss
 			}
-			renderFn := func(i interface{}) (string, error) {
+			renderFn := func(i any) (string, error) {
 				iss := Issue{
 					Server:  l.Server,
 					Data:    i.(*jira.Issue),
-					Options: IssueOption{NumComments: 1},
+					Options: IssueOption{NumComments: l.Display.Comments},
 				}
 				return iss.RenderedOut(renderer)
 			}
@@ -133,6 +140,11 @@ func (l *IssueList) renderPlain(w io.Writer, delimeter string) error {
 	return renderPlain(w, l.data(), delimeter)
 }
 
+// renderCSV renders issues in csv format.
+func (l *IssueList) renderCSV(w io.Writer) error {
+	return renderCSV(w, l.data())
+}
+
 func (*IssueList) validColumnsMap() map[string]struct{} {
 	columns := ValidIssueColumns()
 	out := make(map[string]struct{}, len(columns))
@@ -182,11 +194,8 @@ func (l *IssueList) data() tui.TableData {
 	var data tui.TableData
 
 	headers := l.header()
-	if !(l.Display.Plain && l.Display.NoHeaders) {
+	if (!l.Display.Plain && !l.Display.CSV) || !l.Display.NoHeaders {
 		data = append(data, headers)
-	}
-	if len(headers) == 0 {
-		headers = ValidIssueColumns()
 	}
 	for _, iss := range l.Data {
 		data = append(data, l.assignColumns(headers, iss))

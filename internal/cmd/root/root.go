@@ -3,6 +3,7 @@ package root
 import (
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,6 +17,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/me"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/open"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/project"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/release"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/serverinfo"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/sprint"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/version"
@@ -71,7 +73,7 @@ func NewCmdRoot() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			subCmd := cmd.Name()
 			if !cmdRequireToken(subCmd) {
 				return
@@ -131,6 +133,7 @@ func addChildCommands(cmd *cobra.Command) {
 		serverinfo.NewCmdServerInfo(),
 		completion.NewCmdCompletion(),
 		version.NewCmdVersion(),
+		release.NewCmdRelease(),
 		man.NewCmdMan(),
 	)
 }
@@ -144,14 +147,7 @@ func cmdRequireToken(cmd string) bool {
 		"completion",
 		"man",
 	}
-
-	for _, item := range allowList {
-		if item == cmd {
-			return false
-		}
-	}
-
-	return true
+	return !slices.Contains(allowList, cmd)
 }
 
 func checkForJiraToken(server string, login string) {
