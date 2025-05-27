@@ -100,7 +100,8 @@ func (sl *SprintList) RenderInTable() error {
 
 // renderPlain renders the issue in plain view.
 func (sl *SprintList) renderPlain(w io.Writer) error {
-	return renderPlain(w, sl.tableData())
+	// sprint view supports only \t as delimiter, not custom.
+	return renderPlain(w, sl.tableData(), "\t")
 }
 
 func (sl *SprintList) data() []tui.PreviewData {

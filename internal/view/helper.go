@@ -152,13 +152,13 @@ func copyKey() tui.CopyKeyFunc {
 	}
 }
 
-func renderPlain(w io.Writer, data tui.TableData) error {
+func renderPlain(w io.Writer, data tui.TableData, delimiter string) error {
 	for _, items := range data {
 		n := len(items)
 		for j, v := range items {
 			_, _ = fmt.Fprintf(w, "%s", unescape(v))
 			if j != n-1 {
-				_, _ = fmt.Fprintf(w, "\t")
+				fmt.Fprintf(w, "%s", delimiter)
 			}
 		}
 		_, _ = fmt.Fprintln(w)

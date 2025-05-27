@@ -16,6 +16,7 @@ import (
 // DisplayFormat is a issue display type.
 type DisplayFormat struct {
 	Plain        bool
+	Delimiter    string
 	CSV          bool
 	NoHeaders    bool
 	NoTruncate   bool
@@ -40,8 +41,13 @@ type IssueList struct {
 // Render renders the view.
 func (l *IssueList) Render() error {
 	if l.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
+		// custom delimiter is used only in plain mode, otherwise \t is used
+		delimeter := "\t"
+		if l.Display.Plain {
+			delimeter = l.Display.Delimiter
+		}
 		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
-		return l.renderPlain(w)
+		return l.renderPlain(w, delimeter)
 	}
 
 	if l.Display.CSV {
@@ -129,9 +135,9 @@ func (l *IssueList) Render() error {
 	return view.Paint(data)
 }
 
-// renderPlain renders issues in plain formatted view.
-func (l *IssueList) renderPlain(w io.Writer) error {
-	return renderPlain(w, l.data())
+// renderPlain renders the issue in plain view.
+func (l *IssueList) renderPlain(w io.Writer, delimeter string) error {
+	return renderPlain(w, l.data(), delimeter)
 }
 
 // renderCSV renders issues in csv format.
