@@ -144,10 +144,9 @@ func loadList(cmd *cobra.Command, args []string) {
 	plain, err := cmd.Flags().GetBool("plain")
 	cmdutil.ExitIfError(err)
 
-
 	delimiter, err := cmd.Flags().GetString("delimiter")
 	cmdutil.ExitIfError(err)
-  
+
 	csv, err := cmd.Flags().GetBool("csv")
 	cmdutil.ExitIfError(err)
 
