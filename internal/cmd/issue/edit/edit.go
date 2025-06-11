@@ -355,6 +355,9 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	custom, err := flags.GetStringToString("custom")
 	cmdutil.ExitIfError(err)
 
+	skipNotify, err := flags.GetBool("skip-notify")
+	cmdutil.ExitIfError(err)
+
 	noInput, err := flags.GetBool("no-input")
 	cmdutil.ExitIfError(err)
 
@@ -465,6 +468,7 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringArray("fix-version", []string{}, "Add/Append release info (fixVersions)")
 	cmd.Flags().StringArray("affects-version", []string{}, "Add/Append release info (affectsVersions)")
 	cmd.Flags().StringToString("custom", custom, "Edit custom fields")
+	cmd.Flags().Bool("skip-notify", false, "Do not notify watchers about the issue update")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful update")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }

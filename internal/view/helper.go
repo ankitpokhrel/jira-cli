@@ -1,9 +1,11 @@
 package view
 
 import (
+	"encoding/csv"
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -115,7 +117,7 @@ func prepareTitle(text string) string {
 	return tview.Escape(text)
 }
 
-func issueKeyFromTuiData(r int, d interface{}) string {
+func issueKeyFromTuiData(r int, d any) string {
 	var path string
 
 	switch data := d.(type) {
@@ -128,35 +130,35 @@ func issueKeyFromTuiData(r int, d interface{}) string {
 	return path
 }
 
-func jiraURLFromTuiData(server string, r int, d interface{}) string {
+func jiraURLFromTuiData(server string, r int, d any) string {
 	return cmdutil.GenerateServerBrowseURL(server, issueKeyFromTuiData(r, d))
 }
 
 func navigate(server string) tui.SelectedFunc {
-	return func(r, _ int, d interface{}) {
+	return func(r, _ int, d any) {
 		_ = browser.Browse(jiraURLFromTuiData(server, r, d))
 	}
 }
 
 func copyURL(server string) tui.CopyFunc {
-	return func(r, _ int, d interface{}) {
+	return func(r, _ int, d any) {
 		_ = clipboard.WriteAll(jiraURLFromTuiData(server, r, d))
 	}
 }
 
 func copyKey() tui.CopyKeyFunc {
-	return func(r, _ int, d interface{}) {
+	return func(r, _ int, d any) {
 		_ = clipboard.WriteAll(issueKeyFromTuiData(r, d))
 	}
 }
 
-func renderPlain(w io.Writer, data tui.TableData) error {
+func renderPlain(w io.Writer, data tui.TableData, delimiter string) error {
 	for _, items := range data {
 		n := len(items)
 		for j, v := range items {
-			_, _ = fmt.Fprintf(w, "%s", v)
+			_, _ = fmt.Fprintf(w, "%s", unescape(v))
 			if j != n-1 {
-				_, _ = fmt.Fprintf(w, "\t")
+				_, _ = fmt.Fprintf(w, "%s", delimiter)
 			}
 		}
 		_, _ = fmt.Fprintln(w)
@@ -166,6 +168,27 @@ func renderPlain(w io.Writer, data tui.TableData) error {
 		return w.(*tabwriter.Writer).Flush()
 	}
 	return nil
+}
+
+func renderCSV(w io.Writer, data tui.TableData) error {
+	csvwrt := csv.NewWriter(w)
+
+	for _, items := range data {
+		if err := csvwrt.Write(items); err != nil {
+			return err
+		}
+	}
+
+	csvwrt.Flush()
+	if err := csvwrt.Error(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func unescape(s string) string {
+	pattern := regexp.MustCompile(`(\[[a-zA-Z0-9_,;: \-\."#]+\[*)\[\]`)
+	return pattern.ReplaceAllString(s, "$1]")
 }
 
 func coloredOut(msg string, clr color.Attribute, attrs ...color.Attribute) string {

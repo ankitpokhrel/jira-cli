@@ -72,7 +72,7 @@ func remove(cmd *cobra.Command, args []string) {
 		}
 
 		for _, iss := range params.issues {
-			if err := client.Edit(iss, &jira.EditRequest{ParentIssueKey: jira.AssigneeNone}); err != nil {
+			if err := client.Edit(iss, &jira.EditRequest{ParentIssueKey: jira.AssigneeNone, SkipNotify: true}); err != nil {
 				msg := fmt.Sprintf("\n  - %s: %s", iss, cmdutil.NormalizeJiraError(err.Error()))
 				failed.WriteString(msg)
 			} else {

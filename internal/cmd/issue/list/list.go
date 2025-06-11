@@ -1,6 +1,7 @@
 package list
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -20,7 +21,10 @@ const (
 You can combine different flags to create a unique query. For instance,
 	
 # Issues that are of high priority, is in progress, was created this month, and has given labels
-jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high prio"
+$ jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high prio"
+
+You can also add an optional search query as a positional argument, which functions the same
+as entering a search query into the Jira UI's search box.
 
 Issues are displayed in an interactive list view by default. You can use a --plain flag
 to display output in a plain text mode. A --no-headers flag will hide the table headers
@@ -34,6 +38,9 @@ $ jira issue list --paginate 20
 # Get 50 items starting from 10
 $ jira issue list --paginate 10:50
 
+# Search for issues containing specific text
+$ jira issue list "Feature Request"
+
 # List issues in a plain table view without headers
 $ jira issue list --plain --no-headers
 
@@ -42,6 +49,12 @@ $ jira issue list --plain --columns key,assignee,status
 
 # List issues in a plain table view and show all fields
 $ jira issue list --plain --no-truncate
+
+# List issues in a plain table view using custom delimiter (default is "\t")
+$ jira issue list --plain --delimeter "|"
+
+# List issues as raw JSON data
+$ jira issue list --raw
 
 # List issues of type "Epic" in status "Done"
 $ jira issue list -tEpic -sDone
@@ -56,23 +69,25 @@ $ jira issue list -q"project IS NOT EMPTY"`
 // NewCmdList is a list command.
 func NewCmdList() *cobra.Command {
 	return &cobra.Command{
-		Use:     "list",
+		Use:     "list [optional text to query]",
 		Short:   "List lists issues in a project",
 		Long:    helpText,
 		Example: examples,
-		Aliases: []string{"lists", "ls"},
+		Aliases: []string{"lists", "ls", "search"},
+		Args:    cobra.RangeArgs(0, 1),
 		Run:     List,
 	}
 }
 
 // List displays a list view.
-func List(cmd *cobra.Command, _ []string) {
-	loadList(cmd)
+func List(cmd *cobra.Command, args []string) {
+	loadList(cmd, args)
 }
 
-func loadList(cmd *cobra.Command) {
+func loadList(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
+	numComments := viper.GetUint("num_comments")
 
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
@@ -82,6 +97,17 @@ func loadList(cmd *cobra.Command) {
 
 	err = cmd.Flags().Set("parent", cmdutil.GetJiraIssueKey(project, pk))
 	cmdutil.ExitIfError(err)
+
+	if len(args) > 0 {
+		searchQuery := fmt.Sprintf(`text ~ %q`, strings.Join(args, " "))
+
+		jqlFlag, err := cmd.Flags().GetString("jql")
+		cmdutil.ExitIfError(err)
+		if jqlFlag != "" {
+			searchQuery = fmt.Sprintf(`%s AND %s`, jqlFlag, searchQuery)
+		}
+		cmdutil.ExitIfError(cmd.Flags().Set("jql", searchQuery))
+	}
 
 	issues, total, err := func() ([]*jira.Issue, int, error) {
 		s := cmdutil.Info("Fetching issues...")
@@ -107,7 +133,21 @@ func loadList(cmd *cobra.Command) {
 		return
 	}
 
+	raw, err := cmd.Flags().GetBool("raw")
+	cmdutil.ExitIfError(err)
+
+	if raw {
+		outputRawJSON(issues)
+		return
+	}
+
 	plain, err := cmd.Flags().GetBool("plain")
+	cmdutil.ExitIfError(err)
+
+	delimiter, err := cmd.Flags().GetString("delimiter")
+	cmdutil.ExitIfError(err)
+
+	csv, err := cmd.Flags().GetBool("csv")
 	cmdutil.ExitIfError(err)
 
 	noHeaders, err := cmd.Flags().GetBool("no-headers")
@@ -122,19 +162,30 @@ func loadList(cmd *cobra.Command) {
 	columns, err := cmd.Flags().GetString("columns")
 	cmdutil.ExitIfError(err)
 
+	var comments uint
+	if cmd.Flags().Changed("comments") {
+		comments, err = cmd.Flags().GetUint("comments")
+		cmdutil.ExitIfError(err)
+	} else {
+		comments = max(numComments, 1)
+	}
+
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
 		Total:   total,
 		Data:    issues,
 		Refresh: func() {
-			loadList(cmd)
+			loadList(cmd, args)
 		},
 		Display: view.DisplayFormat{
 			Plain:        plain,
+			Delimiter:    delimiter,
+			CSV:          csv,
 			NoHeaders:    noHeaders,
 			NoTruncate:   noTruncate,
 			FixedColumns: fixedColumns,
+			Comments:     comments,
 			Columns: func() []string {
 				if columns != "" {
 					return strings.Split(columns, ",")
@@ -147,6 +198,15 @@ func loadList(cmd *cobra.Command) {
 	}
 
 	cmdutil.ExitIfError(v.Render())
+}
+
+func outputRawJSON(issues []*jira.Issue) {
+	data, err := json.MarshalIndent(issues, "", "  ")
+	if err != nil {
+		cmdutil.Failed("Failed to marshal issues to JSON: %s", err)
+		return
+	}
+	fmt.Println(string(data))
 }
 
 // SetFlags sets flags supported by a list command.
@@ -183,6 +243,10 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
+	cmd.Flags().String("delimiter", "\t", "Custom delimeter for columns in plain mode. Works only with --plain")
+	cmd.Flags().Uint("comments", 1, "Show N comments when viewing the issue")
+	cmd.Flags().Bool("raw", false, "Print raw JSON output")
+	cmd.Flags().Bool("csv", false, "Print output in CSV format")
 
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {
 		cmd.Flags().String("columns", "", "Comma separated list of columns to display in the plain mode.\n"+

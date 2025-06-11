@@ -1,0 +1,26 @@
+[
+    {
+        "id": "1000",
+        "description": "Release A",
+        "name": "First",
+        "archived": false,
+        "released": true,
+        "projectId": 1000
+    },
+    {
+        "id": "1001",
+        "description": "Release B",
+        "name": "Second",
+        "archived": false,
+        "released": false,
+        "projectId": 1000
+    },
+    {
+        "id": "1002",
+        "description": "Release C",
+        "name": "Third",
+        "archived": true,
+        "released": false,
+        "projectId": 1000
+    }
+]

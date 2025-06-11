@@ -127,6 +127,9 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 	plain, err := flags.GetBool("plain")
 	cmdutil.ExitIfError(err)
 
+	csv, err := flags.GetBool("csv")
+	cmdutil.ExitIfError(err)
+
 	noHeaders, err := flags.GetBool("no-headers")
 	cmdutil.ExitIfError(err)
 
@@ -149,6 +152,7 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 		},
 		Display: view.DisplayFormat{
 			Plain:        plain,
+			CSV:          csv,
 			NoHeaders:    noHeaders,
 			NoTruncate:   noTruncate,
 			FixedColumns: fixedColumns,

@@ -36,6 +36,16 @@ type Project struct {
 	Type string `json:"style"`
 }
 
+// ProjectVersion holds project version info.
+type ProjectVersion struct {
+	Archived    bool        `json:"archived"`
+	Description interface{} `json:"description"`
+	ID          string      `json:"id"`
+	Name        string      `json:"name"`
+	ProjectID   int         `json:"projectId"`
+	Released    bool        `json:"released"`
+}
+
 // Board holds board info.
 type Board struct {
 	ID   int    `json:"id"`
