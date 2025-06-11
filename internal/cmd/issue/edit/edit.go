@@ -319,6 +319,7 @@ type editParams struct {
 	customFields     map[string]string
 	noInput          bool
 	debug            bool
+	skipNotify       bool
 }
 
 func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *editParams {
@@ -379,6 +380,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 		customFields:     custom,
 		noInput:          noInput,
 		debug:            debug,
+		skipNotify:       skipNotify,
 	}
 }
 
