@@ -127,6 +127,14 @@ func GetMetadataQuestions(cat []string) []*survey.Question {
 					Help:    "Comma separated list of labels. For eg: backend,urgent",
 				},
 			})
+		case "OriginalEstimate":
+			qs = append(qs, &survey.Question{
+				Name: "originalestimate",
+				Prompt: &survey.Input{
+					Message: "Original Estimate",
+					Help:    "Original estimate in the format of 1w 2d 3h 4m (weeks, days, hours, minutes). For eg: 1w 2d 3h 4m",
+				},
+			})
 		case "FixVersions":
 			qs = append(qs, &survey.Question{
 				Name: "fixversions",
@@ -171,11 +179,12 @@ func HandleNoInput(params *CreateParams) error {
 			if len(ans.Metadata) > 0 {
 				qs := GetMetadataQuestions(ans.Metadata)
 				ans := struct {
-					Priority        string
-					Labels          string
-					Components      string
-					FixVersions     string
-					AffectsVersions string
+					Priority         string
+					Labels           string
+					OriginalEstimate string
+					Components       string
+					FixVersions      string
+					AffectsVersions  string
 				}{}
 				err := survey.Ask(qs, &ans)
 				if err != nil {
@@ -187,6 +196,9 @@ func HandleNoInput(params *CreateParams) error {
 				}
 				if len(ans.Labels) > 0 {
 					params.Labels = strings.Split(ans.Labels, ",")
+				}
+				if len(ans.OriginalEstimate) > 0 {
+					params.OriginalEstimate = ans.OriginalEstimate
 				}
 				if len(ans.Components) > 0 {
 					params.Components = strings.Split(ans.Components, ",")
