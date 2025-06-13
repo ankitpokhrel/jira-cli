@@ -66,6 +66,10 @@ func getActionModal() *primitive.ActionModal {
 		SetTextColor(tcell.ColorDefault)
 }
 
+func getChoiceModal() *primitive.ChoiceModal {
+	return primitive.NewChoiceModal()
+}
+
 // IsDumbTerminal checks TERM/WT_SESSION environment variable and returns true if they indicate a dumb terminal.
 //
 // Dumb terminal indicates terminal with limited capability. It may not provide support
