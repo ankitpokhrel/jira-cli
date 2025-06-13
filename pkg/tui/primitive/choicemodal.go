@@ -111,8 +111,8 @@ func (m *ChoiceModal) Draw(screen tcell.Screen) {
 	m.frame.Clear()
 	var lines []string
 	for _, line := range strings.Split(m.text, "\n") {
-		if len(line) == 0 {
-			lines = append(lines, "")
+		if line == "" {
+			lines = append(lines, line)
 			continue
 		}
 		lines = append(lines, tview.WordWrap(line, width)...)
