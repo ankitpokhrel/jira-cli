@@ -356,7 +356,7 @@ func (t *Table) initTable() {
 								fmt.Sprintf("Select desired state to transition %s to:", key),
 							)
 
-							t.choice.SetDoneFunc(func(btnIndex int, btnLabel string) {
+							t.choice.SetDoneFunc(func(_ int, btnLabel string) {
 								t.choice.GetFooter().SetText("Processing. Please wait...").SetTextColor(tcell.ColorGray)
 								t.screen.ForceDraw()
 
