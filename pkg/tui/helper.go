@@ -59,13 +59,6 @@ func getInfoModal() *tview.Modal {
 	return modal
 }
 
-func getActionModal() *primitive.ActionModal {
-	return primitive.NewActionModal().
-		SetBackgroundColor(tcell.ColorSpecial).
-		SetButtonBackgroundColor(tcell.ColorDarkCyan).
-		SetTextColor(tcell.ColorDefault)
-}
-
 func getChoiceModal() *primitive.ChoiceModal {
 	return primitive.NewChoiceModal()
 }
