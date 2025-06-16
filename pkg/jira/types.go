@@ -7,6 +7,8 @@ import (
 const (
 	// AuthTypeBasic is a basic auth.
 	AuthTypeBasic AuthType = "basic"
+	// AuthTypeBasic is a cookie auth.
+	AuthTypeCookie AuthType = "cookie"
 	// AuthTypeBearer is a bearer auth.
 	AuthTypeBearer AuthType = "bearer"
 	// AuthTypeMTLS is a mTLS auth.
