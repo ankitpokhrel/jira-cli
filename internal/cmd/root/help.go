@@ -20,12 +20,12 @@ func helpFunc(cmd *cobra.Command, _ []string) {
 	out := cmd.OutOrStdout()
 	for _, e := range entries {
 		if e.Title != "" {
-			fmt.Fprintf(out, "\033[1m%s\033[0m\n", e.Title)
-			fmt.Fprintln(out, text.Indent(strings.Trim(e.Body, "\r\n"), "  "))
+			_, _ = fmt.Fprintf(out, "\033[1m%s\033[0m\n", e.Title)
+			_, _ = fmt.Fprintln(out, text.Indent(strings.Trim(e.Body, "\r\n"), "  "))
 		} else {
-			fmt.Fprintln(out, e.Body)
+			_, _ = fmt.Fprintln(out, e.Body)
 		}
-		fmt.Fprintln(out)
+		_, _ = fmt.Fprintln(out)
 	}
 }
 

@@ -51,6 +51,78 @@ func (c *Client) Sprints(boardID int, qp string, from, limit int) (*SprintResult
 	return &out, err
 }
 
+// GetSprint returns a single sprint given an ID.
+func (c *Client) GetSprint(sprintID int) (*Sprint, error) {
+	res, err := c.GetV1(
+		context.Background(),
+		fmt.Sprintf("/sprint/%d", sprintID),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, formatUnexpectedResponse(res)
+	}
+
+	var s Sprint
+	err = json.NewDecoder(res.Body).Decode(&s)
+	if err != nil {
+		return nil, err
+	}
+
+	return &s, nil
+}
+
+// EndSprint queries the existence of the sprint and
+// full updates the sprint with new status of closed.
+// Default behavior is all open tasks are sent to backlog.
+func (c *Client) EndSprint(sprintID int) error {
+	// get the sprint
+	sprint, err := c.GetSprint(sprintID)
+	if err != nil {
+		return err
+	}
+	if sprint.Status == SprintStateClosed {
+		return fmt.Errorf("sprint %d is already closed", sprintID)
+	}
+
+	// Update to closed and format for PUT.
+	sprint.Status = SprintStateClosed
+	body, err := json.Marshal(sprint)
+	if err != nil {
+		return err
+	}
+
+	res, err := c.PutV1(
+		context.Background(),
+		fmt.Sprintf("/sprint/%d", sprintID),
+		body,
+		Header{
+			"Accept":       "application/json",
+			"Content-Type": "application/json",
+		},
+	)
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusOK {
+		return formatUnexpectedResponse(res)
+	}
+
+	return nil
+}
+
 // SprintsInBoards fetches sprints across given board IDs.
 //
 // qp is an additional query parameters in key, value pair format, eg: state=closed.

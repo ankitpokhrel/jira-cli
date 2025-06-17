@@ -531,7 +531,7 @@ func TestAddIssueComment(t *testing.T) {
 		actualBody := new(strings.Builder)
 		_, _ = io.Copy(actualBody, r.Body)
 
-		expectedBody := `{"body":"comment"}`
+		expectedBody := `{"body":"comment","properties":[{"key":"sd.public.comment","value":{"internal":false}}]}`
 
 		assert.Equal(t, expectedBody, actualBody.String())
 
@@ -545,12 +545,12 @@ func TestAddIssueComment(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
-	err := client.AddIssueComment("TEST-1", "comment")
+	err := client.AddIssueComment("TEST-1", "comment", false)
 	assert.NoError(t, err)
 
 	unexpectedStatusCode = true
 
-	err = client.AddIssueComment("TEST-1", "comment")
+	err = client.AddIssueComment("TEST-1", "comment", false)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 

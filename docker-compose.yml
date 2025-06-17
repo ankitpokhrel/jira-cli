@@ -1,10 +1,8 @@
-version: '3'
-
 services:
   jira:
     depends_on:
       - postgresql
-    image: teamatldocker/jira:8.22.1
+    image: atlassian/jira-software:9.14.0
     networks:
       - jiranet
     volumes:

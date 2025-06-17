@@ -3,6 +3,7 @@ package root
 import (
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,6 +17,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/me"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/open"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/project"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/release"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/serverinfo"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/sprint"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/version"
@@ -40,8 +42,13 @@ var (
 func init() {
 	cobra.OnInitialize(func() {
 		if config != "" {
+			// 1. Command line flag has the highest priority
 			viper.SetConfigFile(config)
+		} else if configFile := os.Getenv("JIRA_CONFIG_FILE"); configFile != "" {
+			// 2. Environment variable has second priority
+			viper.SetConfigFile(configFile)
 		} else {
+			// 3. Default location has the lowest priority
 			home, err := cmdutil.GetConfigHome()
 			if err != nil {
 				cmdutil.Failed("Error: %s", err)
@@ -71,7 +78,7 @@ func NewCmdRoot() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			subCmd := cmd.Name()
 			if !cmdRequireToken(subCmd) {
 				return
@@ -96,7 +103,7 @@ func NewCmdRoot() *cobra.Command {
 
 	cmd.PersistentFlags().StringVarP(
 		&config, "config", "c", "",
-		fmt.Sprintf("Config file (default is %s/%s/%s.yml)", configHome, jiraConfig.Dir, jiraConfig.FileName),
+		fmt.Sprintf("Config file (default is %s/%s/%s.yml, can be overridden with JIRA_CONFIG_FILE env var)", configHome, jiraConfig.Dir, jiraConfig.FileName),
 	)
 	cmd.PersistentFlags().StringP(
 		"project", "p", "",
@@ -131,6 +138,7 @@ func addChildCommands(cmd *cobra.Command) {
 		serverinfo.NewCmdServerInfo(),
 		completion.NewCmdCompletion(),
 		version.NewCmdVersion(),
+		release.NewCmdRelease(),
 		man.NewCmdMan(),
 	)
 }
@@ -144,14 +152,7 @@ func cmdRequireToken(cmd string) bool {
 		"completion",
 		"man",
 	}
-
-	for _, item := range allowList {
-		if item == cmd {
-			return false
-		}
-	}
-
-	return true
+	return !slices.Contains(allowList, cmd)
 }
 
 func checkForJiraToken(server string, login string) {

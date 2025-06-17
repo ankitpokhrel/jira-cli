@@ -1,6 +1,7 @@
 package create
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -36,23 +37,32 @@ $ jira issue create --template /path/to/template.tmpl
 # Get description from standard input
 $ jira issue create --template -
 
+# Create issue in the configured project with JSON output
+$ jira issue create --raw
+
 # Or, use pipe to read input directly from standard input
 $ echo "Description from stdin" | jira issue create -s"Summary" -tTask
 
 # For issue description, the flag --body/-b takes precedence over the --template flag
 # The example below will add "Body from flag" as an issue description
 $ jira issue create -tTask -sSummary -b"Body from flag" --template /path/to/template.tpl`
+
+	flagRaw = "raw"
 )
 
 // NewCmdCreate is a create command.
 func NewCmdCreate() *cobra.Command {
-	return &cobra.Command{
+	cmd := cobra.Command{
 		Use:     "create",
 		Short:   "Create an issue in a project",
 		Long:    helpText,
 		Example: examples,
 		Run:     create,
 	}
+
+	cmd.Flags().Bool(flagRaw, false, "Print output in JSON format")
+
+	return &cmd
 }
 
 // SetFlags sets flags supported by create command.
@@ -94,7 +104,7 @@ func create(cmd *cobra.Command, _ []string) {
 	params.Reporter = cmdcommon.GetRelevantUser(client, project, params.Reporter)
 	params.Assignee = cmdcommon.GetRelevantUser(client, project, params.Assignee)
 
-	key, err := func() (string, error) {
+	issue, err := func() (*jira.CreateResponse, error) {
 		s := cmdutil.Info("Creating an issue...")
 		defer s.Stop()
 
@@ -135,10 +145,20 @@ func create(cmd *cobra.Command, _ []string) {
 	}()
 
 	cmdutil.ExitIfError(err)
-	cmdutil.Success("Issue created\n%s", cmdutil.GenerateServerBrowseURL(server, key))
+
+	jsonFlag, err := cmd.Flags().GetBool(flagRaw)
+	cmdutil.ExitIfError(err)
+	if jsonFlag {
+		jsonData, err := json.Marshal(issue)
+		cmdutil.ExitIfError(err)
+		fmt.Println(string(jsonData))
+		return
+	}
+
+	cmdutil.Success("Issue created\n%s", cmdutil.GenerateServerBrowseURL(server, issue.Key))
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
-		err := cmdutil.Navigate(server, key)
+		err := cmdutil.Navigate(server, issue.Key)
 		cmdutil.ExitIfError(err)
 	}
 }

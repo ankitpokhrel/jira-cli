@@ -27,7 +27,7 @@ func TestProjectRender(t *testing.T) {
 
 	expected := `KEY	NAME	TYPE	LEAD
 FRST	First	classic	Person A
-SCND	⦗2⦘ Second	next-gen	Person B
+SCND	[2[] Second	next-gen	Person B
 THIRD	Third	classic	Person C
 `
 	assert.Equal(t, expected, b.String())

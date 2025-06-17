@@ -1,6 +1,7 @@
 package adf
 
 import (
+	"slices"
 	"strings"
 )
 
@@ -60,7 +61,7 @@ type TagOpenerCloser interface {
 // Connector is a connector interface.
 type Connector interface {
 	GetType() NodeType
-	GetAttributes() interface{}
+	GetAttributes() any
 }
 
 // ADF is an Atlassian document format object.
@@ -92,9 +93,9 @@ func (a *ADF) replace(n *Node, old, new string) {
 
 // Node is an ADF content node.
 type Node struct {
-	NodeType   NodeType    `json:"type"`
-	Content    []*Node     `json:"content,omitempty"`
-	Attributes interface{} `json:"attrs,omitempty"`
+	NodeType   NodeType `json:"type"`
+	Content    []*Node  `json:"content,omitempty"`
+	Attributes any      `json:"attrs,omitempty"`
 	NodeValue
 }
 
@@ -102,7 +103,7 @@ type Node struct {
 func (n Node) GetType() NodeType { return n.NodeType }
 
 // GetAttributes gets node attributes.
-func (n Node) GetAttributes() interface{} { return n.Attributes }
+func (n Node) GetAttributes() any { return n.Attributes }
 
 // NodeValue is an actual ADF node content.
 type NodeValue struct {
@@ -112,15 +113,15 @@ type NodeValue struct {
 
 // MarkNode is a mark node type.
 type MarkNode struct {
-	MarkType   NodeType    `json:"type,omitempty"`
-	Attributes interface{} `json:"attrs,omitempty"`
+	MarkType   NodeType `json:"type,omitempty"`
+	Attributes any      `json:"attrs,omitempty"`
 }
 
 // GetType gets node type.
 func (n MarkNode) GetType() NodeType { return n.MarkType }
 
 // GetAttributes gets node attributes.
-func (n MarkNode) GetAttributes() interface{} { return n.Attributes }
+func (n MarkNode) GetAttributes() any { return n.Attributes }
 
 // ParentNodes returns supported ADF parent nodes.
 func ParentNodes() []NodeType {
@@ -150,22 +151,12 @@ func ChildNodes() []NodeType {
 
 // IsParentNode checks if the node is a parent node.
 func IsParentNode(identifier NodeType) bool {
-	for _, n := range ParentNodes() {
-		if n == identifier {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ParentNodes(), identifier)
 }
 
 // IsChildNode checks if the node is a child node.
 func IsChildNode(identifier NodeType) bool {
-	for _, n := range ChildNodes() {
-		if n == identifier {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ChildNodes(), identifier)
 }
 
 // GetADFNodeType returns the type of ADF node.

@@ -52,11 +52,34 @@ func TestIssueRenderInPlainView(t *testing.T) {
 			NoTruncate: false,
 		},
 	}
-	assert.NoError(t, issue.renderPlain(&b))
+	assert.NoError(t, issue.renderPlain(&b, "\t"))
 
 	expected := `TYPE	KEY	SUMMARY	STATUS
 Bug	TEST-1	This is a test	Done
 Story	TEST-2	This is another test	Open
+`
+	assert.Equal(t, expected, b.String())
+}
+
+func TestIssueRenderInPlainViewWithCustomDelimiter(t *testing.T) {
+	var b bytes.Buffer
+
+	issue := IssueList{
+		Total:   2,
+		Project: "TEST",
+		Server:  "https://test.local",
+		Data:    getIssues(),
+		Display: DisplayFormat{
+			Plain:      true,
+			NoHeaders:  false,
+			NoTruncate: false,
+		},
+	}
+	assert.NoError(t, issue.renderPlain(&b, "|"))
+
+	expected := `TYPE|KEY|SUMMARY|STATUS
+Bug|TEST-1|This is a test|Done
+Story|TEST-2|This is another test|Open
 `
 	assert.Equal(t, expected, b.String())
 }
@@ -75,7 +98,7 @@ func TestIssueRenderInPlainViewAndNoTruncate(t *testing.T) {
 			NoTruncate: true,
 		},
 	}
-	assert.NoError(t, issue.renderPlain(&b))
+	assert.NoError(t, issue.renderPlain(&b, "\t"))
 
 	expected := `TYPE	KEY	SUMMARY	STATUS	ASSIGNEE	REPORTER	PRIORITY	RESOLUTION	CREATED	UPDATED	LABELS
 Bug	TEST-1	This is a test	Done	Person A	Person Z	High	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20	krakatit
@@ -98,7 +121,7 @@ func TestIssueRenderInPlainViewWithoutHeaders(t *testing.T) {
 			NoTruncate: true,
 		},
 	}
-	assert.NoError(t, issue.renderPlain(&b))
+	assert.NoError(t, issue.renderPlain(&b, "\t"))
 
 	expected := `Bug	TEST-1	This is a test	Done	Person A	Person Z	High	Fixed	2020-12-13 14:05:20	2020-12-13 14:07:20	krakatit
 Story	TEST-2	This is another test	Open		Person A	Normal		2020-12-13 14:05:20	2020-12-13 14:07:20	pat,mat
@@ -122,7 +145,7 @@ func TestIssueRenderInPlainViewWithFewColumns(t *testing.T) {
 			Columns:   []string{"key", "type", "status", "created"},
 		},
 	}
-	assert.NoError(t, issue.renderPlain(&b))
+	assert.NoError(t, issue.renderPlain(&b, "\t"))
 
 	expected := `KEY	TYPE	STATUS	CREATED
 TEST-1	Bug	Done	2020-12-13 14:05:20
