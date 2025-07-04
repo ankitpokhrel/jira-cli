@@ -1,6 +1,7 @@
 package view
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -78,7 +79,20 @@ func viewRaw(cmd *cobra.Command, args []string) {
 		defer s.Stop()
 
 		client := api.DefaultClient(debug)
-		return api.ProxyGetIssueRaw(client, key)
+
+		// Fetch the issue with remote links included (same as structured view)
+		issue, err := api.ProxyGetIssue(client, key)
+		if err != nil {
+			return "", err
+		}
+
+		// Convert back to JSON for raw output
+		rawJSON, err := json.MarshalIndent(issue, "", "  ")
+		if err != nil {
+			return "", err
+		}
+
+		return string(rawJSON), nil
 	}()
 	cmdutil.ExitIfError(err)
 
