@@ -1,16 +1,21 @@
 package config
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/core"
+	"github.com/pkg/browser"
 	"github.com/spf13/viper"
+	"golang.org/x/oauth2"
 
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
@@ -29,6 +34,8 @@ const (
 	optionBack   = "Go-back"
 	optionNone   = "None"
 	lineBreak    = "----------"
+	jiraAuthURL  = "https://auth.atlassian.com/authorize"
+	jiraTokenURL = "https://auth.atlassian.com/oauth/token"
 )
 
 var (
@@ -92,6 +99,15 @@ type JiraCLIConfigGenerator struct {
 		customFields []*issueTypeFieldConf
 		mtls         struct {
 			caCert, clientCert, clientKey string
+		}
+		oauth struct {
+			clientId     string
+			clientSecret string
+			accessToken  string
+			refreshToken string
+			redirectURI  string
+			scopes       []string
+			cloudId      string
 		}
 		timezone string
 	}
@@ -161,12 +177,25 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 		}
 	}
 
+	if c.value.installation == jira.InstallationTypeCloud {
+		// This is to account for OAUTH setup
+		if err := c.configureCloudAuthType(); err != nil {
+			return "", err
+		}
+	}
+	// Overrides the authType if the authType in the config has been set already
 	if c.usrCfg.AuthType != "" {
 		c.value.authType = jira.AuthType(c.usrCfg.AuthType)
 	}
 
 	if c.value.authType == jira.AuthTypeMTLS {
 		if err := c.configureMTLS(); err != nil {
+			return "", err
+		}
+	}
+
+	if c.value.authType == jira.AuthTypeOAuth {
+		if err := c.configureOAuth(); err != nil {
 			return "", err
 		}
 	}
@@ -252,6 +281,35 @@ func (c *JiraCLIConfigGenerator) configureLocalAuthType() error {
 	return nil
 }
 
+func (c *JiraCLIConfigGenerator) configureCloudAuthType() error {
+	authType := c.usrCfg.AuthType
+
+	if c.usrCfg.AuthType == "" {
+		qs := &survey.Select{
+			Message: "Authentication type:",
+			Help: `Authentication type coud be: cloud or oauth 
+? If you are using your login credentials, the auth type is probably 'cloud' (most common for cloud installation)
+? If you are authenticating using oauth 3LO, the auth type is probably 'oauth'`,
+			Options: []string{"cloud", "oauth"},
+			Default: "cloud",
+		}
+		if err := survey.AskOne(qs, &authType); err != nil {
+			return err
+		}
+	}
+
+	switch authType {
+	case jira.AuthTypeOAuth.String():
+		c.value.authType = jira.AuthTypeOAuth
+	case jira.AuthTypeCloud.String():
+		c.value.authType = jira.AuthTypeCloud
+	default:
+		c.value.authType = jira.AuthTypeCloud
+	}
+
+	return nil
+}
+
 func (c *JiraCLIConfigGenerator) configureMTLS() error {
 	var qs []*survey.Question
 
@@ -301,10 +359,214 @@ func (c *JiraCLIConfigGenerator) configureMTLS() error {
 	return nil
 }
 
+func (c *JiraCLIConfigGenerator) configureOAuth() error {
+	var questions []*survey.Question
+	answers := struct {
+		ClientId     string
+		ClientSecret string
+		RedirectUri  string
+	}{}
+	questions = append(questions, &survey.Question{
+		Name: "clientId",
+		Prompt: &survey.Input{
+			Message: "Jira App Client ID:",
+			Help:    "This is the client ID of your Jira App that you created for OAuth authentication.",
+		},
+	})
+
+	questions = append(questions, &survey.Question{
+		Name: "clientSecret",
+		Prompt: &survey.Password{
+			Message: "Jira App Client Secret:",
+			Help:    "This is the client secret of your Jira App that you created for OAuth authentication.",
+		},
+	})
+
+	questions = append(questions, &survey.Question{
+		Name: "redirectUri",
+		Prompt: &survey.Input{
+			Default: "http://localhost:9876/callback",
+			Message: "Redirect URI",
+			Help:    "The redirect URL for Jira App. Recommended to set as localhost.",
+		},
+	})
+
+	if err := survey.Ask(questions, &answers, survey.WithValidator(survey.Required)); err != nil {
+		return err
+	}
+
+	// Store OAuth credentials
+	c.value.oauth.clientId = answers.ClientId
+	c.value.oauth.clientSecret = answers.ClientSecret
+	c.value.oauth.redirectURI = answers.RedirectUri
+
+	// Perform OAuth flow
+	if err := c.performOAuthFlow(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *JiraCLIConfigGenerator) performOAuthFlow() error {
+	s := cmdutil.Info("Starting OAuth flow...")
+	defer s.Stop()
+	scopes := []string{"read:jira-user", "read:jira-work", "write:jira-work", "offline_access", "read:board-scope:jira-software", "read:project:jira"}
+
+	// OAuth2 configuration for JIRA
+	oauthConfig := &oauth2.Config{
+		ClientID:     c.value.oauth.clientId,
+		ClientSecret: c.value.oauth.clientSecret,
+		RedirectURL:  c.value.oauth.redirectURI,
+		Scopes:       scopes,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  jiraAuthURL,
+			TokenURL: jiraTokenURL,
+		},
+	}
+
+	// Generate authorization URL
+	verifier := oauth2.GenerateVerifier()
+	authURL := oauthConfig.AuthCodeURL(verifier, oauth2.AccessTypeOffline)
+
+	// Start local server to handle callback
+	codeChan := make(chan string, 1)
+	errChan := make(chan error, 1)
+
+	server := &http.Server{
+		Addr: ":9876",
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/callback" {
+				code := r.URL.Query().Get("code")
+				if code == "" {
+					errChan <- fmt.Errorf("no authorization code received")
+					return
+				}
+
+				// Send success response to browser
+				w.Header().Set("Content-Type", "text/html")
+				w.Write([]byte(`
+					<html>
+						<body>
+							<h2>Authorization successful!</h2>
+							<p>You can close this window and return to the terminal.</p>
+							<script>window.close();</script>
+						</body>
+					</html>
+				`))
+
+				codeChan <- code
+			} else {
+				http.NotFound(w, r)
+			}
+		}),
+	}
+
+	// Start server in goroutine
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			errChan <- err
+		}
+	}()
+
+	// Open browser for authorization
+	fmt.Printf("Opening browser for authorization...\n")
+	fmt.Printf("If the browser doesn't open automatically, please visit: %s\n", authURL)
+
+	// Try to open browser
+	if err := openBrowser(authURL); err != nil {
+		fmt.Printf("Could not open browser automatically: %v\n", err)
+		fmt.Printf("Please manually visit: %s\n", authURL)
+	}
+
+	// Wait for authorization code
+	select {
+	case code := <-codeChan:
+		// Shutdown server
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		server.Shutdown(ctx)
+
+		// Exchange code for token
+		s.Stop()
+		s = cmdutil.Info("Exchanging authorization code for access token...")
+		defer s.Stop()
+
+		token, err := oauthConfig.Exchange(context.Background(), code)
+		if err != nil {
+			return fmt.Errorf("failed to exchange code for token: %w", err)
+		}
+
+		// Store tokens
+		c.value.oauth.accessToken = token.AccessToken
+		if token.RefreshToken != "" {
+			c.value.oauth.refreshToken = token.RefreshToken
+		}
+
+		// Store client secret securely (in environment variable)
+		if err := c.storeClientSecretSecurely(); err != nil {
+			return fmt.Errorf("failed to store client secret: %w", err)
+		}
+
+		return nil
+
+	case err := <-errChan:
+		// Shutdown server
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		server.Shutdown(ctx)
+		return fmt.Errorf("OAuth flow failed: %w", err)
+
+	case <-time.After(5 * time.Minute):
+		// Shutdown server
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		server.Shutdown(ctx)
+		return fmt.Errorf("OAuth flow timed out")
+	}
+}
+
+func (c *JiraCLIConfigGenerator) storeClientSecretSecurely() error {
+	// For now, we'll store it in a separate file with restricted permissions
+	// In a production environment, you might want to use a keyring or similar secure storage
+
+	home, err := cmdutil.GetConfigHome()
+	if err != nil {
+		return err
+	}
+	configDir := fmt.Sprintf("%s/%s", home, ".jira")
+
+	secretFile := filepath.Join(configDir, ".oauth_secret")
+
+	// Write client secret to file with restricted permissions
+	if err := os.WriteFile(secretFile, []byte(c.value.oauth.clientSecret), 0600); err != nil {
+		return fmt.Errorf("failed to write client secret to file: %w", err)
+	}
+
+	// Clear the client secret from memory
+	c.value.oauth.clientSecret = ""
+
+	return nil
+}
+
+func openBrowser(url string) error {
+	if err := browser.OpenURL(url); err != nil {
+		return err
+	}
+	return nil
+}
+
 //nolint:gocyclo
 func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 	var qs []*survey.Question
 
+	if c.value.authType == jira.AuthTypeOAuth {
+		// https://developer.atlassian.com/cloud/oauth/getting-started/making-calls-to-api/
+		if err := c.getCloudID(); err != nil {
+			return err
+		}
+		c.usrCfg.Server = fmt.Sprintf("https://api.atlassian.com/ex/jira/%s", c.value.oauth.cloudId)
+	}
 	c.value.server = c.usrCfg.Server
 	c.value.login = c.usrCfg.Login
 
@@ -335,7 +597,7 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 		})
 	}
 
-	if c.usrCfg.Login == "" {
+	if c.usrCfg.Login == "" && c.value.authType != jira.AuthTypeOAuth {
 		switch c.value.installation {
 		case jira.InstallationTypeCloud:
 			qs = append(qs, &survey.Question{
@@ -411,12 +673,59 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 	return c.verifyLoginDetails(c.value.server, c.value.login)
 }
 
+func (c *JiraCLIConfigGenerator) getCloudID() error {
+	if c.value.oauth.accessToken == "" {
+		return fmt.Errorf("access token is required for cloud installation")
+	}
+	accessToken := c.value.oauth.accessToken
+	s := cmdutil.Info("Fetching cloud ID...")
+	defer s.Stop()
+	jiraClient := api.Client(jira.Config{
+		Server:   "https://api.atlassian.com",
+		Login:    c.value.login,
+		APIToken: accessToken,
+		Insecure: &c.usrCfg.Insecure,
+		AuthType: &c.value.authType,
+		Debug:    viper.GetBool("debug"),
+		MTLSConfig: jira.MTLSConfig{
+			CaCert:     c.value.mtls.caCert,
+			ClientCert: c.value.mtls.clientCert,
+			ClientKey:  c.value.mtls.clientKey,
+		},
+	})
+
+	cloudId, err := jiraClient.GetCloudID()
+	if err != nil {
+		return err
+	}
+
+	c.value.oauth.cloudId = cloudId
+	api.DisposeClient()
+	return nil
+}
+
 func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error {
 	s := cmdutil.Info("Verifying login details...")
 	defer s.Stop()
 
 	server = strings.TrimRight(server, "/")
+	if c.value.authType == jira.AuthTypeOAuth {
+		c.jiraClient = api.Client(jira.Config{
+			Server:   server,
+			Login:    login,
+			APIToken: c.value.oauth.accessToken,
+			Insecure: &c.usrCfg.Insecure,
+			AuthType: &c.value.authType,
+			Debug:    viper.GetBool("debug"),
+			MTLSConfig: jira.MTLSConfig{
+				CaCert:     c.value.mtls.caCert,
+				ClientCert: c.value.mtls.clientCert,
+				ClientKey:  c.value.mtls.clientKey,
+			},
+		})
+	} else {
 
+	}
 	c.jiraClient = api.Client(jira.Config{
 		Server:   server,
 		Login:    login,
@@ -429,6 +738,7 @@ func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error 
 			ClientKey:  c.value.mtls.clientKey,
 		},
 	})
+
 	ret, err := c.jiraClient.Me()
 	if err != nil {
 		return err
@@ -773,6 +1083,11 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 		config.Set("version.major", c.value.version.major)
 		config.Set("version.minor", c.value.version.minor)
 		config.Set("version.patch", c.value.version.patch)
+	}
+
+	if c.value.authType == jira.AuthTypeOAuth {
+		config.Set("oauth.client_id", c.value.oauth.clientId)
+		config.Set("oauth.cloud_id", c.value.oauth.cloudId)
 	}
 
 	if c.value.board != nil {
