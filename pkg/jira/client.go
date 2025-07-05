@@ -279,6 +279,8 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		if c.token != "" {
 			req.Header.Add("Authorization", "Bearer "+c.token)
 		}
+	case string(AuthTypeOAuth):
+		req.Header.Add("Authorization", "Bearer "+c.token)
 	case string(AuthTypeBearer):
 		req.Header.Add("Authorization", "Bearer "+c.token)
 	case string(AuthTypeBasic):
