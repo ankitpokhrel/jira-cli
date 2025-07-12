@@ -60,15 +60,17 @@ features like issue creation, cloning, linking, ticket transition, and much more
 > This tool is heavily inspired by the [GitHub CLI](https://github.com/cli/cli)
 
 ## Supported platforms
+
 > [!NOTE]
 > Some features might work slightly differently in cloud installation versus on-premise installation due to the
-nature of the data. Yet, we've attempted to make the experience as similar as possible.
+> nature of the data. Yet, we've attempted to make the experience as similar as possible.
 
 | Platform | <a href="#"><img alt="Linux" src="https://img.shields.io/badge/Linux-%E2%9C%93-dark--green?logo=linux&logoColor=white&style=flat-square" /></a><a href="#"><img alt="macOS" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=apple&style=flat-square" /></a><a href="#"><img alt="FreeBSD" src="https://img.shields.io/badge/FreeBSD-%E2%9C%93-dark--green?logo=freebsd&style=flat-square" /></a><a href="#"><img alt="NetBSD" src="https://img.shields.io/badge/NetBSD-%E2%9C%93-dark--green?logo=netbsd&logoColor=white&style=flat-square" /></a><a href="#"><img alt="Windows" src="https://img.shields.io/badge/Windows-partial-yellow?logo=windows&style=flat-square" /></a> |
-| :------------- | :----------: |
-| **Jira**  | <a href="#"><img alt="Jira Cloud" src="https://img.shields.io/badge/Jira Cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Jira Server" src="https://img.shields.io/badge/Jira Server-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a> |
+| :------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| **Jira** |                                                                                                                                                                                                         <a href="#"><img alt="Jira Cloud" src="https://img.shields.io/badge/Jira Cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Jira Server" src="https://img.shields.io/badge/Jira Server-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a>                                                                                                                                                                                                          |
 
 ## Installation
+
 `jira-cli` is available as a downloadable packaged binary for Linux, macOS, and Windows from the [releases page](https://github.com/ankitpokhrel/jira-cli/releases).
 
 You can use Docker to quickly try out `jira-cli`.
@@ -111,9 +113,9 @@ Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/In
 
 > [!IMPORTANT]
 > If your on-premise Jira installation is using a language other than `English`, then the issue/epic creation
-   may not work because the older version of Jira API doesn't return the untranslated name for `issuetypes`. In that case,
-   you will have to fill in `epic.name`, `epic.link` and `issue.types.*.handle` fields manually in the generated config
-   to get the expected behavior.
+> may not work because the older version of Jira API doesn't return the untranslated name for `issuetypes`. In that case,
+> you will have to fill in `epic.name`, `epic.link` and `issue.types.*.handle` fields manually in the generated config
+> to get the expected behavior.
 
 See [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs) for frequently asked questions.
 
@@ -122,11 +124,12 @@ See [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs)
 The tool supports `basic`, `bearer` (Personal Access Token), and `mtls` (Client Certificates) authentication types. Basic auth is used by
 default.
 
-* If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
-* If you want to use `mtls` run `jira init`. Select installation type `Local`, and then select authentication type as `mtls`.
-  * In case `JIRA_API_TOKEN` variable is set it will be used together with `mtls`.
+- If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
+- If you want to use `mtls` run `jira init`. Select installation type `Local`, and then select authentication type as `mtls`.
+  - In case `JIRA_API_TOKEN` variable is set it will be used together with `mtls`.
 
 #### Shell completion
+
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.
 
 #### Multiple projects
@@ -141,15 +144,19 @@ $ jira issue list -c ./local_jira_config.yaml
 ```
 
 ## Usage
+
 The tool currently comes with an issue, epic, and sprint explorer. The flags are [POSIX-compliant](https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html).
 You can combine available flags in any order to create a unique query. For example, the command below will give you high priority issues created this month
 with status `To Do` that are assigned to you and has the label `backend`.
+
 ```sh
 jira issue list -yHigh -s"To Do" --created month -lbackend -a$(jira me)
 ```
 
 ### Navigation
+
 The lists are displayed in an interactive UI by default.
+
 - Use arrow keys or `j, k, h, l` characters to navigate through the list.
 - Use `g` and `G` to quickly navigate to the top and bottom respectively.
 - Use `CTRL + f` to scroll through a page downwards direction.
@@ -165,6 +172,7 @@ The lists are displayed in an interactive UI by default.
 - Press `?` to open the help window.
 
 ### Resources
+
 - [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs)
 - [Introduction and Motivation](https://medium.com/@ankitpokhrel/introducing-jira-cli-the-missing-command-line-tool-for-atlassian-jira-fe44982cc1de)
 - [Getting Started with JiraCLI](https://www.mslinn.com/blog/2022/08/12/jiracli.html)
@@ -173,10 +181,13 @@ The lists are displayed in an interactive UI by default.
 > Like this tool? Checkout [similar tool for Shopify!](https://github.com/ankitpokhrel/shopctl)
 
 ## Commands
+
 ### Issue
+
 Issues are displayed in an interactive table view by default. You can output the results in a plain view using the `--plain` flag.
 
 #### List
+
 The `list` command lets you search and navigate the issues. The issues are sorted by `created` field in descending order by default.
 
 ```sh
@@ -214,6 +225,7 @@ Check some more examples/use-cases below.
 ```sh
 jira issue list -w
 ```
+
 </details>
 
 <details><summary>List issues assigned to me</summary>
@@ -221,6 +233,7 @@ jira issue list -w
 ```sh
 jira issue list -a$(jira me)
 ```
+
 </details>
 
 <details><summary>List issues assigned to a user and are reported by another user</summary>
@@ -228,6 +241,7 @@ jira issue list -a$(jira me)
 ```sh
 jira issue list -a"User A" -r"User B"
 ```
+
 </details>
 
 <details><summary>List issues assigned to me, is of high priority and is open</summary>
@@ -235,6 +249,7 @@ jira issue list -a"User A" -r"User B"
 ```sh
 jira issue list -a$(jira me) -yHigh -sopen
 ```
+
 </details>
 
 <details><summary>List issues assigned to no one and are created this week</summary>
@@ -242,6 +257,7 @@ jira issue list -a$(jira me) -yHigh -sopen
 ```sh
 jira issue list -ax --created week
 ```
+
 </details>
 
 <details><summary>List issues with resolution won't do</summary>
@@ -249,6 +265,7 @@ jira issue list -ax --created week
 ```sh
 jira issue list -R"Won't do"
 ```
+
 </details>
 
 <details><summary>List issues whose status is not done and is created before 6 months and is assigned to someone</summary>
@@ -257,6 +274,7 @@ jira issue list -R"Won't do"
 # Tilde (~) acts as a not operator
 jira issue list -s~Done --created-before -24w -a~x
 ```
+
 </details>
 
 <details><summary>List issues created within an hour and updated in the last 30 minutes :stopwatch:</summary>
@@ -264,6 +282,7 @@ jira issue list -s~Done --created-before -24w -a~x
 ```sh
 jira issue list --created -1h --updated -30m
 ```
+
 </details>
 
 <details><summary>Give me issues that are of high priority, are in progress, were created this month, and have given labels :fire:</summary>
@@ -271,13 +290,15 @@ jira issue list --created -1h --updated -30m
 ```sh
 jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high-prio"
 ```
+
 </details>
 
 <details><summary>Wait, what was that ticket I opened earlier today? :tired_face:</summary>
 
- ```sh
- jira issue list --history
- ```
+```sh
+jira issue list --history
+```
+
 </details>
 
 <details><summary>What was the first issue I ever reported on the current board? :thinking:</summary>
@@ -285,6 +306,7 @@ jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high-prio"
 ```sh
 jira issue list -r$(jira me) --reverse
 ```
+
 </details>
 
 <details><summary>What was the first bug I ever fixed in the current board? :beetle:</summary>
@@ -292,6 +314,7 @@ jira issue list -r$(jira me) --reverse
 ```sh
 jira issue list -a$(jira me) -tBug sDone -rFixed --reverse
 ```
+
 </details>
 
 <details><summary>What issues did I report this week? :man_shrugging:</summary>
@@ -299,6 +322,7 @@ jira issue list -a$(jira me) -tBug sDone -rFixed --reverse
 ```sh
 jira issue list -r$(jira me) --created week
 ```
+
 </details>
 
 <details><summary>Am I watching any tickets in project XYZ? :monocle_face:</summary>
@@ -306,9 +330,11 @@ jira issue list -r$(jira me) --created week
 ```sh
 jira issue list -w -pXYZ
 ```
+
 </details>
 
 #### Create
+
 The `create` command lets you create an issue.
 
 ```sh
@@ -347,9 +373,11 @@ $ echo "Description from stdin" | jira issue create -s"Summary" -tTask
 ```
 
 ![Markdown render preview](.github/assets/markdown.jpg)
+
 > The preview above shows markdown template passed in Jira CLI and how it is rendered in the Jira UI.
 
 #### Edit
+
 The `edit` command lets you edit an issue.
 
 ```sh
@@ -369,6 +397,7 @@ $ jira issue edit ISSUE-1 --label -p2 --label p1 --component -FE --component BE 
 ```
 
 #### Assign
+
 The `assign` command lets you assign a user to an issue.
 
 ```sh
@@ -394,6 +423,7 @@ $ jira issue assign ISSUE-1 x
 ![Assign issue to a user](.github/assets/assign.gif)
 
 #### Move/Transition
+
 The `move` command lets you transition an issue from one state to another.
 
 ```sh
@@ -420,6 +450,7 @@ $ jira issue move ISSUE-1 Done -RFixed -a$(jira me)
 To transition the selected issue from the TUI, press `m`.
 
 #### View
+
 The `view` command lets you see issue details in a terminal. Atlassian document is roughly converted to a markdown
 and is nicely displayed in the terminal.
 
@@ -440,6 +471,7 @@ $ jira issue view ISSUE-1 --comments 5
 ```
 
 #### Link
+
 The `link` command lets you link two issues.
 
 ```sh
@@ -451,6 +483,7 @@ $ jira issue link ISSUE-1 ISSUE-2 Blocks
 ```
 
 ##### Remote
+
 The `remote` command lets you add a remote web link to an issue.
 
 ```sh
@@ -462,6 +495,7 @@ $ jira issue link remote ISSUE-1 https://example.com "Example text"
 ```
 
 #### Unlink
+
 The `unlink` command lets you unlink two linked issues.
 
 ```sh
@@ -473,6 +507,7 @@ $ jira issue unlink ISSUE-1 ISSUE-2
 ```
 
 #### Clone
+
 The `clone` command lets you clone an issue. You can update fields like summary, priority, assignee, labels, and
 components when cloning the issue. The command also allows you to replace a part of the string (case-sensitive)
 in summary and description using `--replace/-H` option.
@@ -489,6 +524,7 @@ $ jira issue clone ISSUE-1 -H"find me:replace with me"
 ```
 
 #### Delete
+
 The `delete` command lets you delete an issue.
 
 ```sh
@@ -503,9 +539,11 @@ $ jira issue delete ISSUE-1 --cascade
 ```
 
 #### Comment
+
 The `comment` command provides a list of sub-commands to manage issue comments.
 
 ##### Add
+
 The `add` command lets you add a comment to an issue. The command supports both [Github-flavored](https://github.github.com/gfm/)
 and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) markdown for writing
 comment. You can load pre-defined templates using `--template` flag.
@@ -532,7 +570,8 @@ $ echo "Comment from stdin" | jira issue comment add ISSUE-1
 
 > [!NOTE]
 > For the comment body, the positional argument always takes precedence over the `--template` flag if both of them are passed. In the
-example below, the body will be picked from positional argument instead of the template.
+> example below, the body will be picked from positional argument instead of the template.
+
 ```sh
 jira issue comment add ISSUE-42 "comment body positional" --template - <<'EOF'
 comment body template
@@ -540,9 +579,11 @@ EOF
 ```
 
 #### Worklog
+
 The `worklog` command provides a list of sub-commands to manage issue worklog (timelog).
 
 ##### Add
+
 The `add` command lets you add a worklog to an issue. The command supports markdown for worklog comments.
 
 ```sh
@@ -557,12 +598,14 @@ $ jira issue worklog add ISSUE-1 "10m" --comment "This is a comment" --no-input
 ```
 
 ### Epic
+
 Epics are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing epic issues, you can use all filters available for the issue command.
 
 See [usage](#navigation) to learn more about UI interaction.
 
 #### List
+
 You can use all flags supported by `issue list` command here except for the issue type.
 
 ```sh
@@ -589,6 +632,7 @@ $ jira epic list KEY-1 --order-by rank --reverse
 ```
 
 #### Create
+
 Creating an epic is the same as creating the issue except you also need to provide an epic name.
 
 ```sh
@@ -600,6 +644,7 @@ $ jira epic create -n"Epic epic" -s"Everything" -yHigh -lbug -lurgent -b"Epic de
 ```
 
 #### Add
+
 The `add` command allows you to add issues to the epic. You can add up to 50 issues to the epic at once.
 
 ```sh
@@ -611,6 +656,7 @@ $ jira epic add EPIC-KEY ISSUE-1 ISSUE-2
 ```
 
 #### Remove
+
 The `remove` command allows you to remove issues from the epic. You can remove up to 50 issues from the epic at once.
 
 ```sh
@@ -622,12 +668,14 @@ $ jira epic remove ISSUE-1 ISSUE-2
 ```
 
 ### Sprint
+
 Sprints are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing sprint issues, you can use all filters available for the issue command. The tool only shows 25 recent sprints.
 
 See [usage](#navigation) to learn more about UI interaction.
 
 #### List
+
 You can use all flags supported by `issue list` command to filter issues in the sprint.
 
 ```sh
@@ -664,6 +712,7 @@ $ jira sprint list SPRINT_ID --order-by rank --reverse
 ```
 
 #### Add
+
 The `add` command allows you to add issues to the sprint. You can add up to 50 issues to the sprint at once.
 
 ```sh
@@ -697,6 +746,7 @@ $ jira release list --project KEY
 ```sh
 jira open
 ```
+
 </details>
 
 <details><summary>Navigate to the issue</summary>
@@ -704,6 +754,7 @@ jira open
 ```sh
 jira open KEY-1
 ```
+
 </details>
 
 <details><summary>List all projects you have access to</summary>
@@ -711,6 +762,7 @@ jira open KEY-1
 ```sh
 jira project list
 ```
+
 </details>
 
 <details><summary>List all boards in a project</summary>
@@ -718,9 +770,11 @@ jira project list
 ```sh
 jira board list
 ```
+
 </details>
 
 ## Scripts
+
 Often times, you may want to use the output of the command to do something cool. However, the default interactive UI might not allow you to do that.
 The tool comes with the `--plain` flag that displays results in a simple layout that can then be manipulated from the shell script.
 
@@ -746,6 +800,7 @@ Day #02: 10
 Day #03: 21
 ...
 ```
+
 </details>
 
 <details><summary>Number of tickets per sprint</summary>
@@ -767,6 +822,7 @@ Sprint 2:   40
 Sprint 1:   30
 ...
 ```
+
 </details>
 
 <details><summary>Number of unique assignee per sprint</summary>
@@ -787,12 +843,18 @@ Sprint 3:   5
 Sprint 2:   4
 Sprint 1:   3
 ```
+
 </details>
 
 ## Known Issues
 
 1. Not all [Atlassian nodes](https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/#nodes) are
    translated properly at the moment which can cause formatting issues sometimes.
+2. For Jira 3LO OAuth, you have to create your own client app instead of using a single distributable because of:
+
+- https://jira.atlassian.com/browse/ECO-283
+- https://community.developer.atlassian.com/t/oauth-2-0-with-proof-key-for-code-exchange-pkce/80173/3
+- The 3LO doesn't support PKCE, to avoid the need for a client secret, so we need to use the legacy auth flow.
 
 ## Feature requests
 
@@ -805,18 +867,22 @@ Please [open a discussion](https://github.com/ankitpokhrel/jira-cli/discussions/
 - Rest of the features will be picked based on the [number of votes](https://github.com/ankitpokhrel/jira-cli/discussions/categories/ideas) on the particular feature.
 
 ## Development
+
 1. Clone the repo.
+
    ```sh
    git clone git@github.com:ankitpokhrel/jira-cli.git
    ```
 
 2. Optional: If you want to run a Jira instance locally, you can use the following make recipe.
    The trial license key can be generated from the "Licenses" section in the [atlassian admin](https://my.atlassian.com).
+
    ```sh
    make jira.server
    ```
 
 3. Make changes, build the binary, and test your changes.
+
    ```sh
    make deps install
    ```
@@ -827,6 +893,7 @@ Please [open a discussion](https://github.com/ankitpokhrel/jira-cli/discussions/
    ```
 
 ## Support the project
+
 Your suggestions and feedbacks are highly appreciated. Please feel free
 to [start a discussion](https://github.com/ankitpokhrel/jira-cli/discussions)
 or [create an issue](https://github.com/ankitpokhrel/jira-cli/issues/new) to share your experience with the tool or to
