@@ -195,7 +195,7 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 	}
 
 	if c.value.installation == jira.InstallationTypeLocal {
-		if err := c.configureServerMeta(c.value.server, c.value.login); err != nil {
+		if err := c.configureServerMeta(); err != nil {
 			return "", err
 		}
 	}
@@ -474,8 +474,9 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 			c.value.login = strings.TrimSpace(ans.Login)
 		}
 	}
-
-	return c.verifyLoginDetails(c.value.server, c.value.login)
+	// Trim trailing slash from server URL
+	c.value.server = strings.TrimRight(c.value.server, "/")
+	return c.verifyLoginDetails()
 }
 func (c *JiraCLIConfigGenerator) generateJiraConfig() jira.Config {
 	config := jira.Config{
@@ -499,74 +500,34 @@ func (c *JiraCLIConfigGenerator) generateJiraConfig() jira.Config {
 	return config
 }
 
-func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error {
+func (c *JiraCLIConfigGenerator) verifyLoginDetails() error {
 	s := cmdutil.Info("Verifying login details...")
 	defer s.Stop()
-
-	server = strings.TrimRight(server, "/")
-	if c.value.authType == jira.AuthTypeOAuth {
-		c.jiraClient = api.Client(jira.Config{
-			Server:   server,
-			Login:    login,
-			APIToken: c.value.oauth.accessToken,
-			Insecure: &c.usrCfg.Insecure,
-			AuthType: &c.value.authType,
-			Debug:    viper.GetBool("debug"),
-			MTLSConfig: jira.MTLSConfig{
-				CaCert:     c.value.mtls.caCert,
-				ClientCert: c.value.mtls.clientCert,
-				ClientKey:  c.value.mtls.clientKey,
-			},
-		})
-	} else {
-
-	}
-	c.jiraClient = api.Client(jira.Config{
-		Server:   server,
-		Login:    login,
-		Insecure: &c.usrCfg.Insecure,
-		AuthType: &c.value.authType,
-		Debug:    viper.GetBool("debug"),
-		MTLSConfig: jira.MTLSConfig{
-			CaCert:     c.value.mtls.caCert,
-			ClientCert: c.value.mtls.clientCert,
-			ClientKey:  c.value.mtls.clientKey,
-		},
-	})
+	// Configure JIRA client based on auth type
+	config := c.generateJiraConfig()
+	c.jiraClient = api.Client(config)
 
 	ret, err := c.jiraClient.Me()
 	if err != nil {
 		return err
 	}
 	if c.value.authType == jira.AuthTypeBearer {
-		login = ret.Login
+		c.value.login = ret.Login
 	}
 
-	c.value.server = server
-	c.value.login = login
 	c.value.timezone = ret.Timezone
 
 	return nil
 }
 
-func (c *JiraCLIConfigGenerator) configureServerMeta(server, login string) error {
+func (c *JiraCLIConfigGenerator) configureServerMeta() error {
 	s := cmdutil.Info("Fetching server details...")
 	defer s.Stop()
 
-	server = strings.TrimRight(server, "/")
-
-	c.jiraClient = api.Client(jira.Config{
-		Server:   server,
-		Login:    login,
-		Insecure: &c.usrCfg.Insecure,
-		AuthType: &c.value.authType,
-		Debug:    viper.GetBool("debug"),
-		MTLSConfig: jira.MTLSConfig{
-			CaCert:     c.value.mtls.caCert,
-			ClientCert: c.value.mtls.clientCert,
-			ClientKey:  c.value.mtls.clientKey,
-		},
-	})
+	if c.jiraClient != nil {
+		config := c.generateJiraConfig()
+		c.jiraClient = api.Client(config)
+	}
 	info, err := c.jiraClient.ServerInfo()
 	if err != nil {
 		return err
