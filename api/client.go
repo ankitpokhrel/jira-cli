@@ -15,6 +15,35 @@ const clientTimeout = 15 * time.Second
 
 var jiraClient *jira.Client
 
+// getAPIToken retrieves the API token from various sources in order of priority:
+// 1. Viper configuration
+// 2. Netrc file
+// 3. Keyring
+func getAPIToken(config *jira.Config) string {
+	if config.APIToken != "" {
+		return config.APIToken
+	}
+
+	// Try viper config first
+	if token := viper.GetString("api_token"); token != "" {
+		return token
+	}
+
+	// Try netrc file
+	if netrcConfig, _ := netrc.Read(config.Server, config.Login); netrcConfig != nil {
+		if netrcConfig.Password != "" {
+			return netrcConfig.Password
+		}
+	}
+
+	// Try keyring
+	if secret, _ := keyring.Get("jira-cli", config.Login); secret != "" {
+		return secret
+	}
+
+	return ""
+}
+
 // Client initializes and returns jira client.
 func Client(config jira.Config) *jira.Client {
 	if jiraClient != nil {
@@ -32,23 +61,13 @@ func Client(config jira.Config) *jira.Client {
 		authType := jira.AuthType(viper.GetString("auth_type"))
 		config.AuthType = &authType
 	}
-	if config.APIToken == "" {
-		config.APIToken = viper.GetString("api_token")
-	}
-	if config.APIToken == "" {
-		netrcConfig, _ := netrc.Read(config.Server, config.Login)
-		if netrcConfig != nil {
-			config.APIToken = netrcConfig.Password
-		}
-	}
-	if config.APIToken == "" {
-		secret, _ := keyring.Get("jira-cli", config.Login)
-		config.APIToken = secret
-	}
 	if config.Insecure == nil {
 		insecure := viper.GetBool("insecure")
 		config.Insecure = &insecure
 	}
+
+	// Get API token from various sources
+	config.APIToken = getAPIToken(&config)
 
 	// MTLS
 
