@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/ankitpokhrel/jira-cli/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
 )
@@ -75,7 +75,39 @@ func TestGetCloudID(t *testing.T) {
 
 		// Test with mock server - this requires refactoring the function to accept a custom URL
 		// For now, we'll test the error cases and create a separate testable function
-		cloudID, err := getCloudIDFromURL(server.URL+"/oauth/token/accessible-resources", "test-access-token")
+		cloudID, err := getCloudID(server.URL+"/oauth/token/accessible-resources", "test-access-token")
+		assert.NoError(t, err)
+		assert.Equal(t, expectedCloudID, cloudID)
+	})
+
+	t.Run("successfully gets jira cloud id from list of accessible resources", func(t *testing.T) {
+		expectedCloudID := "test-cloud-id-123"
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Verify request
+			assert.Equal(t, "GET", r.Method)
+			assert.Equal(t, "/oauth/token/accessible-resources", r.URL.Path)
+			assert.Equal(t, "Bearer test-access-token", r.Header.Get("Authorization"))
+			assert.Equal(t, "application/json", r.Header.Get("Accept"))
+
+			// Return mock response
+			response := []map[string]interface{}{
+				{
+					"id":        expectedCloudID,
+					"name":      "Test Site",
+					"url":       "https://test.atlassian.net",
+					"scopes":    []string{"read:jira-user", "read:jira-work"},
+					"avatarUrl": "https://test.atlassian.net/avatar.png",
+				},
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(response)
+		}))
+		defer server.Close()
+
+		// Test with mock server - this requires refactoring the function to accept a custom URL
+		// For now, we'll test the error cases and create a separate testable function
+		cloudID, err := getCloudID(server.URL+"/oauth/token/accessible-resources", "test-access-token")
 		assert.NoError(t, err)
 		assert.Equal(t, expectedCloudID, cloudID)
 	})
@@ -86,7 +118,7 @@ func TestGetCloudID(t *testing.T) {
 		}))
 		defer server.Close()
 
-		cloudID, err := getCloudIDFromURL(server.URL+"/oauth/token/accessible-resources", "invalid-token")
+		cloudID, err := getCloudID(server.URL+"/oauth/token/accessible-resources", "invalid-token")
 		assert.Error(t, err)
 		assert.Empty(t, cloudID)
 		assert.Contains(t, err.Error(), "failed to get accessible resources: status 401")
@@ -99,7 +131,7 @@ func TestGetCloudID(t *testing.T) {
 		}))
 		defer server.Close()
 
-		cloudID, err := getCloudIDFromURL(server.URL+"/oauth/token/accessible-resources", "test-token")
+		cloudID, err := getCloudID(server.URL+"/oauth/token/accessible-resources", "test-token")
 		assert.Error(t, err)
 		assert.Empty(t, cloudID)
 		assert.Contains(t, err.Error(), "failed to decode accessible resources response")
@@ -112,61 +144,20 @@ func TestGetCloudID(t *testing.T) {
 		}))
 		defer server.Close()
 
-		cloudID, err := getCloudIDFromURL(server.URL+"/oauth/token/accessible-resources", "test-token")
+		cloudID, err := getCloudID(server.URL+"/oauth/token/accessible-resources", "test-token")
 		assert.Error(t, err)
 		assert.Empty(t, cloudID)
 		assert.Contains(t, err.Error(), "no accessible resources found")
 	})
 }
 
-// Helper function to make getCloudID testable
-func getCloudIDFromURL(url, accessToken string) (string, error) {
-	client := &http.Client{Timeout: 30 * time.Second}
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return "", err
-	}
-
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to get accessible resources: status %d", resp.StatusCode)
-	}
-
-	var resourceResponse []struct {
-		ID        string   `json:"id"`
-		Name      string   `json:"name"`
-		URL       string   `json:"url"`
-		Scopes    []string `json:"scopes"`
-		AvatarURL string   `json:"avatarUrl"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&resourceResponse); err != nil {
-		return "", fmt.Errorf("failed to decode accessible resources response: %w", err)
-	}
-
-	if len(resourceResponse) == 0 {
-		return "", fmt.Errorf("no accessible resources found or cloud ID not found")
-	}
-
-	return resourceResponse[0].ID, nil
-}
-
 func TestConfig(t *testing.T) {
 	t.Parallel()
 
 	t.Run("creates config with all required fields", func(t *testing.T) {
-		config := &Config{
+		config := &OAuthConfig{
 			ClientID:     "test-client-id",
-			ClientSecret: Secret{Key: "client_secret", Value: "test-secret"},
+			ClientSecret: utils.Secret{Key: "client_secret", Value: "test-secret"},
 			RedirectURI:  "http://localhost:9876/callback",
 			Scopes:       []string{"read:jira-user", "read:jira-work"},
 		}
@@ -184,8 +175,8 @@ func TestConfigureTokenResponse(t *testing.T) {
 
 	t.Run("creates token response with all required fields", func(t *testing.T) {
 		response := &ConfigureTokenResponse{
-			AccessToken:  Secret{Key: "access_token", Value: "test-access-token"},
-			RefreshToken: Secret{Key: "refresh_token", Value: "test-refresh-token"},
+			AccessToken:  utils.Secret{Key: "access_token", Value: "test-access-token"},
+			RefreshToken: utils.Secret{Key: "refresh_token", Value: "test-refresh-token"},
 			CloudID:      "test-cloud-id",
 		}
 
@@ -199,9 +190,9 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 	t.Parallel()
 
 	t.Run("handles timeout", func(t *testing.T) {
-		config := &Config{
+		config := &OAuthConfig{
 			ClientID:     "test-client-id",
-			ClientSecret: Secret{Key: "client_secret", Value: "test-secret"},
+			ClientSecret: utils.Secret{Key: "client_secret", Value: "test-secret"},
 			RedirectURI:  "http://localhost:9876/callback",
 			Scopes:       []string{"read:jira-user"},
 		}
@@ -214,9 +205,9 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 	})
 
 	t.Run("handles server startup error", func(t *testing.T) {
-		config := &Config{
+		config := &OAuthConfig{
 			ClientID:     "test-client-id",
-			ClientSecret: Secret{Key: "client_secret", Value: "test-secret"},
+			ClientSecret: utils.Secret{Key: "client_secret", Value: "test-secret"},
 			RedirectURI:  "http://localhost:9876/callback",
 			Scopes:       []string{"read:jira-user"},
 		}
@@ -238,7 +229,7 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 }
 
 // Helper function to test OAuth flow with custom timeout
-func performOAuthFlowWithTimeout(config *Config, timeout time.Duration) (*oauth2.Token, error) {
+func performOAuthFlowWithTimeout(config *OAuthConfig, timeout time.Duration) (*oauth2.Token, error) {
 	oauthConfig := &oauth2.Config{
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret.String(),
@@ -307,24 +298,6 @@ func performOAuthFlowWithTimeout(config *Config, timeout time.Duration) (*oauth2
 	}
 }
 
-func TestConstants(t *testing.T) {
-	t.Parallel()
-
-	t.Run("verifies OAuth constants", func(t *testing.T) {
-		assert.Equal(t, "https://auth.atlassian.com/authorize", jiraAuthURL)
-		assert.Equal(t, "https://auth.atlassian.com/oauth/token", jiraTokenURL)
-		assert.Equal(t, "http://localhost:9876/callback", defaultRedirectURI)
-		assert.Equal(t, ":9876", defaultPort)
-		assert.Equal(t, "/callback", callbackPath)
-		assert.Equal(t, 5*time.Minute, oauthTimeout)
-	})
-
-	t.Run("verifies file permission constants", func(t *testing.T) {
-		assert.Equal(t, 0o700, int(OWNER_ONLY))
-		assert.Equal(t, 0o600, int(OWNER_READ_WRITE))
-	})
-}
-
 func TestOAuthFlowIntegration(t *testing.T) {
 	t.Parallel()
 
@@ -346,9 +319,9 @@ func TestOAuthFlowIntegration(t *testing.T) {
 		defer mockOAuthServer.Close()
 
 		// Create config with mock server
-		config := &Config{
+		config := &OAuthConfig{
 			ClientID:     "test-client-id",
-			ClientSecret: Secret{Key: "client_secret", Value: "test-secret"},
+			ClientSecret: utils.Secret{Key: "client_secret", Value: "test-secret"},
 			RedirectURI:  "http://localhost:9876/callback",
 			Scopes:       []string{"read:jira-user"},
 		}
@@ -441,181 +414,6 @@ func TestOAuthFlowIntegration(t *testing.T) {
 			t.Error("Expected code but got timeout")
 		}
 	})
-}
-
-func TestFileSystemStorage(t *testing.T) {
-	t.Parallel()
-
-	t.Run("creates directory and saves file", func(t *testing.T) {
-		// Create temporary directory
-		tempDir := t.TempDir()
-		storage := FileSystemStorage{BaseDir: tempDir}
-
-		// Test saving
-		err := storage.Save("test-key", []byte("test-value"))
-		assert.NoError(t, err)
-
-		// Verify file exists and has correct content
-		filePath := filepath.Join(tempDir, "test-key")
-		content, err := os.ReadFile(filePath)
-		assert.NoError(t, err)
-		assert.Equal(t, "test-value", string(content))
-
-		// Verify file permissions
-		info, err := os.Stat(filePath)
-		assert.NoError(t, err)
-		// File permissions on Unix systems can vary, so we just check that it's restrictive
-		assert.True(t, info.Mode().Perm() <= 0o600)
-	})
-
-	t.Run("loads file content", func(t *testing.T) {
-		// Create temporary directory
-		tempDir := t.TempDir()
-		storage := FileSystemStorage{BaseDir: tempDir}
-
-		// Create test file
-		testContent := "test-content"
-		filePath := filepath.Join(tempDir, "test-key")
-		err := os.WriteFile(filePath, []byte(testContent), OWNER_READ_WRITE)
-		assert.NoError(t, err)
-
-		// Test loading
-		content, err := storage.Load("test-key")
-		assert.NoError(t, err)
-		assert.Equal(t, testContent, string(content))
-	})
-
-	t.Run("handles non-existent file", func(t *testing.T) {
-		tempDir := t.TempDir()
-		storage := FileSystemStorage{BaseDir: tempDir}
-
-		// Test loading non-existent file
-		content, err := storage.Load("non-existent-key")
-		assert.Error(t, err)
-		assert.Nil(t, content)
-	})
-
-	t.Run("handles directory creation failure", func(t *testing.T) {
-		// Use a path that cannot be created (e.g., under a file instead of directory)
-		tempDir := t.TempDir()
-
-		// Create a file where we want to create a directory
-		filePath := filepath.Join(tempDir, "blocking-file")
-		err := os.WriteFile(filePath, []byte("content"), 0644)
-		assert.NoError(t, err)
-
-		// Try to create storage with the file as base directory
-		storage := FileSystemStorage{BaseDir: filePath}
-
-		err = storage.Save("test-key", []byte("test-value"))
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to create directory")
-	})
-}
-
-func TestSecretOperations(t *testing.T) {
-	t.Parallel()
-
-	t.Run("secret string representation", func(t *testing.T) {
-		secret := Secret{Key: "test-key", Value: "test-value"}
-		assert.Equal(t, "test-value", secret.String())
-	})
-
-	t.Run("secret save with empty key", func(t *testing.T) {
-		secret := Secret{Key: "", Value: "test-value"}
-		storage := &mockStorage{}
-
-		err := secret.Save(storage)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "secret key cannot be empty")
-	})
-
-	t.Run("secret save success", func(t *testing.T) {
-		secret := Secret{Key: "test-key", Value: "test-value"}
-		storage := &mockStorage{}
-
-		err := secret.Save(storage)
-		assert.NoError(t, err)
-		assert.Equal(t, "test-key", storage.savedKey)
-		assert.Equal(t, []byte("test-value"), storage.savedValue)
-	})
-
-	t.Run("secret load with empty key", func(t *testing.T) {
-		secret := &Secret{}
-		storage := &mockStorage{}
-
-		err := secret.Load(storage, "")
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "secret key cannot be empty")
-	})
-
-	t.Run("secret load success", func(t *testing.T) {
-		secret := &Secret{}
-		storage := &mockStorage{
-			loadReturn: []byte("loaded-value"),
-		}
-
-		err := secret.Load(storage, "test-key")
-		assert.NoError(t, err)
-		assert.Equal(t, "test-key", secret.Key)
-		assert.Equal(t, "loaded-value", secret.Value)
-	})
-
-	t.Run("secret load with storage error", func(t *testing.T) {
-		secret := &Secret{}
-		storage := &mockStorage{
-			loadError: fmt.Errorf("storage error"),
-		}
-
-		err := secret.Load(storage, "test-key")
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "storage error")
-	})
-}
-
-// Mock storage for testing
-type mockStorage struct {
-	savedKey   string
-	savedValue []byte
-	loadReturn []byte
-	loadError  error
-	saveError  error
-}
-
-func (m *mockStorage) Save(key string, value []byte) error {
-	if m.saveError != nil {
-		return m.saveError
-	}
-	m.savedKey = key
-	m.savedValue = value
-	return nil
-}
-
-func (m *mockStorage) Load(key string) ([]byte, error) {
-	if m.loadError != nil {
-		return nil, m.loadError
-	}
-	return m.loadReturn, nil
-}
-
-func TestDefaultScopes(t *testing.T) {
-	t.Parallel()
-
-	// Test that the default scopes include all required permissions
-	expectedScopes := []string{
-		"read:jira-user",
-		"read:jira-work",
-		"write:jira-work",
-		"offline_access",
-		"read:board-scope:jira-software",
-		"read:project:jira",
-	}
-
-	// This would typically be tested through collectOAuthCredentials, but since
-	// that function uses interactive prompts, we test the expected scopes directly
-	for _, scope := range expectedScopes {
-		assert.Contains(t, expectedScopes, scope, "Expected scope %s should be present", scope)
-	}
 }
 
 func TestHTMLResponse(t *testing.T) {
