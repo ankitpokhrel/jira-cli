@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -14,12 +13,14 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
+	"github.com/ankitpokhrel/jira-cli/pkg/utils"
 )
 
 const (
 	// JIRA OAuth2 endpoints
-	jiraAuthURL  = "https://auth.atlassian.com/authorize"
-	jiraTokenURL = "https://auth.atlassian.com/oauth/token"
+	jiraAuthURL            = "https://auth.atlassian.com/authorize"
+	jiraTokenURL           = "https://auth.atlassian.com/oauth/token"
+	accessibleResourcesURL = "https://api.atlassian.com/oauth/token/accessible-resources"
 
 	// Default OAuth settings
 	defaultRedirectURI = "http://localhost:9876/callback"
@@ -30,93 +31,39 @@ const (
 	oauthTimeout = 5 * time.Minute
 )
 
-const (
-	OWNER_ONLY       = 0o700
-	OWNER_READ_WRITE = 0o600
-)
-
-// Storage defines the interface for secret storage operations
-type Storage interface {
-	Save(key string, value []byte) error
-	Load(key string) ([]byte, error)
+var defaultScopes = []string{
+	"read:jira-user",
+	"read:jira-work",
+	"read:board-scope:jira-software",
+	"read:project:jira",
+	"write:jira-work",
+	"offline_access", // This is required to get the refresh token from JIRA
 }
 
-// Secret represents a secret value with storage capabilities
-type Secret struct {
-	Key   string
-	Value string
-}
-
-func (s Secret) String() string {
-	return s.Value
-}
-
-func (s Secret) Save(storage Storage) error {
-	if s.Key == "" {
-		return fmt.Errorf("secret key cannot be empty")
-	}
-	return storage.Save(s.Key, []byte(s.Value))
-}
-
-func (s *Secret) Load(storage Storage, key string) error {
-	if key == "" {
-		return fmt.Errorf("secret key cannot be empty")
-	}
-
-	data, err := storage.Load(key)
-	if err != nil {
-		return err
-	}
-
-	s.Key = key
-	s.Value = string(data)
-	return nil
-}
-
-// FileSystemStorage implements Storage interface for filesystem operations
-type FileSystemStorage struct {
-	BaseDir string
-}
-
-func (fs FileSystemStorage) Save(key string, value []byte) error {
-	if err := os.MkdirAll(fs.BaseDir, OWNER_ONLY); err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
-	}
-
-	filePath := filepath.Join(fs.BaseDir, key)
-	return os.WriteFile(filePath, value, OWNER_READ_WRITE)
-}
-
-func (fs FileSystemStorage) Load(key string) ([]byte, error) {
-	filePath := filepath.Join(fs.BaseDir, key)
-	return os.ReadFile(filePath)
-}
-
-// Config holds OAuth configuration
-type Config struct {
+// OAuthConfig holds OAuth configuration
+type OAuthConfig struct {
 	ClientID     string
-	ClientSecret Secret
+	ClientSecret utils.Secret
 	RedirectURI  string
 	Scopes       []string
 }
 
 // ConfigureTokenResponse holds the OAuth token response
 type ConfigureTokenResponse struct {
-	AccessToken  Secret
-	RefreshToken Secret
+	AccessToken  utils.Secret
+	RefreshToken utils.Secret
 	CloudID      string
 }
 
 // Configure performs the complete OAuth flow and returns tokens
 func Configure() (*ConfigureTokenResponse, error) {
 	// Collect OAuth credentials from user
-
 	jiraDir, err := getJiraConfigDir()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Jira config directory: %w", err)
 	}
 
-	secretStorage := FileSystemStorage{BaseDir: jiraDir}
+	secretStorage := utils.FileSystemStorage{BaseDir: jiraDir}
 
 	config, err := collectOAuthCredentials()
 	if err != nil {
@@ -128,14 +75,12 @@ func Configure() (*ConfigureTokenResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("OAuth flow failed: %w", err)
 	}
-
+	accessToken := utils.Secret{Key: "access_token", Value: tokens.AccessToken}
+	refreshToken := utils.Secret{Key: "refresh_token", Value: tokens.RefreshToken}
 	// Store client secret securely
 	if err := config.ClientSecret.Save(secretStorage); err != nil {
 		return nil, fmt.Errorf("failed to store client secret: %w", err)
 	}
-
-	accessToken := Secret{Key: "access_token", Value: tokens.AccessToken}
-	refreshToken := Secret{Key: "refresh_token", Value: tokens.RefreshToken}
 
 	if err := accessToken.Save(secretStorage); err != nil {
 		return nil, fmt.Errorf("failed to store access token: %w", err)
@@ -145,7 +90,7 @@ func Configure() (*ConfigureTokenResponse, error) {
 		return nil, fmt.Errorf("failed to store refresh token: %w", err)
 	}
 	// Get Cloud ID for Atlassian API
-	cloudID, err := getCloudID(tokens.AccessToken)
+	cloudID, err := getCloudID(accessibleResourcesURL, tokens.AccessToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cloud ID: %w", err)
 	}
@@ -158,7 +103,7 @@ func Configure() (*ConfigureTokenResponse, error) {
 }
 
 // collectOAuthCredentials collects OAuth credentials from the user
-func collectOAuthCredentials() (*Config, error) {
+func collectOAuthCredentials() (*OAuthConfig, error) {
 	var questions []*survey.Question
 	answers := struct {
 		ClientID     string
@@ -195,23 +140,16 @@ func collectOAuthCredentials() (*Config, error) {
 		return nil, err
 	}
 
-	return &Config{
+	return &OAuthConfig{
 		ClientID:     answers.ClientID,
-		ClientSecret: Secret{Key: "client_secret", Value: answers.ClientSecret},
+		ClientSecret: utils.Secret{Key: "client_secret", Value: answers.ClientSecret},
 		RedirectURI:  answers.RedirectURI,
-		Scopes: []string{
-			"read:jira-user",
-			"read:jira-work",
-			"write:jira-work",
-			"offline_access",
-			"read:board-scope:jira-software",
-			"read:project:jira",
-		},
+		Scopes:       defaultScopes,
 	}, nil
 }
 
 // performOAuthFlow executes the OAuth authorization flow
-func performOAuthFlow(config *Config) (*oauth2.Token, error) {
+func performOAuthFlow(config *OAuthConfig) (*oauth2.Token, error) {
 	s := cmdutil.Info("Starting OAuth flow...")
 	defer s.Stop()
 
@@ -318,14 +256,14 @@ func performOAuthFlow(config *Config) (*oauth2.Token, error) {
 }
 
 // getCloudID retrieves the Cloud ID for the authenticated user
-func getCloudID(accessToken string) (string, error) {
+func getCloudID(url string, accessToken string) (string, error) {
 	s := cmdutil.Info("Fetching cloud ID...")
 	defer s.Stop()
 
 	// Create HTTP client with bearer token
 	client := &http.Client{Timeout: 30 * time.Second}
 
-	req, err := http.NewRequest("GET", "https://api.atlassian.com/oauth/token/accessible-resources", nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", err
 	}
