@@ -29,6 +29,9 @@ const (
 
 	// OAuth timeout
 	oauthTimeout = 5 * time.Minute
+
+	// OAuth storage file name
+	oauthSecretsFile = "oauth_secrets.json"
 )
 
 var defaultScopes = []string{
@@ -43,16 +46,35 @@ var defaultScopes = []string{
 // OAuthConfig holds OAuth configuration
 type OAuthConfig struct {
 	ClientID     string
-	ClientSecret utils.Secret
+	ClientSecret string
 	RedirectURI  string
 	Scopes       []string
 }
 
+// OAuthSecrets holds all OAuth secrets in a single structure
+type OAuthSecrets struct {
+	ClientSecret string    `json:"client_secret"`
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
+	TokenType    string    `json:"token_type"`
+	Expiry       time.Time `json:"expiry"`
+}
+
 // ConfigureTokenResponse holds the OAuth token response
 type ConfigureTokenResponse struct {
-	AccessToken  utils.Secret
-	RefreshToken utils.Secret
+	AccessToken  string
+	RefreshToken string
 	CloudID      string
+}
+
+// IsExpired checks if the access token is expired
+func (o *OAuthSecrets) IsExpired() bool {
+	return time.Now().After(o.Expiry)
+}
+
+// IsValid checks if the OAuth secrets are valid and not expired
+func (o *OAuthSecrets) IsValid() bool {
+	return o.AccessToken != "" && !o.IsExpired()
 }
 
 // Configure performs the complete OAuth flow and returns tokens
@@ -75,31 +97,61 @@ func Configure() (*ConfigureTokenResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("OAuth flow failed: %w", err)
 	}
-	accessToken := utils.Secret{Key: "access_token", Value: tokens.AccessToken}
-	refreshToken := utils.Secret{Key: "refresh_token", Value: tokens.RefreshToken}
-	// Store client secret securely
-	if err := config.ClientSecret.Save(secretStorage); err != nil {
-		return nil, fmt.Errorf("failed to store client secret: %w", err)
-	}
 
-	if err := accessToken.Save(secretStorage); err != nil {
-		return nil, fmt.Errorf("failed to store access token: %w", err)
-	}
-
-	if err := refreshToken.Save(secretStorage); err != nil {
-		return nil, fmt.Errorf("failed to store refresh token: %w", err)
-	}
 	// Get Cloud ID for Atlassian API
 	cloudID, err := getCloudID(accessibleResourcesURL, tokens.AccessToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cloud ID: %w", err)
 	}
 
+	// Store all OAuth secrets in a single JSON file
+	oauthSecrets := &OAuthSecrets{
+		ClientSecret: config.ClientSecret,
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+		TokenType:    tokens.TokenType,
+		Expiry:       tokens.Expiry,
+	}
+
+	if err := utils.SaveJSON(secretStorage, oauthSecretsFile, oauthSecrets); err != nil {
+		return nil, fmt.Errorf("failed to store OAuth secrets: %w", err)
+	}
+
 	return &ConfigureTokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
 		CloudID:      cloudID,
 	}, nil
+}
+
+// LoadOAuthSecrets loads OAuth secrets from storage
+func LoadOAuthSecrets() (*OAuthSecrets, error) {
+	jiraDir, err := getJiraConfigDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Jira config directory: %w", err)
+	}
+
+	secretStorage := utils.FileSystemStorage{BaseDir: jiraDir}
+	secrets, err := utils.LoadJSON[OAuthSecrets](secretStorage, oauthSecretsFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load OAuth secrets: %w", err)
+	}
+
+	return &secrets, nil
+}
+
+// GetValidAccessToken returns a valid access token if available, otherwise returns empty string
+func GetValidAccessToken() string {
+	secrets, err := LoadOAuthSecrets()
+	if err != nil {
+		return ""
+	}
+
+	if secrets.IsValid() {
+		return secrets.AccessToken
+	}
+
+	return ""
 }
 
 // collectOAuthCredentials collects OAuth credentials from the user
@@ -142,7 +194,7 @@ func collectOAuthCredentials() (*OAuthConfig, error) {
 
 	return &OAuthConfig{
 		ClientID:     answers.ClientID,
-		ClientSecret: utils.Secret{Key: "client_secret", Value: answers.ClientSecret},
+		ClientSecret: answers.ClientSecret,
 		RedirectURI:  answers.RedirectURI,
 		Scopes:       defaultScopes,
 	}, nil
@@ -156,7 +208,7 @@ func performOAuthFlow(config *OAuthConfig) (*oauth2.Token, error) {
 	// OAuth2 configuration for JIRA
 	oauthConfig := &oauth2.Config{
 		ClientID:     config.ClientID,
-		ClientSecret: config.ClientSecret.String(),
+		ClientSecret: config.ClientSecret,
 		RedirectURL:  config.RedirectURI,
 		Scopes:       config.Scopes,
 		Endpoint: oauth2.Endpoint{

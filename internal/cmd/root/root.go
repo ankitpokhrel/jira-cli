@@ -25,6 +25,7 @@ import (
 	jiraConfig "github.com/ankitpokhrel/jira-cli/internal/config"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
+	"github.com/ankitpokhrel/jira-cli/pkg/oauth"
 
 	"github.com/zalando/go-keyring"
 )
@@ -156,6 +157,10 @@ func cmdRequireToken(cmd string) bool {
 }
 
 func checkForJiraToken(server string, login string) {
+	if oauthToken := oauth.GetValidAccessToken(); oauthToken != "" {
+		return
+	}
+
 	if os.Getenv("JIRA_API_TOKEN") != "" {
 		return
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter"
 	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
+	"github.com/ankitpokhrel/jira-cli/pkg/oauth"
 )
 
 const clientTimeout = 15 * time.Second
@@ -17,8 +18,9 @@ var jiraClient *jira.Client
 
 // getAPIToken retrieves the API token from various sources in order of priority:
 // 1. Viper configuration
-// 2. Netrc file
-// 3. Keyring
+// 2. OAuth access token (if available and valid)
+// 3. Netrc file
+// 4. Keyring
 func getAPIToken(config *jira.Config) string {
 	if config.APIToken != "" {
 		return config.APIToken
@@ -27,6 +29,11 @@ func getAPIToken(config *jira.Config) string {
 	// Try viper config first
 	if token := viper.GetString("api_token"); token != "" {
 		return token
+	}
+
+	// Try OAuth access token if available and valid
+	if oauthToken := oauth.GetValidAccessToken(); oauthToken != "" {
+		return oauthToken
 	}
 
 	// Try netrc file
@@ -68,6 +75,12 @@ func Client(config jira.Config) *jira.Client {
 
 	// Get API token from various sources
 	config.APIToken = getAPIToken(&config)
+
+	// If we have an OAuth token, set auth type to OAuth
+	if oauthToken := oauth.GetValidAccessToken(); oauthToken != "" && config.APIToken == oauthToken {
+		oauthAuthType := jira.AuthTypeOAuth
+		config.AuthType = &oauthAuthType
+	}
 
 	// MTLS
 
