@@ -32,8 +32,10 @@ func getAPIToken(config *jira.Config) string {
 	}
 
 	// Try OAuth access token if available and valid
-	if oauthToken := oauth.GetValidAccessToken(); oauthToken != "" {
-		return oauthToken
+	if oauth.HasOAuthCredentials() {
+		tk, _ := oauth.LoadOAuth2TokenSource()
+		token, _ := tk.Token()
+		return token.AccessToken
 	}
 
 	// Try netrc file
@@ -73,14 +75,25 @@ func Client(config jira.Config) *jira.Client {
 		config.Insecure = &insecure
 	}
 
-	// Get API token from various sources
-	config.APIToken = getAPIToken(&config)
-
-	// If we have an OAuth token, set auth type to OAuth
-	if oauthToken := oauth.GetValidAccessToken(); oauthToken != "" && config.APIToken == oauthToken {
-		oauthAuthType := jira.AuthTypeOAuth
-		config.AuthType = &oauthAuthType
+	// Check if we have OAuth credentials and should use OAuth
+	if oauth.HasOAuthCredentials() && config.AuthType != nil && *config.AuthType == jira.AuthTypeOAuth {
+		// Try to create OAuth2 token source
+		tokenSource, err := oauth.LoadOAuth2TokenSource()
+		if err == nil {
+			// We have valid OAuth credentials, use OAuth authentication
+			// Pass the TokenSource to the client via a custom option
+			jiraClient = jira.NewClient(
+				config,
+				jira.WithTimeout(clientTimeout),
+				jira.WithInsecureTLS(*config.Insecure),
+				jira.WithOAuth2TokenSource(tokenSource),
+			)
+			return jiraClient
+		}
 	}
+
+	// Get API token from various sources (fallback for non-OAuth auth)
+	config.APIToken = getAPIToken(&config)
 
 	// MTLS
 
