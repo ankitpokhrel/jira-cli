@@ -357,8 +357,8 @@ func (c *JiraCLIConfigGenerator) configureOAuth() error {
 	}
 
 	// Store the tokens and cloud ID
-	c.value.oauth.accessToken = tokenResponse.AccessToken.String()
-	c.value.oauth.refreshToken = tokenResponse.RefreshToken.String()
+	c.value.oauth.accessToken = tokenResponse.AccessToken
+	c.value.oauth.refreshToken = tokenResponse.RefreshToken
 	c.value.oauth.cloudId = tokenResponse.CloudID
 
 	return nil
