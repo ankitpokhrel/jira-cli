@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -42,6 +43,217 @@ func TestGetJiraConfigDir(t *testing.T) {
 		dir, err := getJiraConfigDir()
 		assert.NoError(t, err)
 		assert.Equal(t, "/tmp/test-home/.config/.jira", dir)
+	})
+}
+
+func TestOAuthSecrets(t *testing.T) {
+	t.Parallel()
+
+	t.Run("IsExpired returns true for expired tokens", func(t *testing.T) {
+		secrets := &OAuthSecrets{
+			AccessToken: "test-token",
+			Expiry:      time.Now().Add(-time.Hour), // Expired 1 hour ago
+		}
+		assert.True(t, secrets.IsExpired())
+	})
+
+	t.Run("IsExpired returns false for valid tokens", func(t *testing.T) {
+		secrets := &OAuthSecrets{
+			AccessToken: "test-token",
+			Expiry:      time.Now().Add(time.Hour), // Expires in 1 hour
+		}
+		assert.False(t, secrets.IsExpired())
+	})
+
+	t.Run("IsValid returns true for valid tokens", func(t *testing.T) {
+		secrets := &OAuthSecrets{
+			AccessToken: "test-token",
+			Expiry:      time.Now().Add(time.Hour), // Expires in 1 hour
+		}
+		assert.True(t, secrets.IsValid())
+	})
+
+	t.Run("IsValid returns false for expired tokens", func(t *testing.T) {
+		secrets := &OAuthSecrets{
+			AccessToken: "test-token",
+			Expiry:      time.Now().Add(-time.Hour), // Expired 1 hour ago
+		}
+		assert.False(t, secrets.IsValid())
+	})
+
+	t.Run("IsValid returns false for empty tokens", func(t *testing.T) {
+		secrets := &OAuthSecrets{
+			AccessToken: "",
+			Expiry:      time.Now().Add(time.Hour), // Expires in 1 hour
+		}
+		assert.False(t, secrets.IsValid())
+	})
+}
+
+func TestLoadOAuthSecrets(t *testing.T) {
+	t.Parallel()
+
+	t.Run("loads OAuth secrets successfully", func(t *testing.T) {
+		// Create a temporary directory for testing
+		tempDir, err := os.MkdirTemp("", "oauth-test-*")
+		assert.NoError(t, err)
+		defer os.RemoveAll(tempDir)
+
+		// Create test secrets
+		testSecrets := &OAuthSecrets{
+			ClientSecret: "test-client-secret",
+			AccessToken:  "test-access-token",
+			RefreshToken: "test-refresh-token",
+			TokenType:    "Bearer",
+			Expiry:       time.Now().Add(time.Hour),
+		}
+
+		// Save secrets to temp directory
+		storage := utils.FileSystemStorage{BaseDir: tempDir}
+		err = utils.SaveJSON(storage, oauthSecretsFile, testSecrets)
+		assert.NoError(t, err)
+
+		// Load secrets directly from the test directory
+		loadedSecrets, err := utils.LoadJSON[OAuthSecrets](storage, oauthSecretsFile)
+		assert.NoError(t, err)
+		assert.Equal(t, testSecrets.ClientSecret, loadedSecrets.ClientSecret)
+		assert.Equal(t, testSecrets.AccessToken, loadedSecrets.AccessToken)
+		assert.Equal(t, testSecrets.RefreshToken, loadedSecrets.RefreshToken)
+		assert.Equal(t, testSecrets.TokenType, loadedSecrets.TokenType)
+		assert.True(t, testSecrets.Expiry.Equal(loadedSecrets.Expiry))
+	})
+
+	t.Run("returns error when secrets file doesn't exist", func(t *testing.T) {
+		// Create a temporary directory without any secrets file
+		tempDir, err := os.MkdirTemp("", "oauth-test-*")
+		assert.NoError(t, err)
+		defer os.RemoveAll(tempDir)
+
+		storage := utils.FileSystemStorage{BaseDir: tempDir}
+		_, err = utils.LoadJSON[OAuthSecrets](storage, oauthSecretsFile)
+		assert.Error(t, err)
+	})
+}
+
+func TestGetValidAccessToken(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns valid access token", func(t *testing.T) {
+		// Create a temporary directory for testing
+		tempDir, err := os.MkdirTemp("", "oauth-test-*")
+		assert.NoError(t, err)
+		defer os.RemoveAll(tempDir)
+
+		// Create test secrets with valid token
+		testSecrets := &OAuthSecrets{
+			ClientSecret: "test-client-secret",
+			AccessToken:  "valid-access-token",
+			RefreshToken: "test-refresh-token",
+			TokenType:    "Bearer",
+			Expiry:       time.Now().Add(time.Hour),
+		}
+
+		// Save secrets to temp directory
+		storage := utils.FileSystemStorage{BaseDir: tempDir}
+		err = utils.SaveJSON(storage, oauthSecretsFile, testSecrets)
+		assert.NoError(t, err)
+
+		// Temporarily override the config directory
+		originalHome := os.Getenv("HOME")
+		originalXDG := os.Getenv("XDG_CONFIG_HOME")
+		defer func() {
+			os.Setenv("HOME", originalHome)
+			os.Setenv("XDG_CONFIG_HOME", originalXDG)
+		}()
+
+		// Use a custom config directory for testing
+		configDir := filepath.Join(tempDir, "..")
+		os.Setenv("XDG_CONFIG_HOME", configDir)
+		os.Setenv("HOME", "")
+
+		// Create the .jira subdirectory and move the secrets file there
+		jiraDir := filepath.Join(configDir, ".jira")
+		err = os.MkdirAll(jiraDir, 0755)
+		assert.NoError(t, err)
+
+		// Copy the secrets file to the expected location
+		srcFile := filepath.Join(tempDir, oauthSecretsFile)
+		dstFile := filepath.Join(jiraDir, oauthSecretsFile)
+		srcData, err := os.ReadFile(srcFile)
+		assert.NoError(t, err)
+		err = os.WriteFile(dstFile, srcData, 0600)
+		assert.NoError(t, err)
+
+		// Get valid access token
+		token := GetValidAccessToken()
+		assert.Equal(t, "valid-access-token", token)
+	})
+
+	t.Run("returns empty string for expired token", func(t *testing.T) {
+		// Create a temporary directory for testing
+		tempDir, err := os.MkdirTemp("", "oauth-test-*")
+		assert.NoError(t, err)
+		defer os.RemoveAll(tempDir)
+
+		// Create test secrets with expired token
+		testSecrets := &OAuthSecrets{
+			ClientSecret: "test-client-secret",
+			AccessToken:  "expired-access-token",
+			RefreshToken: "test-refresh-token",
+			TokenType:    "Bearer",
+			Expiry:       time.Now().Add(-time.Hour), // Expired
+		}
+
+		// Save secrets to temp directory
+		storage := utils.FileSystemStorage{BaseDir: tempDir}
+		err = utils.SaveJSON(storage, oauthSecretsFile, testSecrets)
+		assert.NoError(t, err)
+
+		// Temporarily override the config directory
+		originalHome := os.Getenv("HOME")
+		originalXDG := os.Getenv("XDG_CONFIG_HOME")
+		defer func() {
+			os.Setenv("HOME", originalHome)
+			os.Setenv("XDG_CONFIG_HOME", originalXDG)
+		}()
+
+		// Use a custom config directory for testing
+		configDir := filepath.Join(tempDir, "..")
+		os.Setenv("XDG_CONFIG_HOME", configDir)
+		os.Setenv("HOME", "")
+
+		// Create the .jira subdirectory and move the secrets file there
+		jiraDir := filepath.Join(configDir, ".jira")
+		err = os.MkdirAll(jiraDir, 0755)
+		assert.NoError(t, err)
+
+		// Copy the secrets file to the expected location
+		srcFile := filepath.Join(tempDir, oauthSecretsFile)
+		dstFile := filepath.Join(jiraDir, oauthSecretsFile)
+		srcData, err := os.ReadFile(srcFile)
+		assert.NoError(t, err)
+		err = os.WriteFile(dstFile, srcData, 0600)
+		assert.NoError(t, err)
+
+		// Get valid access token (should return empty string)
+		token := GetValidAccessToken()
+		assert.Empty(t, token)
+	})
+
+	t.Run("returns empty string when no secrets file exists", func(t *testing.T) {
+		// Set up environment to use a non-existent directory
+		originalHome := os.Getenv("HOME")
+		originalXDG := os.Getenv("XDG_CONFIG_HOME")
+		defer func() {
+			os.Setenv("HOME", originalHome)
+			os.Setenv("XDG_CONFIG_HOME", originalXDG)
+		}()
+
+		os.Setenv("XDG_CONFIG_HOME", "/tmp/non-existent-dir")
+		os.Setenv("HOME", "")
+
+		token := GetValidAccessToken()
+		assert.Empty(t, token)
 	})
 }
 
@@ -157,13 +369,13 @@ func TestConfig(t *testing.T) {
 	t.Run("creates config with all required fields", func(t *testing.T) {
 		config := &OAuthConfig{
 			ClientID:     "test-client-id",
-			ClientSecret: utils.Secret{Key: "client_secret", Value: "test-secret"},
+			ClientSecret: "test-secret",
 			RedirectURI:  "http://localhost:9876/callback",
 			Scopes:       []string{"read:jira-user", "read:jira-work"},
 		}
 
 		assert.Equal(t, "test-client-id", config.ClientID)
-		assert.Equal(t, "test-secret", config.ClientSecret.String())
+		assert.Equal(t, "test-secret", config.ClientSecret)
 		assert.Equal(t, "http://localhost:9876/callback", config.RedirectURI)
 		assert.Contains(t, config.Scopes, "read:jira-user")
 		assert.Contains(t, config.Scopes, "read:jira-work")
@@ -175,13 +387,13 @@ func TestConfigureTokenResponse(t *testing.T) {
 
 	t.Run("creates token response with all required fields", func(t *testing.T) {
 		response := &ConfigureTokenResponse{
-			AccessToken:  utils.Secret{Key: "access_token", Value: "test-access-token"},
-			RefreshToken: utils.Secret{Key: "refresh_token", Value: "test-refresh-token"},
+			AccessToken:  "test-access-token",
+			RefreshToken: "test-refresh-token",
 			CloudID:      "test-cloud-id",
 		}
 
-		assert.Equal(t, "test-access-token", response.AccessToken.String())
-		assert.Equal(t, "test-refresh-token", response.RefreshToken.String())
+		assert.Equal(t, "test-access-token", response.AccessToken)
+		assert.Equal(t, "test-refresh-token", response.RefreshToken)
 		assert.Equal(t, "test-cloud-id", response.CloudID)
 	})
 }
@@ -192,7 +404,7 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 	t.Run("handles timeout", func(t *testing.T) {
 		config := &OAuthConfig{
 			ClientID:     "test-client-id",
-			ClientSecret: utils.Secret{Key: "client_secret", Value: "test-secret"},
+			ClientSecret: "test-secret",
 			RedirectURI:  "http://localhost:9876/callback",
 			Scopes:       []string{"read:jira-user"},
 		}
@@ -207,7 +419,7 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 	t.Run("handles server startup error", func(t *testing.T) {
 		config := &OAuthConfig{
 			ClientID:     "test-client-id",
-			ClientSecret: utils.Secret{Key: "client_secret", Value: "test-secret"},
+			ClientSecret: "test-secret",
 			RedirectURI:  "http://localhost:9876/callback",
 			Scopes:       []string{"read:jira-user"},
 		}
@@ -232,7 +444,7 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 func performOAuthFlowWithTimeout(config *OAuthConfig, timeout time.Duration) (*oauth2.Token, error) {
 	oauthConfig := &oauth2.Config{
 		ClientID:     config.ClientID,
-		ClientSecret: config.ClientSecret.String(),
+		ClientSecret: config.ClientSecret,
 		RedirectURL:  config.RedirectURI,
 		Scopes:       config.Scopes,
 		Endpoint: oauth2.Endpoint{
@@ -321,7 +533,7 @@ func TestOAuthFlowIntegration(t *testing.T) {
 		// Create config with mock server
 		config := &OAuthConfig{
 			ClientID:     "test-client-id",
-			ClientSecret: utils.Secret{Key: "client_secret", Value: "test-secret"},
+			ClientSecret: "test-secret",
 			RedirectURI:  "http://localhost:9876/callback",
 			Scopes:       []string{"read:jira-user"},
 		}
@@ -329,7 +541,7 @@ func TestOAuthFlowIntegration(t *testing.T) {
 		// Test the OAuth configuration creation
 		oauthConfig := &oauth2.Config{
 			ClientID:     config.ClientID,
-			ClientSecret: config.ClientSecret.String(),
+			ClientSecret: config.ClientSecret,
 			RedirectURL:  config.RedirectURI,
 			Scopes:       config.Scopes,
 			Endpoint: oauth2.Endpoint{
