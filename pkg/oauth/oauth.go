@@ -51,15 +51,6 @@ type OAuthConfig struct {
 	Scopes       []string
 }
 
-// OAuthSecrets holds all OAuth secrets in a single structure
-type OAuthSecrets struct {
-	ClientSecret string    `json:"client_secret"`
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token"`
-	TokenType    string    `json:"token_type"`
-	Expiry       time.Time `json:"expiry"`
-}
-
 // ConfigureTokenResponse holds the OAuth token response
 type ConfigureTokenResponse struct {
 	AccessToken  string
@@ -67,14 +58,25 @@ type ConfigureTokenResponse struct {
 	CloudID      string
 }
 
-// IsExpired checks if the access token is expired
-func (o *OAuthSecrets) IsExpired() bool {
-	return time.Now().After(o.Expiry)
-}
+// GetOAuth2Config creates an OAuth2 config for the given client credentials
+func GetOAuth2Config(clientID, clientSecret, redirectURI string, scopes []string) *oauth2.Config {
+	if scopes == nil {
+		scopes = defaultScopes
+	}
 
-// IsValid checks if the OAuth secrets are valid and not expired
-func (o *OAuthSecrets) IsValid() bool {
-	return o.AccessToken != "" && !o.IsExpired()
+	if redirectURI == "" {
+		redirectURI = defaultRedirectURI
+	}
+	return &oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  redirectURI,
+		Scopes:       scopes,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  jiraAuthURL,
+			TokenURL: jiraTokenURL,
+		},
+	}
 }
 
 // Configure performs the complete OAuth flow and returns tokens
@@ -106,6 +108,7 @@ func Configure() (*ConfigureTokenResponse, error) {
 
 	// Store all OAuth secrets in a single JSON file
 	oauthSecrets := &OAuthSecrets{
+		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
@@ -152,6 +155,12 @@ func GetValidAccessToken() string {
 	}
 
 	return ""
+}
+
+// HasOAuthCredentials checks if OAuth credentials are present
+func HasOAuthCredentials() bool {
+	_, err := LoadOAuthSecrets()
+	return err == nil
 }
 
 // collectOAuthCredentials collects OAuth credentials from the user
@@ -206,16 +215,7 @@ func performOAuthFlow(config *OAuthConfig) (*oauth2.Token, error) {
 	defer s.Stop()
 
 	// OAuth2 configuration for JIRA
-	oauthConfig := &oauth2.Config{
-		ClientID:     config.ClientID,
-		ClientSecret: config.ClientSecret,
-		RedirectURL:  config.RedirectURI,
-		Scopes:       config.Scopes,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  jiraAuthURL,
-			TokenURL: jiraTokenURL,
-		},
-	}
+	oauthConfig := GetOAuth2Config(config.ClientID, config.ClientSecret, config.RedirectURI, config.Scopes)
 
 	// Generate authorization URL with PKCE
 	verifier := oauth2.GenerateVerifier()
