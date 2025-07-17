@@ -73,7 +73,6 @@ func Client(config jira.Config) *jira.Client {
 	if config.Login == "" {
 		config.Login = viper.GetString("login")
 	}
-	//TODO: Load auth token here
 	if config.AuthType == nil {
 		authType := jira.AuthType(viper.GetString("auth_type"))
 		config.AuthType = &authType
