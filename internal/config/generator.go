@@ -468,7 +468,6 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 
 		if ans.Server != "" {
 			c.value.server = strings.TrimSpace(ans.Server)
-
 		}
 		if ans.Login != "" {
 			c.value.login = strings.TrimSpace(ans.Login)
@@ -485,6 +484,7 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 	c.value.server = strings.TrimRight(c.value.server, "/")
 	return c.verifyLoginDetails()
 }
+
 func (c *JiraCLIConfigGenerator) generateJiraConfig() jira.Config {
 	config := jira.Config{
 		Server:   c.value.apiServer,

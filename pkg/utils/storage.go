@@ -17,7 +17,7 @@ const (
 	OWNER_READ_WRITE = 0o600
 )
 
-// FileSystemStorage implements Storage interface for filesystem operations
+// FileSystemStorage implements Storage interface for filesystem operations.
 type FileSystemStorage struct {
 	// BaseDir is the directory where the storage will be saved
 	BaseDir string
@@ -37,7 +37,7 @@ func (fs FileSystemStorage) Load(key string) ([]byte, error) {
 	return os.ReadFile(filePath)
 }
 
-// SaveJSON saves a typed value as JSON using the provided storage
+// SaveJSON saves a typed value as JSON using the provided storage.
 func SaveJSON[T any](storage Storage, key string, value T) error {
 	data, err := json.MarshalIndent(value, "", "  ")
 	if err != nil {
@@ -46,7 +46,7 @@ func SaveJSON[T any](storage Storage, key string, value T) error {
 	return storage.Save(key, data)
 }
 
-// LoadJSON loads a typed value from JSON using the provided storage
+// LoadJSON loads a typed value from JSON using the provided storage.
 func LoadJSON[T any](storage Storage, key string) (T, error) {
 	var result T
 	data, err := storage.Load(key)

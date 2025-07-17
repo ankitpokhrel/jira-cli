@@ -17,21 +17,27 @@ import (
 )
 
 const (
-	// JIRA OAuth2 endpoints
+	// JIRA OAuth2 endpoints.
 	jiraAuthURL            = "https://auth.atlassian.com/authorize"
 	jiraTokenURL           = "https://auth.atlassian.com/oauth/token"
 	accessibleResourcesURL = "https://api.atlassian.com/oauth/token/accessible-resources"
 
-	// Default OAuth settings
+	// Default OAuth settings.
 	defaultRedirectURI = "http://localhost:9876/callback"
 	defaultPort        = ":9876"
 	callbackPath       = "/callback"
 
-	// OAuth timeout
+	// OAuth timeout.
 	oauthTimeout = 5 * time.Minute
 
-	// OAuth storage file name
+	// OAuth storage file name.
 	oauthSecretsFile = "oauth_secrets.json"
+
+	// Server shutdown timeout.
+	serverShutdownTimeout = 5 * time.Second
+
+	// HTTP client timeout for API calls.
+	httpClientTimeout = 30 * time.Second
 )
 
 var defaultScopes = []string{
@@ -43,7 +49,7 @@ var defaultScopes = []string{
 	"offline_access", // This is required to get the refresh token from JIRA
 }
 
-// OAuthConfig holds OAuth configuration
+// OAuthConfig holds OAuth configuration.
 type OAuthConfig struct {
 	ClientID     string
 	ClientSecret string
@@ -51,14 +57,14 @@ type OAuthConfig struct {
 	Scopes       []string
 }
 
-// ConfigureTokenResponse holds the OAuth token response
+// ConfigureTokenResponse holds the OAuth token response.
 type ConfigureTokenResponse struct {
 	AccessToken  string
 	RefreshToken string
 	CloudID      string
 }
 
-// GetOAuth2Config creates an OAuth2 config for the given client credentials
+// GetOAuth2Config creates an OAuth2 config for the given client credentials.
 func GetOAuth2Config(clientID, clientSecret, redirectURI string, scopes []string) *oauth2.Config {
 	if scopes == nil {
 		scopes = defaultScopes
@@ -79,7 +85,7 @@ func GetOAuth2Config(clientID, clientSecret, redirectURI string, scopes []string
 	}
 }
 
-// Configure performs the complete OAuth flow and returns tokens
+// Configure performs the complete OAuth flow and returns tokens.
 func Configure() (*ConfigureTokenResponse, error) {
 	// Collect OAuth credentials from user
 	jiraDir, err := getJiraConfigDir()
@@ -127,7 +133,7 @@ func Configure() (*ConfigureTokenResponse, error) {
 	}, nil
 }
 
-// LoadOAuthSecrets loads OAuth secrets from storage
+// LoadOAuthSecrets loads OAuth secrets from storage.
 func LoadOAuthSecrets() (*OAuthSecrets, error) {
 	jiraDir, err := getJiraConfigDir()
 	if err != nil {
@@ -143,13 +149,13 @@ func LoadOAuthSecrets() (*OAuthSecrets, error) {
 	return &secrets, nil
 }
 
-// HasOAuthCredentials checks if OAuth credentials are present
+// HasOAuthCredentials checks if OAuth credentials are present.
 func HasOAuthCredentials() bool {
 	_, err := LoadOAuthSecrets()
 	return err == nil
 }
 
-// collectOAuthCredentials collects OAuth credentials from the user
+// collectOAuthCredentials collects OAuth credentials from the user.
 func collectOAuthCredentials() (*OAuthConfig, error) {
 	var questions []*survey.Question
 	answers := struct {
@@ -195,7 +201,7 @@ func collectOAuthCredentials() (*OAuthConfig, error) {
 	}, nil
 }
 
-// performOAuthFlow executes the OAuth authorization flow
+// performOAuthFlow executes the OAuth authorization flow.
 func performOAuthFlow(config *OAuthConfig) (*oauth2.Token, error) {
 	s := cmdutil.Info("Starting OAuth flow...")
 	defer s.Stop()
@@ -223,7 +229,7 @@ func performOAuthFlow(config *OAuthConfig) (*oauth2.Token, error) {
 
 				// Send success response to browser
 				w.Header().Set("Content-Type", "text/html")
-				w.Write([]byte(`
+				if _, err := w.Write([]byte(`
 					<html>
 						<body>
 							<h2>Authorization successful!</h2>
@@ -231,7 +237,10 @@ func performOAuthFlow(config *OAuthConfig) (*oauth2.Token, error) {
 							<script>window.close();</script>
 						</body>
 					</html>
-				`))
+				`)); err != nil {
+					errChan <- fmt.Errorf("failed to write response: %w", err)
+					return
+				}
 
 				codeChan <- code
 			} else {
@@ -261,9 +270,11 @@ func performOAuthFlow(config *OAuthConfig) (*oauth2.Token, error) {
 	select {
 	case code := <-codeChan:
 		// Shutdown server
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), serverShutdownTimeout)
 		defer cancel()
-		server.Shutdown(ctx)
+		if err := server.Shutdown(ctx); err != nil {
+			fmt.Printf("Warning: failed to shutdown server: %v\n", err)
+		}
 
 		// Exchange code for token
 		s.Stop()
@@ -279,27 +290,31 @@ func performOAuthFlow(config *OAuthConfig) (*oauth2.Token, error) {
 
 	case err := <-errChan:
 		// Shutdown server
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), serverShutdownTimeout)
 		defer cancel()
-		server.Shutdown(ctx)
+		if shutdownErr := server.Shutdown(ctx); shutdownErr != nil {
+			fmt.Printf("Warning: failed to shutdown server: %v\n", shutdownErr)
+		}
 		return nil, fmt.Errorf("OAuth flow failed: %w", err)
 
 	case <-time.After(oauthTimeout):
 		// Shutdown server
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), serverShutdownTimeout)
 		defer cancel()
-		server.Shutdown(ctx)
+		if err := server.Shutdown(ctx); err != nil {
+			fmt.Printf("Warning: failed to shutdown server: %v\n", err)
+		}
 		return nil, fmt.Errorf("OAuth flow timed out after %v", oauthTimeout)
 	}
 }
 
-// getCloudID retrieves the Cloud ID for the authenticated user
+// getCloudID retrieves the Cloud ID for the authenticated user.
 func getCloudID(url string, accessToken string) (string, error) {
 	s := cmdutil.Info("Fetching cloud ID...")
 	defer s.Stop()
 
 	// Create HTTP client with bearer token
-	client := &http.Client{Timeout: 30 * time.Second}
+	client := &http.Client{Timeout: httpClientTimeout}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -313,7 +328,11 @@ func getCloudID(url string, accessToken string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			fmt.Printf("Warning: failed to close response body: %v\n", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("failed to get accessible resources: status %d", resp.StatusCode)

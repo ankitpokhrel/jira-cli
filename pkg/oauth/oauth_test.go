@@ -23,13 +23,13 @@ func TestGetJiraConfigDir(t *testing.T) {
 	originalHome := os.Getenv("HOME")
 	originalXDG := os.Getenv("XDG_CONFIG_HOME")
 	defer func() {
-		os.Setenv("HOME", originalHome)
-		os.Setenv("XDG_CONFIG_HOME", originalXDG)
+		_ = os.Setenv("HOME", originalHome)
+		_ = os.Setenv("XDG_CONFIG_HOME", originalXDG)
 	}()
 
 	t.Run("uses XDG_CONFIG_HOME when set", func(t *testing.T) {
-		os.Setenv("XDG_CONFIG_HOME", "/tmp/test-config")
-		os.Setenv("HOME", "/tmp/test-home")
+		_ = os.Setenv("XDG_CONFIG_HOME", "/tmp/test-config")
+		_ = os.Setenv("HOME", "/tmp/test-home")
 
 		dir, err := getJiraConfigDir()
 		assert.NoError(t, err)
@@ -37,8 +37,8 @@ func TestGetJiraConfigDir(t *testing.T) {
 	})
 
 	t.Run("falls back to HOME/.config when XDG_CONFIG_HOME not set", func(t *testing.T) {
-		os.Unsetenv("XDG_CONFIG_HOME")
-		os.Setenv("HOME", "/tmp/test-home")
+		_ = os.Unsetenv("XDG_CONFIG_HOME")
+		_ = os.Setenv("HOME", "/tmp/test-home")
 
 		dir, err := getJiraConfigDir()
 		assert.NoError(t, err)
@@ -97,7 +97,9 @@ func TestLoadOAuthSecrets(t *testing.T) {
 		// Create a temporary directory for testing
 		tempDir, err := os.MkdirTemp("", "oauth-test-*")
 		assert.NoError(t, err)
-		defer os.RemoveAll(tempDir)
+		defer func() {
+			_ = os.RemoveAll(tempDir)
+		}()
 
 		// Create test secrets
 		testSecrets := &OAuthSecrets{
@@ -127,7 +129,9 @@ func TestLoadOAuthSecrets(t *testing.T) {
 		// Create a temporary directory without any secrets file
 		tempDir, err := os.MkdirTemp("", "oauth-test-*")
 		assert.NoError(t, err)
-		defer os.RemoveAll(tempDir)
+		defer func() {
+			_ = os.RemoveAll(tempDir)
+		}()
 
 		storage := utils.FileSystemStorage{BaseDir: tempDir}
 		_, err = utils.LoadJSON[OAuthSecrets](storage, oauthSecretsFile)
@@ -159,7 +163,9 @@ func TestGetCloudID(t *testing.T) {
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response)
+			if err := json.NewEncoder(w).Encode(response); err != nil {
+				t.Errorf("Failed to encode response: %v", err)
+			}
 		}))
 		defer server.Close()
 
@@ -185,7 +191,9 @@ func TestGetCloudID(t *testing.T) {
 	t.Run("handles invalid JSON response", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte("invalid json"))
+			if _, err := w.Write([]byte("invalid json")); err != nil {
+				t.Errorf("Failed to write response: %v", err)
+			}
 		}))
 		defer server.Close()
 
@@ -198,7 +206,9 @@ func TestGetCloudID(t *testing.T) {
 	t.Run("handles empty response", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode([]map[string]interface{}{})
+			if err := json.NewEncoder(w).Encode([]map[string]interface{}{}); err != nil {
+				t.Errorf("Failed to encode response: %v", err)
+			}
 		}))
 		defer server.Close()
 
@@ -209,7 +219,7 @@ func TestGetCloudID(t *testing.T) {
 	})
 }
 
-// Helper function to make getCloudID testable
+// getCloudIDFromURL is a helper function to make getCloudID testable.
 func getCloudIDFromURL(url, accessToken string) (string, error) {
 	client := &http.Client{Timeout: 30 * time.Second}
 
@@ -225,7 +235,9 @@ func getCloudIDFromURL(url, accessToken string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("failed to get accessible resources: status %d", resp.StatusCode)
@@ -313,8 +325,12 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 
 		// Start a server on the same port to cause a conflict
 		conflictServer := &http.Server{Addr: defaultPort}
-		go conflictServer.ListenAndServe()
-		defer conflictServer.Close()
+		go func() {
+			_ = conflictServer.ListenAndServe()
+		}()
+		defer func() {
+			_ = conflictServer.Close()
+		}()
 
 		// Wait a bit for the server to start
 		time.Sleep(100 * time.Millisecond)
@@ -327,7 +343,7 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 	})
 }
 
-// Helper function to test OAuth flow with custom timeout
+// performOAuthFlowWithTimeout is a helper function to test OAuth flow with custom timeout.
 func performOAuthFlowWithTimeout(config *OAuthConfig, timeout time.Duration) (*oauth2.Token, error) {
 	oauthConfig := &oauth2.Config{
 		ClientID:     config.ClientID,
@@ -357,7 +373,7 @@ func performOAuthFlowWithTimeout(config *OAuthConfig, timeout time.Duration) (*o
 				}
 
 				w.Header().Set("Content-Type", "text/html")
-				w.Write([]byte(`<html><body><h2>Authorization successful!</h2></body></html>`))
+				_, _ = w.Write([]byte(`<html><body><h2>Authorization successful!</h2></body></html>`))
 				codeChan <- code
 			} else {
 				http.NotFound(w, r)
@@ -375,7 +391,7 @@ func performOAuthFlowWithTimeout(config *OAuthConfig, timeout time.Duration) (*o
 	case code := <-codeChan:
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		server.Shutdown(ctx)
+		_ = server.Shutdown(ctx)
 
 		token, err := oauthConfig.Exchange(context.Background(), code)
 		if err != nil {
@@ -386,13 +402,13 @@ func performOAuthFlowWithTimeout(config *OAuthConfig, timeout time.Duration) (*o
 	case err := <-errChan:
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		server.Shutdown(ctx)
+		_ = server.Shutdown(ctx)
 		return nil, fmt.Errorf("OAuth flow failed: %w", err)
 
 	case <-time.After(timeout):
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		server.Shutdown(ctx)
+		_ = server.Shutdown(ctx)
 		return nil, fmt.Errorf("OAuth flow timed out after %v", timeout)
 	}
 }
@@ -421,7 +437,9 @@ func TestOAuthFlowIntegration(t *testing.T) {
 					"expires_in":    3600,
 				}
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(token)
+				if err := json.NewEncoder(w).Encode(token); err != nil {
+					t.Errorf("Failed to encode response: %v", err)
+				}
 			}
 		}))
 		defer mockOAuthServer.Close()
@@ -500,7 +518,7 @@ func TestOAuthFlowIntegration(t *testing.T) {
 				}
 
 				w.Header().Set("Content-Type", "text/html")
-				w.Write([]byte(`<html><body><h2>Authorization successful!</h2></body></html>`))
+				_, _ = w.Write([]byte(`<html><body><h2>Authorization successful!</h2></body></html>`))
 				codeChan <- code
 			}
 		})
