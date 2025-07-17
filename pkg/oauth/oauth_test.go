@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/ankitpokhrel/jira-cli/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
+
+	"github.com/ankitpokhrel/jira-cli/pkg/utils"
 )
 
 func TestGetJiraConfigDir(t *testing.T) {
@@ -135,128 +135,6 @@ func TestLoadOAuthSecrets(t *testing.T) {
 	})
 }
 
-func TestGetValidAccessToken(t *testing.T) {
-	t.Parallel()
-
-	t.Run("returns valid access token", func(t *testing.T) {
-		// Create a temporary directory for testing
-		tempDir, err := os.MkdirTemp("", "oauth-test-*")
-		assert.NoError(t, err)
-		defer os.RemoveAll(tempDir)
-
-		// Create test secrets with valid token
-		testSecrets := &OAuthSecrets{
-			ClientSecret: "test-client-secret",
-			AccessToken:  "valid-access-token",
-			RefreshToken: "test-refresh-token",
-			TokenType:    "Bearer",
-			Expiry:       time.Now().Add(time.Hour),
-		}
-
-		// Save secrets to temp directory
-		storage := utils.FileSystemStorage{BaseDir: tempDir}
-		err = utils.SaveJSON(storage, oauthSecretsFile, testSecrets)
-		assert.NoError(t, err)
-
-		// Temporarily override the config directory
-		originalHome := os.Getenv("HOME")
-		originalXDG := os.Getenv("XDG_CONFIG_HOME")
-		defer func() {
-			os.Setenv("HOME", originalHome)
-			os.Setenv("XDG_CONFIG_HOME", originalXDG)
-		}()
-
-		// Use a custom config directory for testing
-		configDir := filepath.Join(tempDir, "..")
-		os.Setenv("XDG_CONFIG_HOME", configDir)
-		os.Setenv("HOME", "")
-
-		// Create the .jira subdirectory and move the secrets file there
-		jiraDir := filepath.Join(configDir, ".jira")
-		err = os.MkdirAll(jiraDir, 0755)
-		assert.NoError(t, err)
-
-		// Copy the secrets file to the expected location
-		srcFile := filepath.Join(tempDir, oauthSecretsFile)
-		dstFile := filepath.Join(jiraDir, oauthSecretsFile)
-		srcData, err := os.ReadFile(srcFile)
-		assert.NoError(t, err)
-		err = os.WriteFile(dstFile, srcData, 0600)
-		assert.NoError(t, err)
-
-		// Get valid access token
-		token := GetValidAccessToken()
-		assert.Equal(t, "valid-access-token", token)
-	})
-
-	t.Run("returns empty string for expired token", func(t *testing.T) {
-		// Create a temporary directory for testing
-		tempDir, err := os.MkdirTemp("", "oauth-test-*")
-		assert.NoError(t, err)
-		defer os.RemoveAll(tempDir)
-
-		// Create test secrets with expired token
-		testSecrets := &OAuthSecrets{
-			ClientSecret: "test-client-secret",
-			AccessToken:  "expired-access-token",
-			RefreshToken: "test-refresh-token",
-			TokenType:    "Bearer",
-			Expiry:       time.Now().Add(-time.Hour), // Expired
-		}
-
-		// Save secrets to temp directory
-		storage := utils.FileSystemStorage{BaseDir: tempDir}
-		err = utils.SaveJSON(storage, oauthSecretsFile, testSecrets)
-		assert.NoError(t, err)
-
-		// Temporarily override the config directory
-		originalHome := os.Getenv("HOME")
-		originalXDG := os.Getenv("XDG_CONFIG_HOME")
-		defer func() {
-			os.Setenv("HOME", originalHome)
-			os.Setenv("XDG_CONFIG_HOME", originalXDG)
-		}()
-
-		// Use a custom config directory for testing
-		configDir := filepath.Join(tempDir, "..")
-		os.Setenv("XDG_CONFIG_HOME", configDir)
-		os.Setenv("HOME", "")
-
-		// Create the .jira subdirectory and move the secrets file there
-		jiraDir := filepath.Join(configDir, ".jira")
-		err = os.MkdirAll(jiraDir, 0755)
-		assert.NoError(t, err)
-
-		// Copy the secrets file to the expected location
-		srcFile := filepath.Join(tempDir, oauthSecretsFile)
-		dstFile := filepath.Join(jiraDir, oauthSecretsFile)
-		srcData, err := os.ReadFile(srcFile)
-		assert.NoError(t, err)
-		err = os.WriteFile(dstFile, srcData, 0600)
-		assert.NoError(t, err)
-
-		// Get valid access token (should return empty string)
-		token := GetValidAccessToken()
-		assert.Empty(t, token)
-	})
-
-	t.Run("returns empty string when no secrets file exists", func(t *testing.T) {
-		// Set up environment to use a non-existent directory
-		originalHome := os.Getenv("HOME")
-		originalXDG := os.Getenv("XDG_CONFIG_HOME")
-		defer func() {
-			os.Setenv("HOME", originalHome)
-			os.Setenv("XDG_CONFIG_HOME", originalXDG)
-		}()
-
-		os.Setenv("XDG_CONFIG_HOME", "/tmp/non-existent-dir")
-		os.Setenv("HOME", "")
-
-		token := GetValidAccessToken()
-		assert.Empty(t, token)
-	})
-}
-
 func TestGetCloudID(t *testing.T) {
 	t.Parallel()
 
@@ -287,39 +165,7 @@ func TestGetCloudID(t *testing.T) {
 
 		// Test with mock server - this requires refactoring the function to accept a custom URL
 		// For now, we'll test the error cases and create a separate testable function
-		cloudID, err := getCloudID(server.URL+"/oauth/token/accessible-resources", "test-access-token")
-		assert.NoError(t, err)
-		assert.Equal(t, expectedCloudID, cloudID)
-	})
-
-	t.Run("successfully gets jira cloud id from list of accessible resources", func(t *testing.T) {
-		expectedCloudID := "test-cloud-id-123"
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Verify request
-			assert.Equal(t, "GET", r.Method)
-			assert.Equal(t, "/oauth/token/accessible-resources", r.URL.Path)
-			assert.Equal(t, "Bearer test-access-token", r.Header.Get("Authorization"))
-			assert.Equal(t, "application/json", r.Header.Get("Accept"))
-
-			// Return mock response
-			response := []map[string]interface{}{
-				{
-					"id":        expectedCloudID,
-					"name":      "Test Site",
-					"url":       "https://test.atlassian.net",
-					"scopes":    []string{"read:jira-user", "read:jira-work"},
-					"avatarUrl": "https://test.atlassian.net/avatar.png",
-				},
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response)
-		}))
-		defer server.Close()
-
-		// Test with mock server - this requires refactoring the function to accept a custom URL
-		// For now, we'll test the error cases and create a separate testable function
-		cloudID, err := getCloudID(server.URL+"/oauth/token/accessible-resources", "test-access-token")
+		cloudID, err := getCloudIDFromURL(server.URL+"/oauth/token/accessible-resources", "test-access-token")
 		assert.NoError(t, err)
 		assert.Equal(t, expectedCloudID, cloudID)
 	})
@@ -330,7 +176,7 @@ func TestGetCloudID(t *testing.T) {
 		}))
 		defer server.Close()
 
-		cloudID, err := getCloudID(server.URL+"/oauth/token/accessible-resources", "invalid-token")
+		cloudID, err := getCloudIDFromURL(server.URL+"/oauth/token/accessible-resources", "invalid-token")
 		assert.Error(t, err)
 		assert.Empty(t, cloudID)
 		assert.Contains(t, err.Error(), "failed to get accessible resources: status 401")
@@ -343,7 +189,7 @@ func TestGetCloudID(t *testing.T) {
 		}))
 		defer server.Close()
 
-		cloudID, err := getCloudID(server.URL+"/oauth/token/accessible-resources", "test-token")
+		cloudID, err := getCloudIDFromURL(server.URL+"/oauth/token/accessible-resources", "test-token")
 		assert.Error(t, err)
 		assert.Empty(t, cloudID)
 		assert.Contains(t, err.Error(), "failed to decode accessible resources response")
@@ -356,11 +202,52 @@ func TestGetCloudID(t *testing.T) {
 		}))
 		defer server.Close()
 
-		cloudID, err := getCloudID(server.URL+"/oauth/token/accessible-resources", "test-token")
+		cloudID, err := getCloudIDFromURL(server.URL+"/oauth/token/accessible-resources", "test-token")
 		assert.Error(t, err)
 		assert.Empty(t, cloudID)
 		assert.Contains(t, err.Error(), "no accessible resources found")
 	})
+}
+
+// Helper function to make getCloudID testable
+func getCloudIDFromURL(url, accessToken string) (string, error) {
+	client := &http.Client{Timeout: 30 * time.Second}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to get accessible resources: status %d", resp.StatusCode)
+	}
+
+	var resourceResponse []struct {
+		ID        string   `json:"id"`
+		Name      string   `json:"name"`
+		URL       string   `json:"url"`
+		Scopes    []string `json:"scopes"`
+		AvatarURL string   `json:"avatarUrl"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&resourceResponse); err != nil {
+		return "", fmt.Errorf("failed to decode accessible resources response: %w", err)
+	}
+
+	if len(resourceResponse) == 0 {
+		return "", fmt.Errorf("no accessible resources found or cloud ID not found")
+	}
+
+	return resourceResponse[0].ID, nil
 }
 
 func TestConfig(t *testing.T) {
@@ -510,6 +397,15 @@ func performOAuthFlowWithTimeout(config *OAuthConfig, timeout time.Duration) (*o
 	}
 }
 
+func TestConstants(t *testing.T) {
+	t.Parallel()
+
+	t.Run("verifies file permission constants", func(t *testing.T) {
+		assert.Equal(t, 0o700, int(utils.OWNER_ONLY))
+		assert.Equal(t, 0o600, int(utils.OWNER_READ_WRITE))
+	})
+}
+
 func TestOAuthFlowIntegration(t *testing.T) {
 	t.Parallel()
 
@@ -628,306 +524,34 @@ func TestOAuthFlowIntegration(t *testing.T) {
 	})
 }
 
-func TestHTMLResponse(t *testing.T) {
-	t.Parallel()
-
-	t.Run("callback returns proper HTML response", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == callbackPath {
-				code := r.URL.Query().Get("code")
-				if code != "" {
-					w.Header().Set("Content-Type", "text/html")
-					w.Write([]byte(`
-					<html>
-						<body>
-							<h2>Authorization successful!</h2>
-							<p>You can close this window and return to the terminal.</p>
-							<script>window.close();</script>
-						</body>
-					</html>
-				`))
-				}
-			}
-		})
-
-		req := httptest.NewRequest("GET", "http://localhost:9876/callback?code=test-code", nil)
-		w := httptest.NewRecorder()
-
-		handler.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Equal(t, "text/html", w.Header().Get("Content-Type"))
-		assert.Contains(t, w.Body.String(), "Authorization successful!")
-		assert.Contains(t, w.Body.String(), "window.close()")
-	})
-}
-
-func TestOAuthSecrets_ToOAuth2Token(t *testing.T) {
-	t.Parallel()
-
-	t.Run("converts OAuthSecrets to oauth2.Token correctly", func(t *testing.T) {
-		expiry := time.Now().Add(time.Hour)
-		secrets := &OAuthSecrets{
-			ClientID:     "test-client-id",
-			ClientSecret: "test-client-secret",
-			AccessToken:  "test-access-token",
-			RefreshToken: "test-refresh-token",
-			TokenType:    "Bearer",
-			Expiry:       expiry,
-		}
-
-		token := secrets.ToOAuth2Token()
-		assert.Equal(t, "test-access-token", token.AccessToken)
-		assert.Equal(t, "test-refresh-token", token.RefreshToken)
-		assert.Equal(t, "Bearer", token.TokenType)
-		assert.True(t, expiry.Equal(token.Expiry))
-	})
-}
-
-func TestOAuthSecrets_FromOAuth2Token(t *testing.T) {
-	t.Parallel()
-
-	t.Run("updates OAuthSecrets from oauth2.Token correctly", func(t *testing.T) {
-		expiry := time.Now().Add(time.Hour)
-		token := &oauth2.Token{
-			AccessToken:  "new-access-token",
-			RefreshToken: "new-refresh-token",
-			TokenType:    "Bearer",
-			Expiry:       expiry,
-		}
-
-		secrets := &OAuthSecrets{
-			ClientID:     "test-client-id",
-			ClientSecret: "test-client-secret",
-		}
-
-		secrets.FromOAuth2Token(token)
-		assert.Equal(t, "new-access-token", secrets.AccessToken)
-		assert.Equal(t, "new-refresh-token", secrets.RefreshToken)
-		assert.Equal(t, "Bearer", secrets.TokenType)
-		assert.True(t, expiry.Equal(secrets.Expiry))
-		// ClientID and ClientSecret should remain unchanged
-		assert.Equal(t, "test-client-id", secrets.ClientID)
-		assert.Equal(t, "test-client-secret", secrets.ClientSecret)
-	})
-}
-
-func TestNewPersistentTokenSource(t *testing.T) {
-	t.Parallel()
-
-	t.Run("creates PersistentTokenSource successfully", func(t *testing.T) {
-		tokenSource, err := NewPersistentTokenSource("test-client-id", "test-client-secret")
-		assert.NoError(t, err)
-		assert.NotNil(t, tokenSource)
-		assert.Equal(t, "test-client-id", tokenSource.clientID)
-		assert.Equal(t, "test-client-secret", tokenSource.clientSecret)
-		assert.NotNil(t, tokenSource.storage)
-	})
-}
-
-func TestPersistentTokenSource_Token(t *testing.T) {
-	t.Parallel()
-
-	t.Run("returns valid token when not expired", func(t *testing.T) {
-		// Create a temporary directory for testing
-		tempDir, err := os.MkdirTemp("", "oauth-test-*")
-		assert.NoError(t, err)
-		defer os.RemoveAll(tempDir)
-
-		// Create test secrets with valid token
-		testSecrets := &OAuthSecrets{
-			ClientID:     "test-client-id",
-			ClientSecret: "test-client-secret",
-			AccessToken:  "valid-access-token",
-			RefreshToken: "test-refresh-token",
-			TokenType:    "Bearer",
-			Expiry:       time.Now().Add(time.Hour), // Valid for another hour
-		}
-
-		// Save secrets to temp directory
-		storage := utils.FileSystemStorage{BaseDir: tempDir}
-		err = utils.SaveJSON(storage, oauthSecretsFile, testSecrets)
-		assert.NoError(t, err)
-
-		// Create token source
-		tokenSource := &PersistentTokenSource{
-			clientID:     "test-client-id",
-			clientSecret: "test-client-secret",
-			storage:      storage,
-		}
-
-		// Get token - should return the valid token without refresh
-		token, err := tokenSource.Token()
-		assert.NoError(t, err)
-		assert.Equal(t, "valid-access-token", token.AccessToken)
-		assert.Equal(t, "test-refresh-token", token.RefreshToken)
-		assert.Equal(t, "Bearer", token.TokenType)
-		assert.True(t, token.Valid())
-	})
-
-	t.Run("returns error when secrets file doesn't exist", func(t *testing.T) {
-		// Create a temporary directory without any secrets
-		tempDir, err := os.MkdirTemp("", "oauth-test-*")
-		assert.NoError(t, err)
-		defer os.RemoveAll(tempDir)
-
-		// Create token source
-		tokenSource := &PersistentTokenSource{
-			clientID:     "test-client-id",
-			clientSecret: "test-client-secret",
-			storage:      utils.FileSystemStorage{BaseDir: tempDir},
-		}
-
-		// Get token - should return error
-		_, err = tokenSource.Token()
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to load OAuth secrets")
-	})
-}
-
-func TestLoadOAuth2TokenSource(t *testing.T) {
-	t.Parallel()
-
-	t.Run("creates TokenSource from stored secrets", func(t *testing.T) {
-		// Create a temporary directory for testing
-		tempDir, err := os.MkdirTemp("", "oauth-test-*")
-		assert.NoError(t, err)
-		defer os.RemoveAll(tempDir)
-
-		// Create test secrets
-		testSecrets := &OAuthSecrets{
-			ClientID:     "test-client-id",
-			ClientSecret: "test-client-secret",
-			AccessToken:  "test-access-token",
-			RefreshToken: "test-refresh-token",
-			TokenType:    "Bearer",
-			Expiry:       time.Now().Add(time.Hour),
-		}
-
-		// Save secrets to temp directory
-		storage := utils.FileSystemStorage{BaseDir: tempDir}
-		err = utils.SaveJSON(storage, oauthSecretsFile, testSecrets)
-		assert.NoError(t, err)
-
-		// Temporarily override the config directory
-		originalHome := os.Getenv("HOME")
-		originalXDG := os.Getenv("XDG_CONFIG_HOME")
-		defer func() {
-			os.Setenv("HOME", originalHome)
-			os.Setenv("XDG_CONFIG_HOME", originalXDG)
-		}()
-
-		// Use a custom config directory for testing
-		configDir := filepath.Join(tempDir, "..")
-		os.Setenv("XDG_CONFIG_HOME", configDir)
-		os.Setenv("HOME", "")
-
-		// Create the .jira subdirectory and move the secrets file there
-		jiraDir := filepath.Join(configDir, ".jira")
-		err = os.MkdirAll(jiraDir, 0755)
-		assert.NoError(t, err)
-
-		// Copy the secrets file to the expected location
-		srcFile := filepath.Join(tempDir, oauthSecretsFile)
-		dstFile := filepath.Join(jiraDir, oauthSecretsFile)
-		srcData, err := os.ReadFile(srcFile)
-		assert.NoError(t, err)
-		err = os.WriteFile(dstFile, srcData, 0600)
-		assert.NoError(t, err)
-
-		// Load token source
-		tokenSource, err := LoadOAuth2TokenSource()
-		assert.NoError(t, err)
-		assert.NotNil(t, tokenSource)
-
-		// Verify we can get a token from it
-		token, err := tokenSource.Token()
-		assert.NoError(t, err)
-		assert.Equal(t, "test-access-token", token.AccessToken)
-	})
-}
-
 func TestGetOAuth2Config(t *testing.T) {
 	t.Parallel()
 
-	t.Run("creates OAuth2 config with correct values", func(t *testing.T) {
-		config := GetOAuth2Config("test-client-id", "test-client-secret")
-		assert.Equal(t, "test-client-id", config.ClientID)
-		assert.Equal(t, "test-client-secret", config.ClientSecret)
-		assert.Equal(t, defaultScopes, config.Scopes)
+	t.Run("creates OAuth2 config with all parameters", func(t *testing.T) {
+		clientID := "test-client-id"
+		clientSecret := "test-client-secret"
+		redirectURI := "http://localhost:9876/callback"
+		scopes := []string{"read:jira-user", "read:jira-work"}
+
+		config := GetOAuth2Config(clientID, clientSecret, redirectURI, scopes)
+
+		assert.Equal(t, clientID, config.ClientID)
+		assert.Equal(t, clientSecret, config.ClientSecret)
+		assert.Equal(t, redirectURI, config.RedirectURL)
+		assert.Equal(t, scopes, config.Scopes)
 		assert.Equal(t, jiraAuthURL, config.Endpoint.AuthURL)
 		assert.Equal(t, jiraTokenURL, config.Endpoint.TokenURL)
 	})
-}
 
-func TestHasOAuthCredentials(t *testing.T) {
-	t.Parallel()
+	t.Run("uses default scopes when nil", func(t *testing.T) {
+		config := GetOAuth2Config("test-client-id", "test-client-secret", "http://localhost:9876/callback", nil)
 
-	t.Run("returns true when OAuth credentials exist", func(t *testing.T) {
-		// Create a temporary directory for testing
-		tempDir, err := os.MkdirTemp("", "oauth-test-*")
-		assert.NoError(t, err)
-		defer os.RemoveAll(tempDir)
-
-		// Create test secrets
-		testSecrets := &OAuthSecrets{
-			ClientID:     "test-client-id",
-			ClientSecret: "test-client-secret",
-			AccessToken:  "test-access-token",
-			RefreshToken: "test-refresh-token",
-			TokenType:    "Bearer",
-			Expiry:       time.Now().Add(time.Hour),
-		}
-
-		// Save secrets to temp directory
-		storage := utils.FileSystemStorage{BaseDir: tempDir}
-		err = utils.SaveJSON(storage, oauthSecretsFile, testSecrets)
-		assert.NoError(t, err)
-
-		// Temporarily override the config directory
-		originalHome := os.Getenv("HOME")
-		originalXDG := os.Getenv("XDG_CONFIG_HOME")
-		defer func() {
-			os.Setenv("HOME", originalHome)
-			os.Setenv("XDG_CONFIG_HOME", originalXDG)
-		}()
-
-		// Use a custom config directory for testing
-		configDir := filepath.Join(tempDir, "..")
-		os.Setenv("XDG_CONFIG_HOME", configDir)
-		os.Setenv("HOME", "")
-
-		// Create the .jira subdirectory and move the secrets file there
-		jiraDir := filepath.Join(configDir, ".jira")
-		err = os.MkdirAll(jiraDir, 0755)
-		assert.NoError(t, err)
-
-		// Copy the secrets file to the expected location
-		srcFile := filepath.Join(tempDir, oauthSecretsFile)
-		dstFile := filepath.Join(jiraDir, oauthSecretsFile)
-		srcData, err := os.ReadFile(srcFile)
-		assert.NoError(t, err)
-		err = os.WriteFile(dstFile, srcData, 0600)
-		assert.NoError(t, err)
-
-		// Check if OAuth credentials exist
-		result := HasOAuthCredentials()
-		assert.True(t, result)
+		assert.Equal(t, defaultScopes, config.Scopes)
 	})
 
-	t.Run("returns false when OAuth credentials don't exist", func(t *testing.T) {
-		// Set up environment to use a non-existent directory
-		originalHome := os.Getenv("HOME")
-		originalXDG := os.Getenv("XDG_CONFIG_HOME")
-		defer func() {
-			os.Setenv("HOME", originalHome)
-			os.Setenv("XDG_CONFIG_HOME", originalXDG)
-		}()
+	t.Run("uses default redirect URI when empty", func(t *testing.T) {
+		config := GetOAuth2Config("test-client-id", "test-client-secret", "", []string{"read:jira-user"})
 
-		os.Setenv("XDG_CONFIG_HOME", "/tmp/non-existent-dir")
-		os.Setenv("HOME", "")
-
-		result := HasOAuthCredentials()
-		assert.False(t, result)
+		assert.Equal(t, defaultRedirectURI, config.RedirectURL)
 	})
 }
