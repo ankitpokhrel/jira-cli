@@ -10,8 +10,6 @@ import (
 )
 
 func TestFileSystemStorage(t *testing.T) {
-	t.Parallel()
-
 	t.Run("creates directory and saves file", func(t *testing.T) {
 		// Create temporary directory
 		tempDir := t.TempDir()
@@ -80,8 +78,6 @@ func TestFileSystemStorage(t *testing.T) {
 }
 
 func TestStorageOperations(t *testing.T) {
-	t.Parallel()
-
 	t.Run("storage save and load operations", func(t *testing.T) {
 		storage := &mockStorage{}
 
