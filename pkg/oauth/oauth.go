@@ -101,7 +101,7 @@ func Configure() (*ConfigureTokenResponse, error) {
 	}
 
 	// Perform OAuth flow
-	tokens, err := performOAuthFlow(config)
+	tokens, err := performOAuthFlow(config, oauthTimeout, true)
 	if err != nil {
 		return nil, fmt.Errorf("OAuth flow failed: %w", err)
 	}
@@ -164,30 +164,29 @@ func collectOAuthCredentials() (*OAuthConfig, error) {
 		RedirectURI  string
 	}{}
 
-	questions = append(questions, &survey.Question{
+	q1 := &survey.Question{
 		Name: "clientID",
 		Prompt: &survey.Input{
 			Message: "Jira App Client ID:",
 			Help:    "This is the client ID of your Jira App that you created for OAuth authentication.",
 		},
-	})
-
-	questions = append(questions, &survey.Question{
+	}
+	q2 := &survey.Question{
 		Name: "clientSecret",
 		Prompt: &survey.Password{
 			Message: "Jira App Client Secret:",
 			Help:    "This is the client secret of your Jira App that you created for OAuth authentication.",
 		},
-	})
-
-	questions = append(questions, &survey.Question{
+	}
+	q3 := &survey.Question{
 		Name: "redirectURI",
 		Prompt: &survey.Input{
 			Default: defaultRedirectURI,
 			Message: "Redirect URI:",
 			Help:    "The redirect URL for Jira App. Recommended to set as localhost.",
 		},
-	})
+	}
+	questions = append(questions, q1, q2, q3)
 
 	if err := survey.Ask(questions, &answers, survey.WithValidator(survey.Required)); err != nil {
 		return nil, err
@@ -202,7 +201,7 @@ func collectOAuthCredentials() (*OAuthConfig, error) {
 }
 
 // performOAuthFlow executes the OAuth authorization flow.
-func performOAuthFlow(config *OAuthConfig) (*oauth2.Token, error) {
+func performOAuthFlow(config *OAuthConfig, httpTimeout time.Duration, openBrowser bool) (*oauth2.Token, error) {
 	s := cmdutil.Info("Starting OAuth flow...")
 	defer s.Stop()
 
@@ -256,14 +255,17 @@ func performOAuthFlow(config *OAuthConfig) (*oauth2.Token, error) {
 		}
 	}()
 
-	// Open browser for authorization
-	fmt.Printf("Opening browser for authorization...\n")
-	fmt.Printf("If the browser doesn't open automatically, please visit: %s\n", authURL)
+	if openBrowser {
+		// Open browser for authorization
+		fmt.Printf("Opening browser for authorization...\n")
+		fmt.Printf("If the browser doesn't open automatically, please visit: %s\n", authURL)
 
-	// Try to open browser
-	if err := browser.OpenURL(authURL); err != nil {
-		fmt.Printf("Could not open browser automatically: %v\n", err)
-		fmt.Printf("Please manually visit: %s\n", authURL)
+		// Try to open browser
+		if err := browser.OpenURL(authURL); err != nil {
+			fmt.Printf("Could not open browser automatically: %v\n", err)
+			fmt.Printf("Please manually visit: %s\n", authURL)
+		}
+
 	}
 
 	// Wait for authorization code
@@ -297,7 +299,7 @@ func performOAuthFlow(config *OAuthConfig) (*oauth2.Token, error) {
 		}
 		return nil, fmt.Errorf("OAuth flow failed: %w", err)
 
-	case <-time.After(oauthTimeout):
+	case <-time.After(httpTimeout):
 		// Shutdown server
 		ctx, cancel := context.WithTimeout(context.Background(), serverShutdownTimeout)
 		defer cancel()
@@ -316,7 +318,7 @@ func getCloudID(url string, accessToken string) (string, error) {
 	// Create HTTP client with bearer token
 	client := &http.Client{Timeout: httpClientTimeout}
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", url, http.NoBody)
 	if err != nil {
 		return "", err
 	}

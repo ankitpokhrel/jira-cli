@@ -130,7 +130,7 @@ func (m *mockStorage) Save(key string, value []byte) error {
 	return nil
 }
 
-func (m *mockStorage) Load(key string) ([]byte, error) {
+func (m *mockStorage) Load(_ string) ([]byte, error) {
 	if m.loadError != nil {
 		return nil, m.loadError
 	}
