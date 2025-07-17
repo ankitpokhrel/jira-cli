@@ -38,6 +38,9 @@ const (
 
 	// HTTP client timeout for API calls.
 	httpClientTimeout = 30 * time.Second
+
+	// Read header timeout for API calls.
+	readHeaderTimeout = 3 * time.Second
 )
 
 var defaultScopes = []string{
@@ -217,7 +220,8 @@ func performOAuthFlow(config *OAuthConfig, httpTimeout time.Duration, openBrowse
 	errChan := make(chan error, 1)
 
 	server := &http.Server{
-		Addr: defaultPort,
+		Addr:              defaultPort,
+		ReadHeaderTimeout: readHeaderTimeout,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == callbackPath {
 				code := r.URL.Query().Get("code")

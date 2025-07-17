@@ -332,7 +332,10 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 		}
 
 		// Start a server on the same port to cause a conflict
-		conflictServer := &http.Server{Addr: defaultPort}
+		conflictServer := &http.Server{
+			Addr:              defaultPort,
+			ReadHeaderTimeout: readHeaderTimeout,
+		}
 		go func() {
 			_ = conflictServer.ListenAndServe()
 		}()
