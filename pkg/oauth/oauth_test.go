@@ -1,7 +1,6 @@
 package oauth
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -17,19 +16,17 @@ import (
 )
 
 func TestGetJiraConfigDir(t *testing.T) {
-	t.Parallel()
-
 	// Save original environment
 	originalHome := os.Getenv("HOME")
 	originalXDG := os.Getenv("XDG_CONFIG_HOME")
 	defer func() {
-		_ = os.Setenv("HOME", originalHome)
-		_ = os.Setenv("XDG_CONFIG_HOME", originalXDG)
+		t.Setenv("HOME", originalHome)
+		t.Setenv("XDG_CONFIG_HOME", originalXDG)
 	}()
 
 	t.Run("uses XDG_CONFIG_HOME when set", func(t *testing.T) {
-		_ = os.Setenv("XDG_CONFIG_HOME", "/tmp/test-config")
-		_ = os.Setenv("HOME", "/tmp/test-home")
+		t.Setenv("XDG_CONFIG_HOME", "/tmp/test-config")
+		t.Setenv("HOME", "/tmp/test-home")
 
 		dir, err := getJiraConfigDir()
 		assert.NoError(t, err)
@@ -37,8 +34,8 @@ func TestGetJiraConfigDir(t *testing.T) {
 	})
 
 	t.Run("falls back to HOME/.config when XDG_CONFIG_HOME not set", func(t *testing.T) {
-		_ = os.Unsetenv("XDG_CONFIG_HOME")
-		_ = os.Setenv("HOME", "/tmp/test-home")
+		t.Setenv("XDG_CONFIG_HOME", "")
+		t.Setenv("HOME", "/tmp/test-home")
 
 		dir, err := getJiraConfigDir()
 		assert.NoError(t, err)
@@ -50,6 +47,7 @@ func TestOAuthSecrets(t *testing.T) {
 	t.Parallel()
 
 	t.Run("IsExpired returns true for expired tokens", func(t *testing.T) {
+		t.Parallel()
 		secrets := &OAuthSecrets{
 			AccessToken: "test-token",
 			Expiry:      time.Now().Add(-time.Hour), // Expired 1 hour ago
@@ -58,6 +56,7 @@ func TestOAuthSecrets(t *testing.T) {
 	})
 
 	t.Run("IsExpired returns false for valid tokens", func(t *testing.T) {
+		t.Parallel()
 		secrets := &OAuthSecrets{
 			AccessToken: "test-token",
 			Expiry:      time.Now().Add(time.Hour), // Expires in 1 hour
@@ -66,6 +65,7 @@ func TestOAuthSecrets(t *testing.T) {
 	})
 
 	t.Run("IsValid returns true for valid tokens", func(t *testing.T) {
+		t.Parallel()
 		secrets := &OAuthSecrets{
 			AccessToken: "test-token",
 			Expiry:      time.Now().Add(time.Hour), // Expires in 1 hour
@@ -74,6 +74,7 @@ func TestOAuthSecrets(t *testing.T) {
 	})
 
 	t.Run("IsValid returns false for expired tokens", func(t *testing.T) {
+		t.Parallel()
 		secrets := &OAuthSecrets{
 			AccessToken: "test-token",
 			Expiry:      time.Now().Add(-time.Hour), // Expired 1 hour ago
@@ -82,6 +83,7 @@ func TestOAuthSecrets(t *testing.T) {
 	})
 
 	t.Run("IsValid returns false for empty tokens", func(t *testing.T) {
+		t.Parallel()
 		secrets := &OAuthSecrets{
 			AccessToken: "",
 			Expiry:      time.Now().Add(time.Hour), // Expires in 1 hour
@@ -94,6 +96,7 @@ func TestLoadOAuthSecrets(t *testing.T) {
 	t.Parallel()
 
 	t.Run("loads OAuth secrets successfully", func(t *testing.T) {
+		t.Parallel()
 		// Create a temporary directory for testing
 		tempDir, err := os.MkdirTemp("", "oauth-test-*")
 		assert.NoError(t, err)
@@ -126,6 +129,7 @@ func TestLoadOAuthSecrets(t *testing.T) {
 	})
 
 	t.Run("returns error when secrets file doesn't exist", func(t *testing.T) {
+		t.Parallel()
 		// Create a temporary directory without any secrets file
 		tempDir, err := os.MkdirTemp("", "oauth-test-*")
 		assert.NoError(t, err)
@@ -143,6 +147,7 @@ func TestGetCloudID(t *testing.T) {
 	t.Parallel()
 
 	t.Run("successfully retrieves cloud ID", func(t *testing.T) {
+		t.Parallel()
 		expectedCloudID := "test-cloud-id-123"
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Verify request
@@ -177,7 +182,8 @@ func TestGetCloudID(t *testing.T) {
 	})
 
 	t.Run("handles HTTP error", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Parallel()
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 		}))
 		defer server.Close()
@@ -189,7 +195,8 @@ func TestGetCloudID(t *testing.T) {
 	})
 
 	t.Run("handles invalid JSON response", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Parallel()
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			if _, err := w.Write([]byte("invalid json")); err != nil {
 				t.Errorf("Failed to write response: %v", err)
@@ -204,7 +211,8 @@ func TestGetCloudID(t *testing.T) {
 	})
 
 	t.Run("handles empty response", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Parallel()
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode([]map[string]interface{}{}); err != nil {
 				t.Errorf("Failed to encode response: %v", err)
@@ -223,7 +231,7 @@ func TestGetCloudID(t *testing.T) {
 func getCloudIDFromURL(url, accessToken string) (string, error) {
 	client := &http.Client{Timeout: 30 * time.Second}
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", url, http.NoBody)
 	if err != nil {
 		return "", err
 	}
@@ -266,6 +274,7 @@ func TestConfig(t *testing.T) {
 	t.Parallel()
 
 	t.Run("creates config with all required fields", func(t *testing.T) {
+		t.Parallel()
 		config := &OAuthConfig{
 			ClientID:     "test-client-id",
 			ClientSecret: "test-secret",
@@ -285,6 +294,7 @@ func TestConfigureTokenResponse(t *testing.T) {
 	t.Parallel()
 
 	t.Run("creates token response with all required fields", func(t *testing.T) {
+		t.Parallel()
 		response := &ConfigureTokenResponse{
 			AccessToken:  "test-access-token",
 			RefreshToken: "test-refresh-token",
@@ -298,8 +308,6 @@ func TestConfigureTokenResponse(t *testing.T) {
 }
 
 func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
-	t.Parallel()
-
 	t.Run("handles timeout", func(t *testing.T) {
 		config := &OAuthConfig{
 			ClientID:     "test-client-id",
@@ -309,7 +317,7 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 		}
 
 		// Create a version of performOAuthFlow with a shorter timeout for testing
-		token, err := performOAuthFlowWithTimeout(config, 100*time.Millisecond)
+		token, err := performOAuthFlow(config, 100*time.Millisecond, false)
 		assert.Error(t, err)
 		assert.Nil(t, token)
 		assert.Contains(t, err.Error(), "OAuth flow timed out")
@@ -336,87 +344,18 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 
 		// This should fail due to port conflict
-		token, err := performOAuthFlowWithTimeout(config, 1*time.Second)
+		token, err := performOAuthFlow(config, 1*time.Second, false)
 		// The error might be about port conflict or timeout, both are acceptable
 		assert.Error(t, err)
 		assert.Nil(t, token)
 	})
 }
 
-// performOAuthFlowWithTimeout is a helper function to test OAuth flow with custom timeout.
-func performOAuthFlowWithTimeout(config *OAuthConfig, timeout time.Duration) (*oauth2.Token, error) {
-	oauthConfig := &oauth2.Config{
-		ClientID:     config.ClientID,
-		ClientSecret: config.ClientSecret,
-		RedirectURL:  config.RedirectURI,
-		Scopes:       config.Scopes,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  jiraAuthURL,
-			TokenURL: jiraTokenURL,
-		},
-	}
-
-	verifier := oauth2.GenerateVerifier()
-	_ = oauthConfig.AuthCodeURL(verifier, oauth2.AccessTypeOffline)
-
-	codeChan := make(chan string, 1)
-	errChan := make(chan error, 1)
-
-	server := &http.Server{
-		Addr: defaultPort,
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == callbackPath {
-				code := r.URL.Query().Get("code")
-				if code == "" {
-					errChan <- fmt.Errorf("no authorization code received")
-					return
-				}
-
-				w.Header().Set("Content-Type", "text/html")
-				_, _ = w.Write([]byte(`<html><body><h2>Authorization successful!</h2></body></html>`))
-				codeChan <- code
-			} else {
-				http.NotFound(w, r)
-			}
-		}),
-	}
-
-	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			errChan <- err
-		}
-	}()
-
-	select {
-	case code := <-codeChan:
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		_ = server.Shutdown(ctx)
-
-		token, err := oauthConfig.Exchange(context.Background(), code)
-		if err != nil {
-			return nil, fmt.Errorf("failed to exchange code for token: %w", err)
-		}
-		return token, nil
-
-	case err := <-errChan:
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		_ = server.Shutdown(ctx)
-		return nil, fmt.Errorf("OAuth flow failed: %w", err)
-
-	case <-time.After(timeout):
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		_ = server.Shutdown(ctx)
-		return nil, fmt.Errorf("OAuth flow timed out after %v", timeout)
-	}
-}
-
 func TestConstants(t *testing.T) {
 	t.Parallel()
 
 	t.Run("verifies file permission constants", func(t *testing.T) {
+		t.Parallel()
 		assert.Equal(t, 0o700, int(utils.OWNER_ONLY))
 		assert.Equal(t, 0o600, int(utils.OWNER_READ_WRITE))
 	})
@@ -426,6 +365,7 @@ func TestOAuthFlowIntegration(t *testing.T) {
 	t.Parallel()
 
 	t.Run("handles callback with authorization code", func(t *testing.T) {
+		t.Parallel()
 		// Create a mock OAuth server
 		mockOAuthServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/oauth/token" {
@@ -475,11 +415,12 @@ func TestOAuthFlowIntegration(t *testing.T) {
 	})
 
 	t.Run("handles callback without authorization code", func(t *testing.T) {
+		t.Parallel()
 		// Test callback handler
 		codeChan := make(chan string, 1)
 		errChan := make(chan error, 1)
 
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler := http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == callbackPath {
 				code := r.URL.Query().Get("code")
 				if code == "" {
@@ -491,7 +432,7 @@ func TestOAuthFlowIntegration(t *testing.T) {
 		})
 
 		// Create test request without code
-		req := httptest.NewRequest("GET", "http://localhost:9876/callback", nil)
+		req := httptest.NewRequest("GET", "http://localhost:9876/callback", http.NoBody)
 		w := httptest.NewRecorder()
 
 		handler.ServeHTTP(w, req)
@@ -506,6 +447,7 @@ func TestOAuthFlowIntegration(t *testing.T) {
 	})
 
 	t.Run("handles callback with authorization code", func(t *testing.T) {
+		t.Parallel()
 		codeChan := make(chan string, 1)
 		errChan := make(chan error, 1)
 
@@ -524,7 +466,7 @@ func TestOAuthFlowIntegration(t *testing.T) {
 		})
 
 		// Create test request with code
-		req := httptest.NewRequest("GET", "http://localhost:9876/callback?code=test-auth-code", nil)
+		req := httptest.NewRequest("GET", "http://localhost:9876/callback?code=test-auth-code", http.NoBody)
 		w := httptest.NewRecorder()
 
 		handler.ServeHTTP(w, req)
@@ -542,10 +484,46 @@ func TestOAuthFlowIntegration(t *testing.T) {
 	})
 }
 
+func TestHTMLResponse(t *testing.T) {
+	t.Parallel()
+
+	t.Run("callback returns proper HTML response", func(t *testing.T) {
+		t.Parallel()
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == callbackPath {
+				code := r.URL.Query().Get("code")
+				if code != "" {
+					w.Header().Set("Content-Type", "text/html")
+					_, _ = w.Write([]byte(`
+					<html>
+						<body>
+							<h2>Authorization successful!</h2>
+							<p>You can close this window and return to the terminal.</p>
+							<script>window.close();</script>
+						</body>
+					</html>
+				`))
+				}
+			}
+		})
+
+		req := httptest.NewRequest("GET", "http://localhost:9876/callback?code=test-code", http.NoBody)
+		w := httptest.NewRecorder()
+
+		handler.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, "text/html", w.Header().Get("Content-Type"))
+		assert.Contains(t, w.Body.String(), "Authorization successful!")
+		assert.Contains(t, w.Body.String(), "window.close()")
+	})
+}
+
 func TestGetOAuth2Config(t *testing.T) {
 	t.Parallel()
 
 	t.Run("creates OAuth2 config with all parameters", func(t *testing.T) {
+		t.Parallel()
 		clientID := "test-client-id"
 		clientSecret := "test-client-secret"
 		redirectURI := "http://localhost:9876/callback"
@@ -562,12 +540,14 @@ func TestGetOAuth2Config(t *testing.T) {
 	})
 
 	t.Run("uses default scopes when nil", func(t *testing.T) {
+		t.Parallel()
 		config := GetOAuth2Config("test-client-id", "test-client-secret", "http://localhost:9876/callback", nil)
 
 		assert.Equal(t, defaultScopes, config.Scopes)
 	})
 
 	t.Run("uses default redirect URI when empty", func(t *testing.T) {
+		t.Parallel()
 		config := GetOAuth2Config("test-client-id", "test-client-secret", "", []string{"read:jira-user"})
 
 		assert.Equal(t, defaultRedirectURI, config.RedirectURL)
