@@ -143,20 +143,6 @@ func LoadOAuthSecrets() (*OAuthSecrets, error) {
 	return &secrets, nil
 }
 
-// GetValidAccessToken returns a valid access token if available, otherwise returns empty string
-func GetValidAccessToken() string {
-	secrets, err := LoadOAuthSecrets()
-	if err != nil {
-		return ""
-	}
-
-	if secrets.IsValid() {
-		return secrets.AccessToken
-	}
-
-	return ""
-}
-
 // HasOAuthCredentials checks if OAuth credentials are present
 func HasOAuthCredentials() bool {
 	_, err := LoadOAuthSecrets()

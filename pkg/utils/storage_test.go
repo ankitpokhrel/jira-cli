@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -76,4 +77,62 @@ func TestFileSystemStorage(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to create directory")
 	})
+}
+
+func TestStorageOperations(t *testing.T) {
+	t.Parallel()
+
+	t.Run("storage save and load operations", func(t *testing.T) {
+		storage := &mockStorage{}
+
+		err := storage.Save("test-key", []byte("test-value"))
+		assert.NoError(t, err)
+		assert.Equal(t, "test-key", storage.savedKey)
+		assert.Equal(t, []byte("test-value"), storage.savedValue)
+	})
+
+	t.Run("storage load with error", func(t *testing.T) {
+		storage := &mockStorage{
+			loadError: fmt.Errorf("storage error"),
+		}
+
+		_, err := storage.Load("test-key")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "storage error")
+	})
+
+	t.Run("storage load success", func(t *testing.T) {
+		storage := &mockStorage{
+			loadReturn: []byte("loaded-value"),
+		}
+
+		value, err := storage.Load("test-key")
+		assert.NoError(t, err)
+		assert.Equal(t, []byte("loaded-value"), value)
+	})
+}
+
+// Mock storage for testing
+type mockStorage struct {
+	savedKey   string
+	savedValue []byte
+	loadReturn []byte
+	loadError  error
+	saveError  error
+}
+
+func (m *mockStorage) Save(key string, value []byte) error {
+	if m.saveError != nil {
+		return m.saveError
+	}
+	m.savedKey = key
+	m.savedValue = value
+	return nil
+}
+
+func (m *mockStorage) Load(key string) ([]byte, error) {
+	if m.loadError != nil {
+		return nil, m.loadError
+	}
+	return m.loadReturn, nil
 }
