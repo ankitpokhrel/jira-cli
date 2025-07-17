@@ -22,7 +22,8 @@ type CloudIDResponse struct {
 
 func (c *Client) GetCloudID() (string, error) {
 	res, err := c.request(context.Background(), http.MethodGet, "https://api.atlassian.com/oauth/token/accessible-resources", nil, Header{
-		"Accept": "application/json"})
+		"Accept": "application/json",
+	})
 	if err != nil {
 		return "", err
 	}

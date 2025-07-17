@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// OAuthSecrets holds all OAuth secrets in a single structure
+// OAuthSecrets holds all OAuth secrets in a single structure.
 type OAuthSecrets struct {
 	ClientID     string    `json:"client_id"`
 	ClientSecret string    `json:"client_secret"`
@@ -19,24 +19,24 @@ type OAuthSecrets struct {
 	Expiry       time.Time `json:"expiry"`
 }
 
-// PersistentTokenSource implements oauth2.TokenSource with automatic token persistence
+// PersistentTokenSource implements oauth2.TokenSource with automatic token persistence.
 type PersistentTokenSource struct {
 	clientID     string
 	clientSecret string
 	storage      utils.Storage
 }
 
-// IsExpired checks if the access token is expired
+// IsExpired checks if the access token is expired.
 func (o *OAuthSecrets) IsExpired() bool {
 	return time.Now().After(o.Expiry)
 }
 
-// IsValid checks if the OAuth secrets are valid and not expired
+// IsValid checks if the OAuth secrets are valid and not expired.
 func (o *OAuthSecrets) IsValid() bool {
 	return o.AccessToken != "" && !o.IsExpired()
 }
 
-// ToOAuth2Token converts OAuthSecrets to oauth2.Token
+// ToOAuth2Token converts OAuthSecrets to oauth2.Token.
 func (o *OAuthSecrets) ToOAuth2Token() *oauth2.Token {
 	return &oauth2.Token{
 		AccessToken:  o.AccessToken,
@@ -46,7 +46,7 @@ func (o *OAuthSecrets) ToOAuth2Token() *oauth2.Token {
 	}
 }
 
-// FromOAuth2Token updates OAuthSecrets from oauth2.Token
+// FromOAuth2Token updates OAuthSecrets from oauth2.Token.
 func (o *OAuthSecrets) FromOAuth2Token(token *oauth2.Token) {
 	o.AccessToken = token.AccessToken
 	o.RefreshToken = token.RefreshToken
@@ -54,7 +54,7 @@ func (o *OAuthSecrets) FromOAuth2Token(token *oauth2.Token) {
 	o.Expiry = token.Expiry
 }
 
-// NewPersistentTokenSource creates a new TokenSource that persists tokens
+// NewPersistentTokenSource creates a new TokenSource that persists tokens.
 func NewPersistentTokenSource(clientID, clientSecret string) (*PersistentTokenSource, error) {
 	jiraDir, err := getJiraConfigDir()
 	if err != nil {
@@ -69,7 +69,7 @@ func NewPersistentTokenSource(clientID, clientSecret string) (*PersistentTokenSo
 	}, nil
 }
 
-// Token implements oauth2.TokenSource interface
+// Token implements oauth2.TokenSource interface.
 func (pts *PersistentTokenSource) Token() (*oauth2.Token, error) {
 	// Load current token from storage
 	secrets, err := utils.LoadJSON[OAuthSecrets](pts.storage, oauthSecretsFile)
@@ -110,7 +110,7 @@ func (pts *PersistentTokenSource) Token() (*oauth2.Token, error) {
 	return refreshedToken, nil
 }
 
-// LoadOAuth2TokenSource creates a TokenSource from stored OAuth secrets
+// LoadOAuth2TokenSource creates a TokenSource from stored OAuth secrets.
 func LoadOAuth2TokenSource() (oauth2.TokenSource, error) {
 	// Load OAuth secrets to get client credentials
 	secrets, err := LoadOAuthSecrets()

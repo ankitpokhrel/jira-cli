@@ -67,7 +67,7 @@ func TestFileSystemStorage(t *testing.T) {
 
 		// Create a file where we want to create a directory
 		filePath := filepath.Join(tempDir, "blocking-file")
-		err := os.WriteFile(filePath, []byte("content"), 0644)
+		err := os.WriteFile(filePath, []byte("content"), 0o644)
 		assert.NoError(t, err)
 
 		// Try to create storage with the file as base directory
@@ -112,7 +112,7 @@ func TestStorageOperations(t *testing.T) {
 	})
 }
 
-// Mock storage for testing
+// mockStorage is a mock storage for testing.
 type mockStorage struct {
 	savedKey   string
 	savedValue []byte
