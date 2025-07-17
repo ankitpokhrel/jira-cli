@@ -30,6 +30,7 @@ const (
 	optionBack   = "Go-back"
 	optionNone   = "None"
 	lineBreak    = "----------"
+	apiServer    = "https://api.atlassian.com/ex/jira"
 )
 
 var (
@@ -81,7 +82,9 @@ type JiraCLIConfigGenerator struct {
 	value  struct {
 		installation string
 		server       string
-		version      struct {
+		// API server is the server URL for the Jira API. Should be the same as the server URL if not oAuth.
+		apiServer string
+		version   struct {
 			major, minor, patch int
 		}
 		login        string
@@ -368,10 +371,6 @@ func (c *JiraCLIConfigGenerator) configureOAuth() error {
 func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 	var qs []*survey.Question
 
-	if c.value.authType == jira.AuthTypeOAuth {
-		// Set server URL using the cloud ID from OAuth configuration
-		c.usrCfg.Server = fmt.Sprintf("https://api.atlassian.com/ex/jira/%s", c.value.oauth.cloudId)
-	}
 	c.value.server = c.usrCfg.Server
 	c.value.login = c.usrCfg.Login
 
@@ -469,9 +468,17 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 
 		if ans.Server != "" {
 			c.value.server = strings.TrimSpace(ans.Server)
+
 		}
 		if ans.Login != "" {
 			c.value.login = strings.TrimSpace(ans.Login)
+		}
+
+		if c.value.authType == jira.AuthTypeOAuth {
+			// Set server URL using the cloud ID from OAuth configuration
+			c.value.apiServer = fmt.Sprintf("%s/%s", apiServer, c.value.oauth.cloudId)
+		} else {
+			c.value.apiServer = c.value.server
 		}
 	}
 	// Trim trailing slash from server URL
@@ -480,7 +487,7 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 }
 func (c *JiraCLIConfigGenerator) generateJiraConfig() jira.Config {
 	config := jira.Config{
-		Server:   c.value.server,
+		Server:   c.value.apiServer,
 		Login:    c.value.login,
 		Insecure: &c.usrCfg.Insecure,
 		AuthType: &c.value.authType,
@@ -819,6 +826,7 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 
 	config.Set("installation", c.value.installation)
 	config.Set("server", c.value.server)
+	config.Set("api_server", c.value.apiServer)
 	config.Set("login", c.value.login)
 	config.Set("project", c.value.project)
 	config.Set("epic", c.value.epic)
