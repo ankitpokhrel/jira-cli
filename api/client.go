@@ -21,7 +21,7 @@ var jiraClient *jira.Client
 // 1. Viper configuration
 // 2. OAuth access token (if available and valid)
 // 3. Netrc file
-// 4. Keyring
+// 4. Keyring.
 func getAPIToken(config *jira.Config) string {
 	if config.APIToken != "" {
 		return config.APIToken
