@@ -95,8 +95,7 @@ Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/In
    more [here](https://github.com/ankitpokhrel/jira-cli/discussions/356).
 2. Run `jira init`, select installation type as `Cloud`, and provide required details to generate a config file required
    for the tool.
-3. Run the `jira init`, Select  the `Cloud` installation type and then select the `OAuth` authentication type. This will prompt for your Jira App Client ID and Client Secret. You can learn more about how to create a Jira App [here](link-to-a-discussion)
-
+3. Run the `jira init`, Select the `Cloud` installation type and then select the `OAuth` authentication type. This will prompt for your Jira App Client ID and Client Secret. You can learn more about how to create a Jira App [here](https://github.com/ankitpokhrel/jira-cli/discussions/879#discussion-8604411)
 
 #### On-premise installation
 
@@ -129,7 +128,7 @@ default.
 - If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
 - If you want to use `mtls` run `jira init`. Select installation type `Local`, and then select authentication type as `mtls`.
   - In case `JIRA_API_TOKEN` variable is set it will be used together with `mtls`.
-- If you want to use `oauth` run `jira init`. Select installation type `Cloud`, and then select authentication type as `oauth`. 
+- If you want to use `oauth` run `jira init`. Select installation type `Cloud`, and then select authentication type as `oauth`.
 
 #### Shell completion
 
@@ -857,7 +856,7 @@ Sprint 1:   3
 
 - https://jira.atlassian.com/browse/ECO-283
 - https://community.developer.atlassian.com/t/oauth-2-0-with-proof-key-for-code-exchange-pkce/80173/3
-- The 3LO doesn't support [Proof Key for Code Exchange (PKCE)](https://oauth.net/2/pkce/). Without this support, we would have to share the single distrubuted app's client secret with all the consumers. To avoid the need for globally sharing a client secret, each consumer will need to create a JIRA app to effectively use as a proxy into your Jira cloud instance. 
+- The 3LO doesn't support [Proof Key for Code Exchange (PKCE)](https://oauth.net/2/pkce/). Without this support, we would have to share the single distrubuted app's client secret with all the consumers. To avoid the need for globally sharing a client secret, each consumer will need to create a JIRA app to effectively use as a proxy into your Jira cloud instance.
 
 ## Feature requests
 
