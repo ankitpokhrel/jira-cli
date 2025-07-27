@@ -39,6 +39,12 @@ type IssueList struct {
 
 // Render renders the view.
 func (l *IssueList) Render() error {
+	// Prioritize CSV format when explicitly requested
+	if l.Display.CSV {
+		w := os.Stdout
+		return l.renderCSV(w)
+	}
+
 	if l.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		// custom delimiter is used only in plain mode, otherwise \t is used
 		delimeter := "\t"
@@ -47,11 +53,6 @@ func (l *IssueList) Render() error {
 		}
 		w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
 		return l.renderPlain(w, delimeter)
-	}
-
-	if l.Display.CSV {
-		w := os.Stdout
-		return l.renderCSV(w)
 	}
 
 	renderer, err := MDRenderer()
