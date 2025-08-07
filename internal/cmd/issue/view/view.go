@@ -23,10 +23,11 @@ $ jira issue view ISSUE-1 --comments 5
 # Get the raw JSON data
 $ jira issue view ISSUE-1 --raw`
 
-	flagRaw      = "raw"
-	flagDebug    = "debug"
-	flagComments = "comments"
-	flagPlain    = "plain"
+	flagRaw         = "raw"
+	flagDebug       = "debug"
+	flagComments    = "comments"
+	flagPlain       = "plain"
+	flagUnformatted = "unformatted"
 
 	configProject = "project.key"
 	configServer  = "server"
@@ -52,6 +53,7 @@ func NewCmdView() *cobra.Command {
 	cmd.Flags().Uint(flagComments, 1, "Show N comments")
 	cmd.Flags().Bool(flagPlain, false, "Display output in plain mode")
 	cmd.Flags().Bool(flagRaw, false, "Print raw Jira API response")
+	cmd.Flags().Bool(flagUnformatted, false, "Don't format into MD")
 
 	return &cmd
 }
@@ -110,11 +112,13 @@ func viewPretty(cmd *cobra.Command, args []string) {
 
 	plain, err := cmd.Flags().GetBool(flagPlain)
 	cmdutil.ExitIfError(err)
+	unformatted, err := cmd.Flags().GetBool(flagUnformatted)
+	cmdutil.ExitIfError(err)
 
 	v := tuiView.Issue{
 		Server:  viper.GetString(configServer),
 		Data:    iss,
-		Display: tuiView.DisplayFormat{Plain: plain},
+		Display: tuiView.DisplayFormat{Plain: plain, Unformatted: unformatted},
 		Options: tuiView.IssueOption{NumComments: comments},
 	}
 	cmdutil.ExitIfError(v.Render())
