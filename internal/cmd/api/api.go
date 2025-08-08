@@ -156,7 +156,8 @@ func getCustomFieldsMapping() (map[string]string, error) {
 	return fieldsMap, nil
 }
 
-func runAPI(cmd *cobra.Command, args []string) {
+// prepareAPIRequest prepares the configuration and request payload.
+func prepareAPIRequest(cmd *cobra.Command) (string, string, []byte, bool, bool, bool, error) {
 	// Check if the environment is initialized properly
 	configFile := viper.ConfigFileUsed()
 	if configFile == "" || !jiraConfig.Exists(configFile) {
@@ -169,9 +170,9 @@ func runAPI(cmd *cobra.Command, args []string) {
 	}
 
 	debug, err := cmd.Flags().GetBool("debug")
-	cmdutil.ExitIfError(err)
-
-	endpoint := args[0]
+	if err != nil {
+		return "", "", nil, false, false, false, err
+	}
 
 	method, err := cmd.Flags().GetString("method")
 	cmdutil.ExitIfError(err)
@@ -183,6 +184,9 @@ func runAPI(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	raw, err := cmd.Flags().GetBool("raw")
+	cmdutil.ExitIfError(err)
+
+	translateFields, err := cmd.Flags().GetBool("translate-fields")
 	cmdutil.ExitIfError(err)
 
 	var payload []byte
@@ -201,6 +205,42 @@ func runAPI(cmd *cobra.Command, args []string) {
 			fmt.Printf("Request payload: %s\n", data)
 		}
 	}
+
+	return server, method, payload, raw, debug, translateFields, nil
+}
+
+// processResponseBody formats the response body as needed.
+func processResponseBody(body []byte, raw, translateFields, debug bool) []byte {
+	if raw || len(body) == 0 {
+		return body
+	}
+
+	// Check if the response looks like JSON
+	trimmedBody := strings.TrimSpace(string(body))
+	isJSON := (strings.HasPrefix(trimmedBody, "{") && strings.HasSuffix(trimmedBody, "}")) ||
+		(strings.HasPrefix(trimmedBody, "[") && strings.HasSuffix(trimmedBody, "]"))
+
+	if isJSON {
+		// If we need to translate custom fields, do that before pretty printing
+		if translateFields {
+			body = translateCustomFields(body, debug)
+		}
+
+		var prettyJSON bytes.Buffer
+		err := json.Indent(&prettyJSON, body, "", "  ")
+		if err == nil {
+			body = prettyJSON.Bytes()
+		}
+	}
+
+	return body
+}
+
+func runAPI(cmd *cobra.Command, args []string) {
+	server, method, payload, raw, debug, translateFields, err := prepareAPIRequest(cmd)
+	cmdutil.ExitIfError(err)
+
+	endpoint := args[0]
 
 	// Show a progress spinner during the request
 	s := cmdutil.Info("Sending request to Jira API...")
@@ -233,34 +273,17 @@ func runAPI(cmd *cobra.Command, args []string) {
 		cmdutil.Failed("Request failed: %s", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			cmdutil.Failed("Failed to close response body: %s", err)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	cmdutil.ExitIfError(err)
 
-	translateFields, err := cmd.Flags().GetBool("translate-fields")
-	cmdutil.ExitIfError(err)
-
-	// Try to pretty print JSON if the response appears to be JSON and raw mode is not enabled
-	if !raw && len(body) > 0 {
-		// Check if the response looks like JSON
-		trimmedBody := strings.TrimSpace(string(body))
-		isJSON := (strings.HasPrefix(trimmedBody, "{") && strings.HasSuffix(trimmedBody, "}")) ||
-			(strings.HasPrefix(trimmedBody, "[") && strings.HasSuffix(trimmedBody, "]"))
-
-		if isJSON {
-			// If we need to translate custom fields, do that before pretty printing
-			if translateFields {
-				body = translateCustomFields(body, debug)
-			}
-
-			var prettyJSON bytes.Buffer
-			err = json.Indent(&prettyJSON, body, "", "  ")
-			if err == nil {
-				body = prettyJSON.Bytes()
-			}
-		}
-	}
+	// Process the response body with formatting and translation
+	body = processResponseBody(body, raw, translateFields, debug)
 
 	fmt.Printf("HTTP/%d %s\n", resp.StatusCode, resp.Status)
 
