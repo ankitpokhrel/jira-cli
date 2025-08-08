@@ -244,6 +244,16 @@ func (c *Client) DeleteV2(ctx context.Context, path string, headers Header) (*ht
 	return c.request(ctx, http.MethodDelete, c.server+baseURLv2+path, nil, headers)
 }
 
+// Delete sends DELETE request to v3 version of the jira api.
+func (c *Client) Delete(ctx context.Context, path string, headers Header) (*http.Response, error) {
+	return c.request(ctx, http.MethodDelete, c.server+baseURLv3+path, nil, headers)
+}
+
+// RequestURL sends a request to an absolute URL with the specified method.
+func (c *Client) RequestURL(ctx context.Context, method, url string, body []byte, headers Header) (*http.Response, error) {
+	return c.request(ctx, method, url, body, headers)
+}
+
 func (c *Client) request(ctx context.Context, method, endpoint string, body []byte, headers Header) (*http.Response, error) {
 	var (
 		req *http.Request
