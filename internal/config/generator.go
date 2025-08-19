@@ -380,7 +380,7 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 					if !ok {
 						return errInvalidUser
 					}
-					if len(str) < 3 || len(str) > 254 {
+					if len(str) < 2 || len(str) > 254 {
 						return errInvalidUser
 					}
 
