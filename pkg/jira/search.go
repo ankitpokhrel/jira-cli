@@ -10,29 +10,28 @@ import (
 
 // SearchResult struct holds response from /search endpoint.
 type SearchResult struct {
-	StartAt    int      `json:"startAt"`
-	MaxResults int      `json:"maxResults"`
-	Total      int      `json:"total"`
-	Issues     []*Issue `json:"issues"`
+	IsLast        bool     `json:"isLast"`
+	NextPageToken string   `json:"nextPageToken"`
+	Issues        []*Issue `json:"issues"`
 }
 
 // Search searches for issues using v3 version of the Jira GET /search endpoint.
 func (c *Client) Search(jql string, from, limit uint) (*SearchResult, error) {
-	return c.search(jql, from, limit, apiVersion3)
+	path := fmt.Sprintf("/search/jql?jql=%s&maxResults=%d&fields=*all", url.QueryEscape(jql), limit)
+	return c.search(jql, from, limit, path, apiVersion3)
 }
 
 // SearchV2 searches an issues using v2 version of the Jira GET /search endpoint.
 func (c *Client) SearchV2(jql string, from, limit uint) (*SearchResult, error) {
-	return c.search(jql, from, limit, apiVersion2)
+	path := fmt.Sprintf("/search?jql=%s&startAt=%d&maxResults=%d", url.QueryEscape(jql), from, limit)
+	return c.search(jql, from, limit, path, apiVersion2)
 }
 
-func (c *Client) search(jql string, from, limit uint, ver string) (*SearchResult, error) {
+func (c *Client) search(jql string, from, limit uint, path, ver string) (*SearchResult, error) {
 	var (
 		res *http.Response
 		err error
 	)
-
-	path := fmt.Sprintf("/search?jql=%s&startAt=%d&maxResults=%d", url.QueryEscape(jql), from, limit)
 
 	switch ver {
 	case apiVersion2:
@@ -52,6 +51,9 @@ func (c *Client) search(jql string, from, limit uint, ver string) (*SearchResult
 	if res.StatusCode != http.StatusOK {
 		return nil, formatUnexpectedResponse(res)
 	}
+
+	// b, _ := io.ReadAll(res.Body)
+	// fmt.Println(string(b))
 
 	var out SearchResult
 

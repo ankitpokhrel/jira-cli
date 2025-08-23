@@ -12,7 +12,6 @@ import (
 
 func TestIssueData(t *testing.T) {
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    getIssues(),
@@ -42,7 +41,6 @@ func TestIssueRenderInPlainView(t *testing.T) {
 	var b bytes.Buffer
 
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    getIssues(),
@@ -65,7 +63,6 @@ func TestIssueRenderInPlainViewWithCustomDelimiter(t *testing.T) {
 	var b bytes.Buffer
 
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    getIssues(),
@@ -88,7 +85,6 @@ func TestIssueRenderInPlainViewAndNoTruncate(t *testing.T) {
 	var b bytes.Buffer
 
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    getIssues(),
@@ -111,7 +107,6 @@ func TestIssueRenderInPlainViewWithoutHeaders(t *testing.T) {
 	var b bytes.Buffer
 
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    getIssues(),
@@ -135,7 +130,6 @@ func TestIssueRenderInPlainViewWithFewColumns(t *testing.T) {
 	data := getIssues()
 
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    data,
