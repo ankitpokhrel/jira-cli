@@ -52,7 +52,6 @@ func (c *Client) search(path, ver string) (*SearchResult, error) {
 		return nil, formatUnexpectedResponse(res)
 	}
 
-
 	var out SearchResult
 
 	err = json.NewDecoder(res.Body).Decode(&out)
