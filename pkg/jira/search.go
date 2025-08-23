@@ -52,8 +52,6 @@ func (c *Client) search(path, ver string) (*SearchResult, error) {
 		return nil, formatUnexpectedResponse(res)
 	}
 
-	// b, _ := io.ReadAll(res.Body)
-	// fmt.Println(string(b))
 
 	var out SearchResult
 
