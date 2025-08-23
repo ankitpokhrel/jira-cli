@@ -106,7 +106,7 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 			q.Params().Parent = key
 			q.Params().IssueType = ""
 
-			resp, err = client.Search(q.Get(), q.Params().From, q.Params().Limit)
+			resp, err = client.Search(q.Get(), q.Params().Limit)
 		} else {
 			resp, err = client.EpicIssues(key, q.Get(), q.Params().From, q.Params().Limit)
 		}
@@ -205,7 +205,7 @@ func epicExplorerView(cmd *cobra.Command, flags query.FlagParser, project, proje
 				q.Params().Parent = key
 				q.Params().IssueType = ""
 
-				resp, err = client.Search(q.Get(), q.Params().From, q.Params().Limit)
+				resp, err = client.Search(q.Get(), q.Params().Limit)
 			} else {
 				resp, err = client.EpicIssues(key, "", q.Params().From, q.Params().Limit)
 			}

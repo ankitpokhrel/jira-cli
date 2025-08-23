@@ -16,18 +16,18 @@ type SearchResult struct {
 }
 
 // Search searches for issues using v3 version of the Jira GET /search endpoint.
-func (c *Client) Search(jql string, from, limit uint) (*SearchResult, error) {
+func (c *Client) Search(jql string, limit uint) (*SearchResult, error) {
 	path := fmt.Sprintf("/search/jql?jql=%s&maxResults=%d&fields=*all", url.QueryEscape(jql), limit)
-	return c.search(jql, from, limit, path, apiVersion3)
+	return c.search(path, apiVersion3)
 }
 
 // SearchV2 searches an issues using v2 version of the Jira GET /search endpoint.
 func (c *Client) SearchV2(jql string, from, limit uint) (*SearchResult, error) {
 	path := fmt.Sprintf("/search?jql=%s&startAt=%d&maxResults=%d", url.QueryEscape(jql), from, limit)
-	return c.search(jql, from, limit, path, apiVersion2)
+	return c.search(path, apiVersion2)
 }
 
-func (c *Client) search(jql string, from, limit uint, path, ver string) (*SearchResult, error) {
+func (c *Client) search(path, ver string) (*SearchResult, error) {
 	var (
 		res *http.Response
 		err error

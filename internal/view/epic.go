@@ -70,7 +70,7 @@ func (el *EpicList) data() []tui.PreviewData {
 	data = append(data, tui.PreviewData{
 		Key:  "help",
 		Menu: "?",
-		Contents: func(s string) any {
+		Contents: func(_ string) any {
 			return helpText
 		},
 	})
