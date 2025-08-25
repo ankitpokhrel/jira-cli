@@ -219,9 +219,7 @@ func TestSprintIssues(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected := &SearchResult{
-		StartAt:    0,
-		MaxResults: 50,
-		Total:      3,
+		IsLast: true,
 		Issues: []*Issue{
 			{
 				Key: "TEST-1",
