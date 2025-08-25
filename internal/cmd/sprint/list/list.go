@@ -124,6 +124,9 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 	csv, err := flags.GetBool("csv")
 	cmdutil.ExitIfError(err)
 
+	delimiter, err := flags.GetString("delimiter")
+	cmdutil.ExitIfError(err)
+
 	noHeaders, err := flags.GetBool("no-headers")
 	cmdutil.ExitIfError(err)
 
@@ -168,6 +171,7 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 		},
 		Display: view.DisplayFormat{
 			Plain:        plain,
+			Delimiter:    delimiter,
 			CSV:          csv,
 			NoHeaders:    noHeaders,
 			NoTruncate:   noTruncate,
