@@ -174,7 +174,6 @@ func TestIssueRenderInCSVFormatWithoutHeaders(t *testing.T) {
 	var b bytes.Buffer
 
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    getIssues(),
