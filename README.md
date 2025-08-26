@@ -90,6 +90,23 @@ Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/In
 2. Run `jira init`, select installation type as `Cloud`, and provide required details to generate a config file required
    for the tool.
 
+#### Cloud server without personal access token
+Some tenants has disabled the ability to create personal Jira API tokens. The alternative then is to use the browser session cookie/token `tenant.session.token`. These will last for a day before they expire.
+
+1. Configure your cli by creating the `~/.config/.jira/.config.yml`
+```
+installation: cloud
+server: https://<COMPANY>.atlassian.net
+auth_type: cookie
+```
+
+2. Login to Jira with your browser. View the developer extension and find the cookie value of `tenant.session.token`. Then set then environment variable `JIRA_API_TOKEN` as that value.
+
+```
+export JIRA_API_TOKEN=ey..
+```
+
+
 #### On-premise installation
 
 1. Export required environment variables:
@@ -672,7 +689,7 @@ $ jira sprint add SPRINT_ID ISSUE-1 ISSUE-2
 
 ### Releases
 
-Interact with releases (project versions).  
+Interact with releases (project versions).
 Ensure the [feature is enabled](https://support.atlassian.com/jira-software-cloud/docs/enable-releases-and-versions/) on your instance.
 
 #### List

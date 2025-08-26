@@ -281,6 +281,8 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		}
 	case string(AuthTypeBearer):
 		req.Header.Add("Authorization", "Bearer "+c.token)
+	case string(AuthTypeCookie):
+		req.Header.Add("Cookie", "tenant.session.token="+c.token)
 	case string(AuthTypeBasic):
 		req.SetBasicAuth(c.login, c.token)
 	}
