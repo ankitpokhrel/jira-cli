@@ -109,6 +109,9 @@ func (i Issue) String() string {
 	if len(i.Data.Fields.IssueLinks) > 0 {
 		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s\n", i.separator("Linked Issues"), i.linkedIssues()))
 	}
+	if len(i.Data.Fields.RemoteLinks) > 0 {
+		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s\n", i.separator("External Links"), i.remoteLinks()))
+	}
 	total := i.Data.Fields.Comment.Total
 	if total > 0 && i.Options.NumComments > 0 {
 		sep := fmt.Sprintf("%d Comments", total)
@@ -156,6 +159,17 @@ func (i Issue) fragments() []fragment {
 			fragment{Body: i.separator("Linked Issues")},
 			newBlankFragment(2),
 			fragment{Body: i.linkedIssues()},
+			newBlankFragment(1),
+		)
+	}
+
+	if len(i.Data.Fields.RemoteLinks) > 0 {
+		scraps = append(
+			scraps,
+			newBlankFragment(1),
+			fragment{Body: i.separator("External Links")},
+			newBlankFragment(2),
+			fragment{Body: i.remoteLinks()},
 			newBlankFragment(1),
 		)
 	}
@@ -376,6 +390,40 @@ func (i Issue) linkedIssues() string {
 	}
 
 	return linked.String()
+}
+
+func (i Issue) remoteLinks() string {
+	if len(i.Data.Fields.RemoteLinks) == 0 {
+		return ""
+	}
+
+	var (
+		remote      strings.Builder
+		maxTitleLen int
+		summaryLen  = defaultSummaryLength
+	)
+
+	// Calculate max lengths for formatting
+	for _, link := range i.Data.Fields.RemoteLinks {
+		maxTitleLen = max(len(link.Object.Title), maxTitleLen)
+	}
+
+	if maxTitleLen < summaryLen {
+		summaryLen = maxTitleLen
+	}
+
+	remote.WriteString("\n")
+	for _, link := range i.Data.Fields.RemoteLinks {
+		remote.WriteString(
+			fmt.Sprintf(
+				"  %s\n  %s\n\n",
+				coloredOut(shortenAndPad(link.Object.Title, summaryLen), color.FgCyan, color.Bold),
+				coloredOut(link.Object.URL, color.FgBlue, color.Underline),
+			),
+		)
+	}
+
+	return remote.String()
 }
 
 func (i Issue) comments() []issueComment {
