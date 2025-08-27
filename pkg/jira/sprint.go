@@ -260,6 +260,56 @@ func (c *Client) lastNSprints(boardID int, qp string, limit int) (*SprintResult,
 	return c.Sprints(boardID, qp, n, limit)
 }
 
+// SprintCreateRequest struct holds request data for sprint create request.
+type SprintCreateRequest struct {
+	Name          string `json:"name"`
+	StartDate     string `json:"startDate,omitempty"`
+	EndDate       string `json:"endDate,omitempty"`
+	Goal          string `json:"goal,omitempty"`
+	OriginBoardID int    `json:"originBoardId"`
+}
+
+// SprintCreateResponse struct holds response from POST /sprint endpoint.
+type SprintCreateResponse struct {
+	ID            int    `json:"id"`
+	Name          string `json:"name"`
+	State         string `json:"state"`
+	StartDate     string `json:"startDate"`
+	EndDate       string `json:"endDate"`
+	OriginBoardID int    `json:"originBoardId"`
+	Goal          string `json:"goal"`
+}
+
+func (c *Client) CreateSprint(req *SprintCreateRequest) (*SprintCreateResponse, error) {
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.PostV1(
+		context.Background(),
+		"/sprint",
+		body,
+		Header{
+			"Accept":       "application/json",
+			"Content-Type": "application/json",
+		},
+	)
+	defer func() { _ = res.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, ErrEmptyResponse
+	}
+	if res.StatusCode != http.StatusCreated {
+		return nil, formatUnexpectedResponse(res)
+	}
+	var out SprintCreateResponse
+	err = json.NewDecoder(res.Body).Decode(&out)
+	return &out, err
+}
+
 func injectBoardID(sprints []*Sprint, boardID int) {
 	for _, s := range sprints {
 		s.BoardID = boardID
