@@ -22,7 +22,7 @@ func TestSearch(t *testing.T) {
 		if apiVersion2 {
 			assert.Equal(t, "/rest/api/2/search", r.URL.Path)
 		} else {
-			assert.Equal(t, "/rest/api/3/search", r.URL.Path)
+			assert.Equal(t, "/rest/api/3/search/jql", r.URL.Path)
 		}
 
 		qs := r.URL.Query()
@@ -32,7 +32,7 @@ func TestSearch(t *testing.T) {
 		} else {
 			assert.Equal(t, url.Values{
 				"jql":        []string{"project=TEST AND status=Done ORDER BY created DESC"},
-				"startAt":    []string{"0"},
+				"fields":     []string{"*all"},
 				"maxResults": []string{"100"},
 			}, qs)
 
@@ -48,13 +48,12 @@ func TestSearch(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
-	actual, err := client.Search("project=TEST AND status=Done ORDER BY created DESC", 0, 100)
+	actual, err := client.Search("project=TEST AND status=Done ORDER BY created DESC", 100)
 	assert.NoError(t, err)
 
 	expected := &SearchResult{
-		StartAt:    0,
-		MaxResults: 50,
-		Total:      3,
+		IsLast:        true,
+		NextPageToken: "",
 		Issues: []*Issue{
 			{
 				Key: "TEST-1",
