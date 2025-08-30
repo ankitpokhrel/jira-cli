@@ -5,6 +5,7 @@ import (
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/sprint/add"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/sprint/close"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/sprint/create"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/sprint/list"
 )
 
@@ -24,8 +25,9 @@ func NewCmdSprint() *cobra.Command {
 	lc := list.NewCmdList()
 	ac := add.NewCmdAdd()
 	cc := close.NewCmdClose()
+	crc := create.NewCmdCreate()
 
-	cmd.AddCommand(lc, ac, cc)
+	cmd.AddCommand(lc, ac, cc, crc)
 
 	list.SetFlags(lc)
 

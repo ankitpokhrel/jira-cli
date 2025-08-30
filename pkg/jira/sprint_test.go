@@ -414,3 +414,46 @@ func TestEndSprint(t *testing.T) {
 	err = client.EndSprint(5)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
+
+func TestCreateSrpint(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.NotNilf(t, r.Method, "invalid request method")
+
+		assert.Equal(t, "POST", r.Method)
+		assert.Equal(t, "application/json", r.Header.Get("Accept"))
+		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+		assert.Equal(t, "/rest/agile/1.0/sprint", r.URL.Path)
+
+		resp, err := os.ReadFile("./testdata/sprint-create.json")
+		assert.NoError(t, err)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(201)
+		_, _ = w.Write(resp)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+	createRequestData := SprintCreateRequest{
+		Name:          "Test sprint",
+		StartDate:     "2025-09-01T13:37:00.000+00:00",
+		EndDate:       "2025-09-08T13:37:00.000+00:00",
+		Goal:          "Testing jira-cli",
+		OriginBoardID: 42,
+	}
+
+	expected := &SprintCreateResponse{
+		ID:            42,
+		Name:          "Test sprint",
+		State:         "future",
+		StartDate:     "2025-09-01T13:37:00.000+00:00",
+		EndDate:       "2025-09-08T13:37:00.000+00:00",
+		OriginBoardID: 5,
+		Goal:          "Testing jira-cli",
+	}
+
+	actual, err := client.CreateSprint(&createRequestData)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
+}
