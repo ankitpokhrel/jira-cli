@@ -97,7 +97,6 @@ func TestEpicData(t *testing.T) {
 	}
 
 	epic := EpicList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    []*jira.Issue{&epic1, &epic2},

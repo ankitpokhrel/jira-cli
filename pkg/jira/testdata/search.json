@@ -1,8 +1,6 @@
 {
   "expand": "schema,names",
-  "startAt": 0,
-  "maxResults": 50,
-  "total": 3,
+  "isLast": true,
   "issues": [
     {
       "key": "TEST-1",

@@ -91,13 +91,13 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 	err := flags.Set("type", "") // Unset issue type.
 	cmdutil.ExitIfError(err)
 
-	issues, total, err := func() ([]*jira.Issue, int, error) {
+	issues, err := func() ([]*jira.Issue, error) {
 		s := cmdutil.Info("Fetching epic issues...")
 		defer s.Stop()
 
 		q, err := query.NewIssue(project, flags)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 
 		var resp *jira.SearchResult
@@ -106,25 +106,28 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 			q.Params().Parent = key
 			q.Params().IssueType = ""
 
-			resp, err = client.Search(q.Get(), q.Params().From, q.Params().Limit)
+			resp, err = client.Search(q.Get(), q.Params().Limit)
 		} else {
 			resp, err = client.EpicIssues(key, q.Get(), q.Params().From, q.Params().Limit)
 		}
 
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
-		return resp.Issues, resp.Total, nil
+		return resp.Issues, nil
 	}()
 	cmdutil.ExitIfError(err)
 
-	if total == 0 {
+	if len(issues) == 0 {
 		fmt.Println()
 		cmdutil.Failed("No result found for given query in project %q", project)
 		return
 	}
 
 	plain, err := flags.GetBool("plain")
+	cmdutil.ExitIfError(err)
+
+	delimiter, err := flags.GetString("delimiter")
 	cmdutil.ExitIfError(err)
 
 	csv, err := flags.GetBool("csv")
@@ -145,13 +148,13 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
-		Total:   total,
 		Data:    issues,
 		Refresh: func() {
 			singleEpicView(flags, key, project, projectType, server, client)
 		},
 		Display: view.DisplayFormat{
 			Plain:        plain,
+			Delimiter:    delimiter,
 			CSV:          csv,
 			NoHeaders:    noHeaders,
 			NoTruncate:   noTruncate,
@@ -174,19 +177,19 @@ func epicExplorerView(cmd *cobra.Command, flags query.FlagParser, project, proje
 	q, err := query.NewIssue(project, flags)
 	cmdutil.ExitIfError(err)
 
-	epics, total, err := func() ([]*jira.Issue, int, error) {
+	epics, err := func() ([]*jira.Issue, error) {
 		s := cmdutil.Info("Fetching epics...")
 		defer s.Stop()
 
 		resp, err := api.ProxySearch(client, q.Get(), q.Params().From, q.Params().Limit)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
-		return resp.Issues, resp.Total, nil
+		return resp.Issues, nil
 	}()
 	cmdutil.ExitIfError(err)
 
-	if total == 0 {
+	if len(epics) == 0 {
 		fmt.Println()
 		cmdutil.Failed("No result found for given query in project %q", project)
 		return
@@ -196,7 +199,6 @@ func epicExplorerView(cmd *cobra.Command, flags query.FlagParser, project, proje
 	cmdutil.ExitIfError(err)
 
 	v := view.EpicList{
-		Total:   total,
 		Project: project,
 		Server:  server,
 		Data:    epics,
@@ -207,7 +209,7 @@ func epicExplorerView(cmd *cobra.Command, flags query.FlagParser, project, proje
 				q.Params().Parent = key
 				q.Params().IssueType = ""
 
-				resp, err = client.Search(q.Get(), q.Params().From, q.Params().Limit)
+				resp, err = client.Search(q.Get(), q.Params().Limit)
 			} else {
 				resp, err = client.EpicIssues(key, "", q.Params().From, q.Params().Limit)
 			}
