@@ -249,6 +249,8 @@ func (i Issue) description() string {
 
 	if adfNode, ok := i.Data.Fields.Description.(*adf.ADF); ok {
 		desc = adf.NewTranslator(adfNode, adf.NewMarkdownTranslator()).Translate()
+	} else if i.Display.Unformatted {
+		desc = i.Data.Fields.Description.(string)
 	} else {
 		desc = i.Data.Fields.Description.(string)
 		desc = md.FromJiraMD(desc)
@@ -393,6 +395,8 @@ func (i Issue) comments() []issueComment {
 		var body string
 		if adfNode, ok := c.Body.(*adf.ADF); ok {
 			body = adf.NewTranslator(adfNode, adf.NewMarkdownTranslator()).Translate()
+		} else if i.Display.Unformatted {
+			body = c.Body.(string)
 		} else {
 			body = c.Body.(string)
 			body = md.FromJiraMD(body)
