@@ -15,6 +15,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/oauth"
 )
 
 const (
@@ -29,6 +30,7 @@ const (
 	optionBack   = "Go-back"
 	optionNone   = "None"
 	lineBreak    = "----------"
+	apiServer    = "https://api.atlassian.com/ex/jira"
 )
 
 var (
@@ -80,7 +82,9 @@ type JiraCLIConfigGenerator struct {
 	value  struct {
 		installation string
 		server       string
-		version      struct {
+		// API server is the server URL for the Jira API. Should be the same as the server URL if not oAuth.
+		apiServer string
+		version   struct {
 			major, minor, patch int
 		}
 		login        string
@@ -92,6 +96,11 @@ type JiraCLIConfigGenerator struct {
 		customFields []*issueTypeFieldConf
 		mtls         struct {
 			caCert, clientCert, clientKey string
+		}
+		oauth struct {
+			accessToken  string
+			refreshToken string
+			cloudId      string
 		}
 		timezone string
 	}
@@ -161,6 +170,13 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 		}
 	}
 
+	if c.value.installation == jira.InstallationTypeCloud {
+		// This is to account for OAUTH setup
+		if err := c.configureCloudAuthType(); err != nil {
+			return "", err
+		}
+	}
+	// Overrides the authType if the authType in the config has been set already
 	if c.usrCfg.AuthType != "" {
 		c.value.authType = jira.AuthType(c.usrCfg.AuthType)
 	}
@@ -171,12 +187,18 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 		}
 	}
 
+	if c.value.authType == jira.AuthTypeOAuth {
+		if err := c.configureOAuth(); err != nil {
+			return "", err
+		}
+	}
+
 	if err := c.configureServerAndLoginDetails(); err != nil {
 		return "", err
 	}
 
 	if c.value.installation == jira.InstallationTypeLocal {
-		if err := c.configureServerMeta(c.value.server, c.value.login); err != nil {
+		if err := c.configureServerMeta(); err != nil {
 			return "", err
 		}
 	}
@@ -252,6 +274,35 @@ func (c *JiraCLIConfigGenerator) configureLocalAuthType() error {
 	return nil
 }
 
+func (c *JiraCLIConfigGenerator) configureCloudAuthType() error {
+	authType := c.usrCfg.AuthType
+
+	if c.usrCfg.AuthType == "" {
+		qs := &survey.Select{
+			Message: "Authentication type:",
+			Help: `Authentication type coud be: cloud or oauth 
+? If you are using your login credentials, the auth type is probably 'cloud' (most common for cloud installation)
+? If you are authenticating using oauth 3LO, the auth type is probably 'oauth'`,
+			Options: []string{"cloud", "oauth"},
+			Default: "cloud",
+		}
+		if err := survey.AskOne(qs, &authType); err != nil {
+			return err
+		}
+	}
+
+	switch authType {
+	case jira.AuthTypeOAuth.String():
+		c.value.authType = jira.AuthTypeOAuth
+	case jira.AuthTypeCloud.String():
+		c.value.authType = jira.AuthTypeCloud
+	default:
+		c.value.authType = jira.AuthTypeCloud
+	}
+
+	return nil
+}
+
 func (c *JiraCLIConfigGenerator) configureMTLS() error {
 	var qs []*survey.Question
 
@@ -297,6 +348,21 @@ func (c *JiraCLIConfigGenerator) configureMTLS() error {
 			c.value.mtls.clientKey = ans.ClientKey
 		}
 	}
+
+	return nil
+}
+
+func (c *JiraCLIConfigGenerator) configureOAuth() error {
+	// Use the new OAuth package
+	tokenResponse, err := oauth.Configure()
+	if err != nil {
+		return err
+	}
+
+	// Store the tokens and cloud ID
+	c.value.oauth.accessToken = tokenResponse.AccessToken
+	c.value.oauth.refreshToken = tokenResponse.RefreshToken
+	c.value.oauth.cloudId = tokenResponse.CloudID
 
 	return nil
 }
@@ -406,62 +472,69 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 		if ans.Login != "" {
 			c.value.login = ans.Login
 		}
-	}
 
-	return c.verifyLoginDetails(c.value.server, c.value.login)
+		if c.value.authType == jira.AuthTypeOAuth {
+			// Set server URL using the cloud ID from OAuth configuration
+			c.value.apiServer = fmt.Sprintf("%s/%s", apiServer, c.value.oauth.cloudId)
+		} else {
+			c.value.apiServer = c.value.server
+		}
+	}
+	// Trim trailing slash from server URL
+	c.value.server = strings.TrimRight(c.value.server, "/")
+	return c.verifyLoginDetails()
 }
 
-func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error {
-	s := cmdutil.Info("Verifying login details...")
-	defer s.Stop()
-
-	server = strings.TrimRight(server, "/")
-
-	c.jiraClient = api.Client(jira.Config{
-		Server:   server,
-		Login:    login,
+func (c *JiraCLIConfigGenerator) generateJiraConfig() jira.Config {
+	config := jira.Config{
+		Server:   c.value.apiServer,
+		Login:    c.value.login,
 		Insecure: &c.usrCfg.Insecure,
 		AuthType: &c.value.authType,
 		Debug:    viper.GetBool("debug"),
-		MTLSConfig: jira.MTLSConfig{
+	}
+
+	switch c.value.authType {
+	case jira.AuthTypeOAuth:
+		config.APIToken = c.value.oauth.accessToken
+	case jira.AuthTypeMTLS:
+		config.MTLSConfig = jira.MTLSConfig{
 			CaCert:     c.value.mtls.caCert,
 			ClientCert: c.value.mtls.clientCert,
 			ClientKey:  c.value.mtls.clientKey,
-		},
-	})
+		}
+	}
+	return config
+}
+
+func (c *JiraCLIConfigGenerator) verifyLoginDetails() error {
+	s := cmdutil.Info("Verifying login details...")
+	defer s.Stop()
+	// Configure JIRA client based on auth type
+	config := c.generateJiraConfig()
+	c.jiraClient = api.Client(config)
+
 	ret, err := c.jiraClient.Me()
 	if err != nil {
 		return err
 	}
 	if c.value.authType == jira.AuthTypeBearer {
-		login = ret.Login
+		c.value.login = ret.Login
 	}
 
-	c.value.server = server
-	c.value.login = login
 	c.value.timezone = ret.Timezone
 
 	return nil
 }
 
-func (c *JiraCLIConfigGenerator) configureServerMeta(server, login string) error {
+func (c *JiraCLIConfigGenerator) configureServerMeta() error {
 	s := cmdutil.Info("Fetching server details...")
 	defer s.Stop()
 
-	server = strings.TrimRight(server, "/")
-
-	c.jiraClient = api.Client(jira.Config{
-		Server:   server,
-		Login:    login,
-		Insecure: &c.usrCfg.Insecure,
-		AuthType: &c.value.authType,
-		Debug:    viper.GetBool("debug"),
-		MTLSConfig: jira.MTLSConfig{
-			CaCert:     c.value.mtls.caCert,
-			ClientCert: c.value.mtls.clientCert,
-			ClientKey:  c.value.mtls.clientKey,
-		},
-	})
+	if c.jiraClient != nil {
+		config := c.generateJiraConfig()
+		c.jiraClient = api.Client(config)
+	}
 	info, err := c.jiraClient.ServerInfo()
 	if err != nil {
 		return err
@@ -753,6 +826,7 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 
 	config.Set("installation", c.value.installation)
 	config.Set("server", c.value.server)
+	config.Set("api_server", c.value.apiServer)
 	config.Set("login", c.value.login)
 	config.Set("project", c.value.project)
 	config.Set("epic", c.value.epic)
@@ -773,6 +847,10 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 		config.Set("version.major", c.value.version.major)
 		config.Set("version.minor", c.value.version.minor)
 		config.Set("version.patch", c.value.version.patch)
+	}
+
+	if c.value.authType == jira.AuthTypeOAuth {
+		config.Set("oauth.cloud_id", c.value.oauth.cloudId)
 	}
 
 	if c.value.board != nil {
