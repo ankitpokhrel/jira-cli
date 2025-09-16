@@ -72,7 +72,7 @@ func SetFlags(cmd *cobra.Command) {
 func sprintList(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
-	boardID := viper.GetInt("board.id")
+	boardID := getBoardID(cmd)
 
 	debug, err := cmd.Flags().GetBool("debug")
 	cmdutil.ExitIfError(err)
@@ -203,6 +203,8 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 		return
 	}
 
+	boardName := getBoardName(client, boardID)
+
 	if sprintQuery.Params().Current || sprintQuery.Params().Prev || sprintQuery.Params().Next {
 		sprint := sprints[0]
 		if sprintQuery.Params().Next {
@@ -226,7 +228,7 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 
 	v := view.SprintList{
 		Project: project,
-		Board:   viper.GetString("board.name"),
+		Board:   boardName,
 		Server:  server,
 		Data:    sprints,
 		Issues: func(boardID, sprintID int) []*jira.Issue {
@@ -277,6 +279,7 @@ func getIssueQuery(project string, flags query.FlagParser, showAll bool) (string
 }
 
 func setFlags(cmd *cobra.Command) {
+	cmd.Flags().String("board", "", "Board ID to use (overrides board.id from config)")
 	cmd.Flags().String("state", "", "Filter sprint by its state (comma separated).\n"+
 		"Valid values are future, active and closed.\n"+
 		`Defaults to "active,closed"`)
@@ -289,6 +292,32 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("current", false, "List issues in current active sprint")
 	cmd.Flags().Bool("prev", false, "List issues in previous sprint")
 	cmd.Flags().Bool("next", false, "List issues in next planned sprint")
+}
+
+func getBoardID(cmd *cobra.Command) int {
+	boardFlag, err := cmd.Flags().GetString("board")
+	cmdutil.ExitIfError(err)
+
+	if boardFlag != "" {
+		boardID, err := strconv.Atoi(boardFlag)
+		cmdutil.ExitIfError(err)
+		return boardID
+	}
+
+	return viper.GetInt("board.id")
+}
+
+func getBoardName(client *jira.Client, boardID int) string {
+	if boardID == 0 {
+		return viper.GetString("board.name")
+	}
+
+	board, err := client.BoardByID(boardID)
+	if err != nil {
+		return viper.GetString("board.name")
+	}
+
+	return board.Name
 }
 
 func hideFlags(cmd *cobra.Command) {
