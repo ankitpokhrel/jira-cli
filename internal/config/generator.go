@@ -229,10 +229,11 @@ func (c *JiraCLIConfigGenerator) configureLocalAuthType() error {
 	if c.usrCfg.AuthType == "" {
 		qs := &survey.Select{
 			Message: "Authentication type:",
-			Help: `Authentication type coud be: basic (login), bearer (PAT) or mtls (client certs)
+			Help: `Authentication type could be: basic (login), cookie (browser session), bearer (PAT) or mtls (client certs)
 ? If you are using your login credentials, the auth type is probably 'basic' (most common for local installation)
+? If you are using a browser session cookie, choose 'cookie'
 ? If you are using a personal access token, the auth type is probably 'bearer'`,
-			Options: []string{"basic", "bearer", "mtls"},
+			Options: []string{"basic", "cookie", "bearer", "mtls"},
 			Default: "basic",
 		}
 		if err := survey.AskOne(qs, &authType); err != nil {
