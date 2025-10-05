@@ -215,7 +215,16 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 	plain, err := flags.GetBool("plain")
 	cmdutil.ExitIfError(err)
 
+	csv, err := flags.GetBool("csv")
+	cmdutil.ExitIfError(err)
+
+	delimiter, err := flags.GetString("delimiter")
+	cmdutil.ExitIfError(err)
+
 	noHeaders, err := flags.GetBool("no-headers")
+	cmdutil.ExitIfError(err)
+
+	noTruncate, err := flags.GetBool("no-truncate")
 	cmdutil.ExitIfError(err)
 
 	fixedColumns, err := flags.GetUint("fixed-columns")
@@ -242,7 +251,10 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 		},
 		Display: view.DisplayFormat{
 			Plain:        plain,
+			Delimiter:    delimiter,
+			CSV:          csv,
 			NoHeaders:    noHeaders,
+			NoTruncate:   noTruncate,
 			FixedColumns: fixedColumns,
 			Columns: func() []string {
 				if columns != "" {
