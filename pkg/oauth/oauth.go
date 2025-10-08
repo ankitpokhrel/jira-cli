@@ -51,6 +51,7 @@ var defaultScopes = []string{
 	"read:sprint:jira-software",
 	"read:issue-details:jira",
 	"read:jql:jira",
+	"write:sprint:jira-software",
 	"write:jira-work",
 	"offline_access", // This is required to get the refresh token from JIRA
 }
