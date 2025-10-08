@@ -48,6 +48,9 @@ var defaultScopes = []string{
 	"read:jira-work",
 	"read:board-scope:jira-software",
 	"read:project:jira",
+	"read:sprint:jira-software",
+	"read:issue-details:jira",
+	"read:jql:jira",
 	"write:jira-work",
 	"offline_access", // This is required to get the refresh token from JIRA
 }
