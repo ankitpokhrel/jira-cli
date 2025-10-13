@@ -34,7 +34,7 @@ func getAPIToken(config *jira.Config) string {
 
 	// Try OAuth access token if available and valid
 	// And should only do this assertion if the AuthType is oauth
-	var isAuthTypeOAuth = config.AuthType != nil && *config.AuthType == jira.AuthTypeOAuth
+	isAuthTypeOAuth := config.AuthType != nil && *config.AuthType == jira.AuthTypeOAuth
 	if isAuthTypeOAuth && oauth.HasOAuthCredentials() {
 		tk, _ := oauth.LoadOAuth2TokenSource()
 		token, _ := tk.Token()
