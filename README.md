@@ -856,7 +856,7 @@ Sprint 1:   3
 
 - https://jira.atlassian.com/browse/ECO-283
 - https://community.developer.atlassian.com/t/oauth-2-0-with-proof-key-for-code-exchange-pkce/80173/3
-- The 3LO doesn't support [Proof Key for Code Exchange (PKCE)](https://oauth.net/2/pkce/). Without this support, we would have to share the single distrubuted app's client secret with all the consumers. To avoid the need for globally sharing a client secret, each consumer will need to create a JIRA app to effectively use as a proxy into your Jira cloud instance.
+- The 3LO doesn't support [Proof Key for Code Exchange (PKCE)](https://oauth.net/2/pkce/). Without this support, we would have to share the single distributed app's client secret with all the consumers. To avoid the need for globally sharing a client secret, each consumer will need to create a JIRA app to effectively use as a proxy into your Jira cloud instance.
 
 ## Feature requests
 

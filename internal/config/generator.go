@@ -280,7 +280,7 @@ func (c *JiraCLIConfigGenerator) configureCloudAuthType() error {
 	if c.usrCfg.AuthType == "" {
 		qs := &survey.Select{
 			Message: "Authentication type:",
-			Help: `Authentication type coud be: cloud or oauth 
+			Help: `Authentication type could be: cloud or oauth 
 ? If you are using your login credentials, the auth type is probably 'cloud' (most common for cloud installation)
 ? If you are authenticating using oauth 3LO, the auth type is probably 'oauth'`,
 			Options: []string{"cloud", "oauth"},
