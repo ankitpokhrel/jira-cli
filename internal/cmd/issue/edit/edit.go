@@ -95,8 +95,15 @@ func edit(cmd *cobra.Command, args []string) {
 
 	cmdutil.ExitIfError(ec.askQuestions(issue, originalBody))
 
-	if !params.noInput {
+	if cmdutil.ShouldPrompt(params.noInput) {
 		getAnswers(params, issue)
+	}
+
+	// Validate that at least one field was provided in no-input mode
+	if cmdutil.IsNoInputMode() {
+		if hasNoChanges(params, originalBody) {
+			cmdutil.Failed("No editable fields provided. Use flags like -s, -b, -l, -C, -y, etc. to specify changes")
+		}
 	}
 
 	// Use stdin only if nothing is passed to --body
@@ -246,13 +253,27 @@ func handleUserAssign(project, key, assignee string, client *jira.Client) {
 	}
 }
 
+// hasNoChanges checks if any editable fields were provided in the params.
+func hasNoChanges(params *editParams, originalBody string) bool {
+	return params.summary == "" &&
+		params.body == "" &&
+		params.priority == "" &&
+		len(params.labels) == 0 &&
+		len(params.components) == 0 &&
+		len(params.fixVersions) == 0 &&
+		len(params.affectsVersions) == 0 &&
+		len(params.customFields) == 0 &&
+		params.parentIssueKey == "" &&
+		params.assignee == ""
+}
+
 type editCmd struct {
 	client *jira.Client
 	params *editParams
 }
 
 func (ec *editCmd) askQuestions(issue *jira.Issue, originalBody string) error {
-	if ec.params.noInput {
+	if !cmdutil.ShouldPrompt(ec.params.noInput) {
 		return nil
 	}
 

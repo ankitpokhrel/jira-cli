@@ -101,6 +101,10 @@ func (mc *deleteCmd) setIssueKey(project string) error {
 		return nil
 	}
 
+	if cmdutil.IsNoInputMode() {
+		return fmt.Errorf("issue key is required in non-interactive mode")
+	}
+
 	var ans string
 
 	qs := &survey.Question{
