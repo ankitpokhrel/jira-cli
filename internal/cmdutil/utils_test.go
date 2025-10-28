@@ -388,10 +388,10 @@ func TestNoInputConfigurationMethods(t *testing.T) {
 				viper.Reset()
 				viper.AutomaticEnv()
 				viper.SetEnvPrefix("jira")
-				os.Setenv("JIRA_NO_INPUT", "true")
+				_ = os.Setenv("JIRA_NO_INPUT", "true")
 			},
 			cleanup: func() {
-				os.Unsetenv("JIRA_NO_INPUT")
+				_ = os.Unsetenv("JIRA_NO_INPUT")
 				viper.Reset()
 			},
 			expected: true,
@@ -402,10 +402,10 @@ func TestNoInputConfigurationMethods(t *testing.T) {
 				viper.Reset()
 				viper.AutomaticEnv()
 				viper.SetEnvPrefix("jira")
-				os.Setenv("JIRA_NO_INPUT", "false")
+				_ = os.Setenv("JIRA_NO_INPUT", "false")
 			},
 			cleanup: func() {
-				os.Unsetenv("JIRA_NO_INPUT")
+				_ = os.Unsetenv("JIRA_NO_INPUT")
 				viper.Reset()
 			},
 			expected: false,
@@ -416,7 +416,7 @@ func TestNoInputConfigurationMethods(t *testing.T) {
 				viper.Reset()
 				viper.AutomaticEnv()
 				viper.SetEnvPrefix("jira")
-				os.Unsetenv("JIRA_NO_INPUT")
+				_ = os.Unsetenv("JIRA_NO_INPUT")
 				viper.Set("no_input", true)
 			},
 			cleanup: func() {

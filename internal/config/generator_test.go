@@ -113,10 +113,10 @@ func TestConfigureInstallationTypeNoInput(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		name              string
-		setup             func()
-		expectError       bool
-		expectedErrorMsg  string
+		name             string
+		setup            func()
+		expectError      bool
+		expectedErrorMsg string
 	}{
 		{
 			name: "returns error when no_input mode is enabled and installation type not provided",
