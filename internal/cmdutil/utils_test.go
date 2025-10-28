@@ -363,64 +363,47 @@ func TestShouldPrompt(t *testing.T) {
 }
 
 func TestNoInputConfigurationMethods(t *testing.T) {
-	t.Parallel()
-
 	cases := []struct {
 		name     string
-		setup    func()
-		cleanup  func()
+		setup    func(t *testing.T)
 		expected bool
 	}{
 		{
 			name: "reads no_input from viper.Set (config file simulation)",
-			setup: func() {
+			setup: func(t *testing.T) {
 				viper.Reset()
 				viper.Set("no_input", true)
-			},
-			cleanup: func() {
-				viper.Reset()
 			},
 			expected: true,
 		},
 		{
 			name: "reads no_input from environment variable",
-			setup: func() {
+			setup: func(t *testing.T) {
 				viper.Reset()
 				viper.AutomaticEnv()
 				viper.SetEnvPrefix("jira")
-				_ = os.Setenv("JIRA_NO_INPUT", "true")
-			},
-			cleanup: func() {
-				_ = os.Unsetenv("JIRA_NO_INPUT")
-				viper.Reset()
+				t.Setenv("JIRA_NO_INPUT", "true")
 			},
 			expected: true,
 		},
 		{
 			name: "environment variable false is respected",
-			setup: func() {
+			setup: func(t *testing.T) {
 				viper.Reset()
 				viper.AutomaticEnv()
 				viper.SetEnvPrefix("jira")
-				_ = os.Setenv("JIRA_NO_INPUT", "false")
-			},
-			cleanup: func() {
-				_ = os.Unsetenv("JIRA_NO_INPUT")
-				viper.Reset()
+				t.Setenv("JIRA_NO_INPUT", "false")
 			},
 			expected: false,
 		},
 		{
 			name: "prefers viper.Set over unset environment variable",
-			setup: func() {
+			setup: func(t *testing.T) {
 				viper.Reset()
 				viper.AutomaticEnv()
 				viper.SetEnvPrefix("jira")
-				_ = os.Unsetenv("JIRA_NO_INPUT")
+				t.Setenv("JIRA_NO_INPUT", "")
 				viper.Set("no_input", true)
-			},
-			cleanup: func() {
-				viper.Reset()
 			},
 			expected: true,
 		},
@@ -428,9 +411,7 @@ func TestNoInputConfigurationMethods(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			tc.setup()
-			defer tc.cleanup()
+			tc.setup(t)
 
 			result := IsNoInputMode()
 			assert.Equal(t, tc.expected, result)

@@ -101,7 +101,7 @@ func edit(cmd *cobra.Command, args []string) {
 
 	// Validate that at least one field was provided in no-input mode
 	if cmdutil.IsNoInputMode() {
-		if hasNoChanges(params) {
+		if params.hasNoChanges() {
 			cmdutil.Failed("No editable fields provided. Use flags like -s, -b, -l, -C, -y, etc. to specify changes")
 		}
 	}
@@ -253,8 +253,8 @@ func handleUserAssign(project, key, assignee string, client *jira.Client) {
 	}
 }
 
-// hasNoChanges checks if any editable fields were provided in the params.
-func hasNoChanges(params *editParams) bool {
+// hasNoChanges checks if any editable fields were provided.
+func (params *editParams) hasNoChanges() bool {
 	return params.summary == "" &&
 		params.body == "" &&
 		params.priority == "" &&
