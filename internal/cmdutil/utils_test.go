@@ -267,8 +267,6 @@ func TestGetSubtaskHandle(t *testing.T) {
 }
 
 func TestIsNoInputMode(t *testing.T) {
-	t.Parallel()
-
 	cases := []struct {
 		name     string
 		setup    func()
@@ -300,11 +298,7 @@ func TestIsNoInputMode(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
 			tc.setup()
 			assert.Equal(t, tc.expected, IsNoInputMode())
 		})
@@ -312,8 +306,6 @@ func TestIsNoInputMode(t *testing.T) {
 }
 
 func TestShouldPrompt(t *testing.T) {
-	t.Parallel()
-
 	cases := []struct {
 		name          string
 		localNoInput  bool
@@ -347,11 +339,7 @@ func TestShouldPrompt(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
 			viper.Reset()
 			if tc.globalNoInput {
 				viper.Set("no_input", true)

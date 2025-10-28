@@ -72,8 +72,6 @@ func TestCreate(t *testing.T) {
 }
 
 func TestShallOverwrite(t *testing.T) {
-	t.Parallel()
-
 	cases := []struct {
 		name     string
 		setup    func()
@@ -99,7 +97,6 @@ func TestShallOverwrite(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
 			tc.setup()
 			defer viper.Reset()
 
@@ -110,8 +107,6 @@ func TestShallOverwrite(t *testing.T) {
 }
 
 func TestConfigureInstallationTypeNoInput(t *testing.T) {
-	t.Parallel()
-
 	cases := []struct {
 		name             string
 		setup            func()
@@ -139,7 +134,6 @@ func TestConfigureInstallationTypeNoInput(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
 			tc.setup()
 			defer viper.Reset()
 
