@@ -458,6 +458,27 @@ func (c *Client) UpdateIssueWorklog(key, worklogID, started, timeSpent, comment 
 	return nil
 }
 
+// DeleteIssueWorklog deletes a worklog using DELETE /issue/{key}/worklog/{worklogID} endpoint.
+func (c *Client) DeleteIssueWorklog(key, worklogID string) error {
+	path := fmt.Sprintf("/issue/%s/worklog/%s", key, worklogID)
+	
+	res, err := c.DeleteV2(context.Background(), path, Header{
+		"Accept": "application/json",
+	})
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusNoContent {
+		return formatUnexpectedResponse(res)
+	}
+	return nil
+}
+
 // GetField gets all fields configured for a Jira instance using GET /field endpiont.
 func (c *Client) GetField() ([]*Field, error) {
 	res, err := c.GetV2(context.Background(), "/field", Header{

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/worklog/add"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/worklog/delete"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/worklog/edit"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/worklog/list"
 )
@@ -21,6 +22,7 @@ func NewCmdWorklog() *cobra.Command {
 	}
 
 	cmd.AddCommand(add.NewCmdWorklogAdd())
+	cmd.AddCommand(delete.NewCmdWorklogDelete())
 	cmd.AddCommand(edit.NewCmdWorklogEdit())
 	cmd.AddCommand(list.NewCmdWorklogList())
 

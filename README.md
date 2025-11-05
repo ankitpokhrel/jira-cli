@@ -589,6 +589,24 @@ $ jira issue worklog edit ISSUE-1 10001 "2h" \
 $ jira issue worklog update ISSUE-1 10001 "4h"
 ```
 
+##### Delete
+The `delete` command removes a worklog from an issue. By default, it asks for confirmation before deleting.
+
+```sh
+# Delete a worklog interactively (select from list)
+$ jira issue worklog delete ISSUE-1
+
+# Delete a specific worklog with confirmation
+$ jira issue worklog delete ISSUE-1 10001
+
+# Delete without confirmation prompt (use with caution)
+$ jira issue worklog delete ISSUE-1 10001 --force
+
+# Using the aliases
+$ jira issue worklog remove ISSUE-1 10001
+$ jira issue worklog rm ISSUE-1 10001 -f
+```
+
 ### Epic
 Epics are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing epic issues, you can use all filters available for the issue command.
