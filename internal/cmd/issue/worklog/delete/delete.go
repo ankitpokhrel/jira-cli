@@ -39,7 +39,7 @@ func NewCmdWorklogDelete() *cobra.Command {
 			"help:args": "ISSUE-KEY\tIssue key of the source issue, eg: ISSUE-1\n" +
 				"WORKLOG-ID\tID of the worklog to delete (optional, will prompt to select if not provided)",
 		},
-		Run: delete,
+		Run: deleteWorklog,
 	}
 
 	cmd.Flags().SortFlags = false
@@ -49,7 +49,7 @@ func NewCmdWorklogDelete() *cobra.Command {
 	return &cmd
 }
 
-func delete(cmd *cobra.Command, args []string) {
+func deleteWorklog(cmd *cobra.Command, args []string) {
 	params := parseArgsAndFlags(args, cmd.Flags())
 	client := api.DefaultClient(params.debug)
 	dc := deleteCmd{
