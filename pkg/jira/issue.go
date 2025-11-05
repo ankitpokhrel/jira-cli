@@ -425,6 +425,39 @@ func (c *Client) AddIssueWorklog(key, started, timeSpent, comment, newEstimate s
 	return nil
 }
 
+// UpdateIssueWorklog updates a worklog using PUT /issue/{key}/worklog/{worklogID} endpoint.
+func (c *Client) UpdateIssueWorklog(key, worklogID, started, timeSpent, comment string) error {
+	worklogReq := issueWorklogRequest{
+		TimeSpent: timeSpent,
+		Comment:   md.ToJiraMD(comment),
+	}
+	if started != "" {
+		worklogReq.Started = started
+	}
+	body, err := json.Marshal(&worklogReq)
+	if err != nil {
+		return err
+	}
+
+	path := fmt.Sprintf("/issue/%s/worklog/%s", key, worklogID)
+	res, err := c.PutV2(context.Background(), path, body, Header{
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	})
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusOK {
+		return formatUnexpectedResponse(res)
+	}
+	return nil
+}
+
 // GetField gets all fields configured for a Jira instance using GET /field endpiont.
 func (c *Client) GetField() ([]*Field, error) {
 	res, err := c.GetV2(context.Background(), "/field", Header{
