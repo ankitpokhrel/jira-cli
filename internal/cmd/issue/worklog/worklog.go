@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/worklog/add"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/worklog/list"
 )
 
 const helpText = `Worklog command helps you manage issue worklogs. See available commands below.`
@@ -19,6 +20,7 @@ func NewCmdWorklog() *cobra.Command {
 	}
 
 	cmd.AddCommand(add.NewCmdWorklogAdd())
+	cmd.AddCommand(list.NewCmdWorklogList())
 
 	return &cmd
 }

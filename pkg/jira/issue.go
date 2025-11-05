@@ -341,6 +341,53 @@ type issueWorklogRequest struct {
 	Comment   string `json:"comment"`
 }
 
+// Worklog holds worklog info.
+type Worklog struct {
+	ID               string      `json:"id"`
+	IssueID          string      `json:"issueId"`
+	Author           User        `json:"author"`
+	UpdateAuthor     User        `json:"updateAuthor"`
+	Comment          interface{} `json:"comment"` // string in v1/v2, adf.ADF in v3
+	Created          string      `json:"created"`
+	Updated          string      `json:"updated"`
+	Started          string      `json:"started"`
+	TimeSpent        string      `json:"timeSpent"`
+	TimeSpentSeconds int         `json:"timeSpentSeconds"`
+}
+
+// WorklogResponse holds response from GET /issue/{key}/worklog endpoint.
+type WorklogResponse struct {
+	StartAt    int        `json:"startAt"`
+	MaxResults int        `json:"maxResults"`
+	Total      int        `json:"total"`
+	Worklogs   []Worklog  `json:"worklogs"`
+}
+
+// GetIssueWorklogs fetches worklogs for an issue using GET /issue/{key}/worklog endpoint.
+func (c *Client) GetIssueWorklogs(key string) (*WorklogResponse, error) {
+	path := fmt.Sprintf("/issue/%s/worklog", key)
+	
+	res, err := c.GetV2(context.Background(), path, Header{
+		"Accept": "application/json",
+	})
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, formatUnexpectedResponse(res)
+	}
+
+	var out WorklogResponse
+	err = json.NewDecoder(res.Body).Decode(&out)
+	
+	return &out, err
+}
+
 // AddIssueWorklog adds worklog to an issue using POST /issue/{key}/worklog endpoint.
 // Leave param `started` empty to use the server's current datetime as start date.
 func (c *Client) AddIssueWorklog(key, started, timeSpent, comment, newEstimate string) error {
