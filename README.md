@@ -556,6 +556,39 @@ $ jira issue worklog add ISSUE-1 "2d 3h 30m" --no-input
 $ jira issue worklog add ISSUE-1 "10m" --comment "This is a comment" --no-input
 ```
 
+##### List
+The `list` command displays all worklogs for an issue. Supports both table and plain text output formats.
+
+```sh
+# List worklogs in table format (default)
+$ jira issue worklog list ISSUE-1
+
+# List worklogs with detailed information
+$ jira issue worklog list ISSUE-1 --plain
+
+# Using the alias
+$ jira issue worklog ls ISSUE-1
+```
+
+##### Edit
+The `edit` command allows you to update an existing worklog. You can modify the time spent, comment, and start date.
+
+```sh
+# Edit a worklog interactively (select from list)
+$ jira issue worklog edit ISSUE-1
+
+# Edit a specific worklog with new time
+$ jira issue worklog edit ISSUE-1 10001 "3h 30m" --no-input
+
+# Edit worklog with new comment and start date
+$ jira issue worklog edit ISSUE-1 10001 "2h" \
+  --comment "Updated work description" \
+  --started "2024-11-05 09:30:00"
+
+# Using the alias
+$ jira issue worklog update ISSUE-1 10001 "4h"
+```
+
 ### Epic
 Epics are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing epic issues, you can use all filters available for the issue command.
