@@ -357,16 +357,16 @@ type Worklog struct {
 
 // WorklogResponse holds response from GET /issue/{key}/worklog endpoint.
 type WorklogResponse struct {
-	StartAt    int        `json:"startAt"`
-	MaxResults int        `json:"maxResults"`
-	Total      int        `json:"total"`
-	Worklogs   []Worklog  `json:"worklogs"`
+	StartAt    int       `json:"startAt"`
+	MaxResults int       `json:"maxResults"`
+	Total      int       `json:"total"`
+	Worklogs   []Worklog `json:"worklogs"`
 }
 
 // GetIssueWorklogs fetches worklogs for an issue using GET /issue/{key}/worklog endpoint.
 func (c *Client) GetIssueWorklogs(key string) (*WorklogResponse, error) {
 	path := fmt.Sprintf("/issue/%s/worklog", key)
-	
+
 	res, err := c.GetV2(context.Background(), path, Header{
 		"Accept": "application/json",
 	})
@@ -384,7 +384,7 @@ func (c *Client) GetIssueWorklogs(key string) (*WorklogResponse, error) {
 
 	var out WorklogResponse
 	err = json.NewDecoder(res.Body).Decode(&out)
-	
+
 	return &out, err
 }
 
@@ -461,7 +461,7 @@ func (c *Client) UpdateIssueWorklog(key, worklogID, started, timeSpent, comment 
 // DeleteIssueWorklog deletes a worklog using DELETE /issue/{key}/worklog/{worklogID} endpoint.
 func (c *Client) DeleteIssueWorklog(key, worklogID string) error {
 	path := fmt.Sprintf("/issue/%s/worklog/%s", key, worklogID)
-	
+
 	res, err := c.DeleteV2(context.Background(), path, Header{
 		"Accept": "application/json",
 	})

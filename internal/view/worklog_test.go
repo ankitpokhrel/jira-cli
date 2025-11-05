@@ -240,7 +240,7 @@ func TestWorklogList_Data(t *testing.T) {
 	}
 
 	data := wl.data()
-	
+
 	if len(data) != 1 {
 		t.Errorf("Expected 1 row, got %d", len(data))
 	}
@@ -277,10 +277,10 @@ func TestExtractTextFromADF(t *testing.T) {
 
 	var builder strings.Builder
 	extractTextFromADF(content, &builder)
-	
+
 	got := builder.String()
 	want := "Hello World"
-	
+
 	if got != want {
 		t.Errorf("extractTextFromADF() = %v, want %v", got, want)
 	}

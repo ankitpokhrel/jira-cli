@@ -12,13 +12,13 @@ import (
 )
 
 const (
-	worklogFieldID          = "ID"
-	worklogFieldAuthor      = "AUTHOR"
-	worklogFieldStarted     = "STARTED"
-	worklogFieldTimeSpent   = "TIME SPENT"
-	worklogFieldCreated     = "CREATED"
-	worklogFieldUpdated     = "UPDATED"
-	worklogFieldComment     = "COMMENT"
+	worklogFieldID        = "ID"
+	worklogFieldAuthor    = "AUTHOR"
+	worklogFieldStarted   = "STARTED"
+	worklogFieldTimeSpent = "TIME SPENT"
+	worklogFieldCreated   = "CREATED"
+	worklogFieldUpdated   = "UPDATED"
+	worklogFieldComment   = "COMMENT"
 )
 
 // WorklogList is a list view for worklogs.
@@ -40,26 +40,26 @@ func (wl WorklogList) Render() error {
 
 func (wl WorklogList) renderPlain(w io.Writer) error {
 	for i, worklog := range wl.Worklogs {
-		fmt.Fprintf(w, "Worklog #%d\n", i+1)
-		fmt.Fprintf(w, "  ID:          %s\n", worklog.ID)
-		fmt.Fprintf(w, "  Author:      %s\n", worklog.Author.Name)
-		fmt.Fprintf(w, "  Started:     %s\n", formatWorklogDate(worklog.Started))
-		fmt.Fprintf(w, "  Time Spent:  %s (%d seconds)\n", worklog.TimeSpent, worklog.TimeSpentSeconds)
-		fmt.Fprintf(w, "  Created:     %s\n", formatWorklogDate(worklog.Created))
-		fmt.Fprintf(w, "  Updated:     %s\n", formatWorklogDate(worklog.Updated))
-		
+		_, _ = fmt.Fprintf(w, "Worklog #%d\n", i+1)
+		_, _ = fmt.Fprintf(w, "  ID:          %s\n", worklog.ID)
+		_, _ = fmt.Fprintf(w, "  Author:      %s\n", worklog.Author.Name)
+		_, _ = fmt.Fprintf(w, "  Started:     %s\n", formatWorklogDate(worklog.Started))
+		_, _ = fmt.Fprintf(w, "  Time Spent:  %s (%d seconds)\n", worklog.TimeSpent, worklog.TimeSpentSeconds)
+		_, _ = fmt.Fprintf(w, "  Created:     %s\n", formatWorklogDate(worklog.Created))
+		_, _ = fmt.Fprintf(w, "  Updated:     %s\n", formatWorklogDate(worklog.Updated))
+
 		if worklog.Comment != nil {
 			comment := extractWorklogComment(worklog.Comment)
 			if comment != "" {
-				fmt.Fprintf(w, "  Comment:     %s\n", truncateString(comment, 60))
+				_, _ = fmt.Fprintf(w, "  Comment:     %s\n", truncateString(comment, 60))
 			}
 		}
-		
-		fmt.Fprintln(w)
+
+		_, _ = fmt.Fprintln(w)
 	}
 
-	fmt.Fprintf(w, "Total worklogs: %d\n", wl.Total)
-	
+	_, _ = fmt.Fprintf(w, "Total worklogs: %d\n", wl.Total)
+
 	return nil
 }
 
@@ -74,17 +74,17 @@ func (wl WorklogList) renderTable() error {
 		worklogFieldTimeSpent,
 		worklogFieldCreated,
 	}
-	fmt.Fprintln(tw, strings.Join(headers, "\t"))
+	_, _ = fmt.Fprintln(tw, strings.Join(headers, "\t"))
 
 	for _, row := range data {
-		fmt.Fprintln(tw, strings.Join(row, "\t"))
+		_, _ = fmt.Fprintln(tw, strings.Join(row, "\t"))
 	}
 
 	return tw.Flush()
 }
 
 func (wl WorklogList) data() [][]string {
-	var data [][]string
+	data := make([][]string, 0, len(wl.Worklogs))
 
 	for _, worklog := range wl.Worklogs {
 		data = append(data, []string{
