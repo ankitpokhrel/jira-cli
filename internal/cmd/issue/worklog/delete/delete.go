@@ -63,7 +63,7 @@ func deleteWorklog(cmd *cobra.Command, args []string) {
 	if !params.force {
 		var confirm bool
 		prompt := &survey.Confirm{
-			Message: fmt.Sprintf("Are you sure you want to delete worklog %s from issue %s?", 
+			Message: fmt.Sprintf("Are you sure you want to delete worklog %s from issue %s?",
 				dc.params.worklogID, dc.params.issueKey),
 			Default: false,
 		}
@@ -178,7 +178,7 @@ func (dc *deleteCmd) setWorklogID() error {
 
 	// Extract worklog ID from selection (format: "ID - ...")
 	var id string
-	fmt.Sscanf(selected, "%s -", &id)
+	_, _ = fmt.Sscanf(selected, "%s -", &id)
 	dc.params.worklogID = id
 
 	return nil

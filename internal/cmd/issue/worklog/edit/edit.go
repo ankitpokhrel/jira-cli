@@ -219,7 +219,7 @@ func (ec *editCmd) setWorklogID() error {
 
 	// Extract worklog ID from selection (format: "ID - ...")
 	var id string
-	fmt.Sscanf(selected, "%s -", &id)
+	_, _ = fmt.Sscanf(selected, "%s -", &id)
 	ec.params.worklogID = id
 
 	return nil

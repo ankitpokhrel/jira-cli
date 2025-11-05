@@ -19,6 +19,8 @@ const (
 	worklogFieldCreated   = "CREATED"
 	worklogFieldUpdated   = "UPDATED"
 	worklogFieldComment   = "COMMENT"
+
+	maxCommentLength = 60
 )
 
 // WorklogList is a list view for worklogs.
@@ -51,7 +53,7 @@ func (wl WorklogList) renderPlain(w io.Writer) error {
 		if worklog.Comment != nil {
 			comment := extractWorklogComment(worklog.Comment)
 			if comment != "" {
-				_, _ = fmt.Fprintf(w, "  Comment:     %s\n", truncateString(comment, 60))
+				_, _ = fmt.Fprintf(w, "  Comment:     %s\n", truncateString(comment, maxCommentLength))
 			}
 		}
 
