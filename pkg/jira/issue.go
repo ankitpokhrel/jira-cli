@@ -390,7 +390,8 @@ func (c *Client) GetIssueWorklogs(key string) (*WorklogResponse, error) {
 
 // AddIssueWorklog adds worklog to an issue using POST /issue/{key}/worklog endpoint.
 // Leave param `started` empty to use the server's current datetime as start date.
-func (c *Client) AddIssueWorklog(key, started, timeSpent, comment, newEstimate string) error {
+// Returns the created worklog.
+func (c *Client) AddIssueWorklog(key, started, timeSpent, comment, newEstimate string) (*Worklog, error) {
 	worklogReq := issueWorklogRequest{
 		TimeSpent: timeSpent,
 		Comment:   md.ToJiraMD(comment),
@@ -400,7 +401,7 @@ func (c *Client) AddIssueWorklog(key, started, timeSpent, comment, newEstimate s
 	}
 	body, err := json.Marshal(&worklogReq)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	path := fmt.Sprintf("/issue/%s/worklog", key)
@@ -412,17 +413,23 @@ func (c *Client) AddIssueWorklog(key, started, timeSpent, comment, newEstimate s
 		"Content-Type": "application/json",
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if res == nil {
-		return ErrEmptyResponse
+		return nil, ErrEmptyResponse
 	}
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusCreated {
-		return formatUnexpectedResponse(res)
+		return nil, formatUnexpectedResponse(res)
 	}
-	return nil
+
+	var worklog Worklog
+	if err := json.NewDecoder(res.Body).Decode(&worklog); err != nil {
+		return nil, err
+	}
+
+	return &worklog, nil
 }
 
 // UpdateIssueWorklog updates a worklog using PUT /issue/{key}/worklog/{worklogID} endpoint.

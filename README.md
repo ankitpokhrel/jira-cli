@@ -543,7 +543,7 @@ EOF
 The `worklog` command provides a list of sub-commands to manage issue worklog (timelog).
 
 ##### Add
-The `add` command lets you add a worklog to an issue. The command supports markdown for worklog comments.
+The `add` command lets you add a worklog to an issue. The command supports markdown for worklog comments and returns the created worklog ID.
 
 ```sh
 # Add a worklog using an interactive prompt
@@ -551,6 +551,7 @@ $ jira issue worklog add
 
 # Pass required parameters and use --no-input to skip prompt
 $ jira issue worklog add ISSUE-1 "2d 3h 30m" --no-input
+✓ Worklog 10001 added to issue "ISSUE-1"
 
 # You can add a comment using --comment flag when adding a worklog
 $ jira issue worklog add ISSUE-1 "10m" --comment "This is a comment" --no-input
