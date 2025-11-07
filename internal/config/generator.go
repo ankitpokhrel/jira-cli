@@ -401,10 +401,10 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 		}
 
 		if ans.Server != "" {
-			c.value.server = ans.Server
+			c.value.server = strings.TrimSpace(ans.Server)
 		}
 		if ans.Login != "" {
-			c.value.login = ans.Login
+			c.value.login = strings.TrimSpace(ans.Login)
 		}
 	}
 
