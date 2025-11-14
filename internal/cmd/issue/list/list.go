@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdcommon"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/internal/view"
@@ -55,6 +56,9 @@ $ jira issue list --plain --delimeter "|"
 
 # List issues as raw JSON data
 $ jira issue list --raw
+
+# List issues in JSON with human-readable custom field names
+$ jira issue list --json
 
 # List issues of type "Epic" in status "Done"
 $ jira issue list -tEpic -sDone
@@ -133,8 +137,16 @@ func loadList(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	jsonOutput, err := cmd.Flags().GetBool("json")
+	cmdutil.ExitIfError(err)
+
 	raw, err := cmd.Flags().GetBool("raw")
 	cmdutil.ExitIfError(err)
+
+	if jsonOutput {
+		outputJSON(issues)
+		return
+	}
 
 	if raw {
 		outputRawJSON(issues)
@@ -208,6 +220,31 @@ func outputRawJSON(issues []*jira.Issue) {
 	fmt.Println(string(data))
 }
 
+func outputJSON(issues []*jira.Issue) {
+	// Marshal issues to JSON first
+	rawJSON, err := json.Marshal(issues)
+	if err != nil {
+		cmdutil.Failed("Failed to marshal issues: %s", err)
+		return
+	}
+
+	// Get field mappings
+	fieldMappings, err := cmdcommon.GetConfiguredCustomFields()
+	if err != nil {
+		cmdutil.Warn("Unable to load custom field mappings: %s", err)
+		fieldMappings = []jira.IssueTypeField{}
+	}
+
+	// Convert custom field IDs to readable names
+	jsonOutput, err := jira.TransformIssueFields(rawJSON, fieldMappings)
+	if err != nil {
+		cmdutil.Failed("Failed to format JSON output: %s", err)
+		return
+	}
+
+	fmt.Println(string(jsonOutput))
+}
+
 // SetFlags sets flags supported by a list command.
 func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().SortFlags = false
@@ -245,6 +282,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().String("delimiter", "\t", "Custom delimeter for columns in plain mode. Works only with --plain")
 	cmd.Flags().Uint("comments", 1, "Show N comments when viewing the issue")
 	cmd.Flags().Bool("raw", false, "Print raw JSON output")
+	cmd.Flags().Bool("json", false, "Print JSON output with human-readable custom field names")
 	cmd.Flags().Bool("csv", false, "Print output in CSV format")
 
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {
