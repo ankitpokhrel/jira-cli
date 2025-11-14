@@ -195,6 +195,18 @@ $ jira issue list --plain
 # List recent issues in raw JSON format
 $ jira issue list --raw
 
+# List issues in JSON with human-readable custom field names
+$ jira issue list --json
+
+# Filter JSON output to specific fields
+$ jira issue list --json --json-filter "key,fields.summary,fields.status.name,fields.storyPoints"
+
+# Use customfield IDs in filter to bypass naming collisions
+$ jira issue list --json --json-filter "key,fields.customfield_10001"
+
+# Suppress collision warnings if you don't care about skipped fields
+$ jira issue list --json --no-warnings
+
 # List recent issues in csv format
 $ jira issue list --csv
 
@@ -437,6 +449,15 @@ not be the latest one if you for some reason have more than 5k comments in a tic
 ```sh
 # Show 5 recent comments when viewing the issue
 $ jira issue view ISSUE-1 --comments 5
+
+# Get JSON output with human-readable custom field names
+$ jira issue view ISSUE-1 --json
+
+# Filter JSON to specific fields
+$ jira issue view ISSUE-1 --json --json-filter "key,fields.summary,fields.storyPoints,fields.status.name"
+
+# Suppress collision warnings
+$ jira issue view ISSUE-1 --json --no-warnings
 ```
 
 #### Link

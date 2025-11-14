@@ -28,11 +28,11 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Story Points", Key: "customfield_10002"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
 		// Verify transformation
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"epicName"`)
 		assert.Contains(t, resultStr, `"storyPoints"`)
 		assert.NotContains(t, resultStr, `"customfield_10001"`)
@@ -65,10 +65,10 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Epic Link", Key: "customfield_10001"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"epicLink"`)
 		assert.NotContains(t, resultStr, `"customfield_10001"`)
 	})
@@ -77,11 +77,11 @@ func TestTransformIssueFields(t *testing.T) {
 		rawJSON := []byte(`{"key": "TEST-1", "fields": {"customfield_10001": "value"}}`)
 		mappings := []IssueTypeField{}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
 		// Should return formatted JSON unchanged
-		assert.Contains(t, string(result), `"customfield_10001"`)
+		assert.Contains(t, string(result.Data), `"customfield_10001"`)
 	})
 
 	t.Run("handles malformed JSON", func(t *testing.T) {
@@ -90,7 +90,7 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Epic Name", Key: "customfield_10001"},
 		}
 
-		_, err := TransformIssueFields(rawJSON, mappings)
+		_, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to parse JSON")
 	})
@@ -119,12 +119,12 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Sprint", Key: "customfield_10001"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
 		// Verify structure preserved
 		var resultData map[string]interface{}
-		err = json.Unmarshal(result, &resultData)
+		err = json.Unmarshal(result.Data, &resultData)
 		assert.NoError(t, err)
 
 		fields := resultData["fields"].(map[string]interface{})
@@ -154,10 +154,10 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "T-Shirt Size", Key: "customfield_10002"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"epicLink": null`)
 		assert.Contains(t, resultStr, `"tShirtSize"`)
 	})
@@ -177,12 +177,12 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "T-Shirt Size", Key: "customfield_10001"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
 		// Verify object structure preserved
 		var resultData map[string]interface{}
-		err = json.Unmarshal(result, &resultData)
+		err = json.Unmarshal(result.Data, &resultData)
 		assert.NoError(t, err)
 
 		fields := resultData["fields"].(map[string]interface{})
@@ -208,10 +208,10 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Tags", Key: "customfield_10002"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"sprint"`)
 		assert.Contains(t, resultStr, `"tags"`)
 		assert.Contains(t, resultStr, `"Sprint 1"`)
@@ -232,10 +232,10 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Epic Name", Key: "customfield_10001"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		// Standard fields should remain unchanged
 		assert.Contains(t, resultStr, `"summary"`)
 		assert.Contains(t, resultStr, `"status"`)
@@ -257,12 +257,12 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Summary", Key: "customfield_10001"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
 		// Should have both summary (standard) and summary from custom field
 		// Last one wins in our current implementation
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"summary"`)
 	})
 
@@ -281,10 +281,10 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Deep Field", Key: "customfield_10001"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"deepField"`)
 		assert.NotContains(t, resultStr, `"customfield_10001"`)
 	})
@@ -302,13 +302,13 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "", Key: "customfield_10001"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		// Empty name converts to empty string key, which is valid JSON
 	})
 
-	t.Run("returns error for empty and whitespace field names that collide", func(t *testing.T) {
+	t.Run("skips empty and whitespace field names that collide", func(t *testing.T) {
 		rawJSON := []byte(`{
 			"key": "TEST-1",
 			"fields": {
@@ -322,18 +322,27 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "   ", Key: "customfield_10002"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "multiple custom fields map to the same name")
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result.Warnings, 1)
+		assert.Contains(t, result.Warnings[0], "Skipping fields with naming collision")
+		assert.Contains(t, result.Warnings[0], "fields.customfield_10001")
+		assert.Contains(t, result.Warnings[0], "fields.customfield_10002")
+
+		// Both fields should be skipped
+		resultStr := string(result.Data)
+		assert.NotContains(t, resultStr, `"customfield_10001"`)
+		assert.NotContains(t, resultStr, `"customfield_10002"`)
 	})
 
-	t.Run("returns error for multiple custom fields mapping to same name", func(t *testing.T) {
+	t.Run("skips multiple custom fields mapping to same name and warns", func(t *testing.T) {
 		rawJSON := []byte(`{
 			"key": "TEST-1",
 			"fields": {
 				"customfield_10001": "Value 1",
-				"customfield_10002": "Value 2"
+				"customfield_10002": "Value 2",
+				"summary": "Test"
 			}
 		}`)
 
@@ -342,11 +351,23 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Story Points", Key: "customfield_10002"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "multiple custom fields map to the same name")
-		assert.Contains(t, err.Error(), "storyPoints")
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result.Warnings, 1)
+		assert.Contains(t, result.Warnings[0], "Skipping fields with naming collision")
+		assert.Contains(t, result.Warnings[0], "storyPoints")
+		assert.Contains(t, result.Warnings[0], "fields.customfield_10001")
+		assert.Contains(t, result.Warnings[0], "fields.customfield_10002")
+
+		resultStr := string(result.Data)
+		// Both conflicting fields should be skipped
+		assert.NotContains(t, resultStr, `"customfield_10001"`)
+		assert.NotContains(t, resultStr, `"customfield_10002"`)
+		assert.NotContains(t, resultStr, `"storyPoints"`)
+		// But other fields should remain
+		assert.Contains(t, resultStr, `"summary"`)
+		assert.Contains(t, resultStr, `"Test"`)
 	})
 
 	t.Run("handles empty arrays in custom fields", func(t *testing.T) {
@@ -363,10 +384,10 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Metadata", Key: "customfield_10002"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"labels": []`)
 		assert.Contains(t, resultStr, `"metadata": {}`)
 	})
@@ -387,10 +408,10 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Confidence", Key: "customfield_10003"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"businessValue": "0.0"`)
 		assert.Contains(t, resultStr, `"rank": "9223372036854775807"`)
 		assert.Contains(t, resultStr, `"confidence": "3.14159"`)
@@ -409,10 +430,10 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Notes", Key: "customfield_10001"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"notes": ""`)
 	})
 
@@ -442,12 +463,12 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Priority Flags", Key: "customfield_10002"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
 		// Verify the structure is preserved
 		var resultData map[string]interface{}
-		err = json.Unmarshal(result, &resultData)
+		err = json.Unmarshal(result.Data, &resultData)
 		assert.NoError(t, err)
 
 		fields := resultData["fields"].(map[string]interface{})
@@ -477,12 +498,12 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Description", Key: "customfield_10001"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 
 		// Verify it contains our field name
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"description"`)
 	})
 
@@ -507,12 +528,12 @@ func TestTransformIssueFields(t *testing.T) {
 			}
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 
 		// Verify some transformations occurred
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"customField1"`)
 		assert.Contains(t, resultStr, `"customField50"`)
 		assert.Contains(t, resultStr, `"customField100"`)
@@ -538,11 +559,11 @@ func TestTransformIssueFields(t *testing.T) {
 		}
 
 		// Should not panic or stack overflow
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"deepField"`)
 	})
 
@@ -565,12 +586,12 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Items", Key: "customfield_10001"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 
 		// Verify transformation happened
-		resultStr := string(result)
+		resultStr := string(result.Data)
 		assert.Contains(t, resultStr, `"items"`)
 		assert.Contains(t, resultStr, `"Item 0"`)
 		assert.Contains(t, resultStr, `"Item 199"`)
@@ -622,10 +643,10 @@ func TestTransformIssueFields(t *testing.T) {
 			{Name: "Rank", Key: "customfield_10007"},
 		}
 
-		result, err := TransformIssueFields(rawJSON, mappings)
+		result, err := TransformIssueFields(rawJSON, mappings, nil)
 		assert.NoError(t, err)
 
-		resultStr := string(result)
+		resultStr := string(result.Data)
 
 		// Verify custom fields are transformed
 		assert.Contains(t, resultStr, `"businessValue"`)
@@ -700,7 +721,8 @@ func TestTransformFieldsRecursion(t *testing.T) {
 			},
 		}
 
-		result := transformFields(data, fieldMap)
+		skipFields := make(map[string]bool)
+		result := transformFields(data, fieldMap, skipFields)
 		resultArray := result.([]interface{})
 
 		obj1 := resultArray[0].(map[string]interface{})
@@ -722,9 +744,291 @@ func TestTransformFieldsRecursion(t *testing.T) {
 			nil,
 		}
 
+		skipFields := make(map[string]bool)
 		for _, test := range tests {
-			result := transformFields(test, fieldMap)
+			result := transformFields(test, fieldMap, skipFields)
 			assert.Equal(t, test, result)
 		}
+	})
+}
+
+func TestTransformIssueFieldsWithFilter(t *testing.T) {
+	t.Run("filters to specific fields", func(t *testing.T) {
+		rawJSON := []byte(`{
+			"key": "TEST-1",
+			"fields": {
+				"summary": "Test Issue",
+				"description": "Long description",
+				"status": {"name": "Done"},
+				"customfield_10001": "Epic Name"
+			}
+		}`)
+
+		mappings := []IssueTypeField{
+			{Name: "Epic Name", Key: "customfield_10001"},
+		}
+
+		filter := []string{"key", "fields.summary", "fields.epicName"}
+		result, err := TransformIssueFields(rawJSON, mappings, filter)
+		assert.NoError(t, err)
+
+		resultStr := string(result.Data)
+		// Should include filtered fields
+		assert.Contains(t, resultStr, `"key"`)
+		assert.Contains(t, resultStr, `"summary"`)
+		assert.Contains(t, resultStr, `"epicName"`)
+
+		// Should exclude unfiltered fields
+		assert.NotContains(t, resultStr, `"description"`)
+		assert.NotContains(t, resultStr, `"status"`)
+	})
+
+	t.Run("filters nested fields", func(t *testing.T) {
+		rawJSON := []byte(`{
+			"key": "TEST-1",
+			"fields": {
+				"status": {
+					"name": "Done",
+					"id": "123",
+					"category": "Complete"
+				},
+				"assignee": {
+					"displayName": "John Doe",
+					"emailAddress": "john@example.com"
+				}
+			}
+		}`)
+
+		filter := []string{"key", "fields.status.name", "fields.assignee.displayName"}
+		result, err := TransformIssueFields(rawJSON, []IssueTypeField{}, filter)
+		assert.NoError(t, err)
+
+		resultStr := string(result.Data)
+		// Should include filtered nested fields
+		assert.Contains(t, resultStr, `"Done"`)
+		assert.Contains(t, resultStr, `"John Doe"`)
+
+		// Should exclude non-filtered fields
+		assert.NotContains(t, resultStr, `"id"`)
+		assert.NotContains(t, resultStr, `"category"`)
+		assert.NotContains(t, resultStr, `"emailAddress"`)
+	})
+
+	t.Run("handles naming collisions with warning", func(t *testing.T) {
+		rawJSON := []byte(`{
+			"key": "TEST-1",
+			"fields": {
+				"customfield_10001": 5,
+				"customfield_10002": 10,
+				"summary": "Test"
+			}
+		}`)
+
+		// Both map to storyPoints - collision!
+		mappings := []IssueTypeField{
+			{Name: "Story Points", Key: "customfield_10001"},
+			{Name: "Story Points", Key: "customfield_10002"},
+		}
+
+		// Filter for key and summary
+		filter := []string{"key", "fields.summary"}
+		result, err := TransformIssueFields(rawJSON, mappings, filter)
+		assert.NoError(t, err)
+
+		resultStr := string(result.Data)
+		// Should include filtered fields
+		assert.Contains(t, resultStr, `"key"`)
+		assert.Contains(t, resultStr, `"summary"`)
+		
+		// Colliding fields should be skipped entirely (both of them)
+		assert.NotContains(t, resultStr, `"customfield_10001"`)
+		assert.NotContains(t, resultStr, `"customfield_10002"`)
+		assert.NotContains(t, resultStr, `"storyPoints"`)
+		
+		// Should have a warning about the collision
+		assert.NotEmpty(t, result.Warnings)
+		assert.Contains(t, result.Warnings[0], "collision")
+	})
+
+	t.Run("explicitly filters colliding field by ID keeps it as ID", func(t *testing.T) {
+		rawJSON := []byte(`{
+			"key": "TEST-1",
+			"fields": {
+				"customfield_10001": 5,
+				"customfield_10002": 10,
+				"summary": "Test"
+			}
+		}`)
+
+		// Both map to storyPoints - collision!
+		mappings := []IssueTypeField{
+			{Name: "Story Points", Key: "customfield_10001"},
+			{Name: "Story Points", Key: "customfield_10002"},
+		}
+
+		// Explicitly select customfield_10001 by ID in filter
+		filter := []string{"key", "fields.customfield_10001"}
+		result, err := TransformIssueFields(rawJSON, mappings, filter)
+		assert.NoError(t, err)
+
+		resultStr := string(result.Data)
+		// Should include the explicitly selected field with its RAW ID (to avoid collision)
+		assert.Contains(t, resultStr, `"customfield_10001"`)
+		assert.Contains(t, resultStr, `5`)
+		
+		// Should NOT transform to storyPoints (would cause collision)
+		assert.NotContains(t, resultStr, `"storyPoints"`)
+		
+		// Should NOT include the other colliding field or its value
+		assert.NotContains(t, resultStr, `"customfield_10002"`)
+		assert.NotContains(t, resultStr, `: 10`) // The value 10 from customfield_10002
+		
+		// Should still have a warning about the collision
+		assert.NotEmpty(t, result.Warnings)
+		assert.Contains(t, result.Warnings[0], "collision")
+	})
+
+	t.Run("handles filter with no matches", func(t *testing.T) {
+		rawJSON := []byte(`{
+			"key": "TEST-1",
+			"fields": {
+				"summary": "Test"
+			}
+		}`)
+
+		filter := []string{"fields.nonexistent"}
+		result, err := TransformIssueFields(rawJSON, []IssueTypeField{}, filter)
+		assert.NoError(t, err)
+
+		// Should return valid but minimal JSON
+		resultStr := string(result.Data)
+		assert.NotContains(t, resultStr, `"key"`)
+		assert.NotContains(t, resultStr, `"summary"`)
+	})
+
+	t.Run("filters arrays of issues", func(t *testing.T) {
+		rawJSON := []byte(`[
+			{
+				"key": "TEST-1",
+				"fields": {
+					"summary": "Issue 1",
+					"description": "Desc 1",
+					"status": {"name": "Done"}
+				}
+			},
+			{
+				"key": "TEST-2",
+				"fields": {
+					"summary": "Issue 2",
+					"description": "Desc 2",
+					"status": {"name": "In Progress"}
+				}
+			}
+		]`)
+
+		filter := []string{"key", "fields.summary"}
+		result, err := TransformIssueFields(rawJSON, []IssueTypeField{}, filter)
+		assert.NoError(t, err)
+
+		resultStr := string(result.Data)
+		// Should include filtered fields from all issues
+		assert.Contains(t, resultStr, `"TEST-1"`)
+		assert.Contains(t, resultStr, `"TEST-2"`)
+		assert.Contains(t, resultStr, `"Issue 1"`)
+		assert.Contains(t, resultStr, `"Issue 2"`)
+
+		// Should exclude non-filtered fields
+		assert.NotContains(t, resultStr, `"description"`)
+		assert.NotContains(t, resultStr, `"status"`)
+	})
+
+	t.Run("includes null values when explicitly filtered", func(t *testing.T) {
+		rawJSON := []byte(`{
+			"key": "TEST-1",
+			"fields": {
+				"summary": "Test Issue",
+				"customfield_10001": null,
+				"customfield_10002": "Has Value",
+				"status": {"name": "Done"}
+			}
+		}`)
+
+		mappings := []IssueTypeField{
+			{Name: "Story Points", Key: "customfield_10001"},
+			{Name: "Epic Name", Key: "customfield_10002"},
+		}
+
+		// Explicitly request the null field
+		filter := []string{"key", "fields.summary", "fields.storyPoints"}
+		result, err := TransformIssueFields(rawJSON, mappings, filter)
+		assert.NoError(t, err)
+
+		resultStr := string(result.Data)
+		// Should include the null field when explicitly requested
+		assert.Contains(t, resultStr, `"storyPoints"`)
+		assert.Contains(t, resultStr, `null`) // The field has a null value
+		
+		// Should include other filtered fields
+		assert.Contains(t, resultStr, `"key"`)
+		assert.Contains(t, resultStr, `"summary"`)
+		
+		// Should exclude non-filtered fields
+		assert.NotContains(t, resultStr, `"epicName"`)
+		assert.NotContains(t, resultStr, `"status"`)
+	})
+
+	t.Run("filters using customfield ID but outputs human name", func(t *testing.T) {
+		rawJSON := []byte(`{
+			"key": "TEST-1",
+			"fields": {
+				"summary": "Test Issue",
+				"customfield_12310243": 4,
+				"status": {"name": "Done"}
+			}
+		}`)
+
+		mappings := []IssueTypeField{
+			{Name: "Story Points", Key: "customfield_12310243"},
+		}
+
+		// Filter using customfield ID
+		filter := []string{"key", "fields.customfield_12310243"}
+		result, err := TransformIssueFields(rawJSON, mappings, filter)
+		assert.NoError(t, err)
+
+		resultStr := string(result.Data)
+		// Should transform to human name in output
+		assert.Contains(t, resultStr, `"storyPoints"`)
+		assert.Contains(t, resultStr, `4`)
+		
+		// Should NOT keep the customfield ID
+		assert.NotContains(t, resultStr, `"customfield_12310243"`)
+		
+		// Should exclude non-filtered fields
+		assert.NotContains(t, resultStr, `"summary"`)
+		assert.NotContains(t, resultStr, `"status"`)
+	})
+
+	t.Run("empty filter returns all fields", func(t *testing.T) {
+		rawJSON := []byte(`{
+			"key": "TEST-1",
+			"fields": {
+				"summary": "Test",
+				"customfield_10001": "Epic"
+			}
+		}`)
+
+		mappings := []IssueTypeField{
+			{Name: "Epic Name", Key: "customfield_10001"},
+		}
+
+		result, err := TransformIssueFields(rawJSON, mappings, []string{})
+		assert.NoError(t, err)
+
+		resultStr := string(result.Data)
+		// Should include all fields
+		assert.Contains(t, resultStr, `"key"`)
+		assert.Contains(t, resultStr, `"summary"`)
+		assert.Contains(t, resultStr, `"epicName"`)
 	})
 }

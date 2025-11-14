@@ -60,6 +60,9 @@ $ jira issue list --raw
 # List issues in JSON with human-readable custom field names
 $ jira issue list --json
 
+# List issues in JSON, and filter output to specific nested paths (only restricts output, cannot add additional fields)
+$ jira issue list --json --json-filter "key,fields.summary,fields.assignee.displayName"
+
 # List issues of type "Epic" in status "Done"
 $ jira issue list -tEpic -sDone
 
@@ -140,15 +143,35 @@ func loadList(cmd *cobra.Command, args []string) {
 	jsonOutput, err := cmd.Flags().GetBool("json")
 	cmdutil.ExitIfError(err)
 
-	raw, err := cmd.Flags().GetBool("raw")
+	rawOutput, err := cmd.Flags().GetBool("raw")
 	cmdutil.ExitIfError(err)
 
 	if jsonOutput {
-		outputJSON(issues)
+		// Get filter fields
+		jsonFilter, err := cmd.Flags().GetString("json-filter")
+		cmdutil.ExitIfError(err)
+
+		var filterFields []string
+		if jsonFilter != "" {
+			// For json-filter, the user provides direct JSON paths
+			// Split by comma and trim spaces
+			filterFields = []string{}
+			for _, field := range strings.Split(jsonFilter, ",") {
+				field = strings.TrimSpace(field)
+				if field != "" {
+					filterFields = append(filterFields, field)
+				}
+			}
+		}
+
+		noWarnings, err := cmd.Flags().GetBool("no-warnings")
+		cmdutil.ExitIfError(err)
+
+		outputJSON(issues, filterFields, noWarnings)
 		return
 	}
 
-	if raw {
+	if rawOutput {
 		outputRawJSON(issues)
 		return
 	}
@@ -220,7 +243,7 @@ func outputRawJSON(issues []*jira.Issue) {
 	fmt.Println(string(data))
 }
 
-func outputJSON(issues []*jira.Issue) {
+func outputJSON(issues []*jira.Issue, filter []string, noWarnings bool) {
 	// Marshal issues to JSON first
 	rawJSON, err := json.Marshal(issues)
 	if err != nil {
@@ -235,14 +258,21 @@ func outputJSON(issues []*jira.Issue) {
 		fieldMappings = []jira.IssueTypeField{}
 	}
 
-	// Convert custom field IDs to readable names
-	jsonOutput, err := jira.TransformIssueFields(rawJSON, fieldMappings)
+	// Convert custom field IDs to readable names and apply output filter
+	result, err := jira.TransformIssueFields(rawJSON, fieldMappings, filter)
 	if err != nil {
 		cmdutil.Failed("Failed to format JSON output: %s", err)
 		return
 	}
 
-	fmt.Println(string(jsonOutput))
+	// Display warnings if any (unless suppressed)
+	if !noWarnings {
+		for _, warning := range result.Warnings {
+			cmdutil.Warn(warning)
+		}
+	}
+
+	fmt.Println(string(result.Data))
 }
 
 // SetFlags sets flags supported by a list command.
@@ -283,6 +313,10 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Uint("comments", 1, "Show N comments when viewing the issue")
 	cmd.Flags().Bool("raw", false, "Print raw JSON output")
 	cmd.Flags().Bool("json", false, "Print JSON output with human-readable custom field names")
+	cmd.Flags().String("json-filter", "", "Comma-separated list of JSON paths to include in output (e.g., 'key,fields.summary,fields.status.statusCategory.name'). "+
+		"Allows precise filtering of nested JSON fields after API response. "+
+		"Only works with --json. If not specified, includes all fields from API response.")
+	cmd.Flags().Bool("no-warnings", false, "Suppress warnings about field name collisions. Only works with --json")
 	cmd.Flags().Bool("csv", false, "Print output in CSV format")
 
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {

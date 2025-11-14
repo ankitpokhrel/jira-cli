@@ -2,6 +2,7 @@ package view
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -25,13 +26,17 @@ $ jira issue view ISSUE-1 --comments 5
 $ jira issue view ISSUE-1 --raw
 
 # Get JSON output with human-readable custom field names
-$ jira issue view ISSUE-1 --json`
+$ jira issue view ISSUE-1 --json
 
-	flagRaw      = "raw"
-	flagJSON     = "json"
-	flagDebug    = "debug"
-	flagComments = "comments"
-	flagPlain    = "plain"
+# Get JSON filtered to specific nested paths
+$ jira issue view ISSUE-1 --json --json-filter "key,fields.summary,fields.status.statusCategory.name"`
+
+	flagRaw        = "raw"
+	flagJSON       = "json"
+	flagDebug      = "debug"
+	flagComments   = "comments"
+	flagPlain      = "plain"
+	flagNoWarnings = "no-warnings"
 
 	configProject = "project.key"
 	configServer  = "server"
@@ -58,6 +63,10 @@ func NewCmdView() *cobra.Command {
 	cmd.Flags().Bool(flagPlain, false, "Display output in plain mode")
 	cmd.Flags().Bool(flagRaw, false, "Print raw Jira API response")
 	cmd.Flags().Bool(flagJSON, false, "Print JSON output with human-readable custom field names")
+	cmd.Flags().String("json-filter", "", "Comma-separated list of JSON paths to include in output (e.g., 'key,fields.summary,fields.status.statusCategory.name'). "+
+		"Allows precise filtering of nested JSON fields after API response. "+
+		"Only works with --json. If not specified, includes all fields from API response.")
+	cmd.Flags().Bool(flagNoWarnings, false, "Suppress warnings about field name collisions. Only works with --json")
 
 	return &cmd
 }
@@ -121,14 +130,40 @@ func viewJSON(cmd *cobra.Command, args []string) {
 		fieldMappings = []jira.IssueTypeField{}
 	}
 
-	// Convert custom field IDs to readable names
-	jsonOutput, err := jira.TransformIssueFields([]byte(apiResp), fieldMappings)
+	// Get filter for output-level filtering (optional)
+	jsonFilter, err := cmd.Flags().GetString("json-filter")
+	cmdutil.ExitIfError(err)
+
+	var filterFields []string
+	if jsonFilter != "" {
+		// For json-filter, the user provides direct JSON paths
+		// Split by comma and trim spaces
+		filterFields = []string{}
+		for _, field := range strings.Split(jsonFilter, ",") {
+			field = strings.TrimSpace(field)
+			if field != "" {
+				filterFields = append(filterFields, field)
+			}
+		}
+	}
+
+	result, err := jira.TransformIssueFields([]byte(apiResp), fieldMappings, filterFields)
 	if err != nil {
 		cmdutil.Failed("Failed to format JSON output: %s", err)
 		return
 	}
 
-	fmt.Println(string(jsonOutput))
+	// Display warnings if any (unless suppressed)
+	noWarnings, err := cmd.Flags().GetBool(flagNoWarnings)
+	cmdutil.ExitIfError(err)
+
+	if !noWarnings {
+		for _, warning := range result.Warnings {
+			cmdutil.Warn(warning)
+		}
+	}
+
+	fmt.Println(string(result.Data))
 }
 
 func viewPretty(cmd *cobra.Command, args []string) {
