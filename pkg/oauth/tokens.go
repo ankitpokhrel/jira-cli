@@ -21,9 +21,11 @@ type OAuthSecrets struct {
 
 // PersistentTokenSource implements oauth2.TokenSource with automatic token persistence.
 type PersistentTokenSource struct {
-	clientID     string
-	clientSecret string
-	storage      utils.Storage
+	clientID        string
+	clientSecret    string
+	storage         utils.Storage
+	fallbackStorage utils.Storage
+	usingFallback   bool
 }
 
 // IsExpired checks if the access token is expired.
@@ -55,17 +57,23 @@ func (o *OAuthSecrets) FromOAuth2Token(token *oauth2.Token) {
 }
 
 // NewPersistentTokenSource creates a new TokenSource that persists tokens.
+// It attempts to use keyring storage first, falling back to filesystem storage if keyring fails.
 func NewPersistentTokenSource(clientID, clientSecret string) (*PersistentTokenSource, error) {
 	jiraDir, err := getJiraConfigDir()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Jira config directory: %w", err)
 	}
 
-	storage := utils.FileSystemStorage{BaseDir: jiraDir}
+	keyringStorage := utils.NewKeyRingStorage(login)
+	fallbackFileSystemStorage := utils.FileSystemStorage{BaseDir: jiraDir}
+
+
 	return &PersistentTokenSource{
-		clientID:     clientID,
-		clientSecret: clientSecret,
-		storage:      storage,
+		clientID:        clientID,
+		clientSecret:    clientSecret,
+		storage:         keyringStorage,
+		fallbackStorage: fallbackFileSystemStorage,
+		usingFallback:   false,
 	}, nil
 }
 
@@ -74,7 +82,19 @@ func (pts *PersistentTokenSource) Token() (*oauth2.Token, error) {
 	// Load current token from storage
 	secrets, err := utils.LoadJSON[OAuthSecrets](pts.storage, oauthSecretsFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load OAuth secrets: %w", err)
+		// If primary storage fails and we're not already using fallback, try fallback
+		if !pts.usingFallback && pts.fallbackStorage != nil {
+			fmt.Println("Warning: Primary storage failed, falling back to FileSystemStorage for OAuth tokens")
+			secrets, err = utils.LoadJSON[OAuthSecrets](pts.fallbackStorage, oauthSecretsFile)
+			if err == nil {
+				// Successfully loaded from fallback, switch to using it
+				pts.storage = pts.fallbackStorage
+				pts.usingFallback = true
+			}
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to load OAuth secrets: %w", err)
+		}
 	}
 
 	token := secrets.ToOAuth2Token()
@@ -102,12 +122,28 @@ func (pts *PersistentTokenSource) Token() (*oauth2.Token, error) {
 
 	// Save the refreshed token
 	secrets.FromOAuth2Token(refreshedToken)
-	if err := utils.SaveJSON(pts.storage, oauthSecretsFile, &secrets); err != nil {
+	if err := pts.saveSecrets(&secrets); err != nil {
 		// Log error but don't fail the request - we still have a valid token
 		fmt.Printf("Warning: failed to save refreshed OAuth token: %v\n", err)
 	}
 
 	return refreshedToken, nil
+}
+
+// saveSecrets attempts to save secrets to primary storage, falling back if necessary.
+func (pts *PersistentTokenSource) saveSecrets(secrets *OAuthSecrets) error {
+	err := utils.SaveJSON(pts.storage, oauthSecretsFile, secrets)
+	if err != nil && !pts.usingFallback && pts.fallbackStorage != nil {
+		// Primary storage failed, try fallback
+		fmt.Println("Warning: Primary storage failed, falling back to FileSystemStorage for OAuth tokens")
+		err = utils.SaveJSON(pts.fallbackStorage, oauthSecretsFile, secrets)
+		if err == nil {
+			// Successfully saved to fallback, switch to using it
+			pts.storage = pts.fallbackStorage
+			pts.usingFallback = true
+		}
+	}
+	return err
 }
 
 // LoadOAuth2TokenSource creates a TokenSource from stored OAuth secrets.
