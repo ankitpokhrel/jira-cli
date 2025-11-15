@@ -23,7 +23,7 @@ func (fs FileSystemStorage) Save(key string, value []byte) error {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 	if !strings.HasSuffix(key, ".json") {
-		key = key + ".json"
+		key += ".json"
 	}
 
 	filePath := filepath.Join(fs.BaseDir, key)

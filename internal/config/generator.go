@@ -189,7 +189,6 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 
 	if err := c.configureLoginDetails(); err != nil {
 		return "", err
-
 	}
 
 	if c.value.authType == jira.AuthTypeOAuth {
@@ -373,7 +372,6 @@ func (c *JiraCLIConfigGenerator) configureOAuth() error {
 	return nil
 }
 
-//nolint:gocyclo
 func (c *JiraCLIConfigGenerator) configureLoginDetails() error {
 	var qs []*survey.Question
 

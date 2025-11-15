@@ -217,7 +217,7 @@ func TestKeyRingStorageImplementsInterface(t *testing.T) {
 	var _ Storage = KeyRingStorage{}
 }
 
-// TestKeyRingStorageWithHelpers tests the SaveJSON and LoadJSON helper functions
+// TestKeyRingStorageWithHelpers tests the SaveJSON and LoadJSON helper functions.
 func TestKeyRingStorageWithHelpers(t *testing.T) {
 	keyring.MockInit()
 

@@ -157,7 +157,7 @@ func cmdRequireToken(cmd string) bool {
 }
 
 func checkForJiraToken(server string, login string) {
-	if oauth.HasOAuthCredentials() {
+	if oauth.HasOAuthCredentials(login) {
 		return
 	}
 
