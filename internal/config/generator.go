@@ -187,13 +187,18 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 		}
 	}
 
+	if err := c.configureLoginDetails(); err != nil {
+		return "", err
+
+	}
+
 	if c.value.authType == jira.AuthTypeOAuth {
 		if err := c.configureOAuth(); err != nil {
 			return "", err
 		}
 	}
 
-	if err := c.configureServerAndLoginDetails(); err != nil {
+	if err := c.configureServerDetails(); err != nil {
 		return "", err
 	}
 
@@ -368,39 +373,10 @@ func (c *JiraCLIConfigGenerator) configureOAuth() error {
 }
 
 //nolint:gocyclo
-func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
+func (c *JiraCLIConfigGenerator) configureLoginDetails() error {
 	var qs []*survey.Question
 
-	c.value.server = c.usrCfg.Server
 	c.value.login = c.usrCfg.Login
-
-	if c.usrCfg.Server == "" {
-		qs = append(qs, &survey.Question{
-			Name: "server",
-			Prompt: &survey.Input{
-				Message: "Link to Jira server:",
-				Help:    "This is a link to your jira server, eg: https://company.atlassian.net",
-			},
-			Validate: func(val interface{}) error {
-				errInvalidURL := fmt.Errorf("not a valid URL")
-
-				str, ok := val.(string)
-				if !ok {
-					return errInvalidURL
-				}
-				u, err := url.Parse(str)
-				if err != nil || u.Scheme == "" || u.Host == "" {
-					return errInvalidURL
-				}
-				if u.Scheme != "http" && u.Scheme != "https" {
-					return errInvalidURL
-				}
-
-				return nil
-			},
-		})
-	}
-
 	if c.usrCfg.Login == "" {
 		switch c.value.installation {
 		case jira.InstallationTypeCloud:
@@ -455,11 +431,58 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 			})
 		}
 	}
+	if len(qs) > 0 {
+		ans := struct {
+			Login string
+		}{}
+
+		if err := survey.Ask(qs, &ans); err != nil {
+			return err
+		}
+		if ans.Login != "" {
+			c.value.login = strings.TrimSpace(ans.Login)
+		}
+
+	}
+	return nil
+}
+
+//nolint:gocyclo
+func (c *JiraCLIConfigGenerator) configureServerDetails() error {
+	var qs []*survey.Question
+
+	c.value.server = c.usrCfg.Server
+
+	if c.usrCfg.Server == "" {
+		qs = append(qs, &survey.Question{
+			Name: "server",
+			Prompt: &survey.Input{
+				Message: "Link to Jira server:",
+				Help:    "This is a link to your jira server, eg: https://company.atlassian.net",
+			},
+			Validate: func(val interface{}) error {
+				errInvalidURL := fmt.Errorf("not a valid URL")
+
+				str, ok := val.(string)
+				if !ok {
+					return errInvalidURL
+				}
+				u, err := url.Parse(str)
+				if err != nil || u.Scheme == "" || u.Host == "" {
+					return errInvalidURL
+				}
+				if u.Scheme != "http" && u.Scheme != "https" {
+					return errInvalidURL
+				}
+
+				return nil
+			},
+		})
+	}
 
 	if len(qs) > 0 {
 		ans := struct {
 			Server string
-			Login  string
 		}{}
 
 		if err := survey.Ask(qs, &ans); err != nil {
@@ -468,9 +491,6 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 
 		if ans.Server != "" {
 			c.value.server = strings.TrimSpace(ans.Server)
-		}
-		if ans.Login != "" {
-			c.value.login = strings.TrimSpace(ans.Login)
 		}
 
 		if c.value.authType == jira.AuthTypeOAuth {
