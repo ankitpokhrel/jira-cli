@@ -97,14 +97,12 @@ func GetOAuth2Config(clientID, clientSecret, redirectURI string, scopes []string
 }
 
 // Configure performs the complete OAuth flow and returns tokens.
-func Configure() (*ConfigureTokenResponse, error) {
+func Configure(login string) (*ConfigureTokenResponse, error) {
 	// Collect OAuth credentials from user
 	jiraDir, err := getJiraConfigDir()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Jira config directory: %w", err)
 	}
-
-	secretStorage := utils.FileSystemStorage{BaseDir: jiraDir}
 
 	config, err := collectOAuthCredentials()
 	if err != nil {
@@ -132,9 +130,15 @@ func Configure() (*ConfigureTokenResponse, error) {
 		TokenType:    tokens.TokenType,
 		Expiry:       tokens.Expiry,
 	}
+	primarySecretStorage := utils.KeyRingStorage{User: login}
+	fallbackSecretStorage := utils.FileSystemStorage{BaseDir: jiraDir}
 
-	if err := utils.SaveJSON(secretStorage, oauthSecretsFile, oauthSecrets); err != nil {
-		return nil, fmt.Errorf("failed to store OAuth secrets: %w", err)
+	if err := utils.SaveJSON(primarySecretStorage, oauthSecretsFile, oauthSecrets); err != nil {
+		fmt.Printf("Warning: Failed to save to the primarySecretStorage, falling back to alternative")
+		err = utils.SaveJSON(fallbackSecretStorage, oauthSecretsFile, oauthSecrets)
+		if err != nil {
+			return nil, fmt.Errorf("failed to store OAuth secrets: %w", err)
+		}
 	}
 
 	return &ConfigureTokenResponse{
@@ -145,24 +149,28 @@ func Configure() (*ConfigureTokenResponse, error) {
 }
 
 // LoadOAuthSecrets loads OAuth secrets from storage.
-func LoadOAuthSecrets() (*OAuthSecrets, error) {
+func LoadOAuthSecrets(login string) (*OAuthSecrets, error) {
 	jiraDir, err := getJiraConfigDir()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Jira config directory: %w", err)
 	}
-
-	secretStorage := utils.FileSystemStorage{BaseDir: jiraDir}
-	secrets, err := utils.LoadJSON[OAuthSecrets](secretStorage, oauthSecretsFile)
+	primaryStorage := utils.KeyRingStorage{User: login}
+	fallbackSecretStorage := utils.FileSystemStorage{BaseDir: jiraDir}
+	secrets, err := utils.LoadJSON[OAuthSecrets](primaryStorage, oauthSecretsFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load OAuth secrets: %w", err)
+		fmt.Printf("Warning: Primary storage failed to save, using fallback")
+		secrets, err = utils.LoadJSON[OAuthSecrets](fallbackSecretStorage, oauthSecretsFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load OAuth secrets: %w", err)
+		}
 	}
 
 	return &secrets, nil
 }
 
 // HasOAuthCredentials checks if OAuth credentials are present.
-func HasOAuthCredentials() bool {
-	_, err := LoadOAuthSecrets()
+func HasOAuthCredentials(login string) bool {
+	_, err := LoadOAuthSecrets(login)
 	return err == nil
 }
 

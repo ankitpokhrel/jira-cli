@@ -58,7 +58,7 @@ func (o *OAuthSecrets) FromOAuth2Token(token *oauth2.Token) {
 
 // NewPersistentTokenSource creates a new TokenSource that persists tokens.
 // It attempts to use keyring storage first, falling back to filesystem storage if keyring fails.
-func NewPersistentTokenSource(clientID, clientSecret string) (*PersistentTokenSource, error) {
+func NewPersistentTokenSource(login, clientID, clientSecret string) (*PersistentTokenSource, error) {
 	jiraDir, err := getJiraConfigDir()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Jira config directory: %w", err)
@@ -66,7 +66,6 @@ func NewPersistentTokenSource(clientID, clientSecret string) (*PersistentTokenSo
 
 	keyringStorage := utils.NewKeyRingStorage(login)
 	fallbackFileSystemStorage := utils.FileSystemStorage{BaseDir: jiraDir}
-
 
 	return &PersistentTokenSource{
 		clientID:        clientID,
@@ -147,15 +146,15 @@ func (pts *PersistentTokenSource) saveSecrets(secrets *OAuthSecrets) error {
 }
 
 // LoadOAuth2TokenSource creates a TokenSource from stored OAuth secrets.
-func LoadOAuth2TokenSource() (oauth2.TokenSource, error) {
+func LoadOAuth2TokenSource(login string) (oauth2.TokenSource, error) {
 	// Load OAuth secrets to get client credentials
-	secrets, err := LoadOAuthSecrets()
+	secrets, err := LoadOAuthSecrets(login)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load OAuth secrets: %w", err)
 	}
 
 	// Create persistent token source
-	tokenSource, err := NewPersistentTokenSource(secrets.ClientID, secrets.ClientSecret)
+	tokenSource, err := NewPersistentTokenSource(login, secrets.ClientID, secrets.ClientSecret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create token source: %w", err)
 	}

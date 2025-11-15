@@ -35,8 +35,8 @@ func getAPIToken(config *jira.Config) string {
 	// Try OAuth access token if available and valid
 	// And should only do this assertion if the AuthType is oauth
 	isAuthTypeOAuth := config.AuthType != nil && *config.AuthType == jira.AuthTypeOAuth
-	if isAuthTypeOAuth && oauth.HasOAuthCredentials() {
-		tk, _ := oauth.LoadOAuth2TokenSource()
+	if isAuthTypeOAuth && oauth.HasOAuthCredentials(config.Login) {
+		tk, _ := oauth.LoadOAuth2TokenSource(config.Login)
 		token, _ := tk.Token()
 		return token.AccessToken
 	}
@@ -85,9 +85,9 @@ func Client(config jira.Config) *jira.Client {
 	}
 
 	// Check if we have OAuth credentials and should use OAuth
-	if oauth.HasOAuthCredentials() && config.AuthType != nil && *config.AuthType == jira.AuthTypeOAuth {
+	if oauth.HasOAuthCredentials(config.Login) && config.AuthType != nil && *config.AuthType == jira.AuthTypeOAuth {
 		// Try to create OAuth2 token source
-		tokenSource, err := oauth.LoadOAuth2TokenSource()
+		tokenSource, err := oauth.LoadOAuth2TokenSource(config.Login)
 		if err == nil {
 			// We have valid OAuth credentials, use OAuth authentication
 			// Pass the TokenSource to the client via a custom option

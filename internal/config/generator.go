@@ -359,7 +359,8 @@ func (c *JiraCLIConfigGenerator) configureMTLS() error {
 
 func (c *JiraCLIConfigGenerator) configureOAuth() error {
 	// Use the new OAuth package
-	tokenResponse, err := oauth.Configure()
+
+	tokenResponse, err := oauth.Configure(c.value.login)
 	if err != nil {
 		return err
 	}
