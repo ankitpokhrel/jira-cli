@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	testService = "jira-cli-test"
-	testUser    = "test-user"
+	testUser = "test-user"
 )
 
 func TestNewKeyRingStorage(t *testing.T) {
