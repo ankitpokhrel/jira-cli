@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -20,6 +21,9 @@ type FileSystemStorage struct {
 func (fs FileSystemStorage) Save(key string, value []byte) error {
 	if err := os.MkdirAll(fs.BaseDir, OWNER_ONLY); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
+	}
+	if !strings.HasSuffix(key, ".json") {
+		key = key + ".json"
 	}
 
 	filePath := filepath.Join(fs.BaseDir, key)

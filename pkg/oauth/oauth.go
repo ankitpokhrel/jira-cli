@@ -31,7 +31,7 @@ const (
 	oauthTimeout = 5 * time.Minute
 
 	// OAuth storage file name.
-	oauthSecretsFile = "oauth_secrets.json"
+	oauthSecretsFile = "jira-cli-oauth-secrets"
 
 	// Server shutdown timeout.
 	serverShutdownTimeout = 5 * time.Second
