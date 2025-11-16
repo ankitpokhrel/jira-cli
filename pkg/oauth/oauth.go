@@ -265,11 +265,51 @@ func performOAuthFlow(config *OAuthConfig, httpTimeout time.Duration, openBrowse
 				// Send success response to browser
 				w.Header().Set("Content-Type", "text/html")
 				if _, err := w.Write([]byte(`
+					<!DOCTYPE html>
 					<html>
+						<head>
+							<meta charset="UTF-8">
+							<title>Authorization Successful</title>
+							<style>
+								body {
+									font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+									display: flex;
+									justify-content: center;
+									align-items: center;
+									height: 100vh;
+									margin: 0;
+									background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+									color: #333;
+								}
+								.container {
+									background: white;
+									padding: 2rem;
+									border-radius: 8px;
+									box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+									text-align: center;
+									max-width: 400px;
+								}
+								h2 {
+									color: #667eea;
+									margin-top: 0;
+								}
+								p {
+									color: #666;
+									line-height: 1.6;
+								}
+								.checkmark {
+									font-size: 3rem;
+									color: #4caf50;
+									margin-bottom: 1rem;
+								}
+							</style>
+						</head>
 						<body>
-							<h2>Authorization successful!</h2>
-							<p>You can close this window and return to the terminal.</p>
-							<script>window.close();</script>
+							<div class="container">
+								<div class="checkmark">✓</div>
+								<h2>Authorization Successful!</h2>
+								<p>You can safely close this window and return to the terminal.</p>
+							</div>
 						</body>
 					</html>
 				`)); err != nil {
