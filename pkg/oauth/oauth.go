@@ -189,8 +189,8 @@ func collectOAuthCredentials() (*OAuthConfig, error) {
 	}{}
 
 	// Check for environment variables
-	envClientID := os.Getenv("JIRA_OAUTH_CLIENT_ID")
-	envClientSecret := os.Getenv("JIRA_OAUTH_CLIENT_SECRET")
+	envClientID := os.Getenv("JIRA_CLI_OAUTH_CLIENT_ID")
+	envClientSecret := os.Getenv("JIRA_CLI_OAUTH_CLIENT_SECRET")
 
 	q1 := &survey.Input{
 		Message: "Jira App Client ID:",

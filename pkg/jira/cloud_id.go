@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
 )
 
 var (
@@ -21,6 +22,11 @@ type CloudIDResponse struct {
 }
 
 func (c *Client) GetCloudID() (string, error) {
+	envCloudID := os.Getenv("JIRA_CLI_CLOUD_ID")
+	if envCloudID != "" {
+		return envCloudID, nil
+	}
+
 	res, err := c.request(context.Background(), http.MethodGet, "https://api.atlassian.com/oauth/token/accessible-resources", nil, Header{
 		"Accept": "application/json",
 	})
