@@ -564,11 +564,11 @@ type mockKeyringStorage struct {
 	user string
 }
 
-func (m *mockKeyringStorage) Save(key string, value []byte) error {
+func (*mockKeyringStorage) Save(_ string, _ []byte) error {
 	return keyring.ErrSetDataTooBig
 }
 
-func (m *mockKeyringStorage) Load(key string) ([]byte, error) {
+func (*mockKeyringStorage) Load(_ string) ([]byte, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 

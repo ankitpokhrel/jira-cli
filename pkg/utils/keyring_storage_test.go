@@ -211,7 +211,7 @@ func TestKeyRingStorage(t *testing.T) {
 	})
 }
 
-func TestKeyRingStorageImplementsInterface(t *testing.T) {
+func TestKeyRingStorageImplementsInterface(_ *testing.T) {
 	// This test ensures KeyRingStorage implements the Storage interface
 	var _ Storage = &KeyRingStorage{}
 	var _ Storage = KeyRingStorage{}
