@@ -20,7 +20,7 @@ func TestFileSystemStorage(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Verify file exists and has correct content
-		filePath := filepath.Join(tempDir, "test-key")
+		filePath := filepath.Join(tempDir, "test-key.json")
 		content, err := os.ReadFile(filePath)
 		assert.NoError(t, err)
 		assert.Equal(t, "test-value", string(content))
@@ -39,7 +39,7 @@ func TestFileSystemStorage(t *testing.T) {
 
 		// Create test file
 		testContent := "test-content"
-		filePath := filepath.Join(tempDir, "test-key")
+		filePath := filepath.Join(tempDir, "test-key.json")
 		err := os.WriteFile(filePath, []byte(testContent), OWNER_READ_WRITE)
 		assert.NoError(t, err)
 
@@ -64,7 +64,7 @@ func TestFileSystemStorage(t *testing.T) {
 		tempDir := t.TempDir()
 
 		// Create a file where we want to create a directory
-		filePath := filepath.Join(tempDir, "blocking-file")
+		filePath := filepath.Join(tempDir, "blocking-file.json")
 		err := os.WriteFile(filePath, []byte("content"), 0o644)
 		assert.NoError(t, err)
 

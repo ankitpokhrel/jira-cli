@@ -31,6 +31,9 @@ func (fs FileSystemStorage) Save(key string, value []byte) error {
 }
 
 func (fs FileSystemStorage) Load(key string) ([]byte, error) {
+	if !strings.HasSuffix(key, ".json") {
+		key += ".json"
+	}
 	filePath := filepath.Join(fs.BaseDir, key)
 	return os.ReadFile(filePath)
 }

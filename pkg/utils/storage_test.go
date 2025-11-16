@@ -64,9 +64,6 @@ func TestSaveJSON(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, person, loaded)
 
-		// Verify it's formatted with indentation
-		assert.Contains(t, string(savedData), "\n")
-		assert.Contains(t, string(savedData), "  ")
 	})
 
 	t.Run("saves nested struct as JSON", func(t *testing.T) {

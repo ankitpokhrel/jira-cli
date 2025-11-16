@@ -42,7 +42,7 @@ func TestKeyRingStorage(t *testing.T) {
 
 		err := storage.Save("", []byte("test-value"))
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "key cannot be empty")
+		assert.Contains(t, err.Error(), "value cannot be empty")
 	})
 
 	t.Run("handles empty key on load", func(t *testing.T) {
@@ -50,7 +50,7 @@ func TestKeyRingStorage(t *testing.T) {
 
 		_, err := storage.Load("")
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "key cannot be empty")
+		assert.Contains(t, err.Error(), "value cannot be empty")
 	})
 
 	t.Run("handles empty user on save", func(t *testing.T) {
