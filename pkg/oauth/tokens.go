@@ -2,10 +2,13 @@ package oauth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/utils"
+	"github.com/zalando/go-keyring"
 	"golang.org/x/oauth2"
 )
 
@@ -133,8 +136,9 @@ func (pts *PersistentTokenSource) Token() (*oauth2.Token, error) {
 func (pts *PersistentTokenSource) saveSecrets(secrets *OAuthSecrets) error {
 	err := utils.SaveJSON(pts.storage, oauthSecretsFile, secrets)
 	if err != nil && !pts.usingFallback && pts.fallbackStorage != nil {
-		// Primary storage failed, try fallback
-		fmt.Println("Warning: Primary storage failed, falling back to FileSystemStorage for OAuth tokens")
+		if errors.Is(err, keyring.ErrSetDataTooBig) {
+			cmdutil.Warn("Data was too big to save to the keyring, falling back to filesystem storage")
+		}
 		err = utils.SaveJSON(pts.fallbackStorage, oauthSecretsFile, secrets)
 		if err == nil {
 			// Successfully saved to fallback, switch to using it

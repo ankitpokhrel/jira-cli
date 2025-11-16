@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/zlib"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/zalando/go-keyring"
@@ -82,9 +81,6 @@ func compressData(value []byte) (string, error) {
 	}
 
 	compressedValue := compressed.String()
-	if len(compressedValue) > maxKeyringValueLength {
-		return "", fmt.Errorf("data is too large to save in the keyring, max length is %d bytes, got %d bytes", maxKeyringValueLength, len(compressedValue))
-	}
 	return compressedValue, nil
 }
 

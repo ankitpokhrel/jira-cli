@@ -3,6 +3,7 @@ package oauth
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/browser"
+	"github.com/zalando/go-keyring"
 	"golang.org/x/oauth2"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
@@ -135,7 +137,9 @@ func Configure(login string) (*ConfigureTokenResponse, error) {
 	fallbackSecretStorage := utils.FileSystemStorage{BaseDir: jiraDir}
 
 	if err := utils.SaveJSON(primarySecretStorage, oauthSecretsFile, oauthSecrets); err != nil {
-		fmt.Printf("Warning: Failed to save to the primarySecretStorage, falling back to alternative")
+		if errors.Is(err, keyring.ErrSetDataTooBig) {
+			cmdutil.Warn("Data was too big to save to the keyring, falling back to filesystem storage")
+		}
 		err = utils.SaveJSON(fallbackSecretStorage, oauthSecretsFile, oauthSecrets)
 		if err != nil {
 			return nil, fmt.Errorf("failed to store OAuth secrets: %w", err)
