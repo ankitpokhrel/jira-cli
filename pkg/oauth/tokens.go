@@ -141,6 +141,7 @@ func (pts *PersistentTokenSource) saveSecrets(secrets *OAuthSecrets) error {
 		}
 		err = utils.SaveJSON(pts.fallbackStorage, oauthSecretsFile, secrets)
 		if err == nil {
+			cmdutil.Warn("Saved credentials to owner-restricted filesystem storage")
 			// Successfully saved to fallback, switch to using it
 			pts.storage = pts.fallbackStorage
 			pts.usingFallback = true

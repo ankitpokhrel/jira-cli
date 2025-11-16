@@ -144,6 +144,7 @@ func Configure(login string) (*ConfigureTokenResponse, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to store OAuth secrets: %w", err)
 		}
+		cmdutil.Warn("Saved credentials to owner-restricted filesystem storage")
 	}
 
 	return &ConfigureTokenResponse{
