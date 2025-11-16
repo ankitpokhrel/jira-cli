@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 )
 
 const (
@@ -13,6 +15,7 @@ const (
 )
 
 // FileSystemStorage implements Storage interface for filesystem operations.
+// Ideally now that we have keyring storage, we primarily use that and only fallback to filesystem storage if the keyring is not available.
 type FileSystemStorage struct {
 	// BaseDir is the directory where the storage will be saved
 	BaseDir string
@@ -27,6 +30,8 @@ func (fs FileSystemStorage) Save(key string, value []byte) error {
 	}
 
 	filePath := filepath.Join(fs.BaseDir, key)
+	cmdutil.Warn("\nSaved credentials to owner-restricted filesystem storage")
+
 	return os.WriteFile(filePath, value, OWNER_READ_WRITE)
 }
 
@@ -35,5 +40,6 @@ func (fs FileSystemStorage) Load(key string) ([]byte, error) {
 		key += ".json"
 	}
 	filePath := filepath.Join(fs.BaseDir, key)
+	cmdutil.Warn("\nLoaded credentials from owner-restricted filesystem storage")
 	return os.ReadFile(filePath)
 }

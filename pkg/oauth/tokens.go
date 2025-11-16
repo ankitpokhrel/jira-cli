@@ -137,11 +137,10 @@ func (pts *PersistentTokenSource) saveSecrets(secrets *OAuthSecrets) error {
 	err := utils.SaveJSON(pts.storage, oauthSecretsFile, secrets)
 	if err != nil && !pts.usingFallback && pts.fallbackStorage != nil {
 		if errors.Is(err, keyring.ErrSetDataTooBig) {
-			cmdutil.Warn("Data was too big to save to the keyring, falling back to filesystem storage")
+			cmdutil.Warn("\nData was too big to save to the keyring, falling back to filesystem storage")
 		}
 		err = utils.SaveJSON(pts.fallbackStorage, oauthSecretsFile, secrets)
 		if err == nil {
-			cmdutil.Warn("Saved credentials to owner-restricted filesystem storage")
 			// Successfully saved to fallback, switch to using it
 			pts.storage = pts.fallbackStorage
 			pts.usingFallback = true
