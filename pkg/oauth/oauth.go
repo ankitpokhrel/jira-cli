@@ -237,6 +237,10 @@ func collectOAuthCredentials() (*OAuthConfig, error) {
 
 // performOAuthFlow executes the OAuth authorization flow.
 func performOAuthFlow(config *OAuthConfig, httpTimeout time.Duration, openBrowser bool) (*oauth2.Token, error) {
+	fmt.Printf("Expected Scopes:\n")
+	for i, scope := range config.Scopes {
+		fmt.Printf("  %2d. %s\n", i+1, scope)
+	}
 	s := cmdutil.Info("Starting OAuth flow...")
 	defer s.Stop()
 
