@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -176,38 +177,48 @@ func HasOAuthCredentials(login string) bool {
 
 // collectOAuthCredentials collects OAuth credentials from the user.
 func collectOAuthCredentials() (*OAuthConfig, error) {
-	var questions []*survey.Question
 	answers := struct {
 		ClientID     string
 		ClientSecret string
 		RedirectURI  string
 	}{}
 
-	q1 := &survey.Question{
-		Name: "clientID",
-		Prompt: &survey.Input{
-			Message: "Jira App Client ID:",
-			Help:    "This is the client ID of your Jira App that you created for OAuth authentication.",
-		},
-	}
-	q2 := &survey.Question{
-		Name: "clientSecret",
-		Prompt: &survey.Password{
-			Message: "Jira App Client Secret:",
-			Help:    "This is the client secret of your Jira App that you created for OAuth authentication.",
-		},
-	}
-	q3 := &survey.Question{
-		Name: "redirectURI",
-		Prompt: &survey.Input{
-			Default: defaultRedirectURI,
-			Message: "Redirect URI:",
-			Help:    "The redirect URL for Jira App. Recommended to set as localhost.",
-		},
-	}
-	questions = append(questions, q1, q2, q3)
+	// Check for environment variables
+	envClientID := os.Getenv("JIRA_OAUTH_CLIENT_ID")
+	envClientSecret := os.Getenv("JIRA_OAUTH_CLIENT_SECRET")
 
-	if err := survey.Ask(questions, &answers, survey.WithValidator(survey.Required)); err != nil {
+	q1 := &survey.Input{
+		Message: "Jira App Client ID:",
+		Help:    "This is the client ID of your Jira App that you created for OAuth authentication.",
+		Default: envClientID,
+	}
+
+	q2 := &survey.Password{
+		Message: "Jira App Client Secret:",
+		Help:    "This is the client secret of your Jira App that you created for OAuth authentication.",
+	}
+
+	q3 := &survey.Input{
+		Default: defaultRedirectURI,
+		Message: "Redirect URI:",
+		Help:    "The redirect URL for Jira App. Recommended to set as localhost.",
+	}
+
+	if envClientID == "" {
+		if err := survey.AskOne(q1, &answers.ClientID); err != nil {
+			return nil, err
+		}
+	} else {
+		answers.ClientID = envClientID
+	}
+	if envClientSecret == "" {
+		if err := survey.AskOne(q2, &answers.ClientSecret); err != nil {
+			return nil, err
+		}
+	} else {
+		answers.ClientSecret = envClientSecret
+	}
+	if err := survey.AskOne(q3, &answers.RedirectURI); err != nil {
 		return nil, err
 	}
 

@@ -376,7 +376,11 @@ func (c *JiraCLIConfigGenerator) configureLoginDetails() error {
 	var qs []*survey.Question
 
 	c.value.login = c.usrCfg.Login
-	if c.usrCfg.Login == "" {
+	envLogin := os.Getenv("JIRA_CLI_LOGIN")
+	if envLogin != "" {
+		c.value.login = envLogin
+		return nil
+	} else if c.usrCfg.Login == "" {
 		switch c.value.installation {
 		case jira.InstallationTypeCloud:
 			qs = append(qs, &survey.Question{
@@ -451,8 +455,11 @@ func (c *JiraCLIConfigGenerator) configureServerDetails() error {
 	var qs []*survey.Question
 
 	c.value.server = c.usrCfg.Server
-
-	if c.usrCfg.Server == "" {
+	envServer := os.Getenv("JIRA_CLI_SERVER")
+	if envServer != "" {
+		c.value.server = envServer
+		return c.verifyServer()
+	} else if c.usrCfg.Server == "" {
 		qs = append(qs, &survey.Question{
 			Name: "server",
 			Prompt: &survey.Input{
@@ -492,14 +499,20 @@ func (c *JiraCLIConfigGenerator) configureServerDetails() error {
 			c.value.server = strings.TrimSpace(ans.Server)
 		}
 
-		if c.value.authType == jira.AuthTypeOAuth {
-			// Set server URL using the cloud ID from OAuth configuration
-			c.value.apiServer = fmt.Sprintf("%s/%s", apiServer, c.value.oauth.cloudId)
-		} else {
-			c.value.apiServer = c.value.server
-		}
 	}
-	// Trim trailing slash from server URL
+	return c.verifyServer()
+}
+
+func (c *JiraCLIConfigGenerator) setApiServer() {
+	if c.value.authType == jira.AuthTypeOAuth {
+		c.value.apiServer = fmt.Sprintf("%s/%s", apiServer, c.value.oauth.cloudId)
+	} else {
+		c.value.apiServer = c.value.server
+	}
+}
+
+func (c *JiraCLIConfigGenerator) verifyServer() error {
+	c.setApiServer()
 	c.value.server = strings.TrimRight(c.value.server, "/")
 	return c.verifyLoginDetails()
 }
