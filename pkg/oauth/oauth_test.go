@@ -559,7 +559,7 @@ func TestGetOAuth2Config(t *testing.T) {
 	})
 }
 
-// mockKeyringStorage is a mock storage that returns keyring.ErrSetDataTooBig
+// mockKeyringStorage is a mock storage that returns keyring.ErrSetDataTooBig.
 type mockKeyringStorage struct {
 	user string
 }
@@ -573,7 +573,6 @@ func (m *mockKeyringStorage) Load(key string) ([]byte, error) {
 }
 
 func TestConfigure_KeyringFallback(t *testing.T) {
-
 	t.Run("falls back to filesystem storage when keyring data is too big", func(t *testing.T) {
 		// Create a temporary directory for filesystem storage
 		tempDir, err := os.MkdirTemp("", "oauth-test-fallback-*")

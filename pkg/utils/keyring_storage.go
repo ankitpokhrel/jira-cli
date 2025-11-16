@@ -15,14 +15,10 @@ type KeyRingStorage struct {
 	User string
 }
 
-const (
-	// maxKeyringValueLength is the lowest limit for the password using this library
-	// See https://github.com/zalando/go-keyring/blob/5c6f7e0ba5bf0380b4a490f2b7e41deb44b3c63e/keyring.go#L13-L16
-	maxKeyringValueLength = 2560
+var (
+	ErrKeyRingValueEmpty = errors.New("value cannot be empty")
+	ErrKeyRingUserEmpty  = errors.New("user cannot be empty")
 )
-
-var ErrKeyRingValueEmpty = errors.New("value cannot be empty")
-var ErrKeyRingUserEmpty = errors.New("user cannot be empty")
 
 // NewKeyRingStorage creates a new KeyRingStorage with the provided user.
 func NewKeyRingStorage(user string) *KeyRingStorage {
@@ -33,7 +29,6 @@ func NewKeyRingStorage(user string) *KeyRingStorage {
 
 // Save compresses the data and stores it in the system keyring.
 func (ks KeyRingStorage) Save(key string, value []byte) error {
-
 	compressedData, err := compressData(value)
 	if err != nil {
 		return err
@@ -45,13 +40,12 @@ func (ks KeyRingStorage) Save(key string, value []byte) error {
 	if ks.User == "" {
 		return ErrKeyRingUserEmpty
 	}
-
+	// Note, there is a limit to the size of the data that can be stored in the keyring. See https://github.com/zalando/go-keyring/blob/5c6f7e0ba5bf0380b4a490f2b7e41deb44b3c63e/keyring.go#L13-L16
 	return keyring.Set(key, ks.User, compressedData)
 }
 
 // Load decompresses and retrieves the data from the system keyring.
 func (ks KeyRingStorage) Load(key string) ([]byte, error) {
-
 	if key == "" {
 		return nil, ErrKeyRingValueEmpty
 	}
@@ -85,12 +79,15 @@ func compressData(value []byte) (string, error) {
 }
 
 func decompressData(compressedData string) ([]byte, error) {
-
 	reader, err := zlib.NewReader(bytes.NewReader([]byte(compressedData)))
 	if err != nil {
 		return nil, err
 	}
-	defer reader.Close()
+	defer func() {
+		if closeErr := reader.Close(); closeErr != nil {
+			_ = closeErr
+		}
+	}()
 
 	decompressed, err := io.ReadAll(reader)
 	if err != nil {

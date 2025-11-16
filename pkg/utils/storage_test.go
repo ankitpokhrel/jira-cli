@@ -63,7 +63,6 @@ func TestSaveJSON(t *testing.T) {
 		err = json.Unmarshal(savedData, &loaded)
 		assert.NoError(t, err)
 		assert.Equal(t, person, loaded)
-
 	})
 
 	t.Run("saves nested struct as JSON", func(t *testing.T) {
