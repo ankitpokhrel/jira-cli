@@ -1,7 +1,11 @@
 package utils
 
 import (
+	"bytes"
+	"compress/zlib"
+	"errors"
 	"fmt"
+	"io"
 
 	"github.com/zalando/go-keyring"
 )
@@ -12,6 +16,15 @@ type KeyRingStorage struct {
 	User string
 }
 
+const (
+	// maxKeyringValueLength is the lowest limit for the password using this library
+	// See https://github.com/zalando/go-keyring/blob/5c6f7e0ba5bf0380b4a490f2b7e41deb44b3c63e/keyring.go#L13-L16
+	maxKeyringValueLength = 2560
+)
+
+var ErrKeyRingValueEmpty = errors.New("value cannot be empty")
+var ErrKeyRingUserEmpty = errors.New("user cannot be empty")
+
 // NewKeyRingStorage creates a new KeyRingStorage with the provided user.
 func NewKeyRingStorage(user string) *KeyRingStorage {
 	return &KeyRingStorage{
@@ -19,31 +32,74 @@ func NewKeyRingStorage(user string) *KeyRingStorage {
 	}
 }
 
-// Save stores the value in the system keyring.
-// The key parameter is used as the keyring's service field.
+// Save compresses the data and stores it in the system keyring.
 func (ks KeyRingStorage) Save(key string, value []byte) error {
-	if key == "" {
-		return fmt.Errorf("key cannot be empty")
-	}
-	if ks.User == "" {
-		return fmt.Errorf("user cannot be empty")
+
+	compressedData, err := compressData(value)
+	if err != nil {
+		return err
 	}
 
-	return keyring.Set(key, ks.User, string(value))
+	if key == "" {
+		return ErrKeyRingValueEmpty
+	}
+	if ks.User == "" {
+		return ErrKeyRingUserEmpty
+	}
+
+	return keyring.Set(key, ks.User, compressedData)
 }
 
-// Load retrieves the value from the system keyring.
+// Load decompresses and retrieves the data from the system keyring.
 func (ks KeyRingStorage) Load(key string) ([]byte, error) {
+
 	if key == "" {
-		return nil, fmt.Errorf("key cannot be empty")
+		return nil, ErrKeyRingValueEmpty
 	}
 	if ks.User == "" {
-		return nil, fmt.Errorf("user cannot be empty")
+		return nil, ErrKeyRingUserEmpty
 	}
 
 	secret, err := keyring.Get(key, ks.User)
 	if err != nil {
 		return nil, err
 	}
-	return []byte(secret), nil
+	decompressedData, err := decompressData(secret)
+	if err != nil {
+		return nil, err
+	}
+	return decompressedData, nil
+}
+
+func compressData(value []byte) (string, error) {
+	var compressed bytes.Buffer
+	zlibWriter := zlib.NewWriter(&compressed)
+	if _, err := zlibWriter.Write(value); err != nil {
+		return "", err
+	}
+	if err := zlibWriter.Close(); err != nil {
+		return "", err
+	}
+
+	compressedValue := compressed.String()
+	if len(compressedValue) > maxKeyringValueLength {
+		return "", fmt.Errorf("data is too large to save in the keyring, max length is %d bytes, got %d bytes", maxKeyringValueLength, len(compressedValue))
+	}
+	return compressedValue, nil
+}
+
+func decompressData(compressedData string) ([]byte, error) {
+
+	reader, err := zlib.NewReader(bytes.NewReader([]byte(compressedData)))
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+
+	decompressed, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return decompressed, nil
 }
