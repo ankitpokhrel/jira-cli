@@ -130,6 +130,24 @@ default.
   - In case `JIRA_API_TOKEN` variable is set it will be used together with `mtls`.
 - If you want to use `oauth` run `jira init`. Select installation type `Cloud`, and then select authentication type as `oauth`.
 
+##### Environment Variables
+
+The following environment variables are optional and can be used to streamline the initialization process:
+
+- `JIRA_CLI_SERVER`: The URL of your Jira server (e.g., `https://company.atlassian.net`)
+- `JIRA_CLI_LOGIN`: Your login email address for your JIRA instance (e.g. `foobar@company.com`)
+- `JIRA_API_TOKEN`: Your API token or password
+- `JIRA_AUTH_TYPE`: Authentication type (`basic`, `bearer`, `mtls`, or `oauth`)
+- `JIRA_CONFIG_FILE`: Path to a specific configuration file
+
+###### OAuth-specific Environment Variables
+
+- `JIRA_CLI_OAUTH_CLIENT_ID`: OAuth Client ID for your Jira App
+- `JIRA_CLI_OAUTH_CLIENT_SECRET`: OAuth Client Secret for your Jira App
+- `JIRA_CLI_CLOUD_ID`: Your Atlassian Cloud ID
+
+When these environment variables are set, `jira init` will use them as defaults, reducing the number of prompts during initialization.
+
 #### Shell completion
 
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.
