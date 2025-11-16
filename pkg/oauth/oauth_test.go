@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/zalando/go-keyring"
 	"golang.org/x/oauth2"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/utils"
@@ -554,5 +556,52 @@ func TestGetOAuth2Config(t *testing.T) {
 		config := GetOAuth2Config("test-client-id", "test-client-secret", "", []string{"read:jira-user"})
 
 		assert.Equal(t, defaultRedirectURI, config.RedirectURL)
+	})
+}
+
+// mockKeyringStorage is a mock storage that returns keyring.ErrSetDataTooBig
+type mockKeyringStorage struct {
+	user string
+}
+
+func (m *mockKeyringStorage) Save(key string, value []byte) error {
+	return keyring.ErrSetDataTooBig
+}
+
+func (m *mockKeyringStorage) Load(key string) ([]byte, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func TestConfigure_KeyringFallback(t *testing.T) {
+
+	t.Run("falls back to filesystem storage when keyring data is too big", func(t *testing.T) {
+		// Create a temporary directory for filesystem storage
+		tempDir, err := os.MkdirTemp("", "oauth-test-fallback-*")
+		assert.NoError(t, err)
+		defer func() {
+			_ = os.RemoveAll(tempDir)
+		}()
+
+		// Create test OAuth secrets
+		oauthSecrets := &OAuthSecrets{
+			ClientID:     "test-client-id",
+			ClientSecret: "test-client-secret",
+			AccessToken:  "test-access-token",
+			RefreshToken: "test-refresh-token",
+			TokenType:    "Bearer",
+			Expiry:       time.Now().Add(time.Hour),
+		}
+
+		// Create a mock keyring storage that returns ErrSetDataTooBig
+		// This simulates the error that would occur in Configure()
+		mockKeyring := &mockKeyringStorage{user: "test-user"}
+		fallbackStorage := utils.FileSystemStorage{BaseDir: tempDir}
+
+		err = utils.SaveJSON(mockKeyring, oauthSecretsFile, oauthSecrets)
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, keyring.ErrSetDataTooBig), "Error should be ErrSetDataTooBig")
+
+		err = utils.SaveJSON(fallbackStorage, oauthSecretsFile, oauthSecrets)
+		assert.NoError(t, err, "Fallback storage should succeed ")
 	})
 }
