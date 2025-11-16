@@ -11,7 +11,7 @@ type Storage interface {
 
 // SaveJSON saves a typed value as JSON using the provided storage.
 func SaveJSON[T any](storage Storage, key string, value T) error {
-	data, err := json.MarshalIndent(value, "", "  ")
+	data, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
