@@ -563,7 +563,7 @@ func (c *JiraCLIConfigGenerator) configureServerMeta() error {
 	s := cmdutil.Info("Fetching server details...")
 	defer s.Stop()
 
-	if c.jiraClient != nil {
+	if c.jiraClient == nil {
 		config := c.generateJiraConfig()
 		c.jiraClient = api.Client(config)
 	}
