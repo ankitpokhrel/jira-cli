@@ -171,7 +171,7 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 	}
 
 	if c.value.installation == jira.InstallationTypeCloud {
-		// This is to account for OAUTH setup
+		// This is to account for OAuth setup
 		if err := c.configureCloudAuthType(); err != nil {
 			return "", err
 		}
