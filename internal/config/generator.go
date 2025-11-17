@@ -505,7 +505,7 @@ func (c *JiraCLIConfigGenerator) configureServerDetails() error {
 
 func (c *JiraCLIConfigGenerator) setApiServer() {
 	if c.value.authType == jira.AuthTypeOAuth {
-		c.value.apiServer = fmt.Sprintf("%s/%s", apiServer, c.value.oauth.cloudID)
+		c.value.apiServer = fmt.Sprintf("%s/%s", apiServer, url.PathEscape(c.value.oauth.cloudID))
 	} else {
 		c.value.apiServer = c.value.server
 	}
