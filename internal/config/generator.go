@@ -100,7 +100,7 @@ type JiraCLIConfigGenerator struct {
 		oauth struct {
 			accessToken  string
 			refreshToken string
-			cloudId      string
+			cloudID      string
 		}
 		timezone string
 	}
@@ -367,7 +367,7 @@ func (c *JiraCLIConfigGenerator) configureOAuth() error {
 	// Store the tokens and cloud ID
 	c.value.oauth.accessToken = tokenResponse.AccessToken
 	c.value.oauth.refreshToken = tokenResponse.RefreshToken
-	c.value.oauth.cloudId = tokenResponse.CloudID
+	c.value.oauth.cloudID = tokenResponse.CloudID
 
 	return nil
 }
@@ -505,7 +505,7 @@ func (c *JiraCLIConfigGenerator) configureServerDetails() error {
 
 func (c *JiraCLIConfigGenerator) setApiServer() {
 	if c.value.authType == jira.AuthTypeOAuth {
-		c.value.apiServer = fmt.Sprintf("%s/%s", apiServer, c.value.oauth.cloudId)
+		c.value.apiServer = fmt.Sprintf("%s/%s", apiServer, c.value.oauth.cloudID)
 	} else {
 		c.value.apiServer = c.value.server
 	}
@@ -882,7 +882,7 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	}
 
 	if c.value.authType == jira.AuthTypeOAuth {
-		config.Set("oauth.cloud_id", c.value.oauth.cloudId)
+		config.Set("oauth.cloud_id", c.value.oauth.cloudID)
 	}
 
 	if c.value.board != nil {
