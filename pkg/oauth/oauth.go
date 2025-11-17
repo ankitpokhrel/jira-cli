@@ -16,14 +16,14 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
+	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/utils"
 )
 
 const (
 	// JIRA OAuth2 endpoints.
-	jiraAuthURL            = "https://auth.atlassian.com/authorize"
-	jiraTokenURL           = "https://auth.atlassian.com/oauth/token"
-	accessibleResourcesURL = "https://api.atlassian.com/oauth/token/accessible-resources"
+	jiraAuthURL  = "https://auth.atlassian.com/authorize"
+	jiraTokenURL = "https://auth.atlassian.com/oauth/token"
 
 	// Default OAuth settings.
 	defaultRedirectURI = "http://localhost:9876/callback"
@@ -119,7 +119,7 @@ func Configure(login string) (*ConfigureTokenResponse, error) {
 	}
 
 	// Get Cloud ID for Atlassian API
-	cloudID, err := getCloudID(accessibleResourcesURL, tokens.AccessToken)
+	cloudID, err := getCloudID(jira.JiraAccessibleResourcesURL, tokens.AccessToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cloud ID: %w", err)
 	}

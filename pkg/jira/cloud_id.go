@@ -13,6 +13,10 @@ var (
 	ErrEmptyCloudID     = errors.New("empty cloud ID returned")
 )
 
+const (
+	JiraAccessibleResourcesURL = "https://api.atlassian.com/oauth/token/accessible-resources"
+)
+
 type CloudIDResponse struct {
 	ID        string   `json:"id"`
 	Name      string   `json:"name"`
@@ -27,7 +31,7 @@ func (c *Client) GetCloudID() (string, error) {
 		return envCloudID, nil
 	}
 
-	res, err := c.request(context.Background(), http.MethodGet, "https://api.atlassian.com/oauth/token/accessible-resources", nil, Header{
+	res, err := c.request(context.Background(), http.MethodGet, JiraAccessibleResourcesURL, nil, Header{
 		"Accept": "application/json",
 	})
 	if err != nil {
