@@ -55,7 +55,7 @@ func TransformIssueFields(rawJSON []byte, fieldMappings []IssueTypeField, fieldF
 
 	for _, field := range fieldMappings {
 		// Convert "Story Points" -> "storyPoints" (camelCase)
-		humanName := toFieldName(field.Name)
+		humanName := ToFieldName(field.Name)
 		fieldMap[field.Key] = humanName
 		nameToKeys[humanName] = append(nameToKeys[humanName], field.Key)
 	}
@@ -113,7 +113,7 @@ func TransformIssueFields(rawJSON []byte, fieldMappings []IssueTypeField, fieldF
 		expandedFilter := make([]string, 0, len(fieldFilter)*2)
 		for _, path := range fieldFilter {
 			expandedFilter = append(expandedFilter, path)
-			
+
 			// Check if this path references a customfield that has a mapping
 			parts := strings.Split(path, ".")
 			for i, part := range parts {
@@ -128,7 +128,7 @@ func TransformIssueFields(rawJSON []byte, fieldMappings []IssueTypeField, fieldF
 				}
 			}
 		}
-		
+
 		transformed = filterFields(transformed, expandedFilter)
 	}
 
@@ -270,9 +270,9 @@ func filterByPathTree(data interface{}, tree *pathTree, currentPath string) inte
 	}
 }
 
-// toFieldName converts a field name to camelCase for use in JSON output.
+// ToFieldName converts a field name to camelCase for use in JSON output.
 // For example: "Story Points" -> "storyPoints", "Rank" -> "rank"
-func toFieldName(name string) string {
+func ToFieldName(name string) string {
 	// Remove special characters and split by space/punctuation
 	name = strings.Map(func(r rune) rune {
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == ' ' {

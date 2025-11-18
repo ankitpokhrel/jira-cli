@@ -25,11 +25,20 @@ $ jira issue view ISSUE-1 --comments 5
 # Get the raw JSON data
 $ jira issue view ISSUE-1 --raw
 
+# Get raw JSON with only specific fields
+$ jira issue view ISSUE-1 --raw --api-fields "key,summary,status"
+
 # Get JSON output with human-readable custom field names
 $ jira issue view ISSUE-1 --json
 
+# Get JSON with only specific fields from API
+$ jira issue view ISSUE-1 --json --api-fields "key,summary,status,Story Points"
+
 # Get JSON filtered to specific nested paths
-$ jira issue view ISSUE-1 --json --json-filter "key,fields.summary,fields.status.statusCategory.name"`
+$ jira issue view ISSUE-1 --json --json-filter "key,fields.summary,fields.status.statusCategory.name"
+
+# Combine both for maximum efficiency and precision
+$ jira issue view ISSUE-1 --json --api-fields "key,summary,status" --json-filter "key,fields.summary,fields.status.statusCategory.name"`
 
 	flagRaw        = "raw"
 	flagJSON       = "json"
@@ -63,6 +72,10 @@ func NewCmdView() *cobra.Command {
 	cmd.Flags().Bool(flagPlain, false, "Display output in plain mode")
 	cmd.Flags().Bool(flagRaw, false, "Print raw Jira API response")
 	cmd.Flags().Bool(flagJSON, false, "Print JSON output with human-readable custom field names")
+	cmd.Flags().String("api-fields", "", "Comma-separated list of fields to fetch from Jira API (e.g., 'key,summary,status,assignee'). "+
+		"Use Jira field names, human-readable names from your config (e.g., 'Story Points', 'Sprint'), "+
+		"custom field IDs (e.g., 'customfield_10001'), or special values like '*navigable' (common fields), '*all' (most fields). "+
+		"Only works with --json or --raw. If not specified, returns all fields.")
 	cmd.Flags().String("json-filter", "", "Comma-separated list of JSON paths to include in output (e.g., 'key,fields.summary,fields.status.statusCategory.name'). "+
 		"Allows precise filtering of nested JSON fields after API response. "+
 		"Only works with --json. If not specified, includes all fields from API response.")
@@ -95,12 +108,18 @@ func viewRaw(cmd *cobra.Command, args []string) {
 
 	key := cmdutil.GetJiraIssueKey(viper.GetString(configProject), args[0])
 
+	// Get fields for API-level filtering and translate names to IDs
+	fieldsStr, err := cmd.Flags().GetString("api-fields")
+	cmdutil.ExitIfError(err)
+
+	fields := cmdcommon.TranslateFieldNames(fieldsStr)
+
 	apiResp, err := func() (string, error) {
 		s := cmdutil.Info(messageFetchingData)
 		defer s.Stop()
 
 		client := api.DefaultClient(debug)
-		return api.ProxyGetIssueRaw(client, key)
+		return api.ProxyGetIssueRaw(client, key, fields)
 	}()
 	cmdutil.ExitIfError(err)
 
@@ -113,13 +132,19 @@ func viewJSON(cmd *cobra.Command, args []string) {
 
 	key := cmdutil.GetJiraIssueKey(viper.GetString(configProject), args[0])
 
-	// Get raw JSON
+	// Get fields for API-level filtering and translate names to IDs
+	fieldsStr, err := cmd.Flags().GetString("api-fields")
+	cmdutil.ExitIfError(err)
+
+	fields := cmdcommon.TranslateFieldNames(fieldsStr)
+
+	// Get raw JSON with API field filtering
 	apiResp, err := func() (string, error) {
 		s := cmdutil.Info(messageFetchingData)
 		defer s.Stop()
 
 		client := api.DefaultClient(debug)
-		return api.ProxyGetIssueRaw(client, key)
+		return api.ProxyGetIssueRaw(client, key, fields)
 	}()
 	cmdutil.ExitIfError(err)
 

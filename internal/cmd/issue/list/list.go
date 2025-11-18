@@ -63,6 +63,13 @@ $ jira issue list --json
 # List issues in JSON, and filter output to specific nested paths (only restricts output, cannot add additional fields)
 $ jira issue list --json --json-filter "key,fields.summary,fields.assignee.displayName"
 
+# List issues in JSON, requesting only specific fields from API
+# Note: --api-fields can only reduce fields returned, not add new ones
+$ jira issue list --json --api-fields "key,summary,description"
+
+# Combine both for maximum API efficiency and output precision
+$ jira issue list --json --api-fields "key,summary,status" --json-filter "key,fields.status.statusCategory.name"
+
 # List issues of type "Epic" in status "Done"
 $ jira issue list -tEpic -sDone
 
@@ -116,6 +123,25 @@ func loadList(cmd *cobra.Command, args []string) {
 		cmdutil.ExitIfError(cmd.Flags().Set("jql", searchQuery))
 	}
 
+	// Check for --json and --raw flags to determine API field filtering
+	jsonOutput, err := cmd.Flags().GetBool("json")
+	cmdutil.ExitIfError(err)
+
+	rawOutput, err := cmd.Flags().GetBool("raw")
+	cmdutil.ExitIfError(err)
+
+	var apiFields string
+	if jsonOutput || rawOutput {
+		// For --json or --raw output, use --api-fields for API-level filtering (optional)
+		fieldsStr, err := cmd.Flags().GetString("api-fields")
+		cmdutil.ExitIfError(err)
+
+		// Translate human-readable field names to field IDs
+		if fieldsStr != "" {
+			apiFields = cmdcommon.TranslateFieldNames(fieldsStr)
+		}
+	}
+
 	issues, err := func() ([]*jira.Issue, error) {
 		s := cmdutil.Info("Fetching issues...")
 		defer s.Stop()
@@ -125,7 +151,7 @@ func loadList(cmd *cobra.Command, args []string) {
 			return nil, err
 		}
 
-		resp, err := api.ProxySearch(api.DefaultClient(debug), q.Get(), q.Params().From, q.Params().Limit)
+		resp, err := api.ProxySearch(api.DefaultClient(debug), q.Get(), q.Params().From, q.Params().Limit, apiFields)
 		if err != nil {
 			return nil, err
 		}
@@ -140,14 +166,8 @@ func loadList(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	jsonOutput, err := cmd.Flags().GetBool("json")
-	cmdutil.ExitIfError(err)
-
-	rawOutput, err := cmd.Flags().GetBool("raw")
-	cmdutil.ExitIfError(err)
-
 	if jsonOutput {
-		// Get filter fields
+		// Get json-filter for output-level filtering (optional)
 		jsonFilter, err := cmd.Flags().GetString("json-filter")
 		cmdutil.ExitIfError(err)
 
@@ -313,6 +333,11 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Uint("comments", 1, "Show N comments when viewing the issue")
 	cmd.Flags().Bool("raw", false, "Print raw JSON output")
 	cmd.Flags().Bool("json", false, "Print JSON output with human-readable custom field names")
+	cmd.Flags().String("api-fields", "", "Comma-separated list of fields to fetch from Jira API (e.g., 'key,summary,description'). "+
+		"Use Jira field names, human-readable names from your config (e.g., 'Story Points', 'Sprint'), "+
+		"custom field IDs (e.g., 'customfield_10001'), or special values like '*navigable' (common fields), '*all' (most fields). "+
+		"Note: For 'issue list', this can only reduce fields returned by the API, not add new ones. "+
+		"Only works with --json or --raw. If not specified, uses Jira's default field selection.")
 	cmd.Flags().String("json-filter", "", "Comma-separated list of JSON paths to include in output (e.g., 'key,fields.summary,fields.status.statusCategory.name'). "+
 		"Allows precise filtering of nested JSON fields after API response. "+
 		"Only works with --json. If not specified, includes all fields from API response.")

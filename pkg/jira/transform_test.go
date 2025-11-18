@@ -699,7 +699,7 @@ func TestToFieldName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			result := toFieldName(tt.input)
+			result := ToFieldName(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -1030,5 +1030,38 @@ func TestTransformIssueFieldsWithFilter(t *testing.T) {
 		assert.Contains(t, resultStr, `"key"`)
 		assert.Contains(t, resultStr, `"summary"`)
 		assert.Contains(t, resultStr, `"epicName"`)
+	})
+
+	t.Run("includes null fields when explicitly requested", func(t *testing.T) {
+		rawJSON := []byte(`{
+			"key": "TEST-1",
+			"fields": {
+				"summary": "Test Issue",
+				"customfield_10001": null,
+				"customfield_10002": null,
+				"status": {
+					"name": "To Do"
+				}
+			}
+		}`)
+
+		mappings := []IssueTypeField{
+			{Name: "Story Points", Key: "customfield_10001"},
+			{Name: "Epic Link", Key: "customfield_10002"},
+		}
+
+		// Explicitly request fields that have null values
+		filter := []string{"key", "fields.storyPoints", "fields.epicLink", "fields.summary"}
+		result, err := TransformIssueFields(rawJSON, mappings, filter)
+		assert.NoError(t, err)
+
+		resultStr := string(result.Data)
+		// Should include null fields when explicitly requested
+		assert.Contains(t, resultStr, `"storyPoints"`)
+		assert.Contains(t, resultStr, `"epicLink"`)
+		assert.Contains(t, resultStr, `"summary"`)
+		assert.Contains(t, resultStr, `null`)
+		// Should NOT include fields not requested
+		assert.NotContains(t, resultStr, `"status"`)
 	})
 }
