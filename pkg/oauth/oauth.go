@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -46,21 +47,25 @@ const (
 	readHeaderTimeout = 3 * time.Second
 )
 
-var defaultScopes = []string{
-	"read:jira-user",
-	"read:jira-work",
-	"read:board-scope:jira-software",
-	"read:project:jira",
-	"read:sprint:jira-software",
-	"read:issue-details:jira",
-	"read:audit-log:jira",
-	"read:avatar:jira",
-	"read:field-configuration:jira",
-	"read:issue-meta:jira",
-	"read:jql:jira",
-	"write:sprint:jira-software",
-	"write:jira-work",
-	"offline_access", // This is required to get the refresh token from JIRA
+type ScopeType string
+
+const (
+	ScopeTypeGranular ScopeType = "granular"
+	ScopeTypeClassic  ScopeType = "classic"
+	ScopeTypeOffline  ScopeType = "offline"
+)
+
+type OAuthScope struct {
+	// The name of the scope
+	Name string
+	// The type of scope (granular, classic, offline)
+	ScopeType ScopeType
+	// Whether the scope is visible to the user in the JIRA UI
+	Visible bool
+}
+
+func (s *OAuthScope) String() string {
+	return s.Name
 }
 
 // OAuthConfig holds OAuth configuration.
@@ -68,7 +73,7 @@ type OAuthConfig struct {
 	ClientID     string
 	ClientSecret string
 	RedirectURI  string
-	Scopes       []string
+	Scopes       []OAuthScope
 }
 
 // ConfigureTokenResponse holds the OAuth token response.
@@ -78,10 +83,35 @@ type ConfigureTokenResponse struct {
 	CloudID      string
 }
 
+var defaultScopes = []OAuthScope{
+	{Name: "read:jira-user", ScopeType: ScopeTypeClassic, Visible: true},
+	{Name: "read:jira-work", ScopeType: ScopeTypeClassic, Visible: true},
+	{Name: "read:board-scope:jira-software", ScopeType: ScopeTypeGranular, Visible: true},
+	{Name: "read:project:jira", ScopeType: ScopeTypeGranular, Visible: true},
+	{Name: "read:sprint:jira-software", ScopeType: ScopeTypeGranular, Visible: true},
+	{Name: "read:issue-details:jira", ScopeType: ScopeTypeGranular, Visible: true},
+	{Name: "read:audit-log:jira", ScopeType: ScopeTypeGranular, Visible: true},
+	{Name: "read:avatar:jira", ScopeType: ScopeTypeGranular, Visible: true},
+	{Name: "read:field-configuration:jira", ScopeType: ScopeTypeGranular, Visible: true},
+	{Name: "read:issue-meta:jira", ScopeType: ScopeTypeGranular, Visible: true},
+	{Name: "read:jql:jira", ScopeType: ScopeTypeGranular, Visible: true},
+	{Name: "write:sprint:jira-software", ScopeType: ScopeTypeGranular, Visible: true},
+	{Name: "write:jira-work", ScopeType: ScopeTypeClassic, Visible: true},
+	{Name: "offline_access", ScopeType: ScopeTypeOffline, Visible: false}, // This is required to get the refresh token from JIRA
+}
+
+func toScopeStrings(scopes []OAuthScope) []string {
+	scopeStrings := make([]string, len(scopes))
+	for i, scope := range scopes {
+		scopeStrings[i] = scope.String()
+	}
+	return scopeStrings
+}
+
 // GetOAuth2Config creates an OAuth2 config for the given client credentials.
 func GetOAuth2Config(clientID, clientSecret, redirectURI string, scopes []string) *oauth2.Config {
 	if scopes == nil {
-		scopes = defaultScopes
+		scopes = toScopeStrings(defaultScopes)
 	}
 
 	if redirectURI == "" {
@@ -233,20 +263,44 @@ func collectOAuthCredentials() (*OAuthConfig, error) {
 	}, nil
 }
 
-// performOAuthFlow executes the OAuth authorization flow.
-func performOAuthFlow(config *OAuthConfig, httpTimeout time.Duration, openBrowser bool) (*oauth2.Token, error) {
-	fmt.Printf("Expected Scopes:\n")
-	for i, scope := range config.Scopes {
-		// Offline_access is a special scope to request a refresh token that wont be there to display in the JIRA UI, so we skip it.
-		if scope != "offline_access" {
-			fmt.Printf("  %2d. %s\n", i+1, scope)
+func printExpectedScopes(scopes []OAuthScope) {
+	var visibleScopes []OAuthScope
+	for _, scope := range scopes {
+		if scope.Visible {
+			visibleScopes = append(visibleScopes, scope)
 		}
 	}
+
+	// Sort by scope type (classic first, then granular) and then by name alphabetically
+	sort.Slice(visibleScopes, func(i, j int) bool {
+		if visibleScopes[i].ScopeType != visibleScopes[j].ScopeType {
+			// Classic comes before granular
+			if visibleScopes[i].ScopeType == ScopeTypeClassic {
+				return true
+			}
+			if visibleScopes[j].ScopeType == ScopeTypeClassic {
+				return false
+			}
+		}
+		// If same scope type, sort alphabetically by name
+		return visibleScopes[i].Name < visibleScopes[j].Name
+	})
+
+	fmt.Printf("Expected Scopes:\n")
+	for i, scope := range visibleScopes {
+		fmt.Printf("%2d. %s (%s)\n", i+1, scope.String(), scope.ScopeType)
+	}
+}
+
+// performOAuthFlow executes the OAuth authorization flow.
+func performOAuthFlow(config *OAuthConfig, httpTimeout time.Duration, openBrowser bool) (*oauth2.Token, error) {
+	// Filter visible scopes and sort them
+	printExpectedScopes(config.Scopes)
 	s := cmdutil.Info("Starting OAuth flow...")
 	defer s.Stop()
 
 	// OAuth2 configuration for JIRA
-	oauthConfig := GetOAuth2Config(config.ClientID, config.ClientSecret, config.RedirectURI, config.Scopes)
+	oauthConfig := GetOAuth2Config(config.ClientID, config.ClientSecret, config.RedirectURI, toScopeStrings(config.Scopes))
 
 	// Generate authorization URL with PKCE
 	verifier := oauth2.GenerateVerifier()

@@ -281,14 +281,14 @@ func TestConfig(t *testing.T) {
 			ClientID:     "test-client-id",
 			ClientSecret: "test-secret",
 			RedirectURI:  "http://localhost:9876/callback",
-			Scopes:       []string{"read:jira-user", "read:jira-work"},
+			Scopes:       []OAuthScope{{Name: "read:jira-user", ScopeType: ScopeTypeClassic, Visible: true}, {Name: "read:jira-work", ScopeType: ScopeTypeClassic, Visible: true}},
 		}
 
 		assert.Equal(t, "test-client-id", config.ClientID)
 		assert.Equal(t, "test-secret", config.ClientSecret)
 		assert.Equal(t, "http://localhost:9876/callback", config.RedirectURI)
-		assert.Contains(t, config.Scopes, "read:jira-user")
-		assert.Contains(t, config.Scopes, "read:jira-work")
+		assert.Contains(t, toScopeStrings(config.Scopes), "read:jira-user")
+		assert.Contains(t, toScopeStrings(config.Scopes), "read:jira-work")
 	})
 }
 
@@ -315,7 +315,7 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 			ClientID:     "test-client-id",
 			ClientSecret: "test-secret",
 			RedirectURI:  "http://localhost:9876/callback",
-			Scopes:       []string{"read:jira-user"},
+			Scopes:       []OAuthScope{{Name: "read:jira-user", ScopeType: ScopeTypeClassic, Visible: true}},
 		}
 
 		// Create a version of performOAuthFlow with a shorter timeout for testing
@@ -330,7 +330,7 @@ func TestPerformOAuthFlow_ErrorCases(t *testing.T) {
 			ClientID:     "test-client-id",
 			ClientSecret: "test-secret",
 			RedirectURI:  "http://localhost:9876/callback",
-			Scopes:       []string{"read:jira-user"},
+			Scopes:       []OAuthScope{{Name: "read:jira-user", ScopeType: ScopeTypeClassic, Visible: true}},
 		}
 
 		// Start a server on the same port to cause a conflict
@@ -394,7 +394,7 @@ func TestOAuthFlowIntegration(t *testing.T) {
 			ClientID:     "test-client-id",
 			ClientSecret: "test-secret",
 			RedirectURI:  "http://localhost:9876/callback",
-			Scopes:       []string{"read:jira-user"},
+			Scopes:       []OAuthScope{{Name: "read:jira-user", ScopeType: ScopeTypeClassic, Visible: true}},
 		}
 
 		// Test the OAuth configuration creation
@@ -402,7 +402,7 @@ func TestOAuthFlowIntegration(t *testing.T) {
 			ClientID:     config.ClientID,
 			ClientSecret: config.ClientSecret,
 			RedirectURL:  config.RedirectURI,
-			Scopes:       config.Scopes,
+			Scopes:       toScopeStrings(config.Scopes),
 			Endpoint: oauth2.Endpoint{
 				AuthURL:  jiraAuthURL,
 				TokenURL: mockOAuthServer.URL + "/oauth/token",
@@ -524,6 +524,16 @@ func TestHTMLResponse(t *testing.T) {
 	})
 }
 
+func TestToScopeStrings(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns scopes in the correct order", func(t *testing.T) {
+		t.Parallel()
+		scopes := []OAuthScope{{Name: "read:jira-user", ScopeType: ScopeTypeClassic, Visible: true}, {Name: "read:jira-work", ScopeType: ScopeTypeClassic, Visible: true}}
+		assert.Equal(t, []string{"read:jira-user", "read:jira-work"}, toScopeStrings(scopes))
+	})
+}
+
 func TestGetOAuth2Config(t *testing.T) {
 	t.Parallel()
 
@@ -548,7 +558,7 @@ func TestGetOAuth2Config(t *testing.T) {
 		t.Parallel()
 		config := GetOAuth2Config("test-client-id", "test-client-secret", "http://localhost:9876/callback", nil)
 
-		assert.Equal(t, defaultScopes, config.Scopes)
+		assert.Equal(t, toScopeStrings(defaultScopes), config.Scopes)
 	})
 
 	t.Run("uses default redirect URI when empty", func(t *testing.T) {
