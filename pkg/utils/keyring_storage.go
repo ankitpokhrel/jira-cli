@@ -84,9 +84,7 @@ func decompressData(compressedData string) ([]byte, error) {
 		return nil, err
 	}
 	defer func() {
-		if closeErr := reader.Close(); closeErr != nil {
-			_ = closeErr
-		}
+		_ = reader.Close()
 	}()
 
 	decompressed, err := io.ReadAll(reader)
