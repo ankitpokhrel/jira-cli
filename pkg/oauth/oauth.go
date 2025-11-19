@@ -209,19 +209,17 @@ func collectOAuthCredentials() (*OAuthConfig, error) {
 		Help:    "The redirect URL for Jira App. Recommended to set as localhost.",
 	}
 
+	answers.ClientID = envClientID
 	if envClientID == "" {
 		if err := survey.AskOne(q1, &answers.ClientID); err != nil {
 			return nil, err
 		}
-	} else {
-		answers.ClientID = envClientID
 	}
+	answers.ClientSecret = envClientSecret
 	if envClientSecret == "" {
 		if err := survey.AskOne(q2, &answers.ClientSecret); err != nil {
 			return nil, err
 		}
-	} else {
-		answers.ClientSecret = envClientSecret
 	}
 	if err := survey.AskOne(q3, &answers.RedirectURI); err != nil {
 		return nil, err
