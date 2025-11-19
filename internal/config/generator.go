@@ -286,7 +286,7 @@ func (c *JiraCLIConfigGenerator) configureCloudAuthType() error {
 			Message: "Authentication type:",
 			Help: `Authentication type could be: cloud or oauth 
 ? If you are using your login credentials, the auth type is probably 'cloud' (most common for cloud installation)
-? If you are authenticating using oauth 3LO, the auth type is probably 'oauth'`,
+? If you are authenticating using OAuth 3LO, the auth type is probably 'oauth'`,
 			Options: []string{jira.AuthTypeCloud.String(), jira.AuthTypeOAuth.String()},
 			Default: jira.AuthTypeCloud.String(),
 		}
