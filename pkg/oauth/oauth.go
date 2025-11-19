@@ -108,7 +108,7 @@ func toScopeStrings(scopes []OAuthScope) []string {
 	return scopeStrings
 }
 
-// GetOAuth2Config creates an OAuth2 config for the given client credentials.
+// GetOAuth2Config creates an [oauth2.Config] for the given client credentials.
 func GetOAuth2Config(clientID, clientSecret, redirectURI string, scopes []string) *oauth2.Config {
 	if scopes == nil {
 		scopes = toScopeStrings(defaultScopes)

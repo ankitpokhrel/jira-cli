@@ -300,7 +300,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 			req.Header.Add("Authorization", "Bearer "+c.token)
 		}
 	case string(AuthTypeOAuth):
-		// OAuth authentication is handled by oauth2.Transport automatically
+		// OAuth authentication is handled by [oauth2.Transport] automatically
 		// Only add manual auth header if we don't have a TokenSource (fallback mode)
 		if c.tokenSource == nil && c.token != "" {
 			req.Header.Add("Authorization", "Bearer "+c.token)
