@@ -489,41 +489,6 @@ func TestOAuthFlowIntegration(t *testing.T) {
 	})
 }
 
-func TestHTMLResponse(t *testing.T) {
-	t.Parallel()
-
-	t.Run("callback returns proper HTML response", func(t *testing.T) {
-		t.Parallel()
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == callbackPath {
-				code := r.URL.Query().Get("code")
-				if code != "" {
-					w.Header().Set("Content-Type", "text/html")
-					_, _ = w.Write([]byte(`
-					<html>
-						<body>
-							<h2>Authorization successful!</h2>
-							<p>You can close this window and return to the terminal.</p>
-							<script>window.close();</script>
-						</body>
-					</html>
-				`))
-				}
-			}
-		})
-
-		req := httptest.NewRequest("GET", "http://localhost:9876/callback?code=test-code", http.NoBody)
-		w := httptest.NewRecorder()
-
-		handler.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Equal(t, "text/html", w.Header().Get("Content-Type"))
-		assert.Contains(t, w.Body.String(), "Authorization successful!")
-		assert.Contains(t, w.Body.String(), "window.close()")
-	})
-}
-
 func TestToScopeStrings(t *testing.T) {
 	t.Parallel()
 
