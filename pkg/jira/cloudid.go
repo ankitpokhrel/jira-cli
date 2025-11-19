@@ -14,7 +14,7 @@ var (
 )
 
 const (
-	JiraAccessibleResourcesURL = "https://api.atlassian.com/oauth/token/accessible-resources"
+	AccessibleResourcesURL = "https://api.atlassian.com/oauth/token/accessible-resources"
 )
 
 type CloudIDResponse struct {
@@ -31,7 +31,7 @@ func (c *Client) GetCloudID() (string, error) {
 		return envCloudID, nil
 	}
 
-	res, err := c.request(context.Background(), http.MethodGet, JiraAccessibleResourcesURL, nil, Header{
+	res, err := c.request(context.Background(), http.MethodGet, AccessibleResourcesURL, nil, Header{
 		"Accept": "application/json",
 	})
 	if err != nil {

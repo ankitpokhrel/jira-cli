@@ -149,7 +149,7 @@ func Configure(login string) (*ConfigureTokenResponse, error) {
 	}
 
 	// Get Cloud ID for Atlassian API
-	cloudID, err := getCloudID(jira.JiraAccessibleResourcesURL, tokens.AccessToken)
+	cloudID, err := getCloudID(jira.AccessibleResourcesURL, tokens.AccessToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cloud ID: %w", err)
 	}
