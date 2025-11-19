@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -272,18 +272,24 @@ func printExpectedScopes(scopes []OAuthScope) {
 	}
 
 	// Sort by scope type (classic first, then granular) and then by name alphabetically
-	sort.Slice(visibleScopes, func(i, j int) bool {
-		if visibleScopes[i].ScopeType != visibleScopes[j].ScopeType {
+	slices.SortFunc(visibleScopes, func(a, b OAuthScope) int {
+		if a.ScopeType != b.ScopeType {
 			// Classic comes before granular
-			if visibleScopes[i].ScopeType == ScopeTypeClassic {
-				return true
+			if a.ScopeType == ScopeTypeClassic {
+				return -1
 			}
-			if visibleScopes[j].ScopeType == ScopeTypeClassic {
-				return false
+			if b.ScopeType == ScopeTypeClassic {
+				return 1
 			}
 		}
 		// If same scope type, sort alphabetically by name
-		return visibleScopes[i].Name < visibleScopes[j].Name
+		if a.Name < b.Name {
+			return -1
+		}
+		if a.Name > b.Name {
+			return 1
+		}
+		return 0
 	})
 
 	fmt.Printf("Expected Scopes:\n")
