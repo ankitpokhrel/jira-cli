@@ -512,8 +512,8 @@ func (c *JiraCLIConfigGenerator) setApiServer() {
 }
 
 func (c *JiraCLIConfigGenerator) verifyServer() error {
-	c.setApiServer()
 	c.value.server = strings.TrimRight(c.value.server, "/")
+	c.setApiServer()
 	return c.verifyLoginDetails()
 }
 
