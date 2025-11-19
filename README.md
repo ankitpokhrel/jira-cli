@@ -93,9 +93,9 @@ Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/In
    a `JIRA_API_TOKEN` variable. Add it to your shell configuration file, for instance, `$HOME/.bashrc`, so that the
    variable is always available. Alternatively, you can also use `.netrc` file or `keychain` to set the token. Learn
    more [here](https://github.com/ankitpokhrel/jira-cli/discussions/356).
-2. Run `jira init`, select installation type as `Cloud`, and provide required details to generate a config file required
-   for the tool.
-3. Run the `jira init`, Select the `Cloud` installation type and then select the `OAuth` authentication type. This will prompt for your Jira App Client ID and Client Secret. You can learn more about how to create a Jira App [here](https://github.com/ankitpokhrel/jira-cli/discussions/879#discussion-8604411)
+2. Run `jira init`, select installation type as `Cloud`, and provide the required details to generate a config file for the tool.
+   - By default, you can use basic authentication with your Jira email and API token.
+   - Alternatively, if you wish to use OAuth authentication, after selecting `Cloud`, choose the `OAuth` authentication type. This will prompt for your Jira App Client ID and Client Secret. Learn more about creating a Jira App [here](https://github.com/ankitpokhrel/jira-cli/discussions/879#discussion-8604411).
 
 #### On-premise installation
 
