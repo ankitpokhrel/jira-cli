@@ -3,6 +3,8 @@ package release
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/release/create"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/release/edit"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/release/list"
 )
 
@@ -19,7 +21,14 @@ func NewCmdRelease() *cobra.Command {
 		RunE:        releases,
 	}
 
-	cmd.AddCommand(list.NewCmdList())
+	listCmd := list.NewCmdList()
+	createCmd := create.NewCmdCreate()
+	editCmd := edit.NewCmdEdit()
+
+	cmd.AddCommand(listCmd, createCmd, editCmd)
+
+	create.SetFlags(createCmd)
+	// edit command has its own setFlags call in NewCmdEdit
 
 	return &cmd
 }
