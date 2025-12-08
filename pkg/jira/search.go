@@ -6,6 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
+)
+
+const (
+	SearchLimitDefault uint = 100
 )
 
 // SearchResult struct holds response from /search endpoint.
@@ -15,16 +20,87 @@ type SearchResult struct {
 	Issues        []*Issue `json:"issues"`
 }
 
+func MergeSearchResults(results ...*SearchResult) *SearchResult {
+	if len(results) == 0 {
+		return nil
+	}
+
+	newResult := &SearchResult{}
+	for _, result := range results {
+		if result == nil {
+			continue
+		}
+		newResult.Issues = append(newResult.Issues, result.Issues...)
+		newResult.NextPageToken = result.NextPageToken
+		newResult.IsLast = result.IsLast
+	}
+
+	return newResult
+}
+
+type SearchOptions struct {
+	Limit         uint
+	From          *uint
+	NextPageToken string
+	APIVersion    string
+}
+
+func WithAPIVersion2() SearchOption {
+	return func(o *SearchOptions) {
+		o.APIVersion = apiVersion2
+	}
+}
+
+type SearchOption func(*SearchOptions)
+
+// SearchWith searches for issues using v3 version of the Jira GET /search endpoint.
+func (c *Client) SearchWith(jql string, options ...SearchOption) (*SearchResult, error) {
+	opts := &SearchOptions{
+		Limit:      SearchLimitDefault,
+		APIVersion: apiVersion3,
+	}
+	for _, option := range options {
+		option(opts)
+	}
+
+	params := []string{
+		fmt.Sprintf("jql=%s", url.QueryEscape(jql)),
+		fmt.Sprintf("maxResults=%d", opts.Limit),
+	}
+
+	if opts.NextPageToken != "" {
+		params = append(params, fmt.Sprintf("nextPageToken=%s", opts.NextPageToken))
+	} else if opts.From != nil && opts.APIVersion == apiVersion2 {
+		params = append(params, fmt.Sprintf("startAt=%d", *opts.From))
+	}
+
+	urlPath := "/search"
+
+	if opts.APIVersion == apiVersion3 {
+		params = append(params, "fields=*all")
+		urlPath = "/search/jql"
+	}
+
+	paramsString := strings.Join(params, "&")
+
+	path := fmt.Sprintf("%s?%s", urlPath, paramsString)
+	return c.search(path, opts.APIVersion)
+}
+
 // Search searches for issues using v3 version of the Jira GET /search endpoint.
 func (c *Client) Search(jql string, limit uint) (*SearchResult, error) {
-	path := fmt.Sprintf("/search/jql?jql=%s&maxResults=%d&fields=*all", url.QueryEscape(jql), limit)
-	return c.search(path, apiVersion3)
+	return c.SearchWith(jql, func(options *SearchOptions) {
+		options.Limit = limit
+	})
 }
 
 // SearchV2 searches an issues using v2 version of the Jira GET /search endpoint.
 func (c *Client) SearchV2(jql string, from, limit uint) (*SearchResult, error) {
-	path := fmt.Sprintf("/search?jql=%s&startAt=%d&maxResults=%d", url.QueryEscape(jql), from, limit)
-	return c.search(path, apiVersion2)
+	return c.SearchWith(jql, func(options *SearchOptions) {
+		options.Limit = limit
+		options.From = &from
+		options.APIVersion = apiVersion2
+	})
 }
 
 func (c *Client) search(path, ver string) (*SearchResult, error) {
