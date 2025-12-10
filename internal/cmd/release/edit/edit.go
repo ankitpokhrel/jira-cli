@@ -2,7 +2,6 @@ package edit
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
@@ -328,10 +327,4 @@ func parseArgsAndFlags(flags query.FlagParser, args []string) *editParams {
 		noInput:         noInput,
 		debug:           debug,
 	}
-}
-
-// Helper to check if string is numeric
-func isNumeric(s string) bool {
-	_, err := strconv.Atoi(s)
-	return err == nil
 }
