@@ -55,6 +55,9 @@ type Issue struct {
 
 // Render renders the view.
 func (i Issue) Render() error {
+	if i.Display.Markdown {
+		return i.renderMarkdown(os.Stdout)
+	}
 	if i.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		return i.renderPlain(os.Stdout)
 	}
@@ -188,7 +191,7 @@ func (i Issue) separator(msg string) string {
 		return m
 	}
 
-	if i.Display.Plain {
+	if i.Display.Plain || i.Display.Markdown {
 		sep := "------------------------"
 		return fmt.Sprintf("%s%s%s", sep, pad(msg), sep)
 	}
@@ -425,15 +428,25 @@ func (i Issue) footer() string {
 
 	nc := int(i.Options.NumComments)
 	if i.Data.Fields.Comment.Total > 0 && nc > 0 && nc < i.Data.Fields.Comment.Total {
-		if i.Display.Plain {
+		if i.Display.Plain || i.Display.Markdown {
 			out.WriteString("\n")
 		}
-		out.WriteString(fmt.Sprintf("%s\n", gray("Use --comments <limit> with `jira issue view` to load more comments")))
+		msg := "Use --comments <limit> with `jira issue view` to load more comments"
+		if i.Display.Markdown {
+			out.WriteString(fmt.Sprintf("%s\n", msg))
+		} else {
+			out.WriteString(fmt.Sprintf("%s\n", gray(msg)))
+		}
 	}
-	if i.Display.Plain {
+	if i.Display.Plain || i.Display.Markdown {
 		out.WriteString("\n")
 	}
-	out.WriteString(gray(fmt.Sprintf("View this issue on Jira: %s", cmdutil.GenerateServerBrowseURL(i.Server, i.Data.Key))))
+	url := fmt.Sprintf("View this issue on Jira: %s", cmdutil.GenerateServerBrowseURL(i.Server, i.Data.Key))
+	if i.Display.Markdown {
+		out.WriteString(url)
+	} else {
+		out.WriteString(gray(url))
+	}
 
 	return out.String()
 }
@@ -452,5 +465,11 @@ func (i Issue) renderPlain(w io.Writer) error {
 		return err
 	}
 	_, err = fmt.Fprint(w, out)
+	return err
+}
+
+// renderMarkdown renders the issue as raw markdown without terminal formatting.
+func (i Issue) renderMarkdown(w io.Writer) error {
+	_, err := fmt.Fprint(w, i.String())
 	return err
 }
