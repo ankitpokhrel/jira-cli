@@ -26,6 +26,7 @@ type DisplayFormat struct {
 	TableStyle   tui.TableStyle
 	Timezone     string
 	Markdown     bool
+	NoEmoji      bool
 }
 
 // IssueList is a list view for issues.
