@@ -247,7 +247,7 @@ func constructCustomFields(fields map[string]string, configuredFields []IssueTyp
 			case customFieldFormatProject:
 				data.Fields.M.customFields[configured.Key] = customFieldTypeProject{Value: val}
 			case customFieldFormatArray:
-				pieces := strings.Split(strings.TrimSpace(val), ",")
+				pieces := splitUnescapedCommas(val)
 				if configured.Schema.Items == customFieldFormatOption {
 					items := make([]customFieldTypeOption, 0)
 					for _, p := range pieces {
