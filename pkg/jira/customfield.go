@@ -55,7 +55,8 @@ func splitUnescapedCommas(s string) []string {
 	escaped := false
 
 	for i := 0; i < len(s); i++ {
-		if escaped {
+		switch {
+		case escaped:
 			if s[i] == ',' {
 				current.WriteByte(',')
 			} else {
@@ -63,12 +64,12 @@ func splitUnescapedCommas(s string) []string {
 				current.WriteByte(s[i])
 			}
 			escaped = false
-		} else if s[i] == '\\' {
+		case s[i] == '\\':
 			escaped = true
-		} else if s[i] == ',' {
+		case s[i] == ',':
 			result = append(result, strings.TrimSpace(current.String()))
 			current.Reset()
-		} else {
+		default:
 			current.WriteByte(s[i])
 		}
 	}
