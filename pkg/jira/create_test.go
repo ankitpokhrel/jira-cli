@@ -178,3 +178,45 @@ func TestCreateEpicNextGen(t *testing.T) {
 	_, err = client.CreateV2(&requestData)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
+
+func TestCreateWithTeamCustomField(t *testing.T) {
+	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Task"},` +
+		`"summary":"Test task","customfield_10001":{"id":"8eb445e7-c606-4500-9b0b-ba87184f2a08"}}}`
+	testServer := createTestServer{code: 201}
+	server := testServer.serve(t, expectedBody)
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	configuredFields := []IssueTypeField{
+		{
+			Name: "Team",
+			Key:  "customfield_10001",
+			Schema: struct {
+				DataType   string `json:"type"`
+				Items      string `json:"items,omitempty"`
+				CustomType string `json:"custom,omitempty"`
+			}{
+				DataType:   "any",
+				CustomType: "com.atlassian.teams:rm-teams-custom-field-team",
+			},
+		},
+	}
+
+	requestData := CreateRequest{
+		Project:      "TEST",
+		IssueType:    "Task",
+		Summary:      "Test task",
+		CustomFields: map[string]string{"team": "8eb445e7-c606-4500-9b0b-ba87184f2a08"},
+	}
+	requestData.WithCustomFields(configuredFields)
+
+	actual, err := client.CreateV2(&requestData)
+	assert.NoError(t, err)
+
+	expected := &CreateResponse{
+		ID:  "10057",
+		Key: "TEST-3",
+	}
+	assert.Equal(t, expected, actual)
+}
