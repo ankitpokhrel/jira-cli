@@ -140,6 +140,17 @@ $ JIRA_CONFIG_FILE=./local_jira_config.yaml jira issue list
 $ jira issue list -c ./local_jira_config.yaml
 ```
 
+#### Non-interactive mode
+
+For programmatic usage and scripting, you can disable all interactive prompts with the `--no-input` flag. This makes the tool suitable for automation and CI/CD pipelines.
+
+Enable non-interactive mode via:
+- CLI flag: `jira issue create --no-input -tBug -s"Summary" -b"Description"`
+- Config file: Add `no_input: true` to `~/.jira/.config.yml`
+- Environment variable: `export JIRA_NO_INPUT=true`
+
+When a required field is missing in non-interactive mode, the command exits with status code 1 and provides an error message.
+
 ## Usage
 The tool currently comes with an issue, epic, and sprint explorer. The flags are [POSIX-compliant](https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html).
 You can combine available flags in any order to create a unique query. For example, the command below will give you high priority issues created this month
@@ -676,7 +687,7 @@ $ jira sprint add SPRINT_ID ISSUE-1 ISSUE-2
 
 ### Releases
 
-Interact with releases (project versions).  
+Interact with releases (project versions).
 Ensure the [feature is enabled](https://support.atlassian.com/jira-software-cloud/docs/enable-releases-and-versions/) on your instance.
 
 #### List

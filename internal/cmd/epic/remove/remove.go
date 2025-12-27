@@ -42,6 +42,9 @@ func remove(cmd *cobra.Command, args []string) {
 
 	qs := getQuestions(params)
 	if len(qs) > 0 {
+		if cmdutil.IsNoInputMode() {
+			cmdutil.Failed("Issue keys are required in non-interactive mode")
+		}
 		ans := struct {
 			EpicKey string
 			Issues  string
