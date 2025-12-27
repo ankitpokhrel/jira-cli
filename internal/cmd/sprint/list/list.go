@@ -21,7 +21,7 @@ import (
 const (
 	numSprints = 50 // This is the maximum result returned by Jira API at once.
 	helpText   = `
-Sprints are displayed in an explorer view by default. You can use --list
+Sprints are displayed in an explorer view by default. You can use --table
 and --plain flags to display output in different modes.`
 
 	examples = `$ jira sprint list
