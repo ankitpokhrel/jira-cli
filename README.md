@@ -543,7 +543,7 @@ EOF
 The `worklog` command provides a list of sub-commands to manage issue worklog (timelog).
 
 ##### Add
-The `add` command lets you add a worklog to an issue. The command supports markdown for worklog comments.
+The `add` command lets you add a worklog to an issue. The command supports markdown for worklog comments and returns the created worklog ID.
 
 ```sh
 # Add a worklog using an interactive prompt
@@ -551,9 +551,61 @@ $ jira issue worklog add
 
 # Pass required parameters and use --no-input to skip prompt
 $ jira issue worklog add ISSUE-1 "2d 3h 30m" --no-input
+✓ Worklog 10001 added to issue "ISSUE-1"
 
 # You can add a comment using --comment flag when adding a worklog
 $ jira issue worklog add ISSUE-1 "10m" --comment "This is a comment" --no-input
+```
+
+##### List
+The `list` command displays all worklogs for an issue. Supports both table and plain text output formats.
+
+```sh
+# List worklogs in table format (default)
+$ jira issue worklog list ISSUE-1
+
+# List worklogs with detailed information
+$ jira issue worklog list ISSUE-1 --plain
+
+# Using the alias
+$ jira issue worklog ls ISSUE-1
+```
+
+##### Edit
+The `edit` command allows you to update an existing worklog. You can modify the time spent, comment, and start date.
+
+```sh
+# Edit a worklog interactively (select from list)
+$ jira issue worklog edit ISSUE-1
+
+# Edit a specific worklog with new time
+$ jira issue worklog edit ISSUE-1 10001 "3h 30m" --no-input
+
+# Edit worklog with new comment and start date
+$ jira issue worklog edit ISSUE-1 10001 "2h" \
+  --comment "Updated work description" \
+  --started "2024-11-05 09:30:00"
+
+# Using the alias
+$ jira issue worklog update ISSUE-1 10001 "4h"
+```
+
+##### Delete
+The `delete` command removes a worklog from an issue. By default, it asks for confirmation before deleting.
+
+```sh
+# Delete a worklog interactively (select from list)
+$ jira issue worklog delete ISSUE-1
+
+# Delete a specific worklog with confirmation
+$ jira issue worklog delete ISSUE-1 10001
+
+# Delete without confirmation prompt (use with caution)
+$ jira issue worklog delete ISSUE-1 10001 --force
+
+# Using the aliases
+$ jira issue worklog remove ISSUE-1 10001
+$ jira issue worklog rm ISSUE-1 10001 -f
 ```
 
 ### Epic

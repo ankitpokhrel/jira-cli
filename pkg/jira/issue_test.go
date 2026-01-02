@@ -587,25 +587,30 @@ func TestAddIssueWorklog(t *testing.T) {
 			w.WriteHeader(400)
 		} else {
 			w.WriteHeader(201)
+			_, _ = w.Write([]byte(`{"id":"10001","issueId":"10000","author":{"name":"user"},"updateAuthor":{"name":"user"},"created":"2022-01-01T01:02:02.000+0200","updated":"2022-01-01T01:02:02.000+0200","started":"2022-01-01T01:02:02.000+0200","timeSpent":"1h","timeSpentSeconds":3600}`))
 		}
 	}))
 	defer server.Close()
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
-	err := client.AddIssueWorklog("TEST-1", "2022-01-01T01:02:02.000+0200", "1h", "comment", "")
+	worklog, err := client.AddIssueWorklog("TEST-1", "2022-01-01T01:02:02.000+0200", "1h", "comment", "")
 	assert.NoError(t, err)
+	assert.NotNil(t, worklog)
 
-	err = client.AddIssueWorklog("TEST-1", "", "1h", "comment", "")
+	worklog, err = client.AddIssueWorklog("TEST-1", "", "1h", "comment", "")
 	assert.NoError(t, err)
+	assert.NotNil(t, worklog)
 
-	err = client.AddIssueWorklog("TEST-1", "", "1h", "comment", "1d")
+	worklog, err = client.AddIssueWorklog("TEST-1", "", "1h", "comment", "1d")
 	assert.NoError(t, err)
+	assert.NotNil(t, worklog)
 
 	unexpectedStatusCode = true
 
-	err = client.AddIssueWorklog("TEST-1", "", "1h", "comment", "")
+	worklog, err = client.AddIssueWorklog("TEST-1", "", "1h", "comment", "")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assert.Nil(t, worklog)
 }
 
 func TestGetField(t *testing.T) {
