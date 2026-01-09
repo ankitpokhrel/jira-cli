@@ -191,3 +191,8 @@ type User struct {
 	DisplayName string `json:"displayName"`
 	Active      bool   `json:"active"`
 }
+
+// TenantInfo holds tenant info.
+type TenantInfo struct {
+	CloudID string `json:"cloudId"`
+}
