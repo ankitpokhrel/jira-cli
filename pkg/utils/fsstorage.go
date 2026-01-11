@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
+	"github.com/ankitpokhrel/jira-cli/pkg/terminal"
 )
 
 const (
@@ -30,7 +30,7 @@ func (fs FileSystemStorage) Save(key string, value []byte) error {
 	}
 
 	filePath := filepath.Join(fs.BaseDir, key)
-	cmdutil.Warn("\nSaved credentials to owner-restricted filesystem storage")
+	terminal.Warn("\nSaved credentials to owner-restricted filesystem storage")
 
 	return os.WriteFile(filePath, value, OWNER_READ_WRITE)
 }
@@ -40,6 +40,6 @@ func (fs FileSystemStorage) Load(key string) ([]byte, error) {
 		key += ".json"
 	}
 	filePath := filepath.Join(fs.BaseDir, key)
-	cmdutil.Warn("\nLoaded credentials from owner-restricted filesystem storage")
+	terminal.Warn("\nLoaded credentials from owner-restricted filesystem storage")
 	return os.ReadFile(filePath)
 }

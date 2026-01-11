@@ -16,8 +16,8 @@ import (
 	"github.com/zalando/go-keyring"
 	"golang.org/x/oauth2"
 
-	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/terminal"
 	"github.com/ankitpokhrel/jira-cli/pkg/utils"
 )
 
@@ -168,13 +168,13 @@ func Configure(login string) (*ConfigureTokenResponse, error) {
 
 	if err := utils.SaveJSON(primarySecretStorage, oauthSecretsFile, oauthSecrets); err != nil {
 		if errors.Is(err, keyring.ErrSetDataTooBig) {
-			cmdutil.Warn("Data was too big to save to the keyring, falling back to filesystem storage")
+			terminal.Warn("Data was too big to save to the keyring, falling back to filesystem storage")
 		}
 		err = utils.SaveJSON(fallbackSecretStorage, oauthSecretsFile, oauthSecrets)
 		if err != nil {
 			return nil, fmt.Errorf("failed to store OAuth secrets: %w", err)
 		}
-		cmdutil.Warn("Saved credentials to owner-restricted filesystem storage")
+		terminal.Warn("Saved credentials to owner-restricted filesystem storage")
 	}
 
 	return &ConfigureTokenResponse{
@@ -302,7 +302,7 @@ func printExpectedScopes(scopes []OAuthScope) {
 func performOAuthFlow(config *OAuthConfig, httpTimeout time.Duration, openBrowser bool) (*oauth2.Token, error) {
 	// Filter visible scopes and sort them
 	printExpectedScopes(config.Scopes)
-	s := cmdutil.Info("Starting OAuth flow...")
+	s := terminal.Info("Starting OAuth flow...")
 	defer s.Stop()
 
 	// OAuth2 configuration for JIRA
@@ -421,7 +421,7 @@ func performOAuthFlow(config *OAuthConfig, httpTimeout time.Duration, openBrowse
 
 		// Exchange code for token
 		s.Stop()
-		s = cmdutil.Info("Exchanging authorization code for access token...")
+		s = terminal.Info("Exchanging authorization code for access token...")
 		defer s.Stop()
 
 		token, err := oauthConfig.Exchange(context.Background(), code)
@@ -453,7 +453,7 @@ func performOAuthFlow(config *OAuthConfig, httpTimeout time.Duration, openBrowse
 
 // getCloudID retrieves the Cloud ID for the authenticated user.
 func getCloudID(url string, accessToken string) (string, error) {
-	s := cmdutil.Info("Fetching cloud ID...")
+	s := terminal.Info("Fetching cloud ID...")
 	defer s.Stop()
 
 	// Create HTTP client with bearer token
@@ -502,7 +502,7 @@ func getCloudID(url string, accessToken string) (string, error) {
 }
 
 func getJiraConfigDir() (string, error) {
-	home, err := cmdutil.GetConfigHome()
+	home, err := utils.GetConfigHome()
 	if err != nil {
 		return "", err
 	}

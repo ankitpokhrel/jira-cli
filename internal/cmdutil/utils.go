@@ -9,14 +9,14 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
-	"github.com/fatih/color"
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 	"golang.org/x/term"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/browser"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/terminal"
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
+	"github.com/ankitpokhrel/jira-cli/pkg/utils"
 )
 
 // ExitIfError exists with error message if err is not nil.
@@ -55,33 +55,22 @@ func ExitIfError(err error) {
 
 // Info displays spinner.
 func Info(msg string) *spinner.Spinner {
-	const refreshRate = 100 * time.Millisecond
-
-	s := spinner.New(
-		spinner.CharSets[14],
-		refreshRate,
-		spinner.WithSuffix(" "+msg),
-		spinner.WithHiddenCursor(true),
-		spinner.WithWriter(color.Error),
-	)
-	s.Start()
-
-	return s
+	return terminal.Info(msg)
 }
 
 // Success prints success message in stdout.
 func Success(msg string, args ...interface{}) {
-	_, _ = fmt.Fprintf(os.Stdout, fmt.Sprintf("\n\u001B[0;32m✓\u001B[0m %s\n", msg), args...)
+	terminal.Success(msg, args...)
 }
 
 // Warn prints warning message in stderr.
 func Warn(msg string, args ...interface{}) {
-	_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("\u001B[0;33m%s\u001B[0m\n", msg), args...)
+	terminal.Warn(msg, args...)
 }
 
 // Fail prints failure message in stderr.
 func Fail(msg string, args ...interface{}) {
-	_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("\u001B[0;31m✗\u001B[0m %s\n", msg), args...)
+	terminal.Fail(msg, args...)
 }
 
 // Failed prints failure message in stderr and exits.
@@ -117,15 +106,7 @@ func FormatDateTimeHuman(dt, format string) string {
 
 // GetConfigHome returns the config home directory.
 func GetConfigHome() (string, error) {
-	home := os.Getenv("XDG_CONFIG_HOME")
-	if home != "" {
-		return home, nil
-	}
-	home, err := homedir.Dir()
-	if err != nil {
-		return "", err
-	}
-	return home + "/.config", nil
+	return utils.GetConfigHome()
 }
 
 // StdinHasData checks if standard input has any data to be processed.

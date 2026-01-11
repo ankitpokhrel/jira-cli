@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
+	"github.com/ankitpokhrel/jira-cli/pkg/terminal"
 	"github.com/ankitpokhrel/jira-cli/pkg/utils"
 	"github.com/zalando/go-keyring"
 	"golang.org/x/oauth2"
@@ -137,7 +137,7 @@ func (pts *PersistentTokenSource) saveSecrets(secrets *OAuthSecrets) error {
 	err := utils.SaveJSON(pts.storage, oauthSecretsFile, secrets)
 	if err != nil && !pts.usingFallback && pts.fallbackStorage != nil {
 		if errors.Is(err, keyring.ErrSetDataTooBig) {
-			cmdutil.Warn("\nData was too big to save to the keyring, falling back to filesystem storage")
+			terminal.Warn("\nData was too big to save to the keyring, falling back to filesystem storage")
 		}
 		err = utils.SaveJSON(pts.fallbackStorage, oauthSecretsFile, secrets)
 		if err == nil {

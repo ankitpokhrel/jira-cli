@@ -6,11 +6,11 @@ import (
 	"github.com/spf13/viper"
 	"github.com/zalando/go-keyring"
 
-	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter"
 	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
 	"github.com/ankitpokhrel/jira-cli/pkg/oauth"
+	"github.com/ankitpokhrel/jira-cli/pkg/terminal"
 )
 
 const clientTimeout = 15 * time.Second
@@ -84,7 +84,7 @@ func Client(config jira.Config) *jira.Client {
 			config.Server = apiServer
 		} else {
 			// Fallback to server URL if api_server is not set
-			cmdutil.Warn("api_server key is not set, falling back to server URL")
+			terminal.Warn("api_server key is not set, falling back to server URL")
 		}
 
 		// Try to create OAuth2 token source
