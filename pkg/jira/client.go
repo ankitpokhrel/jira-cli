@@ -307,7 +307,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		}
 	case string(AuthTypeBearer):
 		req.Header.Add("Authorization", "Bearer "+c.token)
-	case string(AuthTypeBasic):
+	case string(AuthTypeBasic), string(AuthTypeCloud):
 		req.SetBasicAuth(c.login, c.token)
 	}
 
