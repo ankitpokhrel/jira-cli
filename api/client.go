@@ -63,14 +63,7 @@ func Client(config jira.Config) *jira.Client {
 	}
 
 	if config.Server == "" {
-		apiServer := viper.GetString("api_server")
-		if apiServer != "" {
-			config.Server = apiServer
-		} else {
-			// Fallback to server URL if api_server is not set
-			cmdutil.Warn("api_server key is not set, falling back to server URL")
-			config.Server = viper.GetString("server")
-		}
+		config.Server = viper.GetString("server")
 	}
 	if config.Login == "" {
 		config.Login = viper.GetString("login")
@@ -86,6 +79,14 @@ func Client(config jira.Config) *jira.Client {
 
 	// Check if we have OAuth credentials and should use OAuth
 	if oauth.HasOAuthCredentials(config.Login) && config.AuthType != nil && *config.AuthType == jira.AuthTypeOAuth {
+		apiServer := viper.GetString("api_server")
+		if apiServer != "" {
+			config.Server = apiServer
+		} else {
+			// Fallback to server URL if api_server is not set
+			cmdutil.Warn("api_server key is not set, falling back to server URL")
+		}
+
 		// Try to create OAuth2 token source
 		tokenSource, err := oauth.LoadOAuth2TokenSource(config.Login)
 		if err == nil {
