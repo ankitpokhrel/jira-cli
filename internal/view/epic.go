@@ -14,7 +14,6 @@ type EpicIssueFunc func(string) []*jira.Issue
 
 // EpicList is a list view for epics.
 type EpicList struct {
-	Total   int
 	Project string
 	Server  string
 	Data    []*jira.Issue
@@ -33,21 +32,21 @@ func (el *EpicList) Render() error {
 
 	data := el.data()
 	view := tui.NewPreview(
-		tui.WithPreviewFooterText(fmt.Sprintf("Showing %d of %d results for project %q", len(el.Data), el.Total, el.Project)),
+		tui.WithPreviewFooterText(fmt.Sprintf("Showing %d results for project %q", len(el.Data), el.Project)),
 		tui.WithInitialText(helpText),
 		tui.WithSidebarSelectedFunc(navigate(el.Server)),
 		tui.WithContentTableOpts(
 			tui.WithTableStyle(el.Display.TableStyle),
 			tui.WithFixedColumns(el.Display.FixedColumns),
 			tui.WithSelectedFunc(navigate(el.Server)),
-			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) (string, error)) {
-				dataFn := func() interface{} {
+			tui.WithViewModeFunc(func(r, c int, d any) (func() any, func(any) (string, error)) {
+				dataFn := func() any {
 					data := d.(tui.TableData)
 					ci := data.GetIndex(fieldKey)
 					iss, _ := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(1))
 					return iss
 				}
-				renderFn := func(i interface{}) (string, error) {
+				renderFn := func(i any) (string, error) {
 					iss := Issue{
 						Server:  el.Server,
 						Data:    i.(*jira.Issue),
@@ -71,7 +70,7 @@ func (el *EpicList) data() []tui.PreviewData {
 	data = append(data, tui.PreviewData{
 		Key:  "help",
 		Menu: "?",
-		Contents: func(s string) interface{} {
+		Contents: func(_ string) any {
 			return helpText
 		},
 	})
@@ -79,7 +78,7 @@ func (el *EpicList) data() []tui.PreviewData {
 		data = append(data, tui.PreviewData{
 			Key:  issue.Key,
 			Menu: fmt.Sprintf("➤ %s: %s", issue.Key, prepareTitle(issue.Fields.Summary)),
-			Contents: func(key string) interface{} {
+			Contents: func(key string) any {
 				issues := el.Issues(key)
 				return el.tabularize(issues)
 			},

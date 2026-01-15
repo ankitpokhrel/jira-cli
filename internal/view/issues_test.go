@@ -12,7 +12,6 @@ import (
 
 func TestIssueData(t *testing.T) {
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    getIssues(),
@@ -42,7 +41,6 @@ func TestIssueRenderInPlainView(t *testing.T) {
 	var b bytes.Buffer
 
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    getIssues(),
@@ -65,7 +63,6 @@ func TestIssueRenderInPlainViewWithCustomDelimiter(t *testing.T) {
 	var b bytes.Buffer
 
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    getIssues(),
@@ -88,7 +85,6 @@ func TestIssueRenderInPlainViewAndNoTruncate(t *testing.T) {
 	var b bytes.Buffer
 
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    getIssues(),
@@ -111,7 +107,6 @@ func TestIssueRenderInPlainViewWithoutHeaders(t *testing.T) {
 	var b bytes.Buffer
 
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    getIssues(),
@@ -135,7 +130,6 @@ func TestIssueRenderInPlainViewWithFewColumns(t *testing.T) {
 	data := getIssues()
 
 	issue := IssueList{
-		Total:   2,
 		Project: "TEST",
 		Server:  "https://test.local",
 		Data:    data,
@@ -150,6 +144,49 @@ func TestIssueRenderInPlainViewWithFewColumns(t *testing.T) {
 	expected := `KEY	TYPE	STATUS	CREATED
 TEST-1	Bug	Done	2020-12-13 14:05:20
 TEST-2	Story	Open	2020-12-13 14:05:20
+`
+	assert.Equal(t, expected, b.String())
+}
+
+func TestIssueRenderInCSVFormat(t *testing.T) {
+	var b bytes.Buffer
+
+	issue := IssueList{
+		Project: "TEST",
+		Server:  "https://test.local",
+		Data:    getIssues(),
+		Display: DisplayFormat{
+			CSV:        true,
+			NoHeaders:  false,
+			NoTruncate: true,
+		},
+	}
+	assert.NoError(t, issue.renderCSV(&b))
+
+	expected := `TYPE,KEY,SUMMARY,STATUS,ASSIGNEE,REPORTER,PRIORITY,RESOLUTION,CREATED,UPDATED,LABELS
+Bug,TEST-1,This is a test,Done,Person A,Person Z,High,Fixed,2020-12-13 14:05:20,2020-12-13 14:07:20,krakatit
+Story,TEST-2,This is another test,Open,,Person A,Normal,,2020-12-13 14:05:20,2020-12-13 14:07:20,"pat,mat"
+`
+	assert.Equal(t, expected, b.String())
+}
+
+func TestIssueRenderInCSVFormatWithoutHeaders(t *testing.T) {
+	var b bytes.Buffer
+
+	issue := IssueList{
+		Project: "TEST",
+		Server:  "https://test.local",
+		Data:    getIssues(),
+		Display: DisplayFormat{
+			CSV:        true,
+			NoHeaders:  true,
+			NoTruncate: true,
+		},
+	}
+	assert.NoError(t, issue.renderCSV(&b))
+
+	expected := `Bug,TEST-1,This is a test,Done,Person A,Person Z,High,Fixed,2020-12-13 14:05:20,2020-12-13 14:07:20,krakatit
+Story,TEST-2,This is another test,Open,,Person A,Normal,,2020-12-13 14:05:20,2020-12-13 14:07:20,"pat,mat"
 `
 	assert.Equal(t, expected, b.String())
 }

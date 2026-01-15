@@ -21,7 +21,7 @@ import (
 const (
 	numSprints = 50 // This is the maximum result returned by Jira API at once.
 	helpText   = `
-Sprints are displayed in an explorer view by default. You can use --list
+Sprints are displayed in an explorer view by default. You can use --table
 and --plain flags to display output in different modes.`
 
 	examples = `$ jira sprint list
@@ -93,26 +93,26 @@ func sprintList(cmd *cobra.Command, args []string) {
 }
 
 func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID, sprintID int, project, server string, client *jira.Client, sprint *jira.Sprint) {
-	issues, total, err := func() ([]*jira.Issue, int, error) {
+	issues, err := func() ([]*jira.Issue, error) {
 		s := cmdutil.Info("Fetching sprint issues...")
 		defer s.Stop()
 
 		q, err := query.NewIssue(project, flags)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 		if sprintQuery.Params().ShowAllIssues {
 			q.Params().JQL = "project IS NOT EMPTY"
 		}
 		resp, err := client.SprintIssues(sprintID, q.Get(), q.Params().From, q.Params().Limit)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
-		return resp.Issues, resp.Total, nil
+		return resp.Issues, nil
 	}()
 	cmdutil.ExitIfError(err)
 
-	if total == 0 {
+	if len(issues) == 0 {
 		fmt.Println()
 		cmdutil.Failed("No result found for given query in project %q", project)
 		return
@@ -122,6 +122,9 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 	cmdutil.ExitIfError(err)
 
 	csv, err := flags.GetBool("csv")
+	cmdutil.ExitIfError(err)
+
+	delimiter, err := flags.GetString("delimiter")
 	cmdutil.ExitIfError(err)
 
 	noHeaders, err := flags.GetBool("no-headers")
@@ -140,28 +143,27 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 	if sprint != nil {
 		if sprint.Status == jira.SprintStateFuture {
 			ft = fmt.Sprintf(
-				"Showing %d of %d results for project %q in sprint #%d ➤ %s (Future Sprint)",
-				len(issues), total, project, sprint.ID, sprint.Name,
+				"Showing %d results for project %q in sprint #%d ➤ %s (Future Sprint)",
+				len(issues), project, sprint.ID, sprint.Name,
 			)
 		} else {
 			ft = fmt.Sprintf(
-				"Showing %d of %d results for project %q in sprint #%d ➤ %s (%s - %s)",
-				len(issues), total, project, sprint.ID, sprint.Name,
+				"Showing %d results for project %q in sprint #%d ➤ %s (%s - %s)",
+				len(issues), project, sprint.ID, sprint.Name,
 				cmdutil.FormatDateTimeHuman(sprint.StartDate, time.RFC3339),
 				cmdutil.FormatDateTimeHuman(sprint.EndDate, time.RFC3339),
 			)
 		}
 	} else {
 		ft = fmt.Sprintf(
-			"Showing %d of %d results for project %q in sprint #%d",
-			len(issues), total, project, sprintID,
+			"Showing %d results for project %q in sprint #%d",
+			len(issues), project, sprintID,
 		)
 	}
 
 	v := view.IssueList{
 		Project:    project,
 		Server:     server,
-		Total:      total,
 		Data:       issues,
 		FooterText: ft,
 		Refresh: func() {
@@ -169,6 +171,7 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 		},
 		Display: view.DisplayFormat{
 			Plain:        plain,
+			Delimiter:    delimiter,
 			CSV:          csv,
 			NoHeaders:    noHeaders,
 			NoTruncate:   noTruncate,

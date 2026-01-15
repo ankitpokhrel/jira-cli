@@ -109,25 +109,25 @@ func loadList(cmd *cobra.Command, args []string) {
 		cmdutil.ExitIfError(cmd.Flags().Set("jql", searchQuery))
 	}
 
-	issues, total, err := func() ([]*jira.Issue, int, error) {
+	issues, err := func() ([]*jira.Issue, error) {
 		s := cmdutil.Info("Fetching issues...")
 		defer s.Stop()
 
 		q, err := query.NewIssue(project, cmd.Flags())
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 
 		resp, err := api.ProxySearch(api.DefaultClient(debug), q.Get(), q.Params().From, q.Params().Limit)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 
-		return resp.Issues, resp.Total, nil
+		return resp.Issues, nil
 	}()
 	cmdutil.ExitIfError(err)
 
-	if total == 0 {
+	if len(issues) == 0 {
 		fmt.Println()
 		cmdutil.Failed("No result found for given query in project %q", project)
 		return
@@ -173,7 +173,6 @@ func loadList(cmd *cobra.Command, args []string) {
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
-		Total:   total,
 		Data:    issues,
 		Refresh: func() {
 			loadList(cmd, args)

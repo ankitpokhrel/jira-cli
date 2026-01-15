@@ -380,7 +380,7 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 					if !ok {
 						return errInvalidUser
 					}
-					if len(str) < 3 || len(str) > 254 {
+					if len(str) < 2 || len(str) > 254 {
 						return errInvalidUser
 					}
 
@@ -401,10 +401,10 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 		}
 
 		if ans.Server != "" {
-			c.value.server = ans.Server
+			c.value.server = strings.TrimSpace(ans.Server)
 		}
 		if ans.Login != "" {
-			c.value.login = ans.Login
+			c.value.login = strings.TrimSpace(ans.Login)
 		}
 	}
 
