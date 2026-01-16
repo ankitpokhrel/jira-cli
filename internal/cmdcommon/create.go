@@ -260,7 +260,7 @@ func ValidateCustomFields(fields map[string]string, configuredFields []jira.Issu
 
 	fieldsMap := make(map[string]string)
 	for _, configured := range configuredFields {
-		identifier := strings.ToLower(strings.TrimSpace(strings.ReplaceAll(configured.Name, " ", "-")))
+		identifier := strings.ReplaceAll(strings.ToLower(strings.TrimSpace(configured.Name)), " ", "-")
 		fieldsMap[identifier] = configured.Name
 	}
 
