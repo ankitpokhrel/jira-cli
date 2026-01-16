@@ -201,6 +201,9 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 		}{OriginalEstimate: req.OriginalEstimate}}},
 	}}
 
+	if req.OriginalEstimate == "" {
+		update.M.Timetracking = nil
+	}
 	if len(req.Labels) > 0 {
 		add, sub := splitAddAndRemove(req.Labels)
 
