@@ -465,7 +465,7 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("priority", "y", "", "Edit priority")
 	cmd.Flags().StringP("assignee", "a", "", "Edit assignee (email or display name)")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Append labels")
-	cmd.Flags().StringP("original-estimate", "e", "", "Original Estimate in hours")
+	cmd.Flags().StringP("original-estimate", "e", "", "Original estimate (1w 2d 3h 4m: weeks, days, hours, minutes)")
 	cmd.Flags().StringArrayP("component", "C", []string{}, "Replace components")
 	cmd.Flags().StringArray("fix-version", []string{}, "Add/Append release info (fixVersions)")
 	cmd.Flags().StringArray("affects-version", []string{}, "Add/Append release info (affectsVersions)")
