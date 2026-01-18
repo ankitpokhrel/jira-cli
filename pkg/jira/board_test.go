@@ -60,11 +60,13 @@ func TestBoards(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
+	var unexpectedResponseErr *ErrUnexpectedResponse
+
 	_, err := client.Boards("BAD", "scrum")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assert.ErrorAs(t, err, &unexpectedResponseErr)
 
 	_, err = client.BoardSearch("BAD", "scrum")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assert.ErrorAs(t, err, &unexpectedResponseErr)
 
 	actual, err := client.Boards("TEST", "scrum")
 	assert.NoError(t, err)
@@ -120,6 +122,7 @@ func TestBoardByID(t *testing.T) {
 	}
 	assert.Equal(t, expected, actual)
 
+	var unexpectedResponseErr *ErrUnexpectedResponse
 	_, err = client.BoardByID(999)
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assert.ErrorAs(t, err, &unexpectedResponseErr)
 }
