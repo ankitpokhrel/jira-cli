@@ -566,14 +566,13 @@ func isReferenceLink(beg int, line string) bool {
 		return false
 	}
 
-	var end int
+	if beg >= len(line) {
+		return false
+	}
 
-	for beg < len(line) {
-		end = beg + 1
-		for end < len(line) && line[end] != ']' {
-			end++
-		}
-		break
+	end := beg + 1
+	for end < len(line) && line[end] != ']' {
+		end++
 	}
 
 	return end < len(line) && line[end] == ']'
