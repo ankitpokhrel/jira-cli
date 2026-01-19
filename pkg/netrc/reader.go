@@ -51,7 +51,7 @@ lines:
 			case "machine":
 				l = netrcLine{machine: f[i+1]}
 			case "default":
-				break lines
+				break //nolint:staticcheck
 			case "login":
 				l.login = f[i+1]
 			case "password":
