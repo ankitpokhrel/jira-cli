@@ -5,6 +5,7 @@ const (
 	customFieldFormatArray   = "array"
 	customFieldFormatNumber  = "number"
 	customFieldFormatProject = "project"
+	customFieldFormatTeam    = "com.atlassian.teams:rm-teams-custom-field-team"
 )
 
 type customField map[string]interface{}
@@ -38,4 +39,12 @@ type customFieldTypeProject struct {
 
 type customFieldTypeProjectSet struct {
 	Set customFieldTypeProject `json:"set"`
+}
+
+type customFieldTypeTeam struct {
+	ID string `json:"id"`
+}
+
+type customFieldTypeTeamSet struct {
+	Set customFieldTypeTeam `json:"set"`
 }
