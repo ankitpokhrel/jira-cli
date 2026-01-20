@@ -2,7 +2,7 @@
 #   $ docker build -t jira-cli:latest .
 #   $ docker run --rm -it -v ~/.netrc:/root/.netrc -v ~/.config/.jira:/root/.config/.jira jira-cli
 
-FROM golang:1.25-alpine3.21 AS builder
+FROM golang:1.25-alpine3.23 AS builder
 
 ENV CGO_ENABLED=0
 ENV GOOS=linux
