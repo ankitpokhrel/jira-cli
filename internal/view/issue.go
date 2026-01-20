@@ -55,6 +55,9 @@ type Issue struct {
 
 // Render renders the view.
 func (i Issue) Render() error {
+	if i.Display.Markdown {
+		return i.renderMarkdown(os.Stdout)
+	}
 	if i.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		return i.renderPlain(os.Stdout)
 	}
@@ -188,7 +191,7 @@ func (i Issue) separator(msg string) string {
 		return m
 	}
 
-	if i.Display.Plain {
+	if i.Display.Plain || i.Display.Markdown {
 		sep := "------------------------"
 		return fmt.Sprintf("%s%s%s", sep, pad(msg), sep)
 	}
@@ -200,6 +203,9 @@ func (i Issue) separator(msg string) string {
 }
 
 func (i Issue) header() string {
+	if i.Display.NoEmoji {
+		return i.headerNoEmoji()
+	}
 	as := i.Data.Fields.Assignee.Name
 	if as == "" {
 		as = "Unassigned"
@@ -233,6 +239,40 @@ func (i Issue) header() string {
 	return fmt.Sprintf(
 		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s  💭 %d comments  \U0001F9F5 %d linked\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s  👀 %s",
 		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as, i.Data.Key,
+		i.Data.Fields.Comment.Total, len(i.Data.Fields.IssueLinks),
+		i.Data.Fields.Summary,
+		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
+		i.Data.Fields.Priority.Name, cmpt, lbl, wch,
+	)
+}
+
+func (i Issue) headerNoEmoji() string {
+	as := i.Data.Fields.Assignee.Name
+	if as == "" {
+		as = "Unassigned"
+	}
+	lbl := "None"
+	if len(i.Data.Fields.Labels) > 0 {
+		lbl = strings.Join(i.Data.Fields.Labels, ", ")
+	}
+	components := make([]string, 0, len(i.Data.Fields.Components))
+	for _, c := range i.Data.Fields.Components {
+		components = append(components, c.Name)
+	}
+	cmpt := "None"
+	if len(components) > 0 {
+		cmpt = strings.Join(components, ", ")
+	}
+	wch := fmt.Sprintf("Watchers: %d", i.Data.Fields.Watches.WatchCount)
+	if i.Data.Fields.Watches.WatchCount == 1 && i.Data.Fields.Watches.IsWatching {
+		wch = "Watchers: You"
+	} else if i.Data.Fields.Watches.IsWatching {
+		wch = fmt.Sprintf("Watchers: You + %d", i.Data.Fields.Watches.WatchCount-1)
+	}
+	return fmt.Sprintf(
+		"[%s] [%s] Updated: %s  Assignee: %s  Key: %s  Comments: %d  Linked: %d\n# %s\nCreated: %s  Reporter: %s  Priority: %s  Components: %s  Labels: %s  %s",
+		i.Data.Fields.IssueType.Name, i.Data.Fields.Status.Name,
+		cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as, i.Data.Key,
 		i.Data.Fields.Comment.Total, len(i.Data.Fields.IssueLinks),
 		i.Data.Fields.Summary,
 		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
@@ -425,15 +465,25 @@ func (i Issue) footer() string {
 
 	nc := int(i.Options.NumComments)
 	if i.Data.Fields.Comment.Total > 0 && nc > 0 && nc < i.Data.Fields.Comment.Total {
-		if i.Display.Plain {
+		if i.Display.Plain || i.Display.Markdown {
 			out.WriteString("\n")
 		}
-		out.WriteString(fmt.Sprintf("%s\n", gray("Use --comments <limit> with `jira issue view` to load more comments")))
+		msg := "Use --comments <limit> with `jira issue view` to load more comments"
+		if i.Display.Markdown {
+			out.WriteString(fmt.Sprintf("%s\n", msg))
+		} else {
+			out.WriteString(fmt.Sprintf("%s\n", gray(msg)))
+		}
 	}
-	if i.Display.Plain {
+	if i.Display.Plain || i.Display.Markdown {
 		out.WriteString("\n")
 	}
-	out.WriteString(gray(fmt.Sprintf("View this issue on Jira: %s", cmdutil.GenerateServerBrowseURL(i.Server, i.Data.Key))))
+	url := fmt.Sprintf("View this issue on Jira: %s", cmdutil.GenerateServerBrowseURL(i.Server, i.Data.Key))
+	if i.Display.Markdown {
+		out.WriteString(url)
+	} else {
+		out.WriteString(gray(url))
+	}
 
 	return out.String()
 }
@@ -452,5 +502,11 @@ func (i Issue) renderPlain(w io.Writer) error {
 		return err
 	}
 	_, err = fmt.Fprint(w, out)
+	return err
+}
+
+// renderMarkdown renders the issue as raw markdown without terminal formatting.
+func (i Issue) renderMarkdown(w io.Writer) error {
+	_, err := fmt.Fprint(w, i.String())
 	return err
 }

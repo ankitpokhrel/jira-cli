@@ -25,6 +25,8 @@ type DisplayFormat struct {
 	Comments     uint
 	TableStyle   tui.TableStyle
 	Timezone     string
+	Markdown     bool
+	NoEmoji      bool
 }
 
 // IssueList is a list view for issues.

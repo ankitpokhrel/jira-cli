@@ -21,12 +21,20 @@ const (
 $ jira issue view ISSUE-1 --comments 5
 
 # Get the raw JSON data
-$ jira issue view ISSUE-1 --raw`
+$ jira issue view ISSUE-1 --raw
+
+# Get raw markdown output (no terminal formatting)
+$ jira issue view ISSUE-1 --markdown
+
+# Replace emoji with text labels
+$ jira issue view ISSUE-1 --no-emoji`
 
 	flagRaw      = "raw"
 	flagDebug    = "debug"
 	flagComments = "comments"
 	flagPlain    = "plain"
+	flagMarkdown = "markdown"
+	flagNoEmoji  = "no-emoji"
 
 	configProject = "project.key"
 	configServer  = "server"
@@ -52,6 +60,8 @@ func NewCmdView() *cobra.Command {
 	cmd.Flags().Uint(flagComments, 1, "Show N comments")
 	cmd.Flags().Bool(flagPlain, false, "Display output in plain mode")
 	cmd.Flags().Bool(flagRaw, false, "Print raw Jira API response")
+	cmd.Flags().Bool(flagMarkdown, false, "Print raw markdown without terminal formatting")
+	cmd.Flags().Bool(flagNoEmoji, false, "Replace emoji with text labels")
 
 	return &cmd
 }
@@ -111,10 +121,16 @@ func viewPretty(cmd *cobra.Command, args []string) {
 	plain, err := cmd.Flags().GetBool(flagPlain)
 	cmdutil.ExitIfError(err)
 
+	markdown, err := cmd.Flags().GetBool(flagMarkdown)
+	cmdutil.ExitIfError(err)
+
+	noEmoji, err := cmd.Flags().GetBool(flagNoEmoji)
+	cmdutil.ExitIfError(err)
+
 	v := tuiView.Issue{
 		Server:  viper.GetString(configServer),
 		Data:    iss,
-		Display: tuiView.DisplayFormat{Plain: plain},
+		Display: tuiView.DisplayFormat{Plain: plain, Markdown: markdown, NoEmoji: noEmoji},
 		Options: tuiView.IssueOption{NumComments: comments},
 	}
 	cmdutil.ExitIfError(v.Render())
