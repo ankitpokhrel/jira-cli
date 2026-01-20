@@ -150,6 +150,7 @@ func cmdRequireToken(cmd string) bool {
 		"jira",
 		"version",
 		"completion",
+		"__complete", "__completeNoDesc", // Subcommand name during autocompletion call.
 		"man",
 	}
 	return !slices.Contains(allowList, cmd)
