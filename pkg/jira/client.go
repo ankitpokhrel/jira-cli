@@ -105,25 +105,27 @@ type MTLSConfig struct {
 
 // Config is a jira config.
 type Config struct {
-	Server     string
-	Login      string
-	APIToken   string
-	AuthType   *AuthType
-	Insecure   *bool
-	Debug      bool
-	MTLSConfig MTLSConfig
+	Server        string
+	Login         string
+	APIToken      string
+	AuthType      *AuthType
+	Insecure      *bool
+	Debug         bool
+	MTLSConfig    MTLSConfig
+	CustomHeaders map[string]string
 }
 
 // Client is a jira client.
 type Client struct {
-	transport http.RoundTripper
-	insecure  bool
-	server    string
-	login     string
-	authType  *AuthType
-	token     string
-	timeout   time.Duration
-	debug     bool
+	transport     http.RoundTripper
+	insecure      bool
+	server        string
+	login         string
+	authType      *AuthType
+	token         string
+	timeout       time.Duration
+	debug         bool
+	customHeaders map[string]string
 }
 
 // ClientFunc decorates option for client.
@@ -132,11 +134,12 @@ type ClientFunc func(*Client)
 // NewClient instantiates new jira client.
 func NewClient(c Config, opts ...ClientFunc) *Client {
 	client := Client{
-		server:   strings.TrimSuffix(c.Server, "/"),
-		login:    c.Login,
-		token:    c.APIToken,
-		authType: c.AuthType,
-		debug:    c.Debug,
+		server:        strings.TrimSuffix(c.Server, "/"),
+		login:         c.Login,
+		token:         c.APIToken,
+		authType:      c.AuthType,
+		debug:         c.Debug,
+		customHeaders: c.CustomHeaders,
 	}
 
 	for _, opt := range opts {
@@ -263,6 +266,11 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 	}()
 
 	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	// Apply custom headers from config.
+	for k, v := range c.customHeaders {
 		req.Header.Set(k, v)
 	}
 
