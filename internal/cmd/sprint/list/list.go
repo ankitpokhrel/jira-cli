@@ -72,7 +72,6 @@ func SetFlags(cmd *cobra.Command) {
 func sprintList(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
-	boardFlagChanged := cmd.Flags().Changed("board")
 	boardID := getBoardID(cmd)
 
 	debug, err := cmd.Flags().GetBool("debug")
@@ -84,7 +83,7 @@ func sprintList(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	if len(args) == 0 {
-		sprintExplorerView(sprintQuery, cmd.Flags(), boardID, boardFlagChanged, project, server, client)
+		sprintExplorerView(sprintQuery, cmd.Flags(), boardID, project, server, client)
 	} else {
 		sprintID, err := strconv.Atoi(args[0])
 		cmdutil.ExitIfError(err)
@@ -191,7 +190,7 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 	cmdutil.ExitIfError(v.Render())
 }
 
-func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, boardID int, boardFlagChanged bool, project, server string, client *jira.Client) {
+func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, boardID int, project, server string, client *jira.Client) {
 	sprints := func() []*jira.Sprint {
 		s := cmdutil.Info("Fetching sprints...")
 		defer s.Stop()
@@ -204,7 +203,7 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 		return
 	}
 
-	boardName := getBoardName(client, boardID, boardFlagChanged)
+	boardName := getBoardName(client, boardID)
 
 	if sprintQuery.Params().Current || sprintQuery.Params().Prev || sprintQuery.Params().Next {
 		sprint := sprints[0]
@@ -280,7 +279,7 @@ func getIssueQuery(project string, flags query.FlagParser, showAll bool) (string
 }
 
 func setFlags(cmd *cobra.Command) {
-	cmd.Flags().String("board", "", "Board ID to use (overrides board.id from config)")
+	cmd.Flags().Int("board", 0, "Board ID to use (overrides board.id from config)")
 	cmd.Flags().String("state", "", "Filter sprint by its state (comma separated).\n"+
 		"Valid values are future, active and closed.\n"+
 		`Defaults to "active,closed"`)
@@ -296,23 +295,17 @@ func setFlags(cmd *cobra.Command) {
 }
 
 func getBoardID(cmd *cobra.Command) int {
-	boardFlag, err := cmd.Flags().GetString("board")
-	cmdutil.ExitIfError(err)
-
-	if boardFlag != "" {
-		boardID, err := strconv.Atoi(boardFlag)
+	if cmd.Flags().Changed("board") {
+		boardID, err := cmd.Flags().GetInt("board")
 		cmdutil.ExitIfError(err)
+
 		return boardID
 	}
 
 	return viper.GetInt("board.id")
 }
 
-func getBoardName(client *jira.Client, boardID int, boardFlagChanged bool) string {
-	if !boardFlagChanged {
-		return viper.GetString("board.name")
-	}
-
+func getBoardName(client *jira.Client, boardID int) string {
 	board, err := client.BoardByID(boardID)
 	if err != nil {
 		cmdutil.Warn("Failed to fetch board name for board ID %d: %s", boardID, err.Error())
