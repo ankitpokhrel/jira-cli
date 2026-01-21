@@ -94,6 +94,22 @@ Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/In
 2. Run `jira init`, select installation type as `Cloud`, and provide required details to generate a config file required
    for the tool.
 
+#### Cloud server where PAT or OAuth is unavailable
+
+Some tenants have disabled or restricted the ability to create personal Jira API tokens / OAuth credentials. In these cases, you can fall back to the browser session cookie `tenant.session.token`. Note that this cookie usually expires in about 24 hours, so you will need to refresh it periodically.
+
+1. Log in to Jira with your browser. Open the developer tools (Application/Storage tab) and find the cookie value for `tenant.session.token`. Then set the environment variable `JIRA_API_TOKEN` to that value.
+
+```sh
+export JIRA_API_TOKEN=ey..
+```
+
+2. Bootstrap your CLI
+
+```sh
+jira init --installation cloud --server https://<COMPANY>.atlassian.net --auth-type cookie --project ABC
+```
+
 #### On-premise installation
 
 1. Export required environment variables:
@@ -119,9 +135,10 @@ See [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs)
 
 #### Authentication types
 
-The tool supports `basic`, `bearer` (Personal Access Token), and `mtls` (Client Certificates) authentication types. Basic auth is used by
+The tool supports `basic`, `cookie` (browser session), `bearer` (Personal Access Token), and `mtls` (Client Certificates) authentication types. Basic auth is used by
 default.
 
+* If you want to use a browser session cookie, set `--auth-type cookie` (or `JIRA_AUTH_TYPE=cookie`) and set `JIRA_API_TOKEN` to the value of `tenant.session.token`.
 * If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
 * If you want to use `mtls` run `jira init`. Select installation type `Local`, and then select authentication type as `mtls`.
   * In case `JIRA_API_TOKEN` variable is set it will be used together with `mtls`.
