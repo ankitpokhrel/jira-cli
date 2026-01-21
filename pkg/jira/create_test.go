@@ -178,3 +178,89 @@ func TestCreateEpicNextGen(t *testing.T) {
 	_, err = client.CreateV2(&requestData)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
+
+func TestCreateWithCustomFieldArrayEscapedComma(t *testing.T) {
+	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Task"},` +
+		`"summary":"Test task","customfield_10050":["WL: Tools, Development and Support"]}}`
+	testServer := createTestServer{code: 201}
+	server := testServer.serve(t, expectedBody)
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	customFields := []IssueTypeField{
+		{
+			Name: "Work Category",
+			Key:  "customfield_10050",
+			Schema: struct {
+				DataType string `json:"type"`
+				Items    string `json:"items,omitempty"`
+			}{
+				DataType: "array",
+				Items:    "string",
+			},
+		},
+	}
+
+	requestData := CreateRequest{
+		Project:   "TEST",
+		IssueType: "Task",
+		Summary:   "Test task",
+		CustomFields: map[string]string{
+			"work-category": `WL: Tools\, Development and Support`,
+		},
+	}
+	requestData.WithCustomFields(customFields)
+
+	actual, err := client.CreateV2(&requestData)
+	assert.NoError(t, err)
+
+	expected := &CreateResponse{
+		ID:  "10057",
+		Key: "TEST-3",
+	}
+	assert.Equal(t, expected, actual)
+}
+
+func TestCreateWithCustomFieldArrayMultipleValues(t *testing.T) {
+	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Task"},` +
+		`"summary":"Test task","customfield_10051":["Value 1","Value 2, with comma","Value 3"]}}`
+	testServer := createTestServer{code: 201}
+	server := testServer.serve(t, expectedBody)
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	customFields := []IssueTypeField{
+		{
+			Name: "Multi Value Field",
+			Key:  "customfield_10051",
+			Schema: struct {
+				DataType string `json:"type"`
+				Items    string `json:"items,omitempty"`
+			}{
+				DataType: "array",
+				Items:    "string",
+			},
+		},
+	}
+
+	requestData := CreateRequest{
+		Project:   "TEST",
+		IssueType: "Task",
+		Summary:   "Test task",
+		CustomFields: map[string]string{
+			"multi-value-field": `Value 1,Value 2\, with comma,Value 3`,
+		},
+	}
+	requestData.WithCustomFields(customFields)
+
+	actual, err := client.CreateV2(&requestData)
+	assert.NoError(t, err)
+
+	expected := &CreateResponse{
+		ID:  "10057",
+		Key: "TEST-3",
+	}
+	assert.Equal(t, expected, actual)
+}
