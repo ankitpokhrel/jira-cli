@@ -378,8 +378,19 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 			case customFieldFormatProject:
 				data.Update.M.customFields[configured.Key] = []customFieldTypeProjectSet{{Set: customFieldTypeProject{Value: val}}}
 			case customFieldFormatArray:
-				pieces := strings.Split(strings.TrimSpace(val), ",")
-				if configured.Schema.Items == customFieldFormatOption {
+				switch configured.Schema.Items {
+				case customFieldFormatCMDBObject:
+					// CMDB object fields require JSON array format.
+					var jsonVal interface{}
+					if err := json.Unmarshal([]byte(val), &jsonVal); err == nil {
+						// For edit operations, wrap in a "set" operation.
+						data.Update.M.customFields[configured.Key] = []map[string]interface{}{{"set": jsonVal}}
+					} else {
+						// If JSON parsing fails, pass as-is and let Jira API handle it.
+						data.Update.M.customFields[configured.Key] = []customFieldTypeStringSet{{Set: val}}
+					}
+				case customFieldFormatOption:
+					pieces := strings.Split(strings.TrimSpace(val), ",")
 					items := make([]customFieldTypeOptionAddRemove, 0)
 					for _, p := range pieces {
 						if strings.HasPrefix(p, separatorMinus) {
@@ -389,7 +400,8 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 						}
 					}
 					data.Update.M.customFields[configured.Key] = items
-				} else {
+				default:
+					pieces := strings.Split(strings.TrimSpace(val), ",")
 					data.Update.M.customFields[configured.Key] = pieces
 				}
 			case customFieldFormatNumber:
