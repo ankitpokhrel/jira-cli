@@ -183,6 +183,12 @@ The `list` command lets you search and navigate the issues. The issues are sorte
 # List recent issues
 $ jira issue list
 
+# List issues with pagination (default: 100 items)
+$ jira issue list --paginate 50
+
+# Get 20 items starting from offset 10
+$ jira issue list --paginate 10:20
+
 # List issues created in last 7 days
 $ jira issue list --created -7d
 
