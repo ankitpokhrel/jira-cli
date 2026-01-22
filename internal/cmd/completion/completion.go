@@ -37,7 +37,7 @@ Fish:
   $ jira completion fish | source
 
   # To load completions for each session, execute once:
-  $ jira completion fish > ~/.config/fish/completions/_jira.fish
+  $ jira completion fish > ~/.config/fish/completions/jira.fish
 
 PowerShell:
 
