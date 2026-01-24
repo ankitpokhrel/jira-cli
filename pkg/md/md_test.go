@@ -6,6 +6,71 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestConvertJiraNestedLists(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "single level list unchanged",
+			input:    "* Item 1\n* Item 2",
+			expected: "* Item 1\n* Item 2",
+		},
+		{
+			name:     "nested list converted",
+			input:    "* Item 1\n** Subitem 1\n** Subitem 2",
+			expected: "* Item 1\n\t- Subitem 1\n\t- Subitem 2",
+		},
+		{
+			name:     "deeply nested list",
+			input:    "* Item\n** Level 2\n*** Level 3\n**** Level 4",
+			expected: "* Item\n\t- Level 2\n\t\t- Level 3\n\t\t\t- Level 4",
+		},
+		{
+			name:     "bold text not affected",
+			input:    "**bold text** and more",
+			expected: "**bold text** and more",
+		},
+		{
+			name:     "mixed content",
+			input:    "* Item with **bold**\n** Subitem\n*** Deep item",
+			expected: "* Item with **bold**\n\t- Subitem\n\t\t- Deep item",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, convertJiraNestedLists(tc.input))
+		})
+	}
+}
+
+func TestToJiraMDWithNestedLists(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "jira wiki nested list",
+			input:    "* Item 1\n** Subitem 1\n** Subitem 2\n* Item 2",
+			expected: "* Item 1\n** Subitem 1\n** Subitem 2\n* Item 2\n\n",
+		},
+		{
+			name:     "three level nesting",
+			input:    "* Level 1\n** Level 2\n*** Level 3",
+			expected: "* Level 1\n** Level 2\n*** Level 3\n\n",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, ToJiraMD(tc.input))
+		})
+	}
+}
+
 func TestToJiraMD(t *testing.T) {
 	jfm := `# H1
 Some _Markdown_ text.
