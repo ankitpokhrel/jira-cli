@@ -192,7 +192,7 @@ func (sl *SprintList) tableData() tui.TableData {
 	var data tui.TableData
 
 	headers := sl.tableHeader()
-	if !(sl.Display.Plain && sl.Display.NoHeaders) {
+	if !sl.Display.Plain || !sl.Display.NoHeaders {
 		data = append(data, headers)
 	}
 	if len(headers) == 0 {

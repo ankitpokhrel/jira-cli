@@ -29,7 +29,6 @@ type DisplayFormat struct {
 
 // IssueList is a list view for issues.
 type IssueList struct {
-	Total      int
 	Project    string
 	Server     string
 	Data       []*jira.Issue
@@ -40,6 +39,12 @@ type IssueList struct {
 
 // Render renders the view.
 func (l *IssueList) Render() error {
+	// Prioritize CSV format when explicitly requested
+	if l.Display.CSV {
+		w := os.Stdout
+		return l.renderCSV(w)
+	}
+
 	if l.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		// custom delimiter is used only in plain mode, otherwise \t is used
 		delimeter := "\t"
@@ -50,11 +55,6 @@ func (l *IssueList) Render() error {
 		return l.renderPlain(w, delimeter)
 	}
 
-	if l.Display.CSV {
-		w := os.Stdout
-		return l.renderCSV(w)
-	}
-
 	renderer, err := MDRenderer()
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func (l *IssueList) Render() error {
 
 	data := l.data()
 	if l.FooterText == "" {
-		l.FooterText = fmt.Sprintf("Showing %d of %d results for project %q", len(data)-1, l.Total, l.Project)
+		l.FooterText = fmt.Sprintf("Showing %d results for project %q", len(data)-1, l.Project)
 	}
 
 	view := tui.NewTable(
