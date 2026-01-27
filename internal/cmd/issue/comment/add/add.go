@@ -55,6 +55,10 @@ func NewCmdCommentAdd() *cobra.Command {
 
 	cmd.Flags().Bool("web", false, "Open issue in web browser after adding comment")
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read comment body from")
+	cmd.Flags().StringP("visibility-group",
+		"V",
+		"",
+		"The name of the group that visibility of this comment is restricted to.")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 	cmd.Flags().Bool("internal", false, "Make comment internal")
 
@@ -103,7 +107,7 @@ func add(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Adding comment")
 		defer s.Stop()
 
-		return client.AddIssueComment(ac.params.issueKey, ac.params.body, ac.params.internal)
+		return client.AddIssueComment(ac.params.issueKey, ac.params.body, ac.params.internal, ac.params.visibilityGroup)
 	}()
 	cmdutil.ExitIfError(err)
 
@@ -119,12 +123,13 @@ func add(cmd *cobra.Command, args []string) {
 }
 
 type addParams struct {
-	issueKey string
-	body     string
-	template string
-	noInput  bool
-	internal bool
-	debug    bool
+	issueKey        string
+	body            string
+	template        string
+	visibilityGroup string
+	noInput         bool
+	internal        bool
+	debug           bool
 }
 
 func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
@@ -144,6 +149,9 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 	template, err := flags.GetString("template")
 	cmdutil.ExitIfError(err)
 
+	visibilityGroup, err := flags.GetString("visibility-group")
+	cmdutil.ExitIfError(err)
+
 	noInput, err := flags.GetBool("no-input")
 	cmdutil.ExitIfError(err)
 
@@ -151,12 +159,13 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 	cmdutil.ExitIfError(err)
 
 	return &addParams{
-		issueKey: issueKey,
-		body:     body,
-		template: template,
-		noInput:  noInput,
-		internal: internal,
-		debug:    debug,
+		issueKey:        issueKey,
+		body:            body,
+		template:        template,
+		visibilityGroup: visibilityGroup,
+		noInput:         noInput,
+		internal:        internal,
+		debug:           debug,
 	}
 }
 
