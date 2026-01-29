@@ -17,6 +17,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/me"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/open"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/project"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/refresh"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/release"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/serverinfo"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/sprint"
@@ -84,8 +85,9 @@ func NewCmdRoot() *cobra.Command {
 				return
 			}
 
-			// mTLS doesn't need Jira API Token.
-			if viper.GetString("auth_type") != string(jira.AuthTypeMTLS) {
+			// mTLS and cookie auth don't need token check here (retrieved from env/keychain).
+			authType := viper.GetString("auth_type")
+			if authType != string(jira.AuthTypeMTLS) && authType != string(jira.AuthTypeCookie) {
 				checkForJiraToken(viper.GetString("server"), viper.GetString("login"))
 			}
 
@@ -140,6 +142,7 @@ func addChildCommands(cmd *cobra.Command) {
 		version.NewCmdVersion(),
 		release.NewCmdRelease(),
 		man.NewCmdMan(),
+		refresh.NewCmdRefresh(),
 	)
 }
 
@@ -152,6 +155,7 @@ func cmdRequireToken(cmd string) bool {
 		"completion",
 		"__complete", "__completeNoDesc", // Subcommand name during autocompletion call.
 		"man",
+		"refresh",
 	}
 	return !slices.Contains(allowList, cmd)
 }

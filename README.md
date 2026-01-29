@@ -119,12 +119,17 @@ See [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs)
 
 #### Authentication types
 
-The tool supports `basic`, `bearer` (Personal Access Token), and `mtls` (Client Certificates) authentication types. Basic auth is used by
-default.
+The tool supports `basic`, `bearer` (Personal Access Token), `mtls` (Client Certificates), and `cookie` (Session Cookie) authentication types. Basic auth is used by default.
 
 * If you want to use PAT, you need to set `JIRA_AUTH_TYPE` as `bearer`.
 * If you want to use `mtls` run `jira init`. Select installation type `Local`, and then select authentication type as `mtls`.
   * In case `JIRA_API_TOKEN` variable is set it will be used together with `mtls`.
+* If your Jira is behind SSO, a reverse proxy, or requires client certificate authentication, use `cookie` auth:
+  1. Run `jira init`, select `Local` installation, then select `cookie` as authentication type.
+  2. Sign in to Jira in your browser (authenticate via SSO/certificate as needed).
+  3. Copy the `JSESSIONID` cookie value from your browser's DevTools.
+  4. Paste it when prompted. The cookie is validated and stored in your system keychain.
+  * When your session expires, run `jira refresh` to update the cookie without re-running full setup.
 
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.
