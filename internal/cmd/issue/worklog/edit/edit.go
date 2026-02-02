@@ -1,4 +1,4 @@
-package add
+package edit
 
 import (
 	"fmt"
@@ -16,64 +16,60 @@ import (
 )
 
 const (
-	helpText = `Add adds worklog to an issue.`
-	examples = `$ jira issue worklog add
+	helpText = `Edit updates an existing worklog in an issue.`
+	examples = `$ jira issue worklog edit
 
-# Pass required parameters and use --no-input to skip prompt
-$ jira issue worklog add ISSUE-1 "2d 1h 30m" --no-input
+# Edit a specific worklog
+$ jira issue worklog edit ISSUE-1 10001 "3h 30m"
 
-# You can add a comment using --comment flag when adding a worklog
-$ jira issue worklog add ISSUE-1 "2d 1h 30m" --comment "This is a comment" --no-input
+# Edit worklog with new comment
+$ jira issue worklog edit ISSUE-1 10001 "3h 30m" --comment "Updated work description"
 
-# You can also add a worklog with the specific start date (defaults to UTC timezone)
-$ jira issue worklog add ISSUE-1 "2d 1h 30m" --started "2022-01-01 09:30:00"
+# Edit worklog with new start date
+$ jira issue worklog edit ISSUE-1 10001 "3h 30m" --started "2024-11-05 09:30:00"
 
-# You can specify timezone to use along with the start date in IANA timezone format
-$ jira issue worklog add ISSUE-1 3h --started "2022-01-01 09:30:00" --timezone "Europe/Berlin"
-
-# Or, you can use start date in Jira datetime format and skip the timezone flag
-$ jira issue worklog add ISSUE-1 "1h 30m" --started "2022-01-01T09:30:00.000+0200"
-
-# Or, you can update a worklogs remaining estimate
-$ jira issue worklog add ISSUE-1 "1h 30m" --started "2022-01-01T09:30:00.000+0200" --new-estimate 0h`
+# Use --no-input to skip prompts
+$ jira issue worklog edit ISSUE-1 10001 "3h 30m" --no-input`
 )
 
-// NewCmdWorklogAdd is a worklog add command.
-func NewCmdWorklogAdd() *cobra.Command {
+// NewCmdWorklogEdit is a worklog edit command.
+func NewCmdWorklogEdit() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "add ISSUE-KEY TIME_SPENT",
-		Short:   "Add a worklog to an issue",
+		Use:     "edit ISSUE-KEY WORKLOG-ID TIME_SPENT",
+		Short:   "Edit a worklog in an issue",
 		Long:    helpText,
 		Example: examples,
+		Aliases: []string{"update"},
 		Annotations: map[string]string{
 			"help:args": "ISSUE-KEY\tIssue key of the source issue, eg: ISSUE-1\n" +
-				"TIME_SPENT\tTime to log as days (d), hours (h), or minutes (m), separated by space eg: 2d 1h 30m",
+				"WORKLOG-ID\tID of the worklog to edit\n" +
+				"TIME_SPENT\tNew time to log as days (d), hours (h), or minutes (m), eg: 2d 1h 30m",
 		},
-		Run: add,
+		Run: edit,
 	}
 
 	cmd.Flags().SortFlags = false
 
-	cmd.Flags().String("started", "", "The datetime on which the worklog effort was started, eg: 2022-01-01 09:30:00")
+	cmd.Flags().String("started", "", "The datetime on which the worklog effort was started, eg: 2024-01-01 09:30:00")
 	cmd.Flags().String("timezone", "UTC", "The timezone to use for the started date in IANA timezone format, eg: Europe/Berlin")
 	cmd.Flags().String("comment", "", "Comment about the worklog")
-	cmd.Flags().String("new-estimate", "", "the new estimate for the backlog to be completed by")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 
 	return &cmd
 }
 
-func add(cmd *cobra.Command, args []string) {
+func edit(cmd *cobra.Command, args []string) {
 	params := parseArgsAndFlags(args, cmd.Flags())
 	client := api.DefaultClient(params.debug)
-	ac := addCmd{
+	ec := editCmd{
 		client: client,
 		params: params,
 	}
 
-	cmdutil.ExitIfError(ac.setIssueKey())
+	cmdutil.ExitIfError(ec.setIssueKey())
+	cmdutil.ExitIfError(ec.setWorklogID())
 
-	qs := ac.getQuestions()
+	qs := ec.getQuestions()
 	if len(qs) > 0 {
 		ans := struct{ TimeSpent, Comment string }{}
 		err := survey.Ask(qs, &ans)
@@ -97,40 +93,43 @@ func add(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	worklog, err := func() (*jira.Worklog, error) {
-		s := cmdutil.Info("Adding a worklog")
+	err := func() error {
+		s := cmdutil.Info("Updating worklog")
 		defer s.Stop()
 
-		return client.AddIssueWorklog(ac.params.issueKey, ac.params.started, ac.params.timeSpent, ac.params.comment, ac.params.newEstimate)
+		return client.UpdateIssueWorklog(ec.params.issueKey, ec.params.worklogID, ec.params.started, ec.params.timeSpent, ec.params.comment)
 	}()
 	cmdutil.ExitIfError(err)
 
 	server := viper.GetString("server")
 
-	cmdutil.Success("Worklog %s added to issue %q", worklog.ID, ac.params.issueKey)
-	fmt.Printf("%s\n", cmdutil.GenerateServerBrowseURL(server, ac.params.issueKey))
+	cmdutil.Success("Worklog updated in issue %q", ec.params.issueKey)
+	fmt.Printf("%s\n", cmdutil.GenerateServerBrowseURL(server, ec.params.issueKey))
 }
 
-type addParams struct {
-	issueKey    string
-	started     string
-	timezone    string
-	timeSpent   string
-	comment     string
-	newEstimate string
-	noInput     bool
-	debug       bool
+type editParams struct {
+	issueKey  string
+	worklogID string
+	started   string
+	timezone  string
+	timeSpent string
+	comment   string
+	noInput   bool
+	debug     bool
 }
 
-func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
-	var issueKey, timeSpent string
+func parseArgsAndFlags(args []string, flags query.FlagParser) *editParams {
+	var issueKey, worklogID, timeSpent string
 
 	nargs := len(args)
 	if nargs >= 1 {
 		issueKey = cmdutil.GetJiraIssueKey(viper.GetString("project.key"), args[0])
 	}
 	if nargs >= 2 {
-		timeSpent = args[1]
+		worklogID = args[1]
+	}
+	if nargs >= 3 {
+		timeSpent = args[2]
 	}
 
 	debug, err := flags.GetBool("debug")
@@ -151,28 +150,25 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 	noInput, err := flags.GetBool("no-input")
 	cmdutil.ExitIfError(err)
 
-	newEstimate, err := flags.GetString("new-estimate")
-	cmdutil.ExitIfError(err)
-
-	return &addParams{
-		issueKey:    issueKey,
-		started:     startedWithTZ,
-		timezone:    timezone,
-		timeSpent:   timeSpent,
-		comment:     comment,
-		newEstimate: newEstimate,
-		noInput:     noInput,
-		debug:       debug,
+	return &editParams{
+		issueKey:  issueKey,
+		worklogID: worklogID,
+		started:   startedWithTZ,
+		timezone:  timezone,
+		timeSpent: timeSpent,
+		comment:   comment,
+		noInput:   noInput,
+		debug:     debug,
 	}
 }
 
-type addCmd struct {
+type editCmd struct {
 	client *jira.Client
-	params *addParams
+	params *editParams
 }
 
-func (ac *addCmd) setIssueKey() error {
-	if ac.params.issueKey != "" {
+func (ec *editCmd) setIssueKey() error {
+	if ec.params.issueKey != "" {
 		return nil
 	}
 
@@ -186,15 +182,53 @@ func (ac *addCmd) setIssueKey() error {
 	if err := survey.Ask([]*survey.Question{qs}, &ans); err != nil {
 		return err
 	}
-	ac.params.issueKey = cmdutil.GetJiraIssueKey(viper.GetString("project.key"), ans)
+	ec.params.issueKey = cmdutil.GetJiraIssueKey(viper.GetString("project.key"), ans)
 
 	return nil
 }
 
-func (ac *addCmd) getQuestions() []*survey.Question {
+func (ec *editCmd) setWorklogID() error {
+	if ec.params.worklogID != "" {
+		return nil
+	}
+
+	// Fetch worklogs for the issue
+	worklogs, err := ec.client.GetIssueWorklogs(ec.params.issueKey)
+	if err != nil {
+		return err
+	}
+
+	if worklogs.Total == 0 {
+		return fmt.Errorf("no worklogs found for issue %s", ec.params.issueKey)
+	}
+
+	// Create options for selection
+	options := make([]string, len(worklogs.Worklogs))
+	for i, wl := range worklogs.Worklogs {
+		options[i] = fmt.Sprintf("%s - %s by %s (%s)", wl.ID, wl.TimeSpent, wl.Author.Name, wl.Started)
+	}
+
+	var selected string
+	prompt := &survey.Select{
+		Message: "Select worklog to edit:",
+		Options: options,
+	}
+	if err := survey.AskOne(prompt, &selected); err != nil {
+		return err
+	}
+
+	// Extract worklog ID from selection (format: "ID - ...")
+	var id string
+	_, _ = fmt.Sscanf(selected, "%s -", &id)
+	ec.params.worklogID = id
+
+	return nil
+}
+
+func (ec *editCmd) getQuestions() []*survey.Question {
 	var qs []*survey.Question
 
-	if ac.params.timeSpent == "" {
+	if ec.params.timeSpent == "" {
 		qs = append(qs, &survey.Question{
 			Name: "timeSpent",
 			Prompt: &survey.Input{
@@ -205,7 +239,7 @@ func (ac *addCmd) getQuestions() []*survey.Question {
 		})
 	}
 
-	if !ac.params.noInput && ac.params.comment == "" {
+	if !ec.params.noInput && ec.params.comment == "" {
 		qs = append(qs, &survey.Question{
 			Name: "comment",
 			Prompt: &surveyext.JiraEditor{
