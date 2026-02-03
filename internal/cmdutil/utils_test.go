@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -261,6 +262,147 @@ func TestGetSubtaskHandle(t *testing.T) {
 			t.Parallel()
 
 			assert.Equal(t, tc.expected, GetSubtaskHandle(tc.inputType, tc.input))
+		})
+	}
+}
+
+func TestIsNoInputMode(t *testing.T) {
+	cases := []struct {
+		name     string
+		setup    func()
+		expected bool
+	}{
+		{
+			name: "returns false when no_input is not set",
+			setup: func() {
+				viper.Reset()
+			},
+			expected: false,
+		},
+		{
+			name: "returns true when no_input is set to true",
+			setup: func() {
+				viper.Reset()
+				viper.Set("no_input", true)
+			},
+			expected: true,
+		},
+		{
+			name: "returns false when no_input is set to false",
+			setup: func() {
+				viper.Reset()
+				viper.Set("no_input", false)
+			},
+			expected: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup()
+			assert.Equal(t, tc.expected, IsNoInputMode())
+		})
+	}
+}
+
+func TestShouldPrompt(t *testing.T) {
+	cases := []struct {
+		name          string
+		localNoInput  bool
+		globalNoInput bool
+		expected      bool
+	}{
+		{
+			name:          "should prompt when both local and global are false",
+			localNoInput:  false,
+			globalNoInput: false,
+			expected:      true,
+		},
+		{
+			name:          "should not prompt when local is true and global is false",
+			localNoInput:  true,
+			globalNoInput: false,
+			expected:      false,
+		},
+		{
+			name:          "should not prompt when local is false and global is true",
+			localNoInput:  false,
+			globalNoInput: true,
+			expected:      false,
+		},
+		{
+			name:          "should not prompt when both local and global are true",
+			localNoInput:  true,
+			globalNoInput: true,
+			expected:      false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			viper.Reset()
+			if tc.globalNoInput {
+				viper.Set("no_input", true)
+			}
+
+			assert.Equal(t, tc.expected, ShouldPrompt(tc.localNoInput))
+		})
+	}
+}
+
+func TestNoInputConfigurationMethods(t *testing.T) {
+	cases := []struct {
+		name     string
+		setup    func(t *testing.T)
+		expected bool
+	}{
+		{
+			name: "reads no_input from viper.Set (config file simulation)",
+			setup: func(t *testing.T) {
+				viper.Reset()
+				viper.Set("no_input", true)
+			},
+			expected: true,
+		},
+		{
+			name: "reads no_input from environment variable",
+			setup: func(t *testing.T) {
+				viper.Reset()
+				viper.AutomaticEnv()
+				viper.SetEnvPrefix("jira")
+				t.Setenv("JIRA_NO_INPUT", "true")
+			},
+			expected: true,
+		},
+		{
+			name: "environment variable false is respected",
+			setup: func(t *testing.T) {
+				viper.Reset()
+				viper.AutomaticEnv()
+				viper.SetEnvPrefix("jira")
+				t.Setenv("JIRA_NO_INPUT", "false")
+			},
+			expected: false,
+		},
+		{
+			name: "prefers viper.Set over unset environment variable",
+			setup: func(t *testing.T) {
+				viper.Reset()
+				viper.AutomaticEnv()
+				viper.SetEnvPrefix("jira")
+				t.Setenv("JIRA_NO_INPUT", "")
+				viper.Set("no_input", true)
+			},
+			expected: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup(t)
+
+			result := IsNoInputMode()
+			assert.Equal(t, tc.expected, result)
 		})
 	}
 }
