@@ -36,11 +36,17 @@ type EditRequest struct {
 	SkipNotify   bool
 
 	configuredCustomFields []IssueTypeField
+	installationType       string
 }
 
 // WithCustomFields sets valid custom fields for the issue.
 func (er *EditRequest) WithCustomFields(cf []IssueTypeField) {
 	er.configuredCustomFields = cf
+}
+
+// ForInstallationType sets jira installation type for the edit request.
+func (er *EditRequest) ForInstallationType(it string) {
+	er.installationType = it
 }
 
 // Edit updates an issue using POST /issue endpoint.
@@ -353,12 +359,12 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 		Update: update,
 		Fields: fields,
 	}
-	constructCustomFieldsForEdit(req.CustomFields, req.configuredCustomFields, &data)
+	constructCustomFieldsForEdit(req.CustomFields, req.configuredCustomFields, req.installationType, &data)
 
 	return &data
 }
 
-func constructCustomFieldsForEdit(fields map[string]string, configuredFields []IssueTypeField, data *editRequest) {
+func constructCustomFieldsForEdit(fields map[string]string, configuredFields []IssueTypeField, installationType string, data *editRequest) {
 	if len(fields) == 0 || len(configuredFields) == 0 {
 		return
 	}
@@ -379,7 +385,8 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 				data.Update.M.customFields[configured.Key] = []customFieldTypeProjectSet{{Set: customFieldTypeProject{Value: val}}}
 			case customFieldFormatArray:
 				pieces := strings.Split(strings.TrimSpace(val), ",")
-				if configured.Schema.Items == customFieldFormatOption {
+				switch configured.Schema.Items {
+				case customFieldFormatOption:
 					items := make([]customFieldTypeOptionAddRemove, 0)
 					for _, p := range pieces {
 						if strings.HasPrefix(p, separatorMinus) {
@@ -389,7 +396,13 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 						}
 					}
 					data.Update.M.customFields[configured.Key] = items
-				} else {
+				case customFieldFormatUser:
+					items := make([]customFieldTypeUserSet, 0, len(pieces))
+					for _, p := range pieces {
+						items = append(items, customFieldTypeUserSet{Set: newCustomFieldTypeUser(strings.TrimSpace(p), installationType)})
+					}
+					data.Update.M.customFields[configured.Key] = items
+				default:
 					data.Update.M.customFields[configured.Key] = pieces
 				}
 			case customFieldFormatNumber:
@@ -400,6 +413,8 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 				} else {
 					data.Update.M.customFields[configured.Key] = []customFieldTypeNumberSet{{Set: customFieldTypeNumber(num)}}
 				}
+			case customFieldFormatUser:
+				data.Update.M.customFields[configured.Key] = []customFieldTypeUserSet{{Set: newCustomFieldTypeUser(val, installationType)}}
 			default:
 				data.Update.M.customFields[configured.Key] = []customFieldTypeStringSet{{Set: val}}
 			}

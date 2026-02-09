@@ -5,6 +5,7 @@ const (
 	customFieldFormatArray   = "array"
 	customFieldFormatNumber  = "number"
 	customFieldFormatProject = "project"
+	customFieldFormatUser    = "user"
 )
 
 type customField map[string]interface{}
@@ -38,4 +39,21 @@ type customFieldTypeProject struct {
 
 type customFieldTypeProjectSet struct {
 	Set customFieldTypeProject `json:"set"`
+}
+
+type customFieldTypeUser struct {
+	Name      *string `json:"name,omitempty"`      // For local (Server/DC) installation.
+	AccountID *string `json:"accountId,omitempty"` // For cloud installation.
+}
+
+type customFieldTypeUserSet struct {
+	Set customFieldTypeUser `json:"set"`
+}
+
+// newCustomFieldTypeUser creates a user field value appropriate for the installation type.
+func newCustomFieldTypeUser(val, installationType string) customFieldTypeUser {
+	if installationType == InstallationTypeLocal {
+		return customFieldTypeUser{Name: &val}
+	}
+	return customFieldTypeUser{AccountID: &val}
 }
