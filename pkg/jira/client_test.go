@@ -2,14 +2,18 @@
 package jira
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGet(t *testing.T) {
@@ -206,4 +210,174 @@ func TestDeleteV2(t *testing.T) {
 	assert.Equal(t, 204, resp.StatusCode)
 
 	_ = resp.Body.Close()
+}
+
+// captureStdout redirects os.Stdout to a pipe, runs fn, then returns
+// whatever was written. This is used to verify debug output.
+func captureStdout(t *testing.T, fn func()) string {
+	t.Helper()
+
+	origStdout := os.Stdout
+	r, w, err := os.Pipe()
+	require.NoError(t, err)
+
+	os.Stdout = w
+
+	fn()
+
+	require.NoError(t, w.Close())
+	os.Stdout = origStdout
+
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, r)
+	require.NoError(t, err)
+
+	return buf.String()
+}
+
+func TestDumpRedactsAuthorizationHeader(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(200)
+	}))
+	defer server.Close()
+
+	tests := []struct {
+		name     string
+		authType AuthType
+		login    string
+		token    string
+	}{
+		{
+			name:     "bearer token is redacted",
+			authType: AuthTypeBearer,
+			token:    "super-secret-pat-token",
+		},
+		{
+			name:     "basic auth is redacted",
+			authType: AuthTypeBasic,
+			login:    "user@example.com",
+			token:    "super-secret-api-token",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := NewClient(Config{
+				Server:   server.URL,
+				Login:    tt.login,
+				APIToken: tt.token,
+				AuthType: &tt.authType,
+				Debug:    true,
+			}, WithTimeout(3*time.Second))
+
+			output := captureStdout(t, func() {
+				resp, err := client.GetV2(context.Background(), "/search", nil)
+				require.NoError(t, err)
+				_ = resp.Body.Close()
+			})
+
+			assert.Contains(t, output, "[REDACTED]",
+				"debug output should contain redacted placeholder")
+			assert.NotContains(t, output, tt.token,
+				"debug output must not contain the raw token")
+		})
+	}
+
+	// MTLS with a bearer token is tested via dump() directly because
+	// NewClient requires real certificate files for MTLS initialization.
+	t.Run("mtls bearer token is redacted", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, server.URL+"/test", http.NoBody)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer super-secret-mtls-token")
+
+		output := captureStdout(t, func() {
+			dump(req, nil)
+		})
+
+		assert.Contains(t, output, "[REDACTED]",
+			"debug output should contain redacted placeholder")
+		assert.NotContains(t, output, "super-secret-mtls-token",
+			"debug output must not contain the raw MTLS token")
+	})
+}
+
+func TestDumpPreservesOriginalHeaders(t *testing.T) {
+	var receivedAuth string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedAuth = r.Header.Get("Authorization")
+		w.WriteHeader(200)
+	}))
+	defer server.Close()
+
+	authType := AuthTypeBearer
+	client := NewClient(Config{
+		Server:   server.URL,
+		APIToken: "my-secret-token",
+		AuthType: &authType,
+		Debug:    true,
+	}, WithTimeout(3*time.Second))
+
+	_ = captureStdout(t, func() {
+		resp, err := client.GetV2(context.Background(), "/search", nil)
+		require.NoError(t, err)
+		_ = resp.Body.Close()
+	})
+
+	assert.Equal(t, "Bearer my-secret-token", receivedAuth,
+		"server must receive the real Authorization header, not the redacted one")
+}
+
+func TestDumpWithNoAuthorizationHeader(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(200)
+	}))
+	defer server.Close()
+
+	// Create a request without any auth to verify dump does not panic
+	// or inject a spurious [REDACTED] header.
+	req, err := http.NewRequest(http.MethodGet, server.URL+"/test", http.NoBody)
+	require.NoError(t, err)
+
+	output := captureStdout(t, func() {
+		dump(req, nil)
+	})
+
+	assert.NotContains(t, output, "Authorization",
+		"dump should not add an Authorization header when none exists")
+	assert.NotContains(t, output, "[REDACTED]",
+		"dump should not show redacted placeholder when no auth header is present")
+	assert.Contains(t, output, "REQUEST DETAILS",
+		"dump should still produce request output")
+}
+
+func TestDumpWithMultipleAuthorizationValues(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(200)
+	}))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL+"/test", http.NoBody)
+	require.NoError(t, err)
+
+	// Simulate multiple Authorization header values (unlikely but possible).
+	req.Header.Add("Authorization", "Bearer token-one")
+	req.Header.Add("Authorization", "Bearer token-two")
+
+	output := captureStdout(t, func() {
+		dump(req, nil)
+	})
+
+	assert.NotContains(t, output, "token-one",
+		"first authorization value must be redacted")
+	assert.NotContains(t, output, "token-two",
+		"second authorization value must be redacted")
+	assert.Contains(t, output, "[REDACTED]",
+		"redacted placeholder should appear in output")
+
+	// Verify original request headers are untouched.
+	vals := req.Header.Values("Authorization")
+	assert.Len(t, vals, 2, "original request should still have both Authorization values")
+	assert.Equal(t, "Bearer token-one", vals[0])
+	assert.Equal(t, "Bearer token-two", vals[1])
 }
