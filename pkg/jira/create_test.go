@@ -114,6 +114,38 @@ func TestCreateSubtask(t *testing.T) {
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
+func TestCreateWithCascadingSelectWithSpaces(t *testing.T) {
+	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Story"},` +
+		`"summary":"Test spaces","customfield_10318":{"value":"Parent Value","child":{"value":"Child Value"}}}}`
+	testServer := createTestServer{code: 201}
+	server := testServer.serve(t, expectedBody)
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	requestData := CreateRequest{
+		Project:      "TEST",
+		IssueType:    "Story",
+		Summary:      "Test spaces",
+		CustomFields: map[string]string{"dev-team": "Parent Value -> Child Value"},
+	}
+	requestData.WithCustomFields([]IssueTypeField{
+		{Name: "Dev Team", Key: "customfield_10318", Schema: struct {
+			DataType string `json:"type"`
+			Items    string `json:"items,omitempty"`
+		}{DataType: "option-with-child"}},
+	})
+
+	actual, err := client.CreateV2(&requestData)
+	assert.NoError(t, err)
+
+	expected := &CreateResponse{
+		ID:  "10057",
+		Key: "TEST-3",
+	}
+	assert.Equal(t, expected, actual)
+}
+
 func TestCreateEpic(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"customfield_10001":"CLI","description":"Test description","issuetype":{"name":` +
 		`"Bug"},"priority":{"name":"Normal"},"project":{"key":"TEST"},"summary":"Test bug"}}`
@@ -144,6 +176,70 @@ func TestCreateEpic(t *testing.T) {
 
 	_, err = client.CreateV2(&requestData)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
+func TestCreateWithCascadingSelect(t *testing.T) {
+	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Story"},` +
+		`"summary":"Test cascading","customfield_10318":{"value":"Engineering","child":{"value":"Backend"}}}}`
+	testServer := createTestServer{code: 201}
+	server := testServer.serve(t, expectedBody)
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	requestData := CreateRequest{
+		Project:      "TEST",
+		IssueType:    "Story",
+		Summary:      "Test cascading",
+		CustomFields: map[string]string{"dev-team": "Engineering->Backend"},
+	}
+	requestData.WithCustomFields([]IssueTypeField{
+		{Name: "Dev Team", Key: "customfield_10318", Schema: struct {
+			DataType string `json:"type"`
+			Items    string `json:"items,omitempty"`
+		}{DataType: "option-with-child"}},
+	})
+
+	actual, err := client.CreateV2(&requestData)
+	assert.NoError(t, err)
+
+	expected := &CreateResponse{
+		ID:  "10057",
+		Key: "TEST-3",
+	}
+	assert.Equal(t, expected, actual)
+}
+
+func TestCreateWithCascadingSelectParentOnly(t *testing.T) {
+	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Story"},` +
+		`"summary":"Test cascading parent only","customfield_10318":{"value":"Engineering"}}}`
+	testServer := createTestServer{code: 201}
+	server := testServer.serve(t, expectedBody)
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	requestData := CreateRequest{
+		Project:      "TEST",
+		IssueType:    "Story",
+		Summary:      "Test cascading parent only",
+		CustomFields: map[string]string{"dev-team": "Engineering"},
+	}
+	requestData.WithCustomFields([]IssueTypeField{
+		{Name: "Dev Team", Key: "customfield_10318", Schema: struct {
+			DataType string `json:"type"`
+			Items    string `json:"items,omitempty"`
+		}{DataType: "option-with-child"}},
+	})
+
+	actual, err := client.CreateV2(&requestData)
+	assert.NoError(t, err)
+
+	expected := &CreateResponse{
+		ID:  "10057",
+		Key: "TEST-3",
+	}
+	assert.Equal(t, expected, actual)
 }
 
 func TestCreateEpicNextGen(t *testing.T) {
