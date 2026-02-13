@@ -244,6 +244,8 @@ func constructCustomFields(fields map[string]string, configuredFields []IssueTyp
 			switch configured.Schema.DataType {
 			case customFieldFormatOption:
 				data.Fields.M.customFields[configured.Key] = customFieldTypeOption{Value: val}
+			case customFieldFormatCascading:
+				data.Fields.M.customFields[configured.Key] = parseCascadingValue(val)
 			case customFieldFormatProject:
 				data.Fields.M.customFields[configured.Key] = customFieldTypeProject{Value: val}
 			case customFieldFormatArray:
