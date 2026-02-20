@@ -57,7 +57,7 @@ func TestGetIssueAttachmentsV2(t *testing.T) {
 }
 
 func TestGetIssueAttachments_NoAttachments(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		_, _ = w.Write([]byte(`{"key": "TEST-1", "fields": {"attachment": []}}`))
@@ -74,7 +74,7 @@ func TestGetIssueAttachments_NoAttachments(t *testing.T) {
 func TestDownloadAttachment(t *testing.T) {
 	expectedContent := []byte("test file content")
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.WriteHeader(200)
 		_, _ = w.Write(expectedContent)
@@ -97,7 +97,7 @@ func TestDownloadAttachment(t *testing.T) {
 }
 
 func TestDownloadAttachment_HTTPError(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(404)
 	}))
 	defer server.Close()

@@ -72,7 +72,7 @@ func download(cmd *cobra.Command, args []string) {
 	}
 
 	// Create output directory
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0o750); err != nil {
 		cmdutil.ExitIfError(fmt.Errorf("failed to create directory %s: %w", outputDir, err))
 	}
 
