@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 )
 
+const dirPerm = 0o750
+
 // GetIssueAttachments fetches attachments for an issue using v3 API.
 func (c *Client) GetIssueAttachments(key string) ([]Attachment, error) {
 	return c.getIssueAttachments(key, apiVersion3)
@@ -72,7 +74,7 @@ func (c *Client) DownloadAttachment(contentURL, targetPath string) error {
 
 	// Ensure directory exists
 	dir := filepath.Dir(targetPath)
-	if err := os.MkdirAll(dir, 0o750); err != nil {
+	if err := os.MkdirAll(dir, dirPerm); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 

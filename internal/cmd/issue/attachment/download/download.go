@@ -15,6 +15,7 @@ import (
 
 const (
 	helpText = `Download downloads all attachments from an issue.`
+	dirPerm  = 0o750
 	examples = `$ jira issue attachment download ISSUE-1
 
 # Download to a custom directory
@@ -72,7 +73,7 @@ func download(cmd *cobra.Command, args []string) {
 	}
 
 	// Create output directory
-	if err := os.MkdirAll(outputDir, 0o750); err != nil {
+	if err := os.MkdirAll(outputDir, dirPerm); err != nil {
 		cmdutil.ExitIfError(fmt.Errorf("failed to create directory %s: %w", outputDir, err))
 	}
 
