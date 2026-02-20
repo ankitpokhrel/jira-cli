@@ -122,8 +122,9 @@ type IssueFields struct {
 		InwardIssue  *Issue `json:"inwardIssue,omitempty"`
 		OutwardIssue *Issue `json:"outwardIssue,omitempty"`
 	} `json:"issueLinks"`
-	Created string `json:"created"`
-	Updated string `json:"updated"`
+	Created    string       `json:"created"`
+	Updated    string       `json:"updated"`
+	Attachment []Attachment `json:"attachment"`
 }
 
 // Field holds field info.
@@ -163,6 +164,17 @@ type IssueLinkType struct {
 	Name    string `json:"name"`
 	Inward  string `json:"inward"`
 	Outward string `json:"outward"`
+}
+
+// Attachment holds attachment info.
+type Attachment struct {
+	ID       string `json:"id"`
+	Filename string `json:"filename"`
+	MimeType string `json:"mimeType"`
+	Size     int    `json:"size"`
+	Content  string `json:"content"`
+	Created  string `json:"created"`
+	Author   User   `json:"author"`
 }
 
 // Sprint holds sprint info.

@@ -1,0 +1,31 @@
+{
+  "key": "TEST-1",
+  "fields": {
+    "attachment": [
+      {
+        "id": "10001",
+        "filename": "screenshot.png",
+        "mimeType": "image/png",
+        "size": 12345,
+        "content": "http://localhost/attachment/content/10001",
+        "created": "2024-01-15T10:30:00.000+0000",
+        "author": {
+          "accountId": "abc123",
+          "displayName": "Test User"
+        }
+      },
+      {
+        "id": "10002",
+        "filename": "document.pdf",
+        "mimeType": "application/pdf",
+        "size": 54321,
+        "content": "http://localhost/attachment/content/10002",
+        "created": "2024-01-16T14:20:00.000+0000",
+        "author": {
+          "accountId": "def456",
+          "displayName": "Another User"
+        }
+      }
+    ]
+  }
+}
