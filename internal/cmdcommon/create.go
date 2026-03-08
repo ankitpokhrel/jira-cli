@@ -1,7 +1,9 @@
 package cmdcommon
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
@@ -36,6 +38,7 @@ type CreateParams struct {
 	FixVersions      []string
 	AffectsVersions  []string
 	OriginalEstimate string
+	DueDate          string
 	CustomFields     map[string]string
 	Template         string
 	NoInput          bool
@@ -65,6 +68,7 @@ And, this field is mandatory when creating a sub-task.`)
 	cmd.Flags().StringArray("fix-version", []string{}, "Release info (fixVersions)")
 	cmd.Flags().StringArray("affects-version", []string{}, "Release info (affectsVersions)")
 	cmd.Flags().StringP("original-estimate", "e", "", prefix+" Original estimate")
+	cmd.Flags().String("due-date", "", prefix+" due date (format: YYYY-MM-DD)")
 	cmd.Flags().StringToString("custom", custom, "Set custom fields")
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read body/description from")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful creation")
@@ -237,6 +241,17 @@ func GetConfiguredCustomFields() ([]jira.IssueTypeField, error) {
 	}
 
 	return configuredFields, nil
+}
+
+// ValidateDueDate validates that the due date is in YYYY-MM-DD format.
+func ValidateDueDate(dueDate string) error {
+	if dueDate == "" {
+		return nil
+	}
+	if _, err := time.Parse("2006-01-02", dueDate); err != nil {
+		return fmt.Errorf("invalid due date %q: expected format YYYY-MM-DD", dueDate)
+	}
+	return nil
 }
 
 // ValidateCustomFields validates custom fields.
