@@ -447,3 +447,119 @@ func TestIssueGet(t *testing.T) {
 		})
 	}
 }
+
+func TestGetPaginateParams(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name          string
+		input         string
+		expectedFrom  uint
+		expectedLimit uint
+		expectError   bool
+	}{
+		{
+			name:          "empty string returns defaults",
+			input:         "",
+			expectedFrom:  0,
+			expectedLimit: defaultLimit,
+		},
+		{
+			name:          "limit only",
+			input:         "50",
+			expectedFrom:  0,
+			expectedLimit: 50,
+		},
+		{
+			name:          "from and limit",
+			input:         "10:50",
+			expectedFrom:  10,
+			expectedLimit: 50,
+		},
+		{
+			// Verifies that limits larger than 100 are accepted. SearchAll handles
+			// pagination internally, so the query layer should not cap the limit.
+			name:          "limit 200 accepted",
+			input:         "200",
+			expectedFrom:  0,
+			expectedLimit: 200,
+		},
+		{
+			name:          "limit 500 accepted",
+			input:         "500",
+			expectedFrom:  0,
+			expectedLimit: 500,
+		},
+		{
+			name:          "limit 1000 accepted",
+			input:         "1000",
+			expectedFrom:  0,
+			expectedLimit: 1000,
+		},
+		{
+			name:          "from 0 and limit 100",
+			input:         "0:100",
+			expectedFrom:  0,
+			expectedLimit: 100,
+		},
+		{
+			// Whitespace should be trimmed before parsing.
+			name:          "whitespace trimmed",
+			input:         "  50  ",
+			expectedFrom:  0,
+			expectedLimit: 50,
+		},
+		{
+			name:        "non-numeric input",
+			input:       "abc",
+			expectError: true,
+		},
+		{
+			name:        "negative limit",
+			input:       "-1",
+			expectError: true,
+		},
+		{
+			name:        "zero limit",
+			input:       "0",
+			expectError: true,
+		},
+		{
+			name:        "negative from",
+			input:       "-1:50",
+			expectError: true,
+		},
+		{
+			name:        "invalid format with multiple colons",
+			input:       "1:2:3",
+			expectError: true,
+		},
+		{
+			name:        "non-numeric from",
+			input:       "abc:50",
+			expectError: true,
+		},
+		{
+			name:        "non-numeric limit in pair",
+			input:       "10:abc",
+			expectError: true,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			from, limit, err := getPaginateParams(tc.input)
+			if tc.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedFrom, from)
+				assert.Equal(t, tc.expectedLimit, limit)
+			}
+		})
+	}
+}

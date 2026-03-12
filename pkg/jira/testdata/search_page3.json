@@ -1,0 +1,22 @@
+{
+  "isLast": true,
+  "nextPageToken": "",
+  "issues": [
+    {
+      "key": "TEST-4",
+      "fields": {
+        "issuetype": { "name": "Epic" },
+        "resolution": null,
+        "created": "2020-12-03T14:05:20.974+0100",
+        "priority": { "name": "High" },
+        "labels": ["roadmap"],
+        "assignee": { "displayName": "Person B" },
+        "updated": "2020-12-03T14:05:20.974+0100",
+        "status": { "name": "In Progress" },
+        "summary": "Epic summary",
+        "reporter": { "displayName": "Person A" },
+        "watches": { "watchCount": 5, "isWatching": true }
+      }
+    }
+  ]
+}
