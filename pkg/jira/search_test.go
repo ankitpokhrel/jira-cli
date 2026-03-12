@@ -630,6 +630,55 @@ func TestSearchAllPageSizeAdjustment(t *testing.T) {
 	assert.Len(t, actual.Issues, 3)
 }
 
+func TestSearchAllZeroLimit(t *testing.T) {
+	// Verifies that SearchAll handles totalLimit=0 gracefully by treating it as
+	// "fetch all available results". The pageSize should default to maxPageSize (100)
+	// and pagination should continue until isLast=true.
+	var requestCount int32
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/3/search/jql", r.URL.Path)
+
+		page := atomic.AddInt32(&requestCount, 1)
+		qs := r.URL.Query()
+
+		// With totalLimit=0, maxResults should default to maxPageSize (100).
+		assert.Equal(t, "100", qs.Get("maxResults"))
+
+		var fixture string
+		switch page {
+		case 1:
+			assert.Empty(t, qs.Get("nextPageToken"))
+			fixture = "./testdata/search_page1.json"
+		case 2:
+			assert.Equal(t, "token-page-2", qs.Get("nextPageToken"))
+			fixture = "./testdata/search_page2.json"
+		default:
+			t.Fatalf("unexpected request count: %d", page)
+		}
+
+		resp, err := os.ReadFile(fixture)
+		assert.NoError(t, err)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		_, _ = w.Write(resp)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	actual, err := client.SearchAll("project=TEST ORDER BY created DESC", 0)
+	assert.NoError(t, err)
+
+	assert.Equal(t, int32(2), atomic.LoadInt32(&requestCount))
+	assert.True(t, actual.IsLast)
+	assert.Len(t, actual.Issues, 3)
+	assert.Equal(t, "TEST-1", actual.Issues[0].Key)
+	assert.Equal(t, "TEST-2", actual.Issues[1].Key)
+	assert.Equal(t, "TEST-3", actual.Issues[2].Key)
+}
+
 func TestSearchAllPassesNextPageToken(t *testing.T) {
 	// Verifies that SearchAll correctly URL-encodes and passes the nextPageToken
 	// from each response to the subsequent request.

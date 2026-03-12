@@ -357,7 +357,7 @@ func getPaginateParams(paginate string) (uint, uint, error) {
 	}
 
 	errOutOfBounds := fmt.Errorf(
-		"invalid argument for paginate: <from> and <limit> must be positive integers",
+		"invalid argument for paginate: <from> must be a non-negative integer and <limit> must be a positive integer",
 	)
 
 	if from < 0 || limit <= 0 {

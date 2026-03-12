@@ -32,7 +32,7 @@ func (c *Client) SearchAll(jql string, totalLimit uint) (*SearchResult, error) {
 	var allIssues []*Issue
 
 	pageSize := totalLimit
-	if pageSize > maxPageSize {
+	if pageSize == 0 || pageSize > maxPageSize {
 		pageSize = maxPageSize
 	}
 
@@ -60,9 +60,11 @@ func (c *Client) SearchAll(jql string, totalLimit uint) (*SearchResult, error) {
 		nextPageToken = result.NextPageToken
 
 		// Adjust page size for the last page if needed.
-		remaining := totalLimit - uint(len(allIssues))
-		if remaining < pageSize {
-			pageSize = remaining
+		if totalLimit > 0 {
+			remaining := totalLimit - uint(len(allIssues))
+			if remaining < pageSize {
+				pageSize = remaining
+			}
 		}
 	}
 
