@@ -519,7 +519,7 @@ func TestSearchAllSingleIssue(t *testing.T) {
 func TestSearchAllErrorOnFirstPage(t *testing.T) {
 	// Verifies that if the API returns an error on the first request,
 	// SearchAll propagates the error immediately with no partial results.
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(400)
 	}))
 	defer server.Close()
@@ -537,7 +537,7 @@ func TestSearchAllErrorMidPagination(t *testing.T) {
 	// it propagates the error from the failing page.
 	var requestCount int32
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		page := atomic.AddInt32(&requestCount, 1)
 
 		switch page {
@@ -568,7 +568,7 @@ func TestSearchAllErrorMidPagination(t *testing.T) {
 
 func TestSearchAllInvalidJSON(t *testing.T) {
 	// Verifies that a malformed JSON response is surfaced as an error.
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		_, _ = w.Write([]byte(`{"isLast": true, "issues": [`))
