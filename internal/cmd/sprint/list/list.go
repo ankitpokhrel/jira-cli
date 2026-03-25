@@ -258,7 +258,7 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 	table, err := flags.GetBool("table")
 	cmdutil.ExitIfError(err)
 
-	if table || tui.IsDumbTerminal() || tui.IsNotTTY() {
+	if table || plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		cmdutil.ExitIfError(v.RenderInTable())
 	} else {
 		cmdutil.ExitIfError(v.Render())
