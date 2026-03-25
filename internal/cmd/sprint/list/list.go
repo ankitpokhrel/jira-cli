@@ -102,7 +102,11 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 			return nil, err
 		}
 		if sprintQuery.Params().ShowAllIssues {
-			q.Params().JQL = "project IS NOT EMPTY"
+			if q.Params().JQL != "" {
+				q.Params().JQL = "project IS NOT EMPTY AND " + q.Params().JQL
+			} else {
+				q.Params().JQL = "project IS NOT EMPTY"
+			}
 		}
 		resp, err := client.SprintIssues(sprintID, q.Get(), q.Params().From, q.Params().Limit)
 		if err != nil {
@@ -271,7 +275,11 @@ func getIssueQuery(project string, flags query.FlagParser, showAll bool) (string
 		return "", err
 	}
 	if showAll {
-		q.Params().JQL = "project IS NOT EMPTY"
+		if q.Params().JQL != "" {
+			q.Params().JQL = "project IS NOT EMPTY AND " + q.Params().JQL
+		} else {
+			q.Params().JQL = "project IS NOT EMPTY"
+		}
 	}
 	return q.Get(), nil
 }
