@@ -11,7 +11,7 @@ func parseCustomFieldJSONContainer(v string) (any, bool) {
 		return nil, false
 	}
 
-	if !(strings.HasPrefix(trimmed, "{") || strings.HasPrefix(trimmed, "[")) {
+	if !strings.HasPrefix(trimmed, "{") && !strings.HasPrefix(trimmed, "[") {
 		return nil, false
 	}
 
