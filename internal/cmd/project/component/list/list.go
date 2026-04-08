@@ -15,6 +15,8 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
 
+const tabWidth = 8
+
 // NewCmdList is a list command.
 func NewCmdList() *cobra.Command {
 	cmd := &cobra.Command{
@@ -85,7 +87,7 @@ func outputRawJSON(components []*jira.ProjectComponent) {
 }
 
 func outputPlain(components []*jira.ProjectComponent) {
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 1, '\t', 0)
+	w := tabwriter.NewWriter(os.Stdout, 0, tabWidth, 1, '\t', 0)
 	_, _ = fmt.Fprintln(w, "ID\tNAME\tDESCRIPTION")
 
 	for _, c := range components {
