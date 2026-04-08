@@ -36,6 +36,13 @@ type Project struct {
 	Type string `json:"style"`
 }
 
+// ProjectComponent holds project component info.
+type ProjectComponent struct {
+	ID          string      `json:"id"`
+	Name        string      `json:"name"`
+	Description interface{} `json:"description"`
+}
+
 // ProjectVersion holds project version info.
 type ProjectVersion struct {
 	Archived    bool        `json:"archived"`

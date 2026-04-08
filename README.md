@@ -713,6 +713,24 @@ jira project list
 ```
 </details>
 
+<details><summary>List all components in a project</summary>
+
+```sh
+# List components for default project
+jira project component list
+
+# List components for specific project
+jira project component list --project 1000
+jira project component list --project KEY
+
+# List components in plain mode
+jira project component list --plain
+
+# List components as raw JSON
+jira project component list --raw
+```
+</details>
+
 <details><summary>List all boards in a project</summary>
 
 ```sh
