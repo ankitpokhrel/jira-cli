@@ -15,6 +15,7 @@ type issueParamsErr struct {
 	issueType  bool
 	labels     bool
 	status     bool
+	sprints    bool
 }
 
 type issueFlagParser struct {
@@ -25,6 +26,7 @@ type issueFlagParser struct {
 	emptyType     bool
 	labels        []string
 	status        []string
+	sprints       []string
 	withCreated   bool
 	withUpdated   bool
 	created       string
@@ -114,8 +116,14 @@ func (tfp *issueFlagParser) GetStringArray(name string) ([]string, error) {
 	if tfp.err.status && name == "status" {
 		return []string{}, fmt.Errorf("oops! couldn't fetch status flag")
 	}
+	if tfp.err.sprints && name == "sprint" {
+		return []string{}, fmt.Errorf("oops! couldn't fetch sprint flag")
+	}
 	if name == "status" {
 		return tfp.status, nil
+	}
+	if name == "sprint" {
+		return tfp.sprints, nil
 	}
 	return tfp.labels, nil
 }
@@ -420,6 +428,107 @@ func TestIssueGet(t *testing.T) {
 				`AND priority="test" AND reporter="test" AND assignee="test" AND component="test" ` +
 				`AND parent="test" AND updatedDate>"2020-11-31" AND updatedDate<"2020-12-31" ` +
 				`ORDER BY updated ASC`,
+		},
+		{
+			name: "query with error when fetching sprint flag",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{err: issueParamsErr{
+					sprints: true,
+				}})
+				assert.Error(t, err)
+				return i
+			},
+			expected: "",
+		},
+		{
+			name: "query with sprint by name",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{sprints: []string{"Sprint 42"}})
+				assert.NoError(t, err)
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND component="test" AND parent="test" AND sprint IN ("Sprint 42") ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with sprint by id (numeric, unquoted)",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{sprints: []string{"123"}})
+				assert.NoError(t, err)
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND component="test" AND parent="test" AND sprint IN (123) ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with current sprint keyword",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{sprints: []string{"current"}})
+				assert.NoError(t, err)
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND component="test" AND parent="test" AND sprint IN openSprints() ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with active sprint keyword is equivalent to current",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{sprints: []string{"ACTIVE"}})
+				assert.NoError(t, err)
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND component="test" AND parent="test" AND sprint IN openSprints() ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with closed sprint keyword",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{sprints: []string{"closed"}})
+				assert.NoError(t, err)
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND component="test" AND parent="test" AND sprint IN closedSprints() ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with future sprint keyword",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{sprints: []string{"future"}})
+				assert.NoError(t, err)
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND component="test" AND parent="test" AND sprint IN futureSprints() ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query with multiple sprints mixes quoted names and unquoted ids",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{sprints: []string{"Sprint 41", "Sprint 42", "123"}})
+				assert.NoError(t, err)
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND component="test" AND parent="test" AND sprint IN ("Sprint 41", "Sprint 42", 123) ` +
+				`ORDER BY lastViewed ASC`,
+		},
+		{
+			name: "query mixing sprint keywords and names deduplicates keywords",
+			initialize: func() *Issue {
+				i, err := NewIssue("TEST", &issueFlagParser{sprints: []string{"current", "active", "closed", "Sprint 42"}})
+				assert.NoError(t, err)
+				return i
+			},
+			expected: `project="TEST" AND issue IN issueHistory() AND issue IN watchedIssues() AND ` +
+				`type="test" AND resolution="test" AND priority="test" AND reporter="test" AND assignee="test" ` +
+				`AND component="test" AND parent="test" AND sprint IN closedSprints() AND sprint IN openSprints() ` +
+				`AND sprint IN ("Sprint 42") ORDER BY lastViewed ASC`,
 		},
 		{
 			name: "query with jql parameter",

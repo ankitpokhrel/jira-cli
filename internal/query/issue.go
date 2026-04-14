@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -103,6 +104,8 @@ func (i *Issue) Get() string {
 		if len(negative) > 0 {
 			q.NotIn("status", negative...)
 		}
+
+		i.setSprintFilters(q)
 	})
 
 	if i.params.Reverse {
@@ -152,6 +155,62 @@ func (i *Issue) setCreatedFilters(q *jql.JQL) {
 	}
 }
 
+// sprintKeywordFuncs maps user-facing keywords to their JQL function
+// equivalents used with the `sprint IN <fn>()` form.
+var sprintKeywordFuncs = map[string]string{
+	"current":  "openSprints()",
+	"active":   "openSprints()",
+	"closed":   "closedSprints()",
+	"previous": "closedSprints()",
+	"future":   "futureSprints()",
+	"next":     "futureSprints()",
+}
+
+func (i *Issue) setSprintFilters(q *jql.JQL) {
+	if len(i.params.Sprints) == 0 {
+		return
+	}
+
+	// Collect keyword-based function filters (deduplicated) and
+	// explicit sprint identifiers (names or numeric IDs) separately.
+	// Numeric values are emitted unquoted so Jira interprets them as
+	// sprint IDs; non-numeric values are quoted as sprint names.
+	fnSet := make(map[string]struct{})
+	var values []string
+	for _, s := range i.params.Sprints {
+		v := strings.TrimSpace(s)
+		if v == "" {
+			continue
+		}
+		if fn, ok := sprintKeywordFuncs[strings.ToLower(v)]; ok {
+			fnSet[fn] = struct{}{}
+			continue
+		}
+		values = append(values, v)
+	}
+
+	fns := make([]string, 0, len(fnSet))
+	for fn := range fnSet {
+		fns = append(fns, fn)
+	}
+	sort.Strings(fns)
+	for _, fn := range fns {
+		q.InFunc("sprint", fn)
+	}
+
+	if len(values) > 0 {
+		parts := make([]string, 0, len(values))
+		for _, v := range values {
+			if _, err := strconv.Atoi(v); err == nil {
+				parts = append(parts, v)
+			} else {
+				parts = append(parts, fmt.Sprintf("%q", v))
+			}
+		}
+		q.InFunc("sprint", "("+strings.Join(parts, ", ")+")")
+	}
+}
+
 func (i *Issue) setUpdatedFilters(q *jql.JQL) {
 	if i.params.Updated != "" {
 		i.setDateFilters(q, "updatedDate", i.params.Updated)
@@ -184,6 +243,7 @@ type IssueParams struct {
 	CreatedBefore string
 	UpdatedBefore string
 	Labels        []string
+	Sprints       []string
 	OrderBy       string
 	Reverse       bool
 	From          uint
@@ -227,6 +287,11 @@ func (ip *IssueParams) init(flags FlagParser) error {
 		return err
 	}
 
+	sprints, err := flags.GetStringArray("sprint")
+	if err != nil {
+		return err
+	}
+
 	paginate, err := flags.GetString("paginate")
 	if err != nil {
 		return err
@@ -240,6 +305,7 @@ func (ip *IssueParams) init(flags FlagParser) error {
 	ip.setStringParams(stringParamsMap)
 	ip.Labels = labels
 	ip.Status = status
+	ip.Sprints = sprints
 	ip.From = from
 	ip.Limit = limit
 
