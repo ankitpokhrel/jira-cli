@@ -176,7 +176,7 @@ func (i *Issue) setSprintFilters(q *jql.JQL) {
 	// Numeric values are emitted unquoted so Jira interprets them as
 	// sprint IDs; non-numeric values are quoted as sprint names.
 	fnSet := make(map[string]struct{})
-	var values []string
+	values := make([]string, 0, len(i.params.Sprints))
 	for _, s := range i.params.Sprints {
 		v := strings.TrimSpace(s)
 		if v == "" {
