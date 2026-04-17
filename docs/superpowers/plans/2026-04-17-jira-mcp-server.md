@@ -18,22 +18,15 @@
 
 ---
 
-## Task 0: Add SDK dependency and create empty package skeleton
+## Task 0: Create empty package skeleton
 
 **Files:**
-- Modify: `go.mod`, `go.sum`
 - Create: `internal/mcp/doc.go`
 - Create: `internal/mcp/tools/doc.go`
 
-- [ ] **Step 1: Add the official MCP Go SDK dependency**
+The MCP Go SDK is intentionally **not** added in this task. Adding it now would leave `go.mod` with a require line that no source justifies, which `go mod tidy` would revert. The SDK is added in Task 2, alongside the first source file that imports it.
 
-```bash
-go get github.com/modelcontextprotocol/go-sdk@v1.5.0
-```
-
-Expected: `go get` completes; `go.mod` gains `github.com/modelcontextprotocol/go-sdk v1.5.0`; `go.sum` updated. If `v1.5.0` is no longer the latest stable, use the latest stable v1.x.
-
-- [ ] **Step 2: Create empty package marker for `internal/mcp`**
+- [ ] **Step 1: Create empty package marker for `internal/mcp`**
 
 Create `internal/mcp/doc.go`:
 
@@ -44,7 +37,7 @@ Create `internal/mcp/doc.go`:
 package mcp
 ```
 
-- [ ] **Step 3: Create empty package marker for `internal/mcp/tools`**
+- [ ] **Step 2: Create empty package marker for `internal/mcp/tools`**
 
 Create `internal/mcp/tools/doc.go`:
 
@@ -56,7 +49,7 @@ Create `internal/mcp/tools/doc.go`:
 package tools
 ```
 
-- [ ] **Step 4: Verify the module still builds**
+- [ ] **Step 3: Verify the module still builds**
 
 ```bash
 go build ./...
@@ -64,11 +57,11 @@ go build ./...
 
 Expected: exit 0, no output.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add go.mod go.sum internal/mcp/doc.go internal/mcp/tools/doc.go
-git commit -m "feat(mcp): add modelcontextprotocol/go-sdk dependency and package skeleton"
+git add internal/mcp/doc.go internal/mcp/tools/doc.go
+git commit -m "feat(mcp): add internal/mcp package skeleton"
 ```
 
 ---
@@ -181,12 +174,23 @@ git commit -m "feat(mcp): add tools.Deps with project/url/installation helpers"
 ## Task 2: Add the `search_issues` tool
 
 **Files:**
+- Modify: `go.mod`, `go.sum`
 - Create: `internal/mcp/tools/search_issues.go`
 - Create: `internal/mcp/tools/search_issues_test.go`
 
 The tool calls `api.ProxySearch`, which selects the v2 or v3 endpoint based on the configured installation type. The `api` package reads `viper.GetString("installation")` internally; tests set that via `viper.Set("installation", ...)`.
 
-- [ ] **Step 1: Write the failing test**
+This is the first task that imports the MCP Go SDK, so the SDK dependency is added here (intentionally deferred from Task 0 so `go.mod` is never in a state that `go mod tidy` would revert).
+
+- [ ] **Step 1: Add the official MCP Go SDK dependency**
+
+```bash
+go get github.com/modelcontextprotocol/go-sdk@v1.5.0
+```
+
+Expected: `go get` completes; `go.mod` gains `github.com/modelcontextprotocol/go-sdk v1.5.0` (recorded as `// indirect` for now — it'll be promoted to direct when Task 8 imports it). If `v1.5.0` is no longer the latest stable, use the latest stable v1.x.
+
+- [ ] **Step 2: Write the failing test**
 
 Create `internal/mcp/tools/search_issues_test.go`:
 
@@ -337,7 +341,7 @@ func TestSearchIssues_DefaultLimit(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run the test and verify it fails**
+- [ ] **Step 3: Run the test and verify it fails**
 
 ```bash
 go test ./internal/mcp/tools/ -run TestSearchIssues -v
@@ -345,7 +349,7 @@ go test ./internal/mcp/tools/ -run TestSearchIssues -v
 
 Expected: FAIL — `SearchIssues`, `SearchIssuesInput` undefined.
 
-- [ ] **Step 3: Implement the tool**
+- [ ] **Step 4: Implement the tool**
 
 Create `internal/mcp/tools/search_issues.go`:
 
@@ -457,7 +461,7 @@ func composeJQL(project, status, assignee string) string {
 }
 ```
 
-- [ ] **Step 4: Run the test and verify it passes**
+- [ ] **Step 5: Run the test and verify it passes**
 
 ```bash
 go test ./internal/mcp/tools/ -run TestSearchIssues -v
@@ -465,10 +469,10 @@ go test ./internal/mcp/tools/ -run TestSearchIssues -v
 
 Expected: PASS, all 5 subtests.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add internal/mcp/tools/search_issues.go internal/mcp/tools/search_issues_test.go
+git add go.mod go.sum internal/mcp/tools/search_issues.go internal/mcp/tools/search_issues_test.go
 git commit -m "feat(mcp): add search_issues tool"
 ```
 
