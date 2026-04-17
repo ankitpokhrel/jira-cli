@@ -1826,7 +1826,6 @@ Create `internal/cmd/mcp/serve/serve.go`:
 package serve
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/signal"
