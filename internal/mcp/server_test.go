@@ -78,3 +78,40 @@ func TestServer_ListsAllTools(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, res.IsError, "missing required key should produce a tool error result")
 }
+
+func TestRegisterTool_RecoversFromPanic(t *testing.T) {
+	srv := mcp.NewServer(&mcp.Implementation{Name: "panic-test", Version: "v0"}, nil)
+
+	type panicIn struct{}
+	type panicOut struct{}
+
+	registerTool(srv, "panic_tool", "always panics",
+		&tools.Deps{},
+		func(context.Context, *tools.Deps, panicIn) (panicOut, error) {
+			panic("boom")
+		},
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	serverT, clientT := mcp.NewInMemoryTransports()
+	go func() { _ = srv.Run(ctx, serverT) }()
+
+	client := mcp.NewClient(&mcp.Implementation{Name: "panic-client", Version: "v0"}, nil)
+	session, err := client.Connect(ctx, clientT, nil)
+	require.NoError(t, err)
+	defer session.Close()
+
+	res, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "panic_tool",
+		Arguments: map[string]any{},
+	})
+	require.NoError(t, err, "transport should survive a panicking handler")
+	assert.True(t, res.IsError, "panic should surface as a tool error, not a transport error")
+	require.NotEmpty(t, res.Content)
+	if tc, ok := res.Content[0].(*mcp.TextContent); ok {
+		assert.Contains(t, tc.Text, "panic_tool")
+		assert.Contains(t, tc.Text, "boom")
+	}
+}

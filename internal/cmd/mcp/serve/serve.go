@@ -58,9 +58,15 @@ func run(cmd *cobra.Command, _ []string) error {
 		browseServer = v
 	}
 
-	debug := viper.GetBool("debug")
+	// Stdout is reserved for JSON-RPC frames; pkg/jira's debug dump and
+	// root's "Using config file: ..." both write to stdout when debug is
+	// enabled, which would corrupt the MCP transport. Force-disable here
+	// and surface a stderr notice if the user had it on in config.
+	if viper.GetBool("debug") {
+		fmt.Fprintln(os.Stderr, "jira-cli MCP server: ignoring debug=true (would corrupt stdio transport)")
+	}
 	deps := &tools.Deps{
-		Client:         api.DefaultClient(debug),
+		Client:         api.DefaultClient(false),
 		Server:         browseServer,
 		DefaultProject: viper.GetString("project.key"),
 		Installation:   viper.GetString("installation"),
