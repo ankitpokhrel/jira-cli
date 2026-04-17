@@ -14,6 +14,7 @@ import (
 	initCmd "github.com/ankitpokhrel/jira-cli/internal/cmd/init"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/man"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/mcp"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/me"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/open"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/project"
@@ -140,6 +141,7 @@ func addChildCommands(cmd *cobra.Command) {
 		version.NewCmdVersion(),
 		release.NewCmdRelease(),
 		man.NewCmdMan(),
+		mcp.NewCmdMCP(),
 	)
 }
 
