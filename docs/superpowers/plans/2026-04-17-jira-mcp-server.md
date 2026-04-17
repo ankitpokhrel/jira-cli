@@ -357,8 +357,8 @@ import (
 
 // SearchIssuesInput is the input schema for the search_issues tool.
 type SearchIssuesInput struct {
-	JQL      string `json:"jql,omitempty" jsonschema:"raw JQL to execute. If set, other filter fields are ignored except project (which scopes the JQL when present)."`
-	Project  string `json:"project,omitempty" jsonschema:"project key (defaults to the configured project)"`
+	JQL      string `json:"jql,omitempty" jsonschema:"raw JQL to execute. Passed through verbatim unless project is also set, in which case the JQL is wrapped as 'project = X AND (your JQL)'. If you set project alongside JQL, your JQL must not contain its own ORDER BY clause."`
+	Project  string `json:"project,omitempty" jsonschema:"project key (defaults to the configured project when JQL is omitted; when JQL is provided, only set this if you want the JQL scoped to a specific project)"`
 	Status   string `json:"status,omitempty" jsonschema:"filter by status name, e.g. \"To Do\""`
 	Assignee string `json:"assignee,omitempty" jsonschema:"filter by assignee. Use \"me\" for the configured user, \"none\" for unassigned, or a username/account id."`
 	Limit    int    `json:"limit,omitempty" jsonschema:"maximum number of issues to return (default 50, clamped to 100)"`
@@ -366,8 +366,11 @@ type SearchIssuesInput struct {
 
 // SearchIssuesOutput is the structured result of the search_issues tool.
 type SearchIssuesOutput struct {
-	Total  int          `json:"total"`
-	Issues []IssueBrief `json:"issues"`
+	// Returned is the number of issues in this response page. The Jira v3
+	// /search/jql endpoint does not return a total match count; callers that
+	// need to know whether more results exist should rerun with a larger Limit.
+	Returned int          `json:"returned"`
+	Issues   []IssueBrief `json:"issues"`
 }
 
 // IssueBrief is a lean projection of jira.Issue used for list-style outputs.
@@ -401,10 +404,12 @@ func SearchIssues(_ context.Context, d *Deps, in SearchIssuesInput) (SearchIssue
 		// (default-or-explicit) project so plain "list my open issues" calls
 		// stay inside the configured project.
 		jql = composeJQL(d.ResolveProject(in.Project), in.Status, in.Assignee)
-	} else if in.Project != "" && !strings.Contains(strings.ToLower(jql), "project") {
+	} else if in.Project != "" {
 		// JQL is a power-user escape hatch: pass it through unmodified by
-		// default, and only wrap with a project clause when the caller
-		// explicitly opted in by setting Project on the input.
+		// default. Wrap with a project clause only when the caller explicitly
+		// opted in by setting Project on the input. Per the input schema, the
+		// caller is responsible for not including ORDER BY in their JQL when
+		// they opt into wrapping (Jira disallows ORDER BY inside parentheses).
 		jql = fmt.Sprintf(`project = %q AND (%s)`, in.Project, jql)
 	}
 
@@ -428,7 +433,7 @@ func SearchIssues(_ context.Context, d *Deps, in SearchIssuesInput) (SearchIssue
 			URL:      d.IssueURL(iss.Key),
 		})
 	}
-	out.Total = len(out.Issues)
+	out.Returned = len(out.Issues)
 	return out, nil
 }
 
