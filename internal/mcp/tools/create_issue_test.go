@@ -110,3 +110,41 @@ func TestCreateIssue_OverridesProject(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "OTHER", capturedProject)
 }
+
+func TestCreateIssue_Local(t *testing.T) {
+	var (
+		capturedPath string
+		capturedBody map[string]any
+	)
+	deps, cleanup := newCreateTestDeps(t, func(w http.ResponseWriter, r *http.Request) {
+		capturedPath = r.URL.Path
+		raw, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(raw, &capturedBody)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_, _ = w.Write([]byte(`{"id": "10001", "key": "TEST-42"}`))
+	})
+	defer cleanup()
+
+	viper.Set("installation", jira.InstallationTypeLocal)
+	deps.Installation = jira.InstallationTypeLocal
+
+	out, err := CreateIssue(context.Background(), deps, CreateIssueInput{
+		Summary:  "Local bug",
+		Type:     "Bug",
+		Assignee: "alice",
+	})
+	require.NoError(t, err)
+
+	assert.Equal(t, "/rest/api/2/issue", capturedPath)
+	assert.Equal(t, "TEST-42", out.Key)
+
+	fields, _ := capturedBody["fields"].(map[string]any)
+	require.NotNil(t, fields)
+	assignee, _ := fields["assignee"].(map[string]any)
+	require.NotNil(t, assignee)
+	assert.Equal(t, "alice", assignee["name"])
+	_, hasAccountID := assignee["accountId"]
+	assert.False(t, hasAccountID, "v2 assignee should not use accountId")
+}

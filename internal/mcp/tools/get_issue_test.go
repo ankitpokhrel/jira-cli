@@ -131,3 +131,43 @@ func TestGetIssue_RespectsCommentLimit(t *testing.T) {
 }
 
 func boolPtr(b bool) *bool { return &b }
+
+const getIssueResponseV2 = `{
+  "key": "TEST-1",
+  "fields": {
+    "summary": "Sample bug",
+    "status": {"name": "In Progress"},
+    "issueType": {"name": "Bug"},
+    "priority": {"name": "High"},
+    "assignee": {"displayName": "Alice"},
+    "reporter": {"displayName": "Bob"},
+    "labels": [],
+    "components": [],
+    "fixVersions": [],
+    "created": "2026-01-01T10:00:00.000+0000",
+    "updated": "2026-01-02T10:00:00.000+0000",
+    "description": "Repro steps from wiki markup",
+    "comment": {"total": 0, "comments": []}
+  }
+}`
+
+func TestGetIssue_Local(t *testing.T) {
+	var capturedPath string
+	deps, cleanup := newIssueTestDeps(t, func(w http.ResponseWriter, r *http.Request) {
+		capturedPath = r.URL.Path
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(getIssueResponseV2))
+	})
+	defer cleanup()
+
+	viper.Set("installation", jira.InstallationTypeLocal)
+	deps.Installation = jira.InstallationTypeLocal
+
+	out, err := GetIssue(context.Background(), deps, GetIssueInput{Key: "TEST-1"})
+	require.NoError(t, err)
+
+	assert.Equal(t, "/rest/api/2/issue/TEST-1", capturedPath)
+	assert.Equal(t, "TEST-1", out.Key)
+	assert.Equal(t, "In Progress", out.Status)
+	assert.Equal(t, "Repro steps from wiki markup", out.Description)
+}

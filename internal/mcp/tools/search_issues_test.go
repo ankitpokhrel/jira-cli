@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -141,4 +142,31 @@ func TestSearchIssues_DefaultLimit(t *testing.T) {
 	_, err := SearchIssues(context.Background(), deps, SearchIssuesInput{})
 	require.NoError(t, err)
 	assert.Equal(t, "50", capturedLimit)
+}
+
+func TestSearchIssues_Local(t *testing.T) {
+	var (
+		capturedPath  string
+		capturedQuery url.Values
+	)
+	deps, cleanup := newSearchTestDeps(t, func(w http.ResponseWriter, r *http.Request) {
+		capturedPath = r.URL.Path
+		capturedQuery = r.URL.Query()
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(searchResponseBody))
+	})
+	defer cleanup()
+
+	viper.Set("installation", jira.InstallationTypeLocal)
+	deps.Installation = jira.InstallationTypeLocal
+
+	out, err := SearchIssues(context.Background(), deps, SearchIssuesInput{JQL: "summary ~ first"})
+	require.NoError(t, err)
+
+	assert.Equal(t, "/rest/api/2/search", capturedPath)
+	assert.Equal(t, "0", capturedQuery.Get("startAt"))
+	assert.Equal(t, "50", capturedQuery.Get("maxResults"))
+	assert.Equal(t, 1, out.Returned)
+	require.Len(t, out.Issues, 1)
+	assert.Equal(t, "TEST-1", out.Issues[0].Key)
 }
