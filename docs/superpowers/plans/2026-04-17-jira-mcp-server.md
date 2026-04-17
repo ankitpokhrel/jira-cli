@@ -1025,6 +1025,11 @@ import (
 )
 
 // CreateIssueInput is the input schema for the create_issue tool.
+//
+// v1 intentionally omits parent/epic linking: the underlying pkg/jira.CreateRequest
+// routes that through project-type-aware fields (EpicField, SubtaskField) that the
+// MCP layer doesn't currently resolve, so exposing it here would silently drop the
+// link for classic projects. Add back when pkg/jira grows a first-class linker.
 type CreateIssueInput struct {
 	Summary     string   `json:"summary" jsonschema:"issue summary (required)"`
 	Type        string   `json:"type" jsonschema:"issue type, e.g. \"Task\", \"Bug\", \"Story\" (required)"`
@@ -1034,7 +1039,6 @@ type CreateIssueInput struct {
 	Labels      []string `json:"labels,omitempty"`
 	Components  []string `json:"components,omitempty"`
 	Assignee    string   `json:"assignee,omitempty" jsonschema:"assignee account id (Cloud) or username (Local)"`
-	Parent      string   `json:"parent,omitempty" jsonschema:"parent issue key (use this for epic link or sub-task parent)"`
 }
 
 // CreateIssueOutput is the structured result of the create_issue tool.
@@ -1058,15 +1062,14 @@ func CreateIssue(_ context.Context, d *Deps, in CreateIssueInput) (CreateIssueOu
 	}
 
 	req := &jira.CreateRequest{
-		Project:        project,
-		IssueType:      in.Type,
-		Summary:        in.Summary,
-		Body:           in.Description,
-		Priority:       in.Priority,
-		Labels:         in.Labels,
-		Components:     in.Components,
-		Assignee:       in.Assignee,
-		ParentIssueKey: in.Parent,
+		Project:    project,
+		IssueType:  in.Type,
+		Summary:    in.Summary,
+		Body:       in.Description,
+		Priority:   in.Priority,
+		Labels:     in.Labels,
+		Components: in.Components,
+		Assignee:   in.Assignee,
 	}
 	req.ForInstallationType(d.Installation)
 
@@ -1429,12 +1432,16 @@ import (
 )
 
 // TransitionIssueInput is the input schema for the transition_issue tool.
+//
+// v1 omits Assignee-during-transition because pkg/jira.TransitionRequestFields.Assignee
+// only accepts a `{name: ...}` body, which Jira Cloud ignores for account-id users. Users
+// who need to reassign on Cloud should do it in a separate step. Revisit when pkg/jira
+// grows accountId support on the transition endpoint.
 type TransitionIssueInput struct {
 	Key        string `json:"key" jsonschema:"issue key (required)"`
 	Transition string `json:"transition" jsonschema:"target transition name, e.g. \"In Progress\" (required, case-insensitive)"`
 	Comment    string `json:"comment,omitempty" jsonschema:"optional comment to add as part of the transition (workflow must allow it)"`
 	Resolution string `json:"resolution,omitempty" jsonschema:"optional resolution name to set, e.g. \"Fixed\""`
-	Assignee   string `json:"assignee,omitempty" jsonschema:"optional new assignee (account id on Cloud, username on Local)"`
 }
 
 // TransitionIssueOutput is the structured result of the transition_issue tool.
@@ -1492,17 +1499,11 @@ func TransitionIssue(_ context.Context, d *Deps, in TransitionIssueInput) (Trans
 			}{Body: in.Comment},
 		})
 	}
-	if in.Resolution != "" || in.Assignee != "" {
-		req.Fields = &jira.TransitionRequestFields{}
-		if in.Resolution != "" {
-			req.Fields.Resolution = &struct {
+	if in.Resolution != "" {
+		req.Fields = &jira.TransitionRequestFields{
+			Resolution: &struct {
 				Name string `json:"name"`
-			}{Name: in.Resolution}
-		}
-		if in.Assignee != "" {
-			req.Fields.Assignee = &struct {
-				Name string `json:"name"`
-			}{Name: in.Assignee}
+			}{Name: in.Resolution},
 		}
 	}
 
