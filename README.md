@@ -720,6 +720,36 @@ jira board list
 ```
 </details>
 
+## MCP server
+
+`jira-cli` ships an embedded [Model Context Protocol](https://modelcontextprotocol.io) server so MCP-aware hosts (Cursor, Claude Desktop, etc.) can read and modify Jira issues during a coding session. The server reuses the same config, auth, and Jira API client as the rest of the CLI.
+
+Start it from your MCP host configuration:
+
+```json
+{
+  "mcpServers": {
+    "jira": {
+      "command": "jira",
+      "args": ["mcp", "serve"],
+      "env": { "JIRA_API_TOKEN": "..." }
+    }
+  }
+}
+```
+
+The server speaks stdio and exposes the following tools:
+
+| Tool | Purpose |
+| --- | --- |
+| `search_issues` | Search by raw JQL or simple `status`/`assignee` filters. |
+| `get_issue` | Full issue details including description and recent comments. |
+| `create_issue` | Create a new issue in a project. |
+| `add_comment` | Add a comment to an issue. |
+| `transition_issue` | Move an issue to a new status by name. |
+
+Every tool that returns an issue also returns its browser URL so the LLM can cite or link to it directly.
+
 ## Scripts
 Often times, you may want to use the output of the command to do something cool. However, the default interactive UI might not allow you to do that.
 The tool comes with the `--plain` flag that displays results in a simple layout that can then be manipulated from the shell script.
