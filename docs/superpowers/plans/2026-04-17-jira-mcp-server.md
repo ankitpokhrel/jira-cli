@@ -174,23 +174,14 @@ git commit -m "feat(mcp): add tools.Deps with project/url/installation helpers"
 ## Task 2: Add the `search_issues` tool
 
 **Files:**
-- Modify: `go.mod`, `go.sum`
 - Create: `internal/mcp/tools/search_issues.go`
 - Create: `internal/mcp/tools/search_issues_test.go`
 
 The tool calls `api.ProxySearch`, which selects the v2 or v3 endpoint based on the configured installation type. The `api` package reads `viper.GetString("installation")` internally; tests set that via `viper.Set("installation", ...)`.
 
-This is the first task that imports the MCP Go SDK, so the SDK dependency is added here (intentionally deferred from Task 0 so `go.mod` is never in a state that `go mod tidy` would revert).
+The MCP Go SDK is **not** added in this task either — Task 2's source files don't import it (only `api`, `context`, `fmt`, `strings`). The SDK fetch lands in Task 8, the first task whose source actually imports `github.com/modelcontextprotocol/go-sdk/mcp`.
 
-- [ ] **Step 1: Add the official MCP Go SDK dependency**
-
-```bash
-go get github.com/modelcontextprotocol/go-sdk@v1.5.0
-```
-
-Expected: `go get` completes; `go.mod` gains `github.com/modelcontextprotocol/go-sdk v1.5.0` (recorded as `// indirect` for now — it'll be promoted to direct when Task 8 imports it). If `v1.5.0` is no longer the latest stable, use the latest stable v1.x.
-
-- [ ] **Step 2: Write the failing test**
+- [ ] **Step 1: Write the failing test**
 
 Create `internal/mcp/tools/search_issues_test.go`:
 
@@ -341,7 +332,7 @@ func TestSearchIssues_DefaultLimit(t *testing.T) {
 }
 ```
 
-- [ ] **Step 3: Run the test and verify it fails**
+- [ ] **Step 2: Run the test and verify it fails**
 
 ```bash
 go test ./internal/mcp/tools/ -run TestSearchIssues -v
@@ -349,7 +340,7 @@ go test ./internal/mcp/tools/ -run TestSearchIssues -v
 
 Expected: FAIL — `SearchIssues`, `SearchIssuesInput` undefined.
 
-- [ ] **Step 4: Implement the tool**
+- [ ] **Step 3: Implement the tool**
 
 Create `internal/mcp/tools/search_issues.go`:
 
@@ -461,7 +452,7 @@ func composeJQL(project, status, assignee string) string {
 }
 ```
 
-- [ ] **Step 5: Run the test and verify it passes**
+- [ ] **Step 4: Run the test and verify it passes**
 
 ```bash
 go test ./internal/mcp/tools/ -run TestSearchIssues -v
@@ -469,10 +460,10 @@ go test ./internal/mcp/tools/ -run TestSearchIssues -v
 
 Expected: PASS, all 5 subtests.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add go.mod go.sum internal/mcp/tools/search_issues.go internal/mcp/tools/search_issues_test.go
+git add internal/mcp/tools/search_issues.go internal/mcp/tools/search_issues_test.go
 git commit -m "feat(mcp): add search_issues tool"
 ```
 
@@ -1536,12 +1527,23 @@ git commit -m "feat(mcp): add transition_issue tool"
 ## Task 8: Build the MCP server (registration + in-memory round trip test)
 
 **Files:**
+- Modify: `go.mod`, `go.sum`
 - Create: `internal/mcp/server.go`
 - Create: `internal/mcp/server_test.go`
 
 The server constructor takes a `*tools.Deps`, builds a `*mcp.Server`, and registers all five tools using the SDK's `mcp.AddTool` generic helper. Each registration adapts the `(d, in) -> (out, err)` tool function to the SDK's `(ctx, *CallToolRequest, In) -> (*CallToolResult, Out, error)` signature.
 
-- [ ] **Step 1: Write the failing test**
+This is the first task whose source actually imports the MCP Go SDK, so the SDK dependency is added here. (Adding it earlier would have left `go.mod` in a state that `go mod tidy` would revert.)
+
+- [ ] **Step 1: Add the official MCP Go SDK dependency**
+
+```bash
+go get github.com/modelcontextprotocol/go-sdk@v1.5.0
+```
+
+Expected: `go get` completes; `go.mod` gains `github.com/modelcontextprotocol/go-sdk v1.5.0`. Once Steps 2–5 below add the source files that import the SDK, `go mod tidy` will keep the requirement and (if previously listed as `// indirect`) promote it to a direct require. If `v1.5.0` is no longer the latest stable, use the latest stable v1.x.
+
+- [ ] **Step 2: Write the failing test**
 
 Create `internal/mcp/server_test.go`:
 
@@ -1628,7 +1630,7 @@ func TestServer_ListsAllTools(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run the test and verify it fails**
+- [ ] **Step 3: Run the test and verify it fails**
 
 ```bash
 go test ./internal/mcp/ -run TestServer -v
@@ -1636,7 +1638,7 @@ go test ./internal/mcp/ -run TestServer -v
 
 Expected: FAIL — `NewServer` undefined.
 
-- [ ] **Step 3: Implement the server**
+- [ ] **Step 4: Implement the server**
 
 Create `internal/mcp/server.go`:
 
@@ -1737,7 +1739,7 @@ func registerTool[In, Out any](
 }
 ```
 
-- [ ] **Step 4: Run the test and verify it passes**
+- [ ] **Step 5: Run the test and verify it passes**
 
 ```bash
 go test ./internal/mcp/ -run TestServer -v
@@ -1745,7 +1747,7 @@ go test ./internal/mcp/ -run TestServer -v
 
 Expected: PASS. If the SDK's exact symbol names differ slightly between v1.5.0 minor versions (e.g. `mcp.NewInMemoryTransports` vs `mcp.NewInMemoryTransport`), check `pkg.go.dev/github.com/modelcontextprotocol/go-sdk/mcp` for the current API and adjust the test only — the production code in `server.go` follows the README example verbatim.
 
-- [ ] **Step 5: Run the whole MCP test suite to confirm everything still passes**
+- [ ] **Step 6: Run the whole MCP test suite to confirm everything still passes**
 
 ```bash
 go test ./internal/mcp/... -v
@@ -1753,10 +1755,13 @@ go test ./internal/mcp/... -v
 
 Expected: PASS, all suites.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
+
+Before committing, run `go mod tidy` to make sure `go.mod`/`go.sum` are minimal and that the SDK requirement is now recorded as a direct require (since `server.go` and `server_test.go` import it).
 
 ```bash
-git add internal/mcp/server.go internal/mcp/server_test.go
+go mod tidy
+git add go.mod go.sum internal/mcp/server.go internal/mcp/server_test.go
 git commit -m "feat(mcp): add Server constructor and in-memory round-trip test"
 ```
 
