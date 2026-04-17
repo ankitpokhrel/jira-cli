@@ -848,7 +848,7 @@ func GetIssue(_ context.Context, d *Deps, in GetIssueInput) (GetIssueOutput, err
 			c := comments[i]
 			out.Comments = append(out.Comments, CommentBrief{
 				ID:      c.ID,
-				Author:  c.Author.Name,
+				Author:  c.Author.DisplayName,
 				Body:    bodyToMarkdown(c.Body),
 				Created: c.Created,
 			})
