@@ -395,12 +395,17 @@ func SearchIssues(_ context.Context, d *Deps, in SearchIssuesInput) (SearchIssue
 	}
 
 	jql := strings.TrimSpace(in.JQL)
-	project := d.ResolveProject(in.Project)
 
 	if jql == "" {
-		jql = composeJQL(project, in.Status, in.Assignee)
-	} else if project != "" && !strings.Contains(strings.ToLower(jql), "project") {
-		jql = fmt.Sprintf(`project = %q AND (%s)`, project, jql)
+		// No JQL → compose one from the simple filters, scoped to the resolved
+		// (default-or-explicit) project so plain "list my open issues" calls
+		// stay inside the configured project.
+		jql = composeJQL(d.ResolveProject(in.Project), in.Status, in.Assignee)
+	} else if in.Project != "" && !strings.Contains(strings.ToLower(jql), "project") {
+		// JQL is a power-user escape hatch: pass it through unmodified by
+		// default, and only wrap with a project clause when the caller
+		// explicitly opted in by setting Project on the input.
+		jql = fmt.Sprintf(`project = %q AND (%s)`, in.Project, jql)
 	}
 
 	res, err := api.ProxySearch(d.Client, jql, 0, uint(limit))
