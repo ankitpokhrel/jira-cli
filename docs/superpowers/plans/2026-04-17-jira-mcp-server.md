@@ -1865,10 +1865,18 @@ func run(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("no Jira server configured. Run 'jira init' to set up the tool")
 	}
 
+	// Honor browse_server override the same way internal/cmdutil.GenerateServerBrowseURL does,
+	// so MCP-emitted issue URLs match what the rest of the CLI produces for users whose web
+	// client and API endpoints differ.
+	browseServer := server
+	if v := viper.GetString("browse_server"); v != "" {
+		browseServer = v
+	}
+
 	debug := viper.GetBool("debug")
 	deps := &tools.Deps{
 		Client:         api.DefaultClient(debug),
-		Server:         server,
+		Server:         browseServer,
 		DefaultProject: viper.GetString("project.key"),
 		Installation:   viper.GetString("installation"),
 	}
