@@ -65,7 +65,7 @@ func init() {
 		viper.SetEnvPrefix("jira")
 
 		if err := viper.ReadInConfig(); err == nil && debug {
-			fmt.Printf("Using config file: %s\n", viper.ConfigFileUsed())
+			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 		}
 	})
 }
