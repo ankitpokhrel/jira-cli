@@ -48,7 +48,7 @@ func TestServer_ListsAllTools(t *testing.T) {
 	client := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "v0"}, nil)
 	session, err := client.Connect(ctx, clientT, nil)
 	require.NoError(t, err)
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	listed, err := session.ListTools(ctx, &mcp.ListToolsParams{})
 	require.NoError(t, err)
@@ -101,7 +101,7 @@ func TestRegisterTool_RecoversFromPanic(t *testing.T) {
 	client := mcp.NewClient(&mcp.Implementation{Name: "panic-client", Version: "v0"}, nil)
 	session, err := client.Connect(ctx, clientT, nil)
 	require.NoError(t, err)
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	res, err := session.CallTool(ctx, &mcp.CallToolParams{
 		Name:      "panic_tool",

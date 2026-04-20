@@ -8,6 +8,14 @@ import (
 	"github.com/ankitpokhrel/jira-cli/api"
 )
 
+const (
+	// defaultSearchLimit is used when the caller omits Limit (or passes <= 0).
+	defaultSearchLimit = 50
+	// maxSearchLimit is the hard cap we enforce on Limit. The Jira v3
+	// /search/jql endpoint accepts up to 100; we mirror that here.
+	maxSearchLimit = 100
+)
+
 // SearchIssuesInput is the input schema for the search_issues tool.
 type SearchIssuesInput struct {
 	JQL      string `json:"jql,omitempty" jsonschema:"raw JQL to execute. Passed through verbatim unless project is also set, in which case the JQL is wrapped as 'project = X AND (your JQL)'. If you set project alongside JQL, your JQL must not contain its own ORDER BY clause."`
@@ -44,10 +52,10 @@ type IssueBrief struct {
 func SearchIssues(_ context.Context, d *Deps, in SearchIssuesInput) (SearchIssuesOutput, error) {
 	limit := in.Limit
 	if limit <= 0 {
-		limit = 50
+		limit = defaultSearchLimit
 	}
-	if limit > 100 {
-		limit = 100
+	if limit > maxSearchLimit {
+		limit = maxSearchLimit
 	}
 
 	jql := strings.TrimSpace(in.JQL)

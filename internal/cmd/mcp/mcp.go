@@ -12,9 +12,10 @@ Jira operations to MCP-aware hosts (e.g. Cursor, Claude Desktop).`
 // NewCmdMCP is the parent command for MCP-related subcommands.
 func NewCmdMCP() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "mcp",
-		Short: "Run jira-cli as an MCP server",
-		Long:  helpText,
+		Use:         "mcp",
+		Short:       "Run jira-cli as an MCP server",
+		Long:        helpText,
+		Annotations: map[string]string{"cmd:main": "true"},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Help()
 		},
