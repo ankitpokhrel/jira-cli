@@ -30,7 +30,7 @@ func download(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
 	key := cmdutil.GetJiraIssueKey(project, args[0])
 	attachmentName := args[1]
-	
+
 	outputName := attachmentName
 	if len(args) == 3 {
 		outputName = args[2]
@@ -84,13 +84,17 @@ func download(cmd *cobra.Command, args []string) {
 
 	body, err := client.DownloadAttachment(target.Content)
 	cmdutil.ExitIfError(err)
-	defer body.Close()
 
 	out, err := os.Create(outputPath)
 	cmdutil.ExitIfError(err)
-	defer out.Close()
 
 	_, err = io.Copy(out, body)
+	cmdutil.ExitIfError(err)
+
+	err = out.Close()
+	cmdutil.ExitIfError(err)
+
+	err = body.Close()
 	cmdutil.ExitIfError(err)
 
 	s.Stop()
@@ -104,7 +108,7 @@ func getUniqueFilename(name string) string {
 
 	ext := filepath.Ext(name)
 	base := strings.TrimSuffix(name, ext)
-	
+
 	for i := 1; ; i++ {
 		newName := fmt.Sprintf("%s (%d)%s", base, i, ext)
 		if _, err := os.Stat(newName); os.IsNotExist(err) {

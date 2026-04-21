@@ -374,7 +374,7 @@ func TestGetIssueRaw(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				_, err = w.Write(respContent)
+				_, _ = w.Write(respContent)
 			}))
 			defer server.Close()
 
