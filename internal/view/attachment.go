@@ -48,7 +48,7 @@ func (a *Attachment) Render() error {
 	return tui.PagerOut(a.buf.String())
 }
 
-func (a *Attachment) header() []string {
+func attachmentHeader() []string {
 	return []string{
 		"NAME",
 		"SIZE",
@@ -57,8 +57,9 @@ func (a *Attachment) header() []string {
 }
 
 func (a *Attachment) printHeader() {
-	n := len(a.header())
-	for i, h := range a.header() {
+	header := attachmentHeader()
+	n := len(header)
+	for i, h := range header {
 		_, _ = fmt.Fprintf(a.Writer, "%s", h)
 		if i != n-1 {
 			_, _ = fmt.Fprintf(a.Writer, "\t")
