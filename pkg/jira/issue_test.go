@@ -384,7 +384,11 @@ func TestGetIssueRaw(t *testing.T) {
 				return
 			}
 
-			assert.Equal(t, c.wantOut, out)
+			assert.Equal(
+				t,
+				strings.ReplaceAll(c.wantOut, "\r\n", "\n"),
+				strings.ReplaceAll(out, "\r\n", "\n"),
+			)
 		})
 	}
 }
