@@ -76,6 +76,15 @@ func TestGetIssue(t *testing.T) {
 			}{Name: "To Do"},
 			Created: "2020-12-03T14:05:20.974+0100",
 			Updated: "2020-12-03T14:05:20.974+0100",
+			Attachments: []Attachment{
+				{
+					ID:       "10001",
+					Filename: "test.txt",
+					Size:     1024,
+					Created:  "2020-12-03T14:05:20.974+0100",
+					Content:  "https://test.local/secure/attachment/10001/test.txt",
+				},
+			},
 			IssueLinks: []struct {
 				ID       string `json:"id"`
 				LinkType struct {
@@ -146,6 +155,15 @@ func TestGetIssueWithoutDescription(t *testing.T) {
 			}{Name: "To Do"},
 			Created: "2020-12-03T14:05:20.974+0100",
 			Updated: "2020-12-03T14:05:20.974+0100",
+			Attachments: []Attachment{
+				{
+					ID:       "10001",
+					Filename: "test.txt",
+					Size:     1024,
+					Created:  "2020-12-03T14:05:20.974+0100",
+					Content:  "https://test.local/secure/attachment/10001/test.txt",
+				},
+			},
 		},
 	}
 	assert.Equal(t, expected, actual)
@@ -197,6 +215,15 @@ func TestGetIssueV2(t *testing.T) {
 			}{Name: "To Do"},
 			Created: "2020-12-03T14:05:20.974+0100",
 			Updated: "2020-12-03T14:05:20.974+0100",
+			Attachments: []Attachment{
+				{
+					ID:       "10001",
+					Filename: "test.txt",
+					Size:     1024,
+					Created:  "2020-12-03T14:05:20.974+0100",
+					Content:  "https://test.local/secure/attachment/10001/test.txt",
+				},
+			},
 		},
 	}
 	assert.Equal(t, expected, actual)
@@ -273,7 +300,16 @@ func TestGetIssueRaw(t *testing.T) {
     "watches": {
       "watchCount": 1,
       "isWatching": true
-    }
+    },
+    "attachment": [
+      {
+        "id": "10001",
+        "filename": "test.txt",
+        "size": 1024,
+        "created": "2020-12-03T14:05:20.974+0100",
+        "content": "https://test.local/secure/attachment/10001/test.txt"
+      }
+    ]
   }
 }
 `,
@@ -310,7 +346,16 @@ func TestGetIssueRaw(t *testing.T) {
     "watches": {
       "watchCount": 1,
       "isWatching": true
-    }
+    },
+    "attachment": [
+      {
+        "id": "10001",
+        "filename": "test.txt",
+        "size": 1024,
+        "created": "2020-12-03T14:05:20.974+0100",
+        "content": "https://test.local/secure/attachment/10001/test.txt"
+      }
+    ]
   }
 }
 `,
@@ -328,11 +373,8 @@ func TestGetIssueRaw(t *testing.T) {
 				}
 
 				w.Header().Set("Content-Type", "application/json")
-				_, err = w.Write(respContent)
-				if !assert.NoError(t, err) {
-					return
-				}
 				w.WriteHeader(http.StatusOK)
+				_, err = w.Write(respContent)
 			}))
 			defer server.Close()
 
@@ -744,4 +786,24 @@ func TestWatchIssue(t *testing.T) {
 
 	err = client.WatchIssueV2("TEST-1", "a12b3")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
+func TestDownloadAttachment(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/secure/attachment/10001/test.txt", r.URL.Path)
+		assert.Equal(t, "no-check", r.Header.Get("X-Atlassian-Token"))
+
+		w.WriteHeader(200)
+		_, _ = w.Write([]byte("attachment content"))
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	actual, err := client.DownloadAttachment(server.URL + "/secure/attachment/10001/test.txt")
+	assert.NoError(t, err)
+
+	content, err := io.ReadAll(actual)
+	assert.NoError(t, err)
+	assert.Equal(t, "attachment content", string(content))
 }

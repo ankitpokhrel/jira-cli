@@ -124,6 +124,18 @@ type IssueFields struct {
 	} `json:"issueLinks"`
 	Created string `json:"created"`
 	Updated string `json:"updated"`
+	Attachments []Attachment `json:"attachment"`
+}
+
+// Attachment holds attachment info.
+type Attachment struct {
+	ID       string `json:"id"`
+	Filename string `json:"filename"`
+	Author   User   `json:"author"`
+	Created  string `json:"created"`
+	Size     int    `json:"size"`
+	MimeType string `json:"mimeType"`
+	Content  string `json:"content"`
 }
 
 // Field holds field info.
