@@ -51,7 +51,7 @@ $ jira issue list --plain --columns key,assignee,status
 $ jira issue list --plain --no-truncate
 
 # List issues in a plain table view using custom delimiter (default is "\t")
-$ jira issue list --plain --delimeter "|"
+$ jira issue list --plain --delimiter "|"
 
 # List issues as raw JSON data
 $ jira issue list --raw
@@ -242,7 +242,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
-	cmd.Flags().String("delimiter", "\t", "Custom delimeter for columns in plain mode. Works only with --plain")
+	cmd.Flags().String("delimiter", "\t", "Custom delimiter for columns in plain mode. Works only with --plain")
 	cmd.Flags().Uint("comments", 1, "Show N comments when viewing the issue")
 	cmd.Flags().Bool("raw", false, "Print raw JSON output")
 	cmd.Flags().Bool("csv", false, "Print output in CSV format")
