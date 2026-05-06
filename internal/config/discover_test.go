@@ -7,12 +7,12 @@ import (
 
 func TestFindProjectConfig(t *testing.T) {
 	tests := []struct {
-		name    string
-		fs      fstest.MapFS
-		start   string
-		home    string
-		want    string
-		wantOK  bool
+		name   string
+		fs     fstest.MapFS
+		start  string
+		home   string
+		want   string
+		wantOK bool
 	}{
 		{
 			name: "found in cwd, yml wins",
@@ -88,9 +88,9 @@ func TestFindProjectConfig(t *testing.T) {
 		{
 			name: "stops at .git boundary",
 			fs: fstest.MapFS{
-				"repo/.git/HEAD":                  {},
-				"repo/sub/placeholder":            {},
-				"outside-repo/.jira-config.yml":   {},
+				"repo/.git/HEAD":                {},
+				"repo/sub/placeholder":          {},
+				"outside-repo/.jira-config.yml": {},
 			},
 			start:  "repo/sub",
 			home:   "",
@@ -99,8 +99,8 @@ func TestFindProjectConfig(t *testing.T) {
 		{
 			name: ".git in same dir as config — config still wins",
 			fs: fstest.MapFS{
-				"repo/.git/HEAD":          {},
-				"repo/.jira-config.yml":   {},
+				"repo/.git/HEAD":        {},
+				"repo/.jira-config.yml": {},
 			},
 			start:  "repo",
 			want:   "repo/.jira-config.yml",
@@ -118,7 +118,7 @@ func TestFindProjectConfig(t *testing.T) {
 		{
 			name: "no home: walks up to filesystem root",
 			fs: fstest.MapFS{
-				".jira-config.yml":     {},
+				".jira-config.yml":      {},
 				"a/b/c/d/e/placeholder": {},
 			},
 			start:  "a/b/c/d/e",
