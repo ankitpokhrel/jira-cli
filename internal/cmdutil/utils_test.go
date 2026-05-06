@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -63,7 +62,7 @@ func TestFormatDateTimeHuman(t *testing.T) {
 func TestGetConfigHome(t *testing.T) {
 	t.Parallel()
 
-	userHome, err := homedir.Dir()
+	userHome, err := os.UserHomeDir()
 	assert.NoError(t, err)
 
 	os.Clearenv()
