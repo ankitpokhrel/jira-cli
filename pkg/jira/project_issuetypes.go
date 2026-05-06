@@ -40,4 +40,3 @@ func (c *Client) ProjectIssueTypes(projectKey string) ([]*IssueType, error) {
 
 	return out.IssueTypes, nil
 }
-

@@ -49,4 +49,3 @@ func TestProjectIssueTypes(t *testing.T) {
 	_, err = client.ProjectIssueTypes("TEST")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
-
