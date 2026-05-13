@@ -45,6 +45,7 @@ func NewCmdCommentEdit() *cobra.Command {
 	cmd.Flags().StringP("body", "b", "", "Edit comment body")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 	cmd.Flags().Bool("internal", false, "Mark comment as internal")
+	cmd.Flags().Bool("raw", false, "Pass comment body as raw Jira wiki markup")
 
 	return &cmd
 }
@@ -103,11 +104,16 @@ func edit(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	body := ec.params.body
+	if !ec.params.raw {
+		body = md.ToJiraMD(body)
+	}
+
 	err = func() error {
 		s := cmdutil.Info("Updating comment")
 		defer s.Stop()
 
-		return client.UpdateIssueComment(ec.params.issueKey, ec.params.commentID, ec.params.body, ec.params.internal)
+		return client.UpdateIssueComment(ec.params.issueKey, ec.params.commentID, body, ec.params.internal)
 	}()
 	cmdutil.ExitIfError(err)
 
@@ -123,6 +129,7 @@ type editParams struct {
 	body      string
 	noInput   bool
 	internal  bool
+	raw       bool
 	debug     bool
 }
 
@@ -149,12 +156,16 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *editParams {
 	internal, err := flags.GetBool("internal")
 	cmdutil.ExitIfError(err)
 
+	raw, err := flags.GetBool("raw")
+	cmdutil.ExitIfError(err)
+
 	return &editParams{
 		issueKey:  issueKey,
 		commentID: commentID,
 		body:      body,
 		noInput:   noInput,
 		internal:  internal,
+		raw:       raw,
 		debug:     debug,
 	}
 }

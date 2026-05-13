@@ -12,6 +12,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/ankitpokhrel/jira-cli/pkg/md"
 	"github.com/ankitpokhrel/jira-cli/pkg/surveyext"
 )
 
@@ -57,6 +58,7 @@ func NewCmdCommentAdd() *cobra.Command {
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read comment body from")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 	cmd.Flags().Bool("internal", false, "Make comment internal")
+	cmd.Flags().Bool("raw", false, "Pass comment body as raw Jira wiki markup")
 
 	return &cmd
 }
@@ -99,11 +101,16 @@ func add(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	body := params.body
+	if !params.raw {
+		body = md.ToJiraMD(body)
+	}
+
 	err := func() error {
 		s := cmdutil.Info("Adding comment")
 		defer s.Stop()
 
-		return client.AddIssueComment(ac.params.issueKey, ac.params.body, ac.params.internal)
+		return client.AddIssueComment(ac.params.issueKey, body, ac.params.internal)
 	}()
 	cmdutil.ExitIfError(err)
 
@@ -124,6 +131,7 @@ type addParams struct {
 	template string
 	noInput  bool
 	internal bool
+	raw      bool
 	debug    bool
 }
 
@@ -150,12 +158,16 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 	internal, err := flags.GetBool("internal")
 	cmdutil.ExitIfError(err)
 
+	raw, err := flags.GetBool("raw")
+	cmdutil.ExitIfError(err)
+
 	return &addParams{
 		issueKey: issueKey,
 		body:     body,
 		template: template,
 		noInput:  noInput,
 		internal: internal,
+		raw:      raw,
 		debug:    debug,
 	}
 }

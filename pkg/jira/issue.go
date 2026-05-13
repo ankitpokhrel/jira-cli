@@ -306,12 +306,16 @@ type issueCommentProperty struct {
 }
 type issueCommentRequest struct {
 	Body       string                 `json:"body"`
-	Properties []issueCommentProperty `json:"properties"`
+	Properties []issueCommentProperty `json:"properties,omitempty"`
 }
 
 // AddIssueComment adds comment to an issue using POST /issue/{key}/comment endpoint.
 func (c *Client) AddIssueComment(key, comment string, internal bool) error {
-	body, err := json.Marshal(&issueCommentRequest{Body: md.ToJiraMD(comment), Properties: []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: internal}}}})
+	req := &issueCommentRequest{Body: comment}
+	if internal {
+		req.Properties = []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: internal}}}
+	}
+	body, err := json.Marshal(req)
 	if err != nil {
 		return err
 	}
@@ -374,10 +378,11 @@ func (c *Client) GetIssueComment(key, commentID string) (*IssueComment, error) {
 
 // UpdateIssueComment updates a comment using PUT /issue/{key}/comment/{commentID}.
 func (c *Client) UpdateIssueComment(key, commentID, comment string, internal bool) error {
-	body, err := json.Marshal(&issueCommentRequest{
-		Body:       md.ToJiraMD(comment),
-		Properties: []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: internal}}},
-	})
+	req := &issueCommentRequest{Body: comment}
+	if internal {
+		req.Properties = []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: internal}}}
+	}
+	body, err := json.Marshal(req)
 	if err != nil {
 		return err
 	}

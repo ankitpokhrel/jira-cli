@@ -531,7 +531,7 @@ func TestAddIssueComment(t *testing.T) {
 		actualBody := new(strings.Builder)
 		_, _ = io.Copy(actualBody, r.Body)
 
-		expectedBody := `{"body":"comment","properties":[{"key":"sd.public.comment","value":{"internal":false}}]}`
+		expectedBody := `{"body":"comment"}`
 
 		assert.Equal(t, expectedBody, actualBody.String())
 
@@ -552,6 +552,23 @@ func TestAddIssueComment(t *testing.T) {
 
 	err = client.AddIssueComment("TEST-1", "comment", false)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
+func TestAddIssueCommentInternal(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		actualBody := new(strings.Builder)
+		_, _ = io.Copy(actualBody, r.Body)
+
+		expectedBody := `{"body":"comment","properties":[{"key":"sd.public.comment","value":{"internal":true}}]}`
+		assert.Equal(t, expectedBody, actualBody.String())
+
+		w.WriteHeader(201)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+	err := client.AddIssueComment("TEST-1", "comment", true)
+	assert.NoError(t, err)
 }
 
 func TestGetIssueComment(t *testing.T) {
@@ -597,7 +614,7 @@ func TestUpdateIssueComment(t *testing.T) {
 		actualBody := new(strings.Builder)
 		_, _ = io.Copy(actualBody, r.Body)
 
-		expectedBody := `{"body":"updated comment","properties":[{"key":"sd.public.comment","value":{"internal":false}}]}`
+		expectedBody := `{"body":"updated comment"}`
 		assert.Equal(t, expectedBody, actualBody.String())
 
 		if unexpectedStatusCode {
@@ -617,6 +634,23 @@ func TestUpdateIssueComment(t *testing.T) {
 
 	err = client.UpdateIssueComment("TEST-1", "10042", "updated comment", false)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
+func TestUpdateIssueCommentInternal(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		actualBody := new(strings.Builder)
+		_, _ = io.Copy(actualBody, r.Body)
+
+		expectedBody := `{"body":"updated comment","properties":[{"key":"sd.public.comment","value":{"internal":true}}]}`
+		assert.Equal(t, expectedBody, actualBody.String())
+
+		w.WriteHeader(200)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+	err := client.UpdateIssueComment("TEST-1", "10042", "updated comment", true)
+	assert.NoError(t, err)
 }
 
 func TestAddIssueWorklog(t *testing.T) {
