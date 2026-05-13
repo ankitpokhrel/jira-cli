@@ -324,7 +324,32 @@ You can use a `--custom` flag to set custom fields while creating the issue. See
 
 The command supports both [GitHub-flavored](https://github.github.com/gfm/)
 and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) Markdown for writing
-description. You can load pre-defined templates using `--template` flag.
+description.
+
+By default, the description is treated as [CommonMark
+Markdown](https://commonmark.org/) and converted to
+[Jira wiki markup](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all)
+before sending. If you'd rather write the description directly in Jira wiki markup —
+useful when wiki syntax (like `# item` for a numbered list, or `*bold*`) conflicts
+with what CommonMark would parse — pass `--body-format=wiki` to bypass the
+conversion:
+
+```sh
+# Default: -b is Markdown, converted to wiki ("# foo" → JIRA H1)
+$ jira issue create -tTask -s"Summary" -b"# foo"
+
+# Treat -b as wiki markup, send as-is ("# foo" → JIRA numbered-list item)
+$ jira issue create -tTask -s"Summary" -b"# foo" --body-format=wiki
+```
+
+The flag accepts `markdown` (default) or `wiki`. To skip the flag on every call,
+set `body.format: wiki` in `~/.config/.jira/.config.yml`; `jira init` writes this
+key with the `markdown` default. The same flag and config key work on `jira issue
+edit`, `jira issue comment add`, `jira issue worklog add`, `jira issue move
+--comment`, and `jira epic create`.
+
+You can load pre-defined templates using `--template` flag. Template, stdin,
+editor, and `-b` content all flow through the same body-format pipeline.
 
 ```sh
 # Load description from template file

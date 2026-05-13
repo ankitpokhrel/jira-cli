@@ -14,7 +14,6 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
-	"github.com/ankitpokhrel/jira-cli/pkg/md"
 	"github.com/ankitpokhrel/jira-cli/pkg/surveyext"
 )
 
@@ -60,6 +59,11 @@ func edit(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
 
 	params := parseArgsAndFlags(cmd.Flags(), args, project)
+
+	// Validate before any prompt or API call so a bad value doesn't discard an edited body.
+	bodyFormat, err := cmdcommon.ResolveBodyFormat(cmd.Flags())
+	cmdutil.ExitIfError(err)
+
 	client := api.DefaultClient(params.debug)
 	ec := editCmd{
 		client: client,
@@ -79,14 +83,10 @@ func edit(cmd *cobra.Command, args []string) {
 	}()
 	cmdutil.ExitIfError(err)
 
-	var (
-		isADF        bool
-		originalBody string
-	)
+	var originalBody string
 
 	if issue.Fields.Description != nil {
 		if adfBody, ok := issue.Fields.Description.(*adf.ADF); ok {
-			isADF = true
 			originalBody = adf.NewTranslator(adfBody, adf.NewJiraMarkdownTranslator()).Translate()
 		} else {
 			originalBody = issue.Fields.Description.(string)
@@ -137,10 +137,7 @@ func edit(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Updating an issue...")
 		defer s.Stop()
 
-		body := params.body
-		if isADF {
-			body = md.ToJiraMD(body)
-		}
+		body := cmdcommon.ConvertBody(params.body, bodyFormat)
 
 		parent := cmdutil.GetJiraIssueKey(project, params.parentIssueKey)
 		if parent == "" && issue.Fields.Parent != nil {
@@ -444,6 +441,7 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("parent", "P", "", `Link to a parent key`)
 	cmd.Flags().StringP("summary", "s", "", "Edit summary or title")
 	cmd.Flags().StringP("body", "b", "", "Edit description")
+	cmdcommon.AddBodyFormatFlag(cmd.Flags())
 	cmd.Flags().StringP("priority", "y", "", "Edit priority")
 	cmd.Flags().StringP("assignee", "a", "", "Edit assignee (email or display name)")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Append labels")

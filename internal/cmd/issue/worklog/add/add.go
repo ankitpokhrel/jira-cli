@@ -57,6 +57,7 @@ func NewCmdWorklogAdd() *cobra.Command {
 	cmd.Flags().String("started", "", "The datetime on which the worklog effort was started, eg: 2022-01-01 09:30:00")
 	cmd.Flags().String("timezone", "UTC", "The timezone to use for the started date in IANA timezone format, eg: Europe/Berlin")
 	cmd.Flags().String("comment", "", "Comment about the worklog")
+	cmdcommon.AddBodyFormatFlag(cmd.Flags())
 	cmd.Flags().String("new-estimate", "", "the new estimate for the backlog to be completed by")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 
@@ -65,6 +66,11 @@ func NewCmdWorklogAdd() *cobra.Command {
 
 func add(cmd *cobra.Command, args []string) {
 	params := parseArgsAndFlags(args, cmd.Flags())
+
+	// Validate before any prompt or API call so a bad value doesn't discard user input.
+	bodyFormat, err := cmdcommon.ResolveBodyFormat(cmd.Flags())
+	cmdutil.ExitIfError(err)
+
 	client := api.DefaultClient(params.debug)
 	ac := addCmd{
 		client: client,
@@ -97,11 +103,13 @@ func add(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	err := func() error {
+	comment := cmdcommon.ConvertBody(ac.params.comment, bodyFormat)
+
+	err = func() error {
 		s := cmdutil.Info("Adding a worklog")
 		defer s.Stop()
 
-		return client.AddIssueWorklog(ac.params.issueKey, ac.params.started, ac.params.timeSpent, ac.params.comment, ac.params.newEstimate)
+		return client.AddIssueWorklog(ac.params.issueKey, ac.params.started, ac.params.timeSpent, comment, ac.params.newEstimate)
 	}()
 	cmdutil.ExitIfError(err)
 
