@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/core"
@@ -784,6 +785,13 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	if err := config.WriteConfig(); err != nil {
 		return "", err
 	}
+	// Belt-and-braces: viper's writer keeps the existing file's mode when it
+	// truncates+rewrites, but if anything (e.g. a future viper change or an
+	// unusual filesystem) widens the mode, force it back to 0o600 so the
+	// api_token / mTLS material isn't world-readable.
+	if err := os.Chmod(path, 0o600); err != nil {
+		return "", err
+	}
 	return path, nil
 }
 
@@ -855,22 +863,53 @@ func shallOverwrite() bool {
 }
 
 func create(file string) error {
-	const perm = 0o700
+	const (
+		dirPerm  = 0o700
+		filePerm = 0o600
+	)
 
 	path := filepath.Dir(file)
 	if !Exists(path) {
-		if err := os.MkdirAll(path, perm); err != nil {
+		if err := os.MkdirAll(path, dirPerm); err != nil {
 			return err
 		}
 	}
 
+	// If the target file already exists, write atomically via a tempfile in
+	// the same directory and rename over the destination. This avoids
+	// leaving a `<file>.bkp` residue (which previously inherited the default
+	// 0o666 mode and meant token rotation never retired the old token from
+	// disk on multi-user hosts).
 	if Exists(file) {
-		if err := os.Rename(file, file+".bkp"); err != nil {
+		tmpPath := fmt.Sprintf("%s.tmp.%d", file, time.Now().UnixNano())
+		f, err := os.OpenFile(tmpPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filePerm)
+		if err != nil {
 			return err
 		}
+		if cerr := f.Close(); cerr != nil {
+			_ = os.Remove(tmpPath)
+			return cerr
+		}
+		if err := os.Rename(tmpPath, file); err != nil {
+			_ = os.Remove(tmpPath)
+			return err
+		}
+		// Defensive: ensure the final file ends up at the desired mode even
+		// if the rename happened across a filesystem with a stricter umask.
+		if err := os.Chmod(file, filePerm); err != nil {
+			return err
+		}
+		return nil
 	}
-	f, err := os.Create(file)
-	defer func() { _ = f.Close() }()
 
-	return err
+	f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filePerm)
+	if err != nil {
+		return err
+	}
+	if cerr := f.Close(); cerr != nil {
+		return cerr
+	}
+	// Defensive chmod (umask may have stripped bits, though for 0o600 that's
+	// not actually possible — kept for clarity / future-proofing).
+	return os.Chmod(file, filePerm)
 }
