@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -291,21 +292,31 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 }
 
 func dump(req *http.Request, res *http.Response) {
-	reqDump, _ := httputil.DumpRequest(req, true)
-	prettyPrintDump("Request Details", reqDump)
+	// Clone the request and scrub sensitive headers before dumping so that
+	// credentials (Bearer/Basic tokens, cookies, proxy auth) never leak to
+	// stderr/stdout via --debug. The original request is left untouched.
+	scrubbed := req.Clone(req.Context())
+	for _, h := range []string{"Authorization", "Cookie", "Proxy-Authorization"} {
+		if scrubbed.Header.Get(h) != "" {
+			scrubbed.Header.Set(h, "REDACTED")
+		}
+	}
+
+	reqDump, _ := httputil.DumpRequest(scrubbed, true)
+	prettyPrintDump(os.Stdout, "Request Details", reqDump)
 
 	if res != nil {
 		respDump, _ := httputil.DumpResponse(res, false)
-		prettyPrintDump("Response Details", respDump)
+		prettyPrintDump(os.Stdout, "Response Details", respDump)
 	}
 }
 
-func prettyPrintDump(heading string, data []byte) {
+func prettyPrintDump(w io.Writer, heading string, data []byte) {
 	const separatorWidth = 60
 
-	fmt.Printf("\n\n%s", strings.ToUpper(heading))
-	fmt.Printf("\n%s\n\n", strings.Repeat("-", separatorWidth))
-	fmt.Print(string(data))
+	fmt.Fprintf(w, "\n\n%s", strings.ToUpper(heading))
+	fmt.Fprintf(w, "\n%s\n\n", strings.Repeat("-", separatorWidth))
+	fmt.Fprint(w, string(data))
 }
 
 func formatUnexpectedResponse(res *http.Response) *ErrUnexpectedResponse {
