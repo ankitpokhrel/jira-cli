@@ -69,8 +69,18 @@ func init() {
 				fmt.Printf("Using config file: %s\n", viper.ConfigFileUsed())
 			}
 			warnIfConfigPermissive(viper.ConfigFileUsed())
+			warnIfInsecureTLS()
 		}
 	})
+}
+
+// warnIfInsecureTLS prints a one-line stderr banner when the loaded config has
+// `insecure: true` (or JIRA_INSECURE is set), so the user is reminded on every
+// invocation that server certificates are not being verified.
+func warnIfInsecureTLS() {
+	if viper.GetBool("insecure") {
+		fmt.Fprintln(os.Stderr, "warning: insecure TLS is enabled — server certificates are not verified")
+	}
 }
 
 // warnIfConfigPermissive prints a warning to stderr if the config file is

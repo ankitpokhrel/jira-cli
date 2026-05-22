@@ -1,6 +1,7 @@
 package api
 
 import (
+	"os"
 	"time"
 
 	"github.com/spf13/viper"
@@ -26,6 +27,14 @@ func Client(config jira.Config) *jira.Client {
 	}
 	if config.Login == "" {
 		config.Login = viper.GetString("login")
+	}
+	// Token resolution order: explicit (caller-supplied) > JIRA_API_TOKEN env
+	// var > viper config (api_token in YAML) > netrc > OS keyring. The env var
+	// is checked before the on-disk config so credential rotation is immediate
+	// — exporting a fresh JIRA_API_TOKEN takes effect without editing the
+	// YAML, and a stale on-disk token can't shadow a freshly exported one.
+	if config.APIToken == "" {
+		config.APIToken = os.Getenv("JIRA_API_TOKEN")
 	}
 	if config.APIToken == "" {
 		config.APIToken = viper.GetString("api_token")

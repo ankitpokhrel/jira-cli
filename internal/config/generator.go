@@ -749,6 +749,14 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	config.SetConfigType(FileType)
 
 	if c.usrCfg.Insecure {
+		cmdutil.Warn(`WARNING: TLS verification is disabled (insecure: true).
+This permanently allows MITM on every future invocation.
+You can re-enable TLS verification by editing your config file.`)
+
+		if !confirmInsecurePersist() {
+			return "", fmt.Errorf("aborted: refused to persist insecure: true to config")
+		}
+
 		config.Set("insecure", c.usrCfg.Insecure)
 	}
 
@@ -854,6 +862,26 @@ func shallOverwrite() bool {
 
 	prompt := &survey.Confirm{
 		Message: "Config already exist. Do you want to overwrite?",
+	}
+	if err := survey.AskOne(prompt, &ans); err != nil {
+		return false
+	}
+
+	return ans
+}
+
+// confirmInsecurePersist prompts the user to confirm that they really want to
+// persist `insecure: true` to the YAML config. This setting permanently
+// disables TLS verification for every future invocation, so we make the user
+// opt in explicitly. If stdin is not a terminal (CI, automation), the prompt
+// errors out and we treat that as a refusal to persist — the loud Warn that
+// preceded this call is the user-facing record of the decision.
+func confirmInsecurePersist() bool {
+	var ans bool
+
+	prompt := &survey.Confirm{
+		Message: "Persist insecure: true (TLS verification OFF) to your config? [y/N]",
+		Default: false,
 	}
 	if err := survey.AskOne(prompt, &ans); err != nil {
 		return false
