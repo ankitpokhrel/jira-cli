@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -159,21 +160,35 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 		// Create a CA certificate pool and add cert.pem to it.
 		caCert, err := os.ReadFile(c.MTLSConfig.CaCert)
 		if err != nil {
-			log.Fatalf("%s, %s", err, c.MTLSConfig.CaCert)
+			log.Fatalf("failed to read CA certificate: %v", err)
 		}
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(caCert)
 
+		// Refuse to use the mTLS client key when the file is group- or
+		// world-readable on POSIX. Skipped on Windows because Unix mode
+		// bits don't reflect ACLs there.
+		if runtime.GOOS != "windows" {
+			keyStat, err := os.Stat(c.MTLSConfig.ClientKey)
+			if err != nil {
+				log.Fatalf("failed to stat mTLS client key: %v", err)
+			}
+			if keyStat.Mode().Perm()&0o077 != 0 {
+				log.Fatalf("mTLS client key file permissions are too open; restrict to owner only (e.g. chmod 600)")
+			}
+		}
+
 		// Read the key pair to create the certificate.
 		cert, err := tls.LoadX509KeyPair(c.MTLSConfig.ClientCert, c.MTLSConfig.ClientKey)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("failed to load mTLS client cert/key: %v", err)
 		}
 
-		// Add the MTLS specific configuration.
+		// Add the MTLS specific configuration. Renegotiation is left at
+		// the zero value (RenegotiateNever); Jira does not need it and
+		// enabling it widens the TLS attack surface.
 		transport.TLSClientConfig.RootCAs = caCertPool
 		transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
-		transport.TLSClientConfig.Renegotiation = tls.RenegotiateFreelyAsClient
 	}
 
 	client.transport = transport
