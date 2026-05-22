@@ -200,27 +200,31 @@ func (i Issue) separator(msg string) string {
 }
 
 func (i Issue) header() string {
-	as := i.Data.Fields.Assignee.Name
+	as := SanitizeTerminal(i.Data.Fields.Assignee.Name)
 	if as == "" {
 		as = "Unassigned"
 	}
-	st, sti := i.Data.Fields.Status.Name, "🚧"
+	st, sti := SanitizeTerminal(i.Data.Fields.Status.Name), "🚧"
 	if st == "Done" {
 		sti = "✅"
 	}
 	lbl := "None"
 	if len(i.Data.Fields.Labels) > 0 {
-		lbl = strings.Join(i.Data.Fields.Labels, ", ")
+		labels := make([]string, 0, len(i.Data.Fields.Labels))
+		for _, l := range i.Data.Fields.Labels {
+			labels = append(labels, SanitizeTerminal(l))
+		}
+		lbl = strings.Join(labels, ", ")
 	}
 	components := make([]string, 0, len(i.Data.Fields.Components))
 	for _, c := range i.Data.Fields.Components {
-		components = append(components, c.Name)
+		components = append(components, SanitizeTerminal(c.Name))
 	}
 	cmpt := "None"
 	if len(components) > 0 {
 		cmpt = strings.Join(components, ", ")
 	}
-	it, iti := i.Data.Fields.IssueType.Name, "⭐"
+	it, iti := SanitizeTerminal(i.Data.Fields.IssueType.Name), "⭐"
 	if it == "Bug" {
 		iti = "🐞"
 	}
@@ -234,9 +238,9 @@ func (i Issue) header() string {
 		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s  💭 %d comments  \U0001F9F5 %d linked\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s  👀 %s",
 		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as, i.Data.Key,
 		i.Data.Fields.Comment.Total, len(i.Data.Fields.IssueLinks),
-		i.Data.Fields.Summary,
-		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
-		i.Data.Fields.Priority.Name, cmpt, lbl, wch,
+		SanitizeTerminal(i.Data.Fields.Summary),
+		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), SanitizeTerminal(i.Data.Fields.Reporter.Name),
+		SanitizeTerminal(i.Data.Fields.Priority.Name), cmpt, lbl, wch,
 	)
 }
 
@@ -254,7 +258,7 @@ func (i Issue) description() string {
 		desc = md.FromJiraMD(desc)
 	}
 
-	return desc
+	return SanitizeTerminal(desc)
 }
 
 func (i Issue) subtasks() string {
@@ -292,10 +296,10 @@ func (i Issue) subtasks() string {
 		subtasks.WriteString(
 			fmt.Sprintf(
 				"  %s %s • %s • %s\n",
-				coloredOut(pad(task.Key, maxKeyLen), color.FgGreen, color.Bold),
-				shortenAndPad(task.Fields.Summary, summaryLen),
-				pad(task.Fields.Priority.Name, maxPriorityLen),
-				pad(task.Fields.Status.Name, maxStatusLen),
+				coloredOut(pad(SanitizeTerminal(task.Key), maxKeyLen), color.FgGreen, color.Bold),
+				shortenAndPad(SanitizeTerminal(task.Fields.Summary), summaryLen),
+				pad(SanitizeTerminal(task.Fields.Priority.Name), maxPriorityLen),
+				pad(SanitizeTerminal(task.Fields.Status.Name), maxStatusLen),
 			),
 		)
 	}
@@ -359,17 +363,17 @@ func (i Issue) linkedIssues() string {
 
 	for _, k := range keys {
 		linked.WriteString(
-			fmt.Sprintf("\n %s\n\n", coloredOut(strings.ToUpper(k), color.FgWhite, color.Bold)),
+			fmt.Sprintf("\n %s\n\n", coloredOut(strings.ToUpper(SanitizeTerminal(k)), color.FgWhite, color.Bold)),
 		)
 		for _, iss := range linkMap[k] {
 			linked.WriteString(
 				fmt.Sprintf(
 					"  %s %s • %s • %s • %s\n",
-					coloredOut(pad(iss.Key, maxKeyLen), color.FgGreen, color.Bold),
-					shortenAndPad(iss.Fields.Summary, summaryLen),
-					pad(iss.Fields.IssueType.Name, maxTypeLen),
-					pad(iss.Fields.Priority.Name, maxPriorityLen),
-					pad(iss.Fields.Status.Name, maxStatusLen),
+					coloredOut(pad(SanitizeTerminal(iss.Key), maxKeyLen), color.FgGreen, color.Bold),
+					shortenAndPad(SanitizeTerminal(iss.Fields.Summary), summaryLen),
+					pad(SanitizeTerminal(iss.Fields.IssueType.Name), maxTypeLen),
+					pad(SanitizeTerminal(iss.Fields.Priority.Name), maxPriorityLen),
+					pad(SanitizeTerminal(iss.Fields.Status.Name), maxStatusLen),
 				),
 			)
 		}
@@ -397,11 +401,12 @@ func (i Issue) comments() []issueComment {
 			body = c.Body.(string)
 			body = md.FromJiraMD(body)
 		}
+		body = SanitizeTerminal(body)
 		authorName := func() string {
 			if c.Author.DisplayName != "" {
-				return c.Author.DisplayName
+				return SanitizeTerminal(c.Author.DisplayName)
 			}
-			return c.Author.Name
+			return SanitizeTerminal(c.Author.Name)
 		}
 		meta := fmt.Sprintf(
 			"\n %s • %s",
