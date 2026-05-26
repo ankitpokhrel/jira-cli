@@ -210,27 +210,31 @@ func (l *IssueList) assignColumns(columns []string, issue *jira.Issue) []string 
 	for _, column := range columns {
 		switch column {
 		case fieldType:
-			bucket = append(bucket, issue.Fields.IssueType.Name)
+			bucket = append(bucket, SanitizeTerminal(issue.Fields.IssueType.Name))
 		case fieldKey:
-			bucket = append(bucket, issue.Key)
+			bucket = append(bucket, SanitizeTerminal(issue.Key))
 		case fieldSummary:
-			bucket = append(bucket, prepareTitle(issue.Fields.Summary))
+			bucket = append(bucket, prepareTitle(SanitizeTerminal(issue.Fields.Summary)))
 		case fieldStatus:
-			bucket = append(bucket, issue.Fields.Status.Name)
+			bucket = append(bucket, SanitizeTerminal(issue.Fields.Status.Name))
 		case fieldAssignee:
-			bucket = append(bucket, issue.Fields.Assignee.Name)
+			bucket = append(bucket, SanitizeTerminal(issue.Fields.Assignee.Name))
 		case fieldReporter:
-			bucket = append(bucket, issue.Fields.Reporter.Name)
+			bucket = append(bucket, SanitizeTerminal(issue.Fields.Reporter.Name))
 		case fieldPriority:
-			bucket = append(bucket, issue.Fields.Priority.Name)
+			bucket = append(bucket, SanitizeTerminal(issue.Fields.Priority.Name))
 		case fieldResolution:
-			bucket = append(bucket, issue.Fields.Resolution.Name)
+			bucket = append(bucket, SanitizeTerminal(issue.Fields.Resolution.Name))
 		case fieldCreated:
 			bucket = append(bucket, formatDateTime(issue.Fields.Created, jira.RFC3339, l.Display.Timezone))
 		case fieldUpdated:
 			bucket = append(bucket, formatDateTime(issue.Fields.Updated, jira.RFC3339, l.Display.Timezone))
 		case fieldLabels:
-			bucket = append(bucket, strings.Join(issue.Fields.Labels, ","))
+			labels := make([]string, 0, len(issue.Fields.Labels))
+			for _, lbl := range issue.Fields.Labels {
+				labels = append(labels, SanitizeTerminal(lbl))
+			}
+			bucket = append(bucket, strings.Join(labels, ","))
 		}
 	}
 

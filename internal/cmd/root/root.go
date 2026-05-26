@@ -3,6 +3,7 @@ package root
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -63,10 +64,43 @@ func init() {
 		viper.AutomaticEnv()
 		viper.SetEnvPrefix("jira")
 
-		if err := viper.ReadInConfig(); err == nil && debug {
-			fmt.Printf("Using config file: %s\n", viper.ConfigFileUsed())
+		if err := viper.ReadInConfig(); err == nil {
+			if debug {
+				fmt.Printf("Using config file: %s\n", viper.ConfigFileUsed())
+			}
+			warnIfConfigPermissive(viper.ConfigFileUsed())
+			warnIfInsecureTLS()
 		}
 	})
+}
+
+// warnIfInsecureTLS prints a one-line stderr banner when the loaded config has
+// `insecure: true` (or JIRA_INSECURE is set), so the user is reminded on every
+// invocation that server certificates are not being verified.
+func warnIfInsecureTLS() {
+	if viper.GetBool("insecure") {
+		fmt.Fprintln(os.Stderr, "warning: insecure TLS is enabled — server certificates are not verified")
+	}
+}
+
+// warnIfConfigPermissive prints a warning to stderr if the config file is
+// readable by group or other users. Skipped on Windows because Unix mode
+// bits don't fully reflect ACL-based permissions there.
+func warnIfConfigPermissive(path string) {
+	if path == "" || runtime.GOOS == "windows" {
+		return
+	}
+	stat, err := os.Stat(path)
+	if err != nil {
+		return
+	}
+	if stat.Mode()&0o077 != 0 {
+		fmt.Fprintf(
+			os.Stderr,
+			"warning: config file %s is readable by other users (mode %#o); recommended mode is 0600\n",
+			path, stat.Mode().Perm(),
+		)
+	}
 }
 
 // NewCmdRoot is a root command.

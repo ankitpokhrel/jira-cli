@@ -156,7 +156,7 @@ func renderPlain(w io.Writer, data tui.TableData, delimiter string) error {
 	for _, items := range data {
 		n := len(items)
 		for j, v := range items {
-			_, _ = fmt.Fprintf(w, "%s", unescape(v))
+			_, _ = fmt.Fprintf(w, "%s", SanitizeTerminal(unescape(v)))
 			if j != n-1 {
 				_, _ = fmt.Fprintf(w, "%s", delimiter)
 			}

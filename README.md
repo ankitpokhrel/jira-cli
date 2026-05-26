@@ -126,6 +126,17 @@ default.
 * If you want to use `mtls` run `jira init`. Select installation type `Local`, and then select authentication type as `mtls`.
   * In case `JIRA_API_TOKEN` variable is set it will be used together with `mtls`.
 
+##### API token resolution order
+
+The Jira API token is resolved in the following order (first non-empty wins):
+
+1. `JIRA_API_TOKEN` environment variable
+2. `api_token` key in the YAML config (`~/.config/.jira/.config.yml`)
+3. `.netrc` entry for the configured server/login
+4. OS keyring (`jira-cli` service)
+
+This means exporting a fresh `JIRA_API_TOKEN` takes effect immediately and a stale on-disk token cannot shadow it.
+
 #### Shell completion
 Check `jira completion --help` for more info on setting up a bash/zsh shell completion.
 
