@@ -184,7 +184,7 @@ func secondPass(lines []string) string {
 					end = token.endIdx
 				}
 			} else {
-				out.WriteRune(rune(line[beg]))
+				out.WriteByte(line[beg])
 			}
 
 			end++
