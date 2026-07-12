@@ -1,4 +1,4 @@
-.PHONY: all deps build install lint test ci jira.server clean distclean
+.PHONY: all deps build install ldflags lint test ci jira.server clean distclean
 
 ##############
 # Build vars #
@@ -40,6 +40,11 @@ build: deps
 
 install:
 	go install -ldflags='$(LDFLAGS)' ./...
+
+# For callers that cannot use the targets above and must invoke the Go
+# toolchain themselves, such as the cross-compiling Dockerfile.
+ldflags:
+	@echo '$(LDFLAGS)'
 
 lint:
 	@if ! command -v golangci-lint > /dev/null 2>&1; then \

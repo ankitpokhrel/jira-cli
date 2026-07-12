@@ -7,18 +7,27 @@ run-name: Docker image for ${{ github.ref_name }}
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     tags: ['v*']
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
+# A newer merge to main supersedes an in-flight build of main. Tags get their
+# own group, so a release build is never cancelled by a merge.
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   docker-image:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      packages: write # push to the registry
+      id-token: write # OIDC token for keyless provenance signing
+      attestations: write # store the provenance attestation
 
     steps:
       - name: Checkout repository
@@ -38,16 +47,20 @@ jobs:
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+          # "latest" follows main, so it is not what a release publishes;
+          # pin a version tag for a stable image.
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=main-,enable={{is_default_branch}}
+          flavor: latest=false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
-        with:
-          platforms: linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7,linux/arm/v8
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
@@ -55,4 +68,18 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7,linux/arm/v8
+          platforms: linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
+          # A push event checks out a detached HEAD, which the Makefile cannot
+          # turn into a version by itself.
+          build-args: |
+            VERSION=${{ github.ref_name }}
+          # Deliberately no build cache: a cache that any branch can write to
+          # is a way into the images we publish. Cross-compiling (see the
+          # Dockerfile) is what keeps the build fast enough to not need one.
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true

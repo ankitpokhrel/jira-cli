@@ -85,10 +85,13 @@ Every merge to `main` also publishes a snapshot build with the same checksums, p
 brew install --cask rethab/jira-cli/jira-cli-snapshot
 ```
 
-You can use Docker to quickly try out `jira-cli`.
+You can use Docker to quickly try out `jira-cli`. Images are published to `ghcr.io/rethab/jira-cli` for `linux/amd64`, `linux/arm64`, `linux/arm/v6` and `linux/arm/v7`, each with a signed provenance attestation.
+
+`latest` follows `main`, so pin a version tag if you want a stable image:
 
 ```sh
-docker run -it --rm ghcr.io/ankitpokhrel/jira-cli:latest
+docker run -it --rm ghcr.io/rethab/jira-cli:latest   # tip of main
+docker run -it --rm ghcr.io/rethab/jira-cli:1.7.0    # a release
 ```
 
 Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/Installation) for other installation methods like `Homebrew`, `Nix`, etc.
