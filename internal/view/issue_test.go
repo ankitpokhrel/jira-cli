@@ -3,6 +3,7 @@ package view
 import (
 	"bytes"
 	"testing"
+	"unicode"
 
 	"github.com/stretchr/testify/assert"
 
@@ -75,7 +76,7 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 		Display: DisplayFormat{Plain: true},
 	}
 
-	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  💭 0 comments  \U0001F9F5 0 linked\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 You + 3 watchers\n\n------------------------ Description ------------------------\n\nTest description\n\n\n"
+	expected := "Type: Bug  Status: Done  Updated: Sun, 13 Dec 20  Assignee: Person A  Key: TEST-1  Comments: 0  Linked: 0\n# This is a test\nCreated: Sun, 13 Dec 20  Reporter: Person Z  Priority: High  Components: BE, FE  Labels: None  Watchers: You + 3 watchers\n\n------------------------ Description ------------------------\n\nTest description\n\n\n"
 	if xterm256() {
 		expected += "\x1b[38;5;242mView this issue on Jira: https://test.local/browse/TEST-1\x1b[m"
 	} else {
@@ -228,7 +229,7 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 	}
 	assert.NoError(t, issue.renderPlain(&b))
 
-	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  👪 TEST-0  💭 3 comments  \U0001F9F5 2 linked\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 0 watchers\n\n------------------------ Description ------------------------\n\n# Title\n## Subtitle\nThis is a **bold** and _italic_ text with [a link](https://ankit.pl) in between.\n\n\n------------------------ 2 Subtasks ------------------------\n\n\n SUBTASKS\n\n  TEST-2 Subtask 1 • High   • TO DO\n  TEST-3 Subtask 2 • Normal • Done \n\n\n\n------------------------ Linked Issues ------------------------\n\n\n BLOCKS\n\n  TEST-2 Something is broken   • Bug • High   • TO DO\n\n RELATES TO\n\n  TEST-3 Everything is on fire • Bug • Urgent • Done \n\n\n\n------------------------ 3 Comments ------------------------\n\n\n Person C • Wed, 24 Nov 21 • Latest comment\n\nTest comment C\n\n\n\n Person B • Tue, 23 Nov 21\n\nTest comment B\n\n"
+	expected := "Type: Bug  Status: Done  Updated: Sun, 13 Dec 20  Assignee: Person A  Key: TEST-1  Parent: TEST-0  Comments: 3  Linked: 2\n# This is a test\nCreated: Sun, 13 Dec 20  Reporter: Person Z  Priority: High  Components: BE, FE  Labels: None  Watchers: 0 watchers\n\n------------------------ Description ------------------------\n\n# Title\n## Subtitle\nThis is a **bold** and _italic_ text with [a link](https://ankit.pl) in between.\n\n\n------------------------ 2 Subtasks ------------------------\n\n\n SUBTASKS\n\n  TEST-2 Subtask 1 | High   | TO DO\n  TEST-3 Subtask 2 | Normal | Done \n\n\n\n------------------------ Linked Issues ------------------------\n\n\n BLOCKS\n\n  TEST-2 Something is broken   | Bug | High   | TO DO\n\n RELATES TO\n\n  TEST-3 Everything is on fire | Bug | Urgent | Done \n\n\n\n------------------------ 3 Comments ------------------------\n\n\n Person C | Wed, 24 Nov 21 | Latest comment\n\nTest comment C\n\n\n\n Person B | Tue, 23 Nov 21\n\nTest comment B\n\n"
 	if xterm256() {
 		expected += "\x1b[38;5;242mUse --comments <limit> with `jira issue view` to load more comments\x1b[m\n\n"
 		expected += "\x1b[38;5;242mView this issue on Jira: https://test.local/browse/TEST-1\x1b[m"
@@ -239,6 +240,142 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 	actual := issue.String()
 
 	assert.Equal(t, tui.TextData(expected), tui.TextData(actual))
+}
+
+func nonASCII(msg string) []string {
+	var out []string
+	for _, r := range msg {
+		if r > unicode.MaxASCII {
+			out = append(out, string(r))
+		}
+	}
+	return out
+}
+
+// A long summary forces shortenAndPad to append its ellipsis.
+const longSummary = "This summary is deliberately made long enough that the renderer has to truncate it"
+
+func decoratedIssue() *jira.Issue {
+	return &jira.Issue{
+		Key: "TEST-1",
+		Fields: jira.IssueFields{
+			Summary:     "This is a test",
+			Description: "Test description",
+			IssueType:   jira.IssueType{Name: "Bug"},
+			Parent: &struct {
+				Key string `json:"key"`
+			}{Key: "TEST-0"},
+			Assignee: struct {
+				Name string `json:"displayName"`
+			}{Name: "Person A"},
+			Priority: struct {
+				Name string `json:"name"`
+			}{Name: "High"},
+			Reporter: struct {
+				Name string `json:"displayName"`
+			}{Name: "Person Z"},
+			Status: struct {
+				Name string `json:"name"`
+			}{Name: "Done"},
+			Components: []struct {
+				Name string `json:"name"`
+			}{{Name: "BE"}},
+			Comment: struct {
+				Comments []struct {
+					ID      string      `json:"id"`
+					Author  jira.User   `json:"author"`
+					Body    interface{} `json:"body"`
+					Created string      `json:"created"`
+				} `json:"comments"`
+				Total int `json:"total"`
+			}{
+				Comments: []struct {
+					ID      string      `json:"id"`
+					Author  jira.User   `json:"author"`
+					Body    interface{} `json:"body"`
+					Created string      `json:"created"`
+				}{
+					{ID: "10033", Author: jira.User{Name: "Person A"}, Body: "Test comment A", Created: "2021-11-22T23:44:13.782+0100"},
+				},
+				Total: 1,
+			},
+			Subtasks: []jira.Issue{
+				{
+					Key: "TEST-2",
+					Fields: jira.IssueFields{
+						Summary: longSummary,
+						Status: struct {
+							Name string `json:"name"`
+						}{Name: "TO DO"},
+						Priority: struct {
+							Name string `json:"name"`
+						}{Name: "High"},
+					},
+				},
+			},
+			IssueLinks: []struct {
+				ID       string `json:"id"`
+				LinkType struct {
+					Name    string `json:"name"`
+					Inward  string `json:"inward"`
+					Outward string `json:"outward"`
+				} `json:"type"`
+				InwardIssue  *jira.Issue `json:"inwardIssue,omitempty"`
+				OutwardIssue *jira.Issue `json:"outwardIssue,omitempty"`
+			}{
+				{
+					LinkType: struct {
+						Name    string `json:"name"`
+						Inward  string `json:"inward"`
+						Outward string `json:"outward"`
+					}{Name: "blocks", Inward: "blocks", Outward: "is blocked by"},
+					InwardIssue: &jira.Issue{
+						Key: "TEST-3",
+						Fields: jira.IssueFields{
+							Summary:   longSummary,
+							IssueType: jira.IssueType{Name: "Bug"},
+							Priority: struct {
+								Name string `json:"name"`
+							}{Name: "High"},
+							Status: struct {
+								Name string `json:"name"`
+							}{Name: "TO DO"},
+						},
+					},
+				},
+			},
+			Created: "2020-12-13T14:05:20.974+0100",
+			Updated: "2020-12-13T14:07:20.974+0100",
+		},
+	}
+}
+
+// Plain output must survive a non-UTF-8 locale like LC_ALL=C, so none of the
+// decorations the view adds around issue data may be non-ASCII.
+func TestPlainIssueViewIsASCIIOnly(t *testing.T) {
+	t.Parallel()
+
+	issue := Issue{
+		Server:  "https://test.local",
+		Data:    decoratedIssue(),
+		Display: DisplayFormat{Plain: true},
+		Options: IssueOption{NumComments: 2},
+	}
+
+	assert.Empty(t, nonASCII(issue.String()))
+}
+
+func TestIssueViewKeepsDecorationsWhenNotPlain(t *testing.T) {
+	t.Parallel()
+
+	issue := Issue{
+		Server:  "https://test.local",
+		Data:    decoratedIssue(),
+		Display: DisplayFormat{Plain: false},
+		Options: IssueOption{NumComments: 2},
+	}
+
+	assert.NotEmpty(t, nonASCII(issue.String()))
 }
 
 func TestIssueDescription(t *testing.T) {
