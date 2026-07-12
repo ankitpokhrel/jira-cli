@@ -1,6 +1,7 @@
 package cmdutil
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -88,6 +89,15 @@ func Fail(msg string, args ...interface{}) {
 func Failed(msg string, args ...interface{}) {
 	Fail(msg, args...)
 	os.Exit(1)
+}
+
+// OutputRawJSON prints the given data to stdout as indented JSON.
+func OutputRawJSON(data any) {
+	out, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		Failed("Failed to marshal output to JSON: %s", err)
+	}
+	fmt.Println(string(out))
 }
 
 // Navigate navigates to jira issue.

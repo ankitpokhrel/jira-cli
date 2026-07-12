@@ -1,7 +1,6 @@
 package list
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -137,7 +136,7 @@ func loadList(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	if raw {
-		outputRawJSON(issues)
+		cmdutil.OutputRawJSON(issues)
 		return
 	}
 
@@ -197,15 +196,6 @@ func loadList(cmd *cobra.Command, args []string) {
 	}
 
 	cmdutil.ExitIfError(v.Render())
-}
-
-func outputRawJSON(issues []*jira.Issue) {
-	data, err := json.MarshalIndent(issues, "", "  ")
-	if err != nil {
-		cmdutil.Failed("Failed to marshal issues to JSON: %s", err)
-		return
-	}
-	fmt.Println(string(data))
 }
 
 // SetFlags sets flags supported by a list command.

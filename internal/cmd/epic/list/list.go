@@ -39,7 +39,11 @@ $ jira epic list <KEY> --plain --no-headers
 
 # Display some columns of epic or epic issues in a plain table view
 $ jira epic list --table --plain --columns key,summary,status
-$ jira epic list <KEY> --plain --columns type,key,summary`
+$ jira epic list <KEY> --plain --columns type,key,summary
+
+# Display epics or epic issues as raw JSON
+$ jira epic list --raw
+$ jira epic list <KEY> --raw`
 )
 
 // NewCmdList is a list command.
@@ -124,6 +128,14 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 		return
 	}
 
+	raw, err := flags.GetBool("raw")
+	cmdutil.ExitIfError(err)
+
+	if raw {
+		cmdutil.OutputRawJSON(issues)
+		return
+	}
+
 	plain, err := flags.GetBool("plain")
 	cmdutil.ExitIfError(err)
 
@@ -192,6 +204,14 @@ func epicExplorerView(cmd *cobra.Command, flags query.FlagParser, project, proje
 	if len(epics) == 0 {
 		fmt.Println()
 		cmdutil.Failed("No result found for given query in project %q", project)
+		return
+	}
+
+	raw, err := flags.GetBool("raw")
+	cmdutil.ExitIfError(err)
+
+	if raw {
+		cmdutil.OutputRawJSON(epics)
 		return
 	}
 

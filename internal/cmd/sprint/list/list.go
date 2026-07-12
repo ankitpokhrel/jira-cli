@@ -49,7 +49,11 @@ $ jira sprint list --table --plain --columns name,start,end
 $ jira sprint list <SPRINT_ID> --plain --columns type,key,summary
 
 # Display sprint issues in a plain table view and show all fields
-$ jira sprint list <SPRINT_ID> --plain --no-truncate`
+$ jira sprint list <SPRINT_ID> --plain --no-truncate
+
+# Display sprints or sprint issues as raw JSON
+$ jira sprint list --raw
+$ jira sprint list <SPRINT_ID> --raw`
 )
 
 // NewCmdList is a sprint list command.
@@ -121,6 +125,14 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 	if len(issues) == 0 {
 		fmt.Println()
 		cmdutil.Failed("No result found for given query in project %q", project)
+		return
+	}
+
+	raw, err := flags.GetBool("raw")
+	cmdutil.ExitIfError(err)
+
+	if raw {
+		cmdutil.OutputRawJSON(issues)
 		return
 	}
 
@@ -215,6 +227,14 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 			sprint = sprints[len(sprints)-1]
 		}
 		singleSprintView(sprintQuery, flags, boardID, sprint.ID, project, server, client, sprint)
+		return
+	}
+
+	raw, err := flags.GetBool("raw")
+	cmdutil.ExitIfError(err)
+
+	if raw {
+		cmdutil.OutputRawJSON(sprints)
 		return
 	}
 
