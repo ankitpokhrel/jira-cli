@@ -309,3 +309,117 @@ func TestShouldRenderSprintsInTable(t *testing.T) {
 		assert.True(t, shouldRenderSprintsInTable(false, false, false, true))
 	})
 }
+
+type testFlagParser struct {
+	jql   string
+	bools map[string]bool
+}
+
+func (tfp *testFlagParser) GetBool(name string) (bool, error) { return tfp.bools[name], nil }
+
+func (tfp *testFlagParser) GetString(name string) (string, error) {
+	if name == "jql" {
+		return tfp.jql, nil
+	}
+	if name == "order-by" {
+		return "created", nil
+	}
+	return "", nil
+}
+
+func (tfp *testFlagParser) GetStringArray(string) ([]string, error) { return []string{}, nil }
+
+func (tfp *testFlagParser) GetStringToString(string) (map[string]string, error) { return nil, nil }
+
+func (tfp *testFlagParser) GetUint(string) (uint, error) { return 100, nil }
+
+func (tfp *testFlagParser) Set(string, string) error { return nil }
+
+// The expectations are on the compiled query rather than on the raw JQL param
+// because the interesting part happens downstream: jql.Raw has to recognize
+// the project keyword in the combined clause and drop the default project
+// filter, otherwise the query stays scoped to a single project with a
+// contradictory `project="TEST" AND project IS NOT EMPTY`.
+func TestApplyShowAllIssues(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		userJQL  string
+		expected string
+	}{
+		{
+			name:     "without user-supplied jql",
+			userJQL:  "",
+			expected: "project IS NOT EMPTY ORDER BY created DESC",
+		},
+		{
+			name:     "preserves user-supplied jql",
+			userJQL:  `status="In Progress"`,
+			expected: `project IS NOT EMPTY AND status="In Progress" ORDER BY created DESC`,
+		},
+		{
+			name:     "user-supplied jql that filters on a project itself",
+			userJQL:  `project="OTHER" AND status="Done"`,
+			expected: `project IS NOT EMPTY AND project="OTHER" AND status="Done" ORDER BY created DESC`,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			t.Run("single sprint view", func(t *testing.T) {
+				q, err := query.NewIssue("TEST", &testFlagParser{jql: tc.userJQL})
+				assert.NoError(t, err)
+
+				applyShowAllIssues(q)
+
+				assert.Equal(t, tc.expected, q.Get())
+			})
+
+			t.Run("explorer view", func(t *testing.T) {
+				got, err := getIssueQuery("TEST", &testFlagParser{jql: tc.userJQL}, true)
+				assert.NoError(t, err)
+
+				assert.Equal(t, tc.expected, got.Get())
+			})
+		})
+	}
+}
+
+// Without --show-all-issues the query must stay scoped to the current project.
+func TestGetIssueQueryWithoutShowAllIssues(t *testing.T) {
+	t.Parallel()
+
+	got, err := getIssueQuery("TEST", &testFlagParser{jql: `status="In Progress"`}, false)
+	assert.NoError(t, err)
+
+	assert.Equal(t, `project="TEST" AND status="In Progress" ORDER BY created DESC`, got.Get())
+}
+
+// End-to-end guard on the flag-to-request wiring: -q used to be dropped on the
+// floor as soon as --show-all-issues was given.
+func TestSingleSprintViewShowAllIssuesSendsUserJQL(t *testing.T) {
+	var gotJQL string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotJQL = r.URL.Query().Get("jql")
+
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(sprintIssuesResponse))
+	}))
+	defer server.Close()
+
+	client := jira.NewClient(jira.Config{Server: server.URL}, jira.WithTimeout(3*time.Second))
+
+	flags := testFlags(t, "--raw", "--show-all-issues", "-q", `status="In Progress"`)
+	sprintQuery, err := query.NewSprint(flags)
+	assert.NoError(t, err)
+
+	captureStdout(t, func() {
+		singleSprintView(sprintQuery, flags, testBoardID, testSprintID, "TEST", server.URL, client, nil)
+	})
+
+	assert.Equal(t, `project IS NOT EMPTY AND status="In Progress" ORDER BY created DESC`, gotJQL)
+}

@@ -322,14 +322,19 @@ func getIssueQuery(project string, flags query.FlagParser, showAll bool) (*query
 		return nil, err
 	}
 	if showAll {
-		allIssues := "project IS NOT EMPTY"
-		if q.Params().JQL != "" {
-			allIssues += " AND " + q.Params().JQL
-		}
-		q.Params().JQL = allIssues
-
+		applyShowAllIssues(q)
 	}
 	return q, nil
+}
+
+// applyShowAllIssues expands the query to include issues from all projects,
+// preserving any user-supplied JQL instead of overwriting it.
+func applyShowAllIssues(q *query.Issue) {
+	if q.Params().JQL != "" {
+		q.Params().JQL = "project IS NOT EMPTY AND " + q.Params().JQL
+	} else {
+		q.Params().JQL = "project IS NOT EMPTY"
+	}
 }
 
 func setFlags(cmd *cobra.Command) {
