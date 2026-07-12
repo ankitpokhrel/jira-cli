@@ -1,6 +1,13 @@
 version: 2
 project_name: jira
 
+git:
+  # The snapshot workflow publishes releases tagged "snapshot-*", which are
+  # not valid semver. Without this, GoReleaser picks one up as the current
+  # tag on the next run and incpatch below fails to parse it.
+  ignore_tags:
+    - "snapshot-*"
+
 release:
   prerelease: auto
   name_template: "v{{.Version}}"
