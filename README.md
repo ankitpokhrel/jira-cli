@@ -648,6 +648,12 @@ $ jira sprint list
 # List sprints in a table view
 $ jira sprint list --table
 
+# List sprints from a board other than the one configured with `jira init`.
+# Sprint issues are still filtered by the current project, so pass --project as
+# well when the board belongs to another project.
+$ jira sprint list --board 42
+$ jira sprint list --project OTHER --board 42
+
 # List issues in the current active sprint
 $ jira sprint list --current
 
