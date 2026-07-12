@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -41,6 +42,30 @@ var (
 	// ErrEmptyResponse denotes empty response from the server.
 	ErrEmptyResponse = fmt.Errorf("jira: empty response from server")
 )
+
+// ErrUnexpectedContentType denotes a successful HTTP response whose body
+// isn't JSON. This usually means the request never reached the Jira API,
+// for instance because it was intercepted by an SSO/login redirect, a VPN
+// captive portal, or a reverse proxy, or because the configured host
+// doesn't support the requested API version.
+type ErrUnexpectedContentType struct {
+	StatusCode  int
+	ContentType string
+	BodySnippet string
+}
+
+func (e *ErrUnexpectedContentType) Error() string {
+	msg := fmt.Sprintf(
+		"jira: unexpected non-JSON response (status %d, content-type %q); this usually means the request was "+
+			"intercepted (e.g. by a login/SSO page, VPN captive portal, or proxy) or that the configured host "+
+			"doesn't support the requested API version; verify the host and installation type with `jira init`",
+		e.StatusCode, e.ContentType,
+	)
+	if e.BodySnippet != "" {
+		msg += fmt.Sprintf("\nresponse body starts with: %s", e.BodySnippet)
+	}
+	return msg
+}
 
 // ErrUnexpectedResponse denotes response code other than the expected one.
 type ErrUnexpectedResponse struct {
@@ -288,7 +313,52 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 
 	httpClient := &http.Client{Transport: c.transport}
 
-	return httpClient.Do(req)
+	res, err = httpClient.Do(req)
+	if err != nil {
+		return res, err
+	}
+
+	if res.StatusCode >= http.StatusOK && res.StatusCode < http.StatusMultipleChoices &&
+		res.ContentLength != 0 && !isJSONContentType(res) {
+		ctErr := &ErrUnexpectedContentType{
+			StatusCode:  res.StatusCode,
+			ContentType: res.Header.Get("Content-Type"),
+			BodySnippet: bodySnippet(res.Body),
+		}
+		_ = res.Body.Close()
+		return nil, ctErr
+	}
+
+	return res, nil
+}
+
+// isJSONContentType reports whether the response's `Content-Type` header
+// indicates a JSON payload. A missing header is treated as JSON since some
+// endpoints (e.g. `204 No Content`) don't set one.
+func isJSONContentType(res *http.Response) bool {
+	ct := res.Header.Get("Content-Type")
+	if ct == "" {
+		return true
+	}
+	return strings.Contains(ct, "json")
+}
+
+// bodySnippet reads the leading bytes of a non-JSON body so the error can show
+// what actually came back. `--debug` dumps headers only, so without this the
+// user has no way to see the intercepting page that caused the failure.
+func bodySnippet(body io.Reader) string {
+	const maxLen = 200
+
+	buf, err := io.ReadAll(io.LimitReader(body, maxLen))
+	if err != nil {
+		return ""
+	}
+
+	snippet := strings.Join(strings.Fields(string(buf)), " ")
+	if len(snippet) == maxLen {
+		snippet += "..."
+	}
+	return snippet
 }
 
 func dump(req *http.Request, res *http.Response) {
