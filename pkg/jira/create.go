@@ -169,11 +169,7 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 		}
 	}
 	if req.Assignee != "" {
-		if req.installationType == InstallationTypeLocal {
-			data.Fields.M.Assignee = &nameOrAccountID{Name: &req.Assignee}
-		} else {
-			data.Fields.M.Assignee = &nameOrAccountID{AccountID: &req.Assignee}
-		}
+		data.Fields.M.Assignee = assigneeField(req.Assignee, req.installationType)
 	}
 	if req.Priority != "" {
 		data.Fields.M.Priority = &struct {
@@ -225,6 +221,31 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 	constructCustomFields(req.CustomFields, req.configuredCustomFields, &data)
 
 	return &data
+}
+
+// assigneeField builds the assignee payload for a create request. Jira unassigns an issue
+// when the assignee id is null and falls back to the project's default assignee when it is
+// "-1", the same magic values the assignee endpoint uses. nameOrAccountID cannot express the
+// null case since its fields are omitempty, so the key is always emitted here instead.
+func assigneeField(assignee, installationType string) any {
+	id := &assignee
+
+	switch assignee {
+	case AssigneeNone:
+		id = nil
+	case AssigneeDefault:
+		def := assigneeDefaultID
+		id = &def
+	}
+
+	if installationType == InstallationTypeLocal {
+		return struct {
+			Name *string `json:"name"`
+		}{Name: id}
+	}
+	return struct {
+		AccountID *string `json:"accountId"`
+	}{AccountID: id}
 }
 
 func constructCustomFields(fields map[string]string, configuredFields []IssueTypeField, data *createRequest) {
@@ -296,7 +317,7 @@ type createFields struct {
 	Summary     string           `json:"summary"`
 	Description any              `json:"description,omitempty"`
 	Reporter    *nameOrAccountID `json:"reporter,omitempty"`
-	Assignee    *nameOrAccountID `json:"assignee,omitempty"`
+	Assignee    any              `json:"assignee,omitempty"`
 	Priority    *struct {
 		Name string `json:"name,omitempty"`
 	} `json:"priority,omitempty"`

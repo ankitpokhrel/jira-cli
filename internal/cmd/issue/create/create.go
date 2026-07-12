@@ -102,7 +102,7 @@ func create(cmd *cobra.Command, _ []string) {
 	}
 
 	params.Reporter = cmdcommon.GetRelevantUser(client, project, params.Reporter)
-	params.Assignee = cmdcommon.GetRelevantUser(client, project, params.Assignee)
+	params.Assignee = cmdcommon.GetRelevantAssignee(client, project, params.Assignee)
 
 	issue, err := func() (*jira.CreateResponse, error) {
 		s := cmdutil.Info("Creating an issue...")

@@ -82,6 +82,73 @@ func TestCreate(t *testing.T) {
 	assertUnexpectedResponse(t, err)
 }
 
+func TestCreateAssignee(t *testing.T) {
+	cases := []struct {
+		name             string
+		assignee         string
+		installationType string
+		expectedAssignee string
+	}{
+		{
+			name:             "unassigned on cloud",
+			assignee:         AssigneeNone,
+			expectedAssignee: `{"accountId":null}`,
+		},
+		{
+			name:             "default assignee on cloud",
+			assignee:         AssigneeDefault,
+			expectedAssignee: `{"accountId":"-1"}`,
+		},
+		{
+			name:             "user on cloud",
+			assignee:         "a12b3",
+			expectedAssignee: `{"accountId":"a12b3"}`,
+		},
+		{
+			name:             "unassigned on local",
+			assignee:         AssigneeNone,
+			installationType: InstallationTypeLocal,
+			expectedAssignee: `{"name":null}`,
+		},
+		{
+			name:             "default assignee on local",
+			assignee:         AssigneeDefault,
+			installationType: InstallationTypeLocal,
+			expectedAssignee: `{"name":"-1"}`,
+		},
+		{
+			name:             "user on local",
+			assignee:         "jdoe",
+			installationType: InstallationTypeLocal,
+			expectedAssignee: `{"name":"jdoe"}`,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Bug"},` +
+				`"summary":"Test bug","assignee":` + tc.expectedAssignee + `}}`
+
+			testServer := createTestServer{code: 201}
+			server := testServer.serve(t, expectedBody)
+			defer server.Close()
+
+			client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+			requestData := CreateRequest{
+				Project:   "TEST",
+				IssueType: "Bug",
+				Summary:   "Test bug",
+				Assignee:  tc.assignee,
+			}
+			requestData.ForInstallationType(tc.installationType)
+
+			_, err := client.CreateV2(&requestData)
+			assert.NoError(t, err)
+		})
+	}
+}
+
 func TestCreateSubtask(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Sub-task"},` +
 		`"parent":{"key":"TEST-123"},"summary":"Test sub-task","description":"Test description"}}`

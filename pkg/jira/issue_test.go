@@ -351,6 +351,7 @@ func TestAssignIssue(t *testing.T) {
 	var (
 		apiVersion2          bool
 		unexpectedStatusCode bool
+		expectedBody         string
 	)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -364,6 +365,10 @@ func TestAssignIssue(t *testing.T) {
 			assert.Equal(t, "/rest/api/3/issue/TEST-1/assignee", r.URL.Path)
 		}
 
+		actualBody := new(strings.Builder)
+		_, _ = io.Copy(actualBody, r.Body)
+		assert.Equal(t, expectedBody, actualBody.String())
+
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
 		} else {
@@ -375,16 +380,28 @@ func TestAssignIssue(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
+	expectedBody = `{"accountId":"a12b3"}`
 	err := client.AssignIssue("TEST-1", "a12b3")
 	assert.NoError(t, err)
 
-	err = client.AssignIssue("TEST-1", "none")
+	expectedBody = `{"accountId":null}`
+	err = client.AssignIssue("TEST-1", AssigneeNone)
+	assert.NoError(t, err)
+
+	expectedBody = `{"accountId":"-1"}`
+	err = client.AssignIssue("TEST-1", AssigneeDefault)
 	assert.NoError(t, err)
 
 	apiVersion2 = true
+
+	expectedBody = `{"name":null}`
+	err = client.AssignIssueV2("TEST-1", AssigneeNone)
+	assert.NoError(t, err)
+
+	expectedBody = `{"name":"-1"}`
 	unexpectedStatusCode = true
 
-	err = client.AssignIssueV2("TEST-1", "default")
+	err = client.AssignIssueV2("TEST-1", AssigneeDefault)
 	assertUnexpectedResponse(t, err)
 }
 

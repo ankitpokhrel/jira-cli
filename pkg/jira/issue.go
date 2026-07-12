@@ -24,6 +24,9 @@ const (
 	AssigneeNone = "none"
 	// AssigneeDefault is a default assignee.
 	AssigneeDefault = "default"
+
+	// assigneeDefaultID is the magic value Jira reserves for the project's default assignee.
+	assigneeDefaultID = "-1"
 )
 
 // GetIssue fetches issue details using GET /issue/{key} endpoint.
@@ -124,9 +127,9 @@ func (c *Client) assignIssue(key, assignee, ver string) error {
 	aid := new(string)
 	switch assignee {
 	case AssigneeNone:
-		*aid = "-1"
-	case AssigneeDefault:
 		aid = nil
+	case AssigneeDefault:
+		*aid = assigneeDefaultID
 	default:
 		*aid = assignee
 	}

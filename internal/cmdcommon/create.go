@@ -19,6 +19,8 @@ const (
 	ActionCancel = "Cancel"
 	// ActionMetadata is an add metadata action.
 	ActionMetadata = "Add metadata"
+	// AssigneeUnassign is the shorthand used to unassign an issue.
+	AssigneeUnassign = "x"
 )
 
 // CreateParams holds parameters for create command.
@@ -216,6 +218,19 @@ func GetRelevantUser(client *jira.Client, project string, user string) string {
 		cmdutil.Failed("Unable to find associated user for %s", user)
 	}
 	return GetUserKeyForConfiguredInstallation(u[0])
+}
+
+// GetRelevantAssignee finds and returns a valid assignee based on user input. The "x" and
+// "default" options are sentinels rather than user names, so they are handed over to the API
+// layer as-is instead of being looked up as a user.
+func GetRelevantAssignee(client *jira.Client, project string, assignee string) string {
+	switch {
+	case strings.EqualFold(assignee, AssigneeUnassign):
+		return jira.AssigneeNone
+	case strings.EqualFold(assignee, jira.AssigneeDefault):
+		return jira.AssigneeDefault
+	}
+	return GetRelevantUser(client, project, assignee)
 }
 
 // GetUserKeyForConfiguredInstallation returns either the user name or account ID based on jira installation type.
