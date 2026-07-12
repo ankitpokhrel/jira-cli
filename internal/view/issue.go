@@ -56,6 +56,9 @@ type Issue struct {
 // Render renders the view.
 func (i Issue) Render() error {
 	if i.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
+		// A dumb terminal or a pipe needs the same ASCII-only treatment as an
+		// explicit --plain; everything below renderPlain branches on this flag.
+		i.Display.Plain = true
 		return i.renderPlain(os.Stdout)
 	}
 	r, err := MDRenderer()
@@ -179,6 +182,14 @@ func (i Issue) fragments() []fragment {
 	return append(scraps, newBlankFragment(1), fragment{Body: i.footer()}, newBlankFragment(2))
 }
 
+// markdownTranslator translates ADF content, e.g. a description or a comment.
+func (i Issue) markdownTranslator() *adf.MarkdownTranslator {
+	if i.Display.Plain {
+		return adf.NewMarkdownTranslator(adf.WithMarkdownASCII())
+	}
+	return adf.NewMarkdownTranslator()
+}
+
 // fieldSeparator divides inline fields, e.g. the priority and status of a subtask.
 func (i Issue) fieldSeparator() string {
 	if i.Display.Plain {
@@ -287,7 +298,7 @@ func (i Issue) description() string {
 	var desc string
 
 	if adfNode, ok := i.Data.Fields.Description.(*adf.ADF); ok {
-		desc = adf.NewTranslator(adfNode, adf.NewMarkdownTranslator()).Translate()
+		desc = adf.NewTranslator(adfNode, i.markdownTranslator()).Translate()
 	} else {
 		desc = i.Data.Fields.Description.(string)
 		desc = md.FromJiraMD(desc)
@@ -432,7 +443,7 @@ func (i Issue) comments() []issueComment {
 		c := i.Data.Fields.Comment.Comments[idx]
 		var body string
 		if adfNode, ok := c.Body.(*adf.ADF); ok {
-			body = adf.NewTranslator(adfNode, adf.NewMarkdownTranslator()).Translate()
+			body = adf.NewTranslator(adfNode, i.markdownTranslator()).Translate()
 		} else {
 			body = c.Body.(string)
 			body = md.FromJiraMD(body)
@@ -482,10 +493,7 @@ func (i Issue) footer() string {
 
 // renderPlain renders the issue in plain view.
 func (i Issue) renderPlain(w io.Writer) error {
-	r, err := glamour.NewTermRenderer(
-		glamour.WithStandardStyle("notty"),
-		glamour.WithWordWrap(wordWrap),
-	)
+	r, err := plainMDRenderer()
 	if err != nil {
 		return err
 	}

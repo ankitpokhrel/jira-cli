@@ -24,6 +24,11 @@ type MarkdownTranslator struct {
 	}
 	openHooks  nodeTypeHook
 	closeHooks nodeTypeHook
+
+	ascii bool
+	// code tracks whether we are inside a code block or an inline code mark,
+	// where the markdown renderer prints the text verbatim.
+	code bool
 }
 
 // MarkdownTranslatorOption is a functional option for MarkdownTranslator.
@@ -65,6 +70,36 @@ func WithMarkdownCloseHooks(hooks nodeTypeHook) MarkdownTranslatorOption {
 	}
 }
 
+// WithMarkdownASCII limits the markup the translator adds to ASCII, so the
+// result stays printable in a non-UTF-8 locale such as LC_ALL=C.
+func WithMarkdownASCII() MarkdownTranslatorOption {
+	return func(tr *MarkdownTranslator) {
+		tr.ascii = true
+	}
+}
+
+// Sanitize implements TextSanitizer interface.
+//
+// Angle brackets can't be passed through as-is because the markdown renderer
+// would consume them as an HTML tag, dropping the text. The default translator
+// swaps in lookalike glyphs; in ASCII mode we backslash-escape them instead,
+// which renders as the original character. Inside code, where the renderer
+// prints text verbatim, neither is needed nor wanted.
+func (tr *MarkdownTranslator) Sanitize(s string) string {
+	if !tr.ascii {
+		return sanitize(s)
+	}
+
+	s = strings.TrimSpace(s)
+	s = strings.TrimRight(s, "\n")
+	if tr.code {
+		return s
+	}
+	s = strings.ReplaceAll(s, "<", `\<`)
+	s = strings.ReplaceAll(s, ">", `\>`)
+	return s
+}
+
 // Open implements TagOpener interface.
 //
 //nolint:gocyclo
@@ -81,6 +116,7 @@ func (tr *MarkdownTranslator) Open(n Connector, _ int) string {
 			tag.WriteString("> ")
 		case NodeCodeBlock:
 			tag.WriteString("```")
+			tr.code = true
 
 			nl := true
 			if attrs != nil {
@@ -138,13 +174,18 @@ func (tr *MarkdownTranslator) Open(n Connector, _ int) string {
 		case InlineNodeMention:
 			tag.WriteString(" @")
 		case InlineNodeCard:
-			tag.WriteString(" 📍 ")
+			if tr.ascii {
+				tag.WriteString(" ")
+			} else {
+				tag.WriteString(" 📍 ")
+			}
 		case MarkStrong:
 			tag.WriteString(" **")
 		case MarkEm:
 			tag.WriteString(" _")
 		case MarkCode:
 			tag.WriteString(" `")
+			tr.code = true
 		case MarkStrike:
 			tag.WriteString(" -")
 		case MarkLink:
@@ -173,6 +214,7 @@ func (tr *MarkdownTranslator) Close(n Connector) string {
 			tag.WriteString("\n")
 		case NodeCodeBlock:
 			tag.WriteString("\n```\n")
+			tr.code = false
 		case NodePanel:
 			tag.WriteString("---\n")
 		case NodeHeading:
@@ -215,6 +257,7 @@ func (tr *MarkdownTranslator) Close(n Connector) string {
 			tag.WriteString("_ ")
 		case MarkCode:
 			tag.WriteString("` ")
+			tr.code = false
 		case MarkStrike:
 			tag.WriteString("- ")
 		case MarkLink:

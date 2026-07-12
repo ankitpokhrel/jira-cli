@@ -52,6 +52,12 @@ type TagCloser interface {
 	Close(Connector) string
 }
 
+// TextSanitizer escapes the text of a node for the target format. A
+// TagOpenerCloser that doesn't implement it gets the default escaping.
+type TextSanitizer interface {
+	Sanitize(string) string
+}
+
 // TagOpenerCloser wraps tag opener and closer.
 type TagOpenerCloser interface {
 	TagOpener
@@ -219,7 +225,7 @@ func (a *Translator) visit(n *Node, depth int) {
 			}
 		}
 
-		tag.WriteString(sanitize(n.Text))
+		tag.WriteString(a.sanitize(n.Text))
 
 		// Close tags in reverse order.
 		for _, m := range slices.Backward(opened) {
@@ -230,6 +236,13 @@ func (a *Translator) visit(n *Node, depth int) {
 	}
 
 	a.buf.WriteString(a.tsl.Close(n))
+}
+
+func (a *Translator) sanitize(s string) string {
+	if ts, ok := a.tsl.(TextSanitizer); ok {
+		return ts.Sanitize(s)
+	}
+	return sanitize(s)
 }
 
 func sanitize(s string) string {

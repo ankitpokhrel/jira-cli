@@ -13,6 +13,7 @@ import (
 
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/glamour/styles"
 	"github.com/fatih/color"
 	"github.com/mgutz/ansi"
 	"github.com/rivo/tview"
@@ -94,6 +95,22 @@ func ValidSprintColumns() []string {
 func MDRenderer() (*glamour.TermRenderer, error) {
 	return glamour.NewTermRenderer(
 		glamour.WithEnvironmentConfig(),
+		glamour.WithWordWrap(wordWrap),
+	)
+}
+
+// plainMDRenderer constructs a markdown renderer for plain output.
+//
+// Glamour's "ascii" and "notty" styles are not ASCII: both decorate list items
+// with a bullet and images with an arrow. Plain output must survive a non-UTF-8
+// locale, so we swap those two for ASCII equivalents.
+func plainMDRenderer() (*glamour.TermRenderer, error) {
+	style := styles.ASCIIStyleConfig
+	style.Item.BlockPrefix = "* "
+	style.ImageText.Format = "Image: {{.text}}"
+
+	return glamour.NewTermRenderer(
+		glamour.WithStyles(style),
 		glamour.WithWordWrap(wordWrap),
 	)
 }

@@ -2,6 +2,7 @@ package view
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 	"unicode"
 
@@ -350,19 +351,153 @@ func decoratedIssue() *jira.Issue {
 	}
 }
 
-// Plain output must survive a non-UTF-8 locale like LC_ALL=C, so none of the
-// decorations the view adds around issue data may be non-ASCII.
+// adfBody is a body Jira cloud would return: a list, an inline card, a code
+// block and angle brackets, each of which the markdown pipeline decorates.
+func adfBody(text string) *adf.ADF {
+	return &adf.ADF{
+		Version: 1,
+		DocType: "doc",
+		Content: []*adf.Node{
+			{
+				NodeType: "paragraph",
+				Content: []*adf.Node{
+					{NodeType: "text", NodeValue: adf.NodeValue{Text: text + " for <Person A> & co"}},
+					{NodeType: "inlineCard", Attributes: map[string]any{"url": "https://test.local/browse/TEST-9"}},
+				},
+			},
+			{
+				NodeType: "bulletList",
+				Content: []*adf.Node{
+					{
+						NodeType: "listItem",
+						Content: []*adf.Node{
+							{
+								NodeType: "paragraph",
+								Content: []*adf.Node{
+									{NodeType: "text", NodeValue: adf.NodeValue{Text: "list item"}},
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				NodeType: "codeBlock",
+				Content: []*adf.Node{
+					{NodeType: "text", NodeValue: adf.NodeValue{Text: "if (a<b && b>c) {}"}},
+				},
+			},
+		},
+	}
+}
+
+// Plain output must survive a non-UTF-8 locale like LC_ALL=C, so nothing the
+// view and its markdown renderer add around issue data may be non-ASCII.
 func TestPlainIssueViewIsASCIIOnly(t *testing.T) {
 	t.Parallel()
 
+	for _, tc := range []struct {
+		name string
+		body any
+	}{
+		{name: "jira markdown body", body: "Test description\n\n* list item\n* another item"},
+		{name: "adf body", body: adfBody("Test description")},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			data := decoratedIssue()
+			data.Fields.Description = tc.body
+			data.Fields.Comment.Comments[0].Body = tc.body
+
+			issue := Issue{
+				Server:  "https://test.local",
+				Data:    data,
+				Display: DisplayFormat{Plain: true},
+				Options: IssueOption{NumComments: 2},
+			}
+
+			var b bytes.Buffer
+			assert.NoError(t, issue.renderPlain(&b))
+			assert.Empty(t, nonASCII(b.String()))
+		})
+	}
+}
+
+// The ASCII escaping must not cost us any content: what the lookalike glyphs
+// used to stand in for has to come out of the renderer as the real character.
+func TestPlainIssueViewKeepsAngleBrackets(t *testing.T) {
+	t.Parallel()
+
+	data := decoratedIssue()
+	data.Fields.Description = adfBody("Test description")
+
 	issue := Issue{
 		Server:  "https://test.local",
-		Data:    decoratedIssue(),
+		Data:    data,
 		Display: DisplayFormat{Plain: true},
 		Options: IssueOption{NumComments: 2},
 	}
 
-	assert.Empty(t, nonASCII(issue.String()))
+	var b bytes.Buffer
+	assert.NoError(t, issue.renderPlain(&b))
+
+	out := b.String()
+	assert.Contains(t, out, "<Person A>")
+	assert.Contains(t, out, "if (a<b && b>c) {}")
+}
+
+// Known issue: a link inside a table whose URL is longer than the terminal
+// width still leaks one non-ASCII rune into plain output. Glamour truncates
+// the URL with a hardcoded "…" (ansi/table_links.go), which the style config
+// cannot override, so plainMDRenderer can't get rid of it. Fixable, but only
+// by post-processing the rendered output or patching glamour — not worth it
+// so far. This test pins the leak so we notice when a glamour upgrade or a
+// workaround changes the behavior; if it starts failing with no non-ASCII
+// left, delete it and celebrate.
+func TestPlainIssueViewLongTableLinkLeaksEllipsis(t *testing.T) {
+	t.Parallel()
+
+	cell := func(kind string, text string, marks []adf.MarkNode) *adf.Node {
+		return &adf.Node{
+			NodeType: adf.NodeType(kind),
+			Content: []*adf.Node{
+				{
+					NodeType: "paragraph",
+					Content:  []*adf.Node{{NodeType: "text", NodeValue: adf.NodeValue{Text: text, Marks: marks}}},
+				},
+			},
+		}
+	}
+	link := []adf.MarkNode{{
+		MarkType:   "link",
+		Attributes: map[string]any{"href": "https://test.local/" + strings.Repeat("a", 200)},
+	}}
+
+	data := decoratedIssue()
+	data.Fields.Description = &adf.ADF{
+		Version: 1,
+		DocType: "doc",
+		Content: []*adf.Node{
+			{
+				NodeType: "table",
+				Content: []*adf.Node{
+					{NodeType: "tableRow", Content: []*adf.Node{cell("tableHeader", "col a", nil), cell("tableHeader", "col b", nil)}},
+					{NodeType: "tableRow", Content: []*adf.Node{cell("tableCell", "a link", link), cell("tableCell", "plain", nil)}},
+				},
+			},
+		},
+	}
+
+	issue := Issue{
+		Server:  "https://test.local",
+		Data:    data,
+		Display: DisplayFormat{Plain: true},
+	}
+
+	var b bytes.Buffer
+	assert.NoError(t, issue.renderPlain(&b))
+	assert.Equal(t, []string{"…"}, nonASCII(b.String()))
 }
 
 func TestIssueViewKeepsDecorationsWhenNotPlain(t *testing.T) {
