@@ -78,8 +78,7 @@ func epicList(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
 	projectType := viper.GetString("project.type")
 
-	debug, err := cmd.Flags().GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	client := api.DefaultClient(debug)
 

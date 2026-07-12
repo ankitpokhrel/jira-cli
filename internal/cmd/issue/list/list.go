@@ -88,8 +88,7 @@ func loadList(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
 	numComments := viper.GetUint("num_comments")
 
-	debug, err := cmd.Flags().GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	pk, err := cmd.Flags().GetString("parent")
 	cmdutil.ExitIfError(err)

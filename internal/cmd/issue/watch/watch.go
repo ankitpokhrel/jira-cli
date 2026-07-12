@@ -12,7 +12,6 @@ import (
 
 	"github.com/rethab/jira-cli/api"
 	"github.com/rethab/jira-cli/internal/cmdutil"
-	"github.com/rethab/jira-cli/internal/query"
 	"github.com/rethab/jira-cli/pkg/jira"
 )
 
@@ -51,7 +50,7 @@ WATCHER	Email or display name of the user to add to issue watchers`,
 
 func watch(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
-	params := parseArgsAndFlags(cmd.Flags(), args, project)
+	params := parseArgsAndFlags(args, project)
 	client := api.DefaultClient(params.debug)
 	ac := watchCmd{
 		client: client,
@@ -90,7 +89,7 @@ type watchParams struct {
 	debug bool
 }
 
-func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *watchParams {
+func parseArgsAndFlags(args []string, project string) *watchParams {
 	var key, user string
 
 	nargs := len(args)
@@ -101,8 +100,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *w
 		user = args[1]
 	}
 
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	return &watchParams{
 		key:   key,

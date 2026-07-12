@@ -376,8 +376,7 @@ func parseFlags(flags query.FlagParser) *cmdcommon.CreateParams {
 	noInput, err := flags.GetBool("no-input")
 	cmdutil.ExitIfError(err)
 
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	return &cmdcommon.CreateParams{
 		IssueType:        issueType,

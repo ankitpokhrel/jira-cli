@@ -2,6 +2,7 @@ package serverinfo
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/rethab/jira-cli/api"
 	"github.com/rethab/jira-cli/internal/cmdutil"
@@ -21,8 +22,7 @@ func NewCmdServerInfo() *cobra.Command {
 }
 
 func serverInfo(cmd *cobra.Command, _ []string) {
-	debug, err := cmd.Flags().GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	info, err := func() (*jira.ServerInfo, error) {
 		s := cmdutil.Info("Fetching server info...")

@@ -27,8 +27,7 @@ func NewCmdList() *cobra.Command {
 func List(cmd *cobra.Command, _ []string) {
 	project := viper.GetString("project.key")
 
-	debug, err := cmd.Flags().GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	boards, total, err := func() ([]*jira.Board, int, error) {
 		s := cmdutil.Info(fmt.Sprintf("Fetching boards in project %s...", project))

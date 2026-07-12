@@ -3,6 +3,8 @@ package query
 import (
 	"fmt"
 
+	"github.com/spf13/viper"
+
 	"github.com/rethab/jira-cli/pkg/jira"
 )
 
@@ -107,11 +109,7 @@ func (sp *SprintParams) init(flags FlagParser) error {
 	sp.From = from
 	sp.Limit = limit
 
-	debug, err := flags.GetBool("debug")
-	if err != nil {
-		return err
-	}
-	sp.debug = debug
+	sp.debug = viper.GetBool("debug")
 
 	return nil
 }

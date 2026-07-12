@@ -7,8 +7,8 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/rethab/jira-cli/api"
 	"github.com/rethab/jira-cli/internal/cmdutil"
-	"github.com/rethab/jira-cli/internal/query"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -32,7 +32,7 @@ func NewCmdClose() *cobra.Command {
 }
 
 func closeSprint(cmd *cobra.Command, args []string) {
-	params := parseFlags(cmd.Flags(), args)
+	params := parseFlags(args)
 	client := api.DefaultClient(params.debug)
 
 	qs := getQuestions(params)
@@ -64,7 +64,7 @@ func closeSprint(cmd *cobra.Command, args []string) {
 	cmdutil.Success(fmt.Sprintf("Sprint %s has been closed.", params.sprintID))
 }
 
-func parseFlags(flags query.FlagParser, args []string) *addParams {
+func parseFlags(args []string) *addParams {
 	var sprintID string
 
 	nArgs := len(args)
@@ -72,8 +72,7 @@ func parseFlags(flags query.FlagParser, args []string) *addParams {
 		sprintID = args[0]
 	}
 
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	return &addParams{
 		sprintID: sprintID,

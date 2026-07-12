@@ -9,7 +9,6 @@ import (
 
 	"github.com/rethab/jira-cli/api"
 	"github.com/rethab/jira-cli/internal/cmdutil"
-	"github.com/rethab/jira-cli/internal/query"
 	"github.com/rethab/jira-cli/pkg/jira"
 )
 
@@ -39,7 +38,7 @@ func NewCmdRemoteLink() *cobra.Command {
 
 func remotelink(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
-	params := parseArgsAndFlags(cmd.Flags(), args, project)
+	params := parseArgsAndFlags(args, project)
 	client := api.DefaultClient(params.debug)
 	lc := linkCmd{
 		client: client,
@@ -76,7 +75,7 @@ type linkParams struct {
 	debug    bool
 }
 
-func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *linkParams {
+func parseArgsAndFlags(args []string, project string) *linkParams {
 	var issueKey, url, title string
 	nargs := len(args)
 	if nargs >= 1 {
@@ -89,8 +88,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *l
 		title = args[2]
 	}
 
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	return &linkParams{
 		issueKey: issueKey,

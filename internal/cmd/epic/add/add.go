@@ -138,8 +138,7 @@ func parseFlags(flags query.FlagParser, args []string, project string) *addParam
 	skipNotify, err := flags.GetBool("skip-notify")
 	cmdutil.ExitIfError(err)
 
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	return &addParams{
 		epicKey:    epicKey,

@@ -156,8 +156,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *m
 	resolution, err := flags.GetString("resolution")
 	cmdutil.ExitIfError(err)
 
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	return &moveParams{
 		key:        key,

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -446,4 +447,30 @@ func TestIssueGet(t *testing.T) {
 			}
 		})
 	}
+}
+
+// debugOffFlagParser reports --debug as unset, which is what pflag does when the
+// user only exports JIRA_DEBUG. issueFlagParser defaults every bool flag to true,
+// so overriding it here is what keeps this test honest.
+type debugOffFlagParser struct{ issueFlagParser }
+
+func (p *debugOffFlagParser) GetBool(name string) (bool, error) {
+	if name == "debug" {
+		return false, nil
+	}
+	return p.issueFlagParser.GetBool(name)
+}
+
+func TestIssueDebugReadsFromEnvVar(t *testing.T) {
+	defer viper.Reset()
+
+	viper.Reset()
+	viper.SetEnvPrefix("jira")
+	viper.AutomaticEnv()
+
+	t.Setenv("JIRA_DEBUG", "true")
+
+	i, err := NewIssue("TEST", &debugOffFlagParser{})
+	assert.NoError(t, err)
+	assert.True(t, i.params.debug)
 }

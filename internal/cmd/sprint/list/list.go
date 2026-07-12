@@ -87,8 +87,7 @@ func sprintList(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 	boardID := resolveBoardID(viper.GetInt("board.id"), boardOverride, cmd.Flags().Changed("board"))
 
-	debug, err := cmd.Flags().GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	client := api.DefaultClient(debug)
 

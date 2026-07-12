@@ -9,7 +9,6 @@ import (
 
 	"github.com/rethab/jira-cli/api"
 	"github.com/rethab/jira-cli/internal/cmdutil"
-	"github.com/rethab/jira-cli/internal/query"
 	"github.com/rethab/jira-cli/pkg/jira"
 )
 
@@ -40,7 +39,7 @@ func NewCmdUnlink() *cobra.Command {
 
 func unlink(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
-	params := parseArgsAndFlags(cmd.Flags(), args, project)
+	params := parseArgsAndFlags(args, project)
 	client := api.DefaultClient(params.debug)
 	uc := unlinkCmd{
 		client: client,
@@ -80,7 +79,7 @@ type unlinkParams struct {
 	debug           bool
 }
 
-func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *unlinkParams {
+func parseArgsAndFlags(args []string, project string) *unlinkParams {
 	var inwardIssueKey, outwardIssueKey string
 
 	nargs := len(args)
@@ -91,8 +90,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *u
 		outwardIssueKey = cmdutil.GetJiraIssueKey(project, args[1])
 	}
 
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	return &unlinkParams{
 		inwardIssueKey:  inwardIssueKey,

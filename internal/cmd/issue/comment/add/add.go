@@ -138,8 +138,7 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 		body = args[1]
 	}
 
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	template, err := flags.GetString("template")
 	cmdutil.ExitIfError(err)

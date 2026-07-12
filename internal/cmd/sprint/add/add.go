@@ -10,7 +10,6 @@ import (
 
 	"github.com/rethab/jira-cli/api"
 	"github.com/rethab/jira-cli/internal/cmdutil"
-	"github.com/rethab/jira-cli/internal/query"
 )
 
 const (
@@ -37,7 +36,7 @@ func NewCmdAdd() *cobra.Command {
 func add(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
-	params := parseFlags(cmd.Flags(), args, project)
+	params := parseFlags(args, project)
 	client := api.DefaultClient(params.debug)
 
 	qs := getQuestions(params)
@@ -73,7 +72,7 @@ func add(cmd *cobra.Command, args []string) {
 	cmdutil.Success(fmt.Sprintf("Issues added to the sprint %s\n%s", params.sprintID, cmdutil.GenerateServerBrowseURL(server, project)))
 }
 
-func parseFlags(flags query.FlagParser, args []string, project string) *addParams {
+func parseFlags(args []string, project string) *addParams {
 	var (
 		sprintID string
 		issues   []string
@@ -91,8 +90,7 @@ func parseFlags(flags query.FlagParser, args []string, project string) *addParam
 		}
 	}
 
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	return &addParams{
 		sprintID: sprintID,

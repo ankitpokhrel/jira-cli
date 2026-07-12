@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"github.com/rethab/jira-cli/pkg/jql"
 )
 
@@ -196,7 +198,7 @@ type IssueParams struct {
 func (ip *IssueParams) init(flags FlagParser) error {
 	var err error
 
-	boolParams := []string{"history", "watching", "reverse", "debug"}
+	boolParams := []string{"history", "watching", "reverse"}
 	stringParams := []string{
 		"resolution", "type", "parent", "priority", "reporter", "assignee", "component",
 		"created", "created-after", "created-before", "updated", "updated-after", "updated-before",
@@ -242,6 +244,7 @@ func (ip *IssueParams) init(flags FlagParser) error {
 	ip.Status = status
 	ip.From = from
 	ip.Limit = limit
+	ip.debug = viper.GetBool("debug")
 
 	return nil
 }
@@ -255,8 +258,6 @@ func (ip *IssueParams) setBoolParams(paramsMap map[string]bool) {
 			ip.Watching = v
 		case "reverse":
 			ip.Reverse = v
-		case "debug":
-			ip.debug = v
 		}
 	}
 }

@@ -266,8 +266,7 @@ func parseFlags(flags query.FlagParser) *cloneParams {
 	replace, err := flags.GetStringArray("replace")
 	cmdutil.ExitIfError(err)
 
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	return &cloneParams{
 		parent:     parent,

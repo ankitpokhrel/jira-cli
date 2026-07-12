@@ -66,7 +66,7 @@ func view(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	if raw {
-		viewRaw(cmd, args)
+		viewRaw(args)
 		return
 	}
 
@@ -74,16 +74,15 @@ func view(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	if desc {
-		viewDescription(cmd, args)
+		viewDescription(args)
 		return
 	}
 
 	viewPretty(cmd, args)
 }
 
-func viewRaw(cmd *cobra.Command, args []string) {
-	debug, err := cmd.Flags().GetBool(flagDebug)
-	cmdutil.ExitIfError(err)
+func viewRaw(args []string) {
+	debug := viper.GetBool(flagDebug)
 
 	key := cmdutil.GetJiraIssueKey(viper.GetString(configProject), args[0])
 
@@ -99,9 +98,8 @@ func viewRaw(cmd *cobra.Command, args []string) {
 	fmt.Println(apiResp)
 }
 
-func viewDescription(cmd *cobra.Command, args []string) {
-	debug, err := cmd.Flags().GetBool(flagDebug)
-	cmdutil.ExitIfError(err)
+func viewDescription(args []string) {
+	debug := viper.GetBool(flagDebug)
 
 	key := cmdutil.GetJiraIssueKey(viper.GetString(configProject), args[0])
 	iss, err := func() (*jira.Issue, error) {
@@ -118,11 +116,11 @@ func viewDescription(cmd *cobra.Command, args []string) {
 }
 
 func viewPretty(cmd *cobra.Command, args []string) {
-	debug, err := cmd.Flags().GetBool(flagDebug)
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool(flagDebug)
 
 	var comments uint
 	if cmd.Flags().Changed(flagComments) {
+		var err error
 		comments, err = cmd.Flags().GetUint(flagComments)
 		cmdutil.ExitIfError(err)
 	} else {

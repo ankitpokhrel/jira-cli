@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/rethab/jira-cli/api"
 	"github.com/rethab/jira-cli/internal/cmdutil"
@@ -38,8 +39,7 @@ func NewCmdList() *cobra.Command {
 
 // List displays a list view.
 func List(cmd *cobra.Command, _ []string) {
-	debug, err := cmd.Flags().GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	raw, err := cmd.Flags().GetBool(flagRaw)
 	cmdutil.ExitIfError(err)

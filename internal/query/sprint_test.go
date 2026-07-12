@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -134,4 +135,18 @@ func TestSprintGet(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSprintDebugReadsFromEnvVar(t *testing.T) {
+	defer viper.Reset()
+
+	viper.Reset()
+	viper.SetEnvPrefix("jira")
+	viper.AutomaticEnv()
+
+	t.Setenv("JIRA_DEBUG", "true")
+
+	s, err := NewSprint(&sprintFlagParser{})
+	assert.NoError(t, err)
+	assert.True(t, s.Params().debug)
 }

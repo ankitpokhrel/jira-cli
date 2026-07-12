@@ -80,8 +80,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *d
 	cascade, err := flags.GetBool("cascade")
 	cmdutil.ExitIfError(err)
 
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	return &deleteParams{
 		key:     key,

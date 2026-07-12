@@ -13,7 +13,6 @@ import (
 
 	"github.com/rethab/jira-cli/api"
 	"github.com/rethab/jira-cli/internal/cmdutil"
-	"github.com/rethab/jira-cli/internal/query"
 	"github.com/rethab/jira-cli/pkg/jira"
 )
 
@@ -60,7 +59,7 @@ ASSIGNEE	Email or display name of the user to assign the issue to`,
 
 func assign(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
-	params := parseArgsAndFlags(cmd.Flags(), args, project)
+	params := parseArgsAndFlags(args, project)
 	client := api.DefaultClient(params.debug)
 	ac := assignCmd{
 		client: client,
@@ -124,7 +123,7 @@ type assignParams struct {
 	debug bool
 }
 
-func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *assignParams {
+func parseArgsAndFlags(args []string, project string) *assignParams {
 	var key, user string
 
 	nargs := len(args)
@@ -135,8 +134,7 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *a
 		user = args[1]
 	}
 
-	debug, err := flags.GetBool("debug")
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	return &assignParams{
 		key:   key,
