@@ -117,8 +117,9 @@ func clone(cmd *cobra.Command, args []string) {
 			defer wg.Done()
 
 			user, err := api.ProxyUserSearch(client, &jira.UserSearchOptions{
-				Query:   cp.assignee,
-				Project: project,
+				Query:    cp.assignee,
+				Project:  project,
+				IssueKey: clonedIssueKey,
 			})
 			if err != nil || len(user) == 0 {
 				fmt.Println()

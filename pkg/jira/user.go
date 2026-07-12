@@ -15,6 +15,7 @@ var ErrInvalidSearchOption = fmt.Errorf("invalid search option")
 // UserSearchOptions holds options to search for user.
 type UserSearchOptions struct {
 	Project    string
+	IssueKey   string
 	Query      string
 	Username   string
 	AccountID  string
@@ -56,6 +57,9 @@ func (c *Client) userSearch(opt *UserSearchOptions, ver string) ([]*User, error)
 
 	if opt.Project != "" {
 		opts = append(opts, fmt.Sprintf("project=%s", opt.Project))
+	}
+	if opt.IssueKey != "" {
+		opts = append(opts, fmt.Sprintf("issueKey=%s", opt.IssueKey))
 	}
 	if opt.Query != "" {
 		opts = append(opts, fmt.Sprintf("query=%s", url.QueryEscape(opt.Query)))

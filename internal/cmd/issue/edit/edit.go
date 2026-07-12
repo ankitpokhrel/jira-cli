@@ -235,8 +235,9 @@ func handleUserAssign(project, key, assignee string, client *jira.Client) {
 		return
 	}
 	user, err := api.ProxyUserSearch(client, &jira.UserSearchOptions{
-		Query:   assignee,
-		Project: project,
+		Query:    assignee,
+		Project:  project,
+		IssueKey: key,
 	})
 	if err != nil || len(user) == 0 {
 		cmdutil.Failed("Unable to find assignee")
