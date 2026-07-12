@@ -390,7 +390,7 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 					}
 					data.Update.M.customFields[configured.Key] = items
 				} else {
-					data.Update.M.customFields[configured.Key] = pieces
+					data.Update.M.customFields[configured.Key] = []customFieldTypeArraySet{{Set: pieces}}
 				}
 			case customFieldFormatNumber:
 				num, err := strconv.ParseFloat(val, 64) //nolint:gomnd

@@ -39,3 +39,7 @@ type customFieldTypeProject struct {
 type customFieldTypeProjectSet struct {
 	Set customFieldTypeProject `json:"set"`
 }
+
+type customFieldTypeArraySet struct {
+	Set []string `json:"set"`
+}
