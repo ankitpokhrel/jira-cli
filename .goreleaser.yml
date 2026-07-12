@@ -22,9 +22,9 @@ builds:
       mod_timestamp: "{{ .CommitTimestamp }}"
       ldflags:
         - -s -w
-        - -X github.com/ankitpokhrel/jira-cli/internal/version.Version={{.Version}}
-        - -X github.com/ankitpokhrel/jira-cli/internal/version.GitCommit={{.FullCommit}}
-        - -X github.com/ankitpokhrel/jira-cli/internal/version.SourceDateEpoch={{.CommitTimestamp}}
+        - -X github.com/rethab/jira-cli/internal/version.Version={{.Version}}
+        - -X github.com/rethab/jira-cli/internal/version.GitCommit={{.FullCommit}}
+        - -X github.com/rethab/jira-cli/internal/version.SourceDateEpoch={{.CommitTimestamp}}
       env:
         - CGO_ENABLED=0
     id: macOS

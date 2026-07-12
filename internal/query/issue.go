@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ankitpokhrel/jira-cli/pkg/jql"
+	"github.com/rethab/jira-cli/pkg/jql"
 )
 
 // Issue is a query type for issue command.

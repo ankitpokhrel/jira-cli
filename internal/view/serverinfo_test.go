@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/rethab/jira-cli/pkg/jira"
 )
 
 func TestServerInfoRender(t *testing.T) {

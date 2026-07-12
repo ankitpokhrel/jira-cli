@@ -5,7 +5,7 @@ name = "go"
 enabled = true
 
   [analyzers.meta]
-  import_root = "github.com/ankitpokhrel/jira-cli"
+  import_root = "github.com/rethab/jira-cli"
 
 [[analyzers]]
 name = "shell"

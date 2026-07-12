@@ -35,7 +35,7 @@ func (c *Client) UserSearchV2(opt *UserSearchOptions) ([]*User, error) {
 	// later v2 updates so we might have to revisit this in the future. Note that the
 	// `username` param is not as flexible as the `query` param available in v3.
 	//
-	// See https://github.com/ankitpokhrel/jira-cli/issues/198
+	// See https://github.com/rethab/jira-cli/issues/198
 	if opt.Query != "" && opt.Username == "" {
 		opt.Username = opt.Query
 		opt.Query = ""

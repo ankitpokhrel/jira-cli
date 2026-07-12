@@ -6,8 +6,8 @@ import (
 	"io"
 	"text/tabwriter"
 
-	"github.com/ankitpokhrel/jira-cli/pkg/jira"
-	"github.com/ankitpokhrel/jira-cli/pkg/tui"
+	"github.com/rethab/jira-cli/pkg/jira"
+	"github.com/rethab/jira-cli/pkg/tui"
 )
 
 // ProjectOption is a functional option to wrap project properties.

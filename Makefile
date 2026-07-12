@@ -20,7 +20,7 @@ GIT_COMMIT ?= $(shell { git stash create; git rev-parse HEAD; } | grep -Exm1 '[[
 export SOURCE_DATE_EPOCH ?= $(shell git show -s --format="%ct" $(GIT_COMMIT))
 
 VERSION ?= $(shell git symbolic-ref -q --short HEAD || git describe --tags --exact-match)
-VERSION_PKG = github.com/ankitpokhrel/jira-cli/internal/version
+VERSION_PKG = github.com/rethab/jira-cli/internal/version
 export LDFLAGS += -X $(VERSION_PKG).GitCommit=$(GIT_COMMIT)
 export LDFLAGS += -X $(VERSION_PKG).SourceDateEpoch=$(SOURCE_DATE_EPOCH)
 export LDFLAGS += -X $(VERSION_PKG).Version=$(VERSION)

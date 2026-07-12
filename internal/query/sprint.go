@@ -3,7 +3,7 @@ package query
 import (
 	"fmt"
 
-	"github.com/ankitpokhrel/jira-cli/pkg/jira"
+	"github.com/rethab/jira-cli/pkg/jira"
 )
 
 // Sprint is a query type for sprint command.

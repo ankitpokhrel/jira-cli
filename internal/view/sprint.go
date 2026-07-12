@@ -8,11 +8,11 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/ankitpokhrel/jira-cli/api"
-	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
-	"github.com/ankitpokhrel/jira-cli/pkg/jira"
-	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter/issue"
-	"github.com/ankitpokhrel/jira-cli/pkg/tui"
+	"github.com/rethab/jira-cli/api"
+	"github.com/rethab/jira-cli/internal/cmdutil"
+	"github.com/rethab/jira-cli/pkg/jira"
+	"github.com/rethab/jira-cli/pkg/jira/filter/issue"
+	"github.com/rethab/jira-cli/pkg/tui"
 	"github.com/rivo/tview"
 )
 

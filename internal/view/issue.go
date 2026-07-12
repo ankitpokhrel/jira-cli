@@ -10,11 +10,11 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/fatih/color"
 
-	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
-	"github.com/ankitpokhrel/jira-cli/pkg/adf"
-	"github.com/ankitpokhrel/jira-cli/pkg/jira"
-	"github.com/ankitpokhrel/jira-cli/pkg/md"
-	"github.com/ankitpokhrel/jira-cli/pkg/tui"
+	"github.com/rethab/jira-cli/internal/cmdutil"
+	"github.com/rethab/jira-cli/pkg/adf"
+	"github.com/rethab/jira-cli/pkg/jira"
+	"github.com/rethab/jira-cli/pkg/md"
+	"github.com/rethab/jira-cli/pkg/tui"
 )
 
 const defaultSummaryLength = 73 // +1 to take ellipsis '…' into account.

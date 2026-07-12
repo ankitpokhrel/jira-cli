@@ -3,7 +3,7 @@ package worklog
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/worklog/add"
+	"github.com/rethab/jira-cli/internal/cmd/issue/worklog/add"
 )
 
 const helpText = `Worklog command helps you manage issue worklogs. See available commands below.`

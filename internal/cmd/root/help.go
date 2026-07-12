@@ -66,7 +66,7 @@ func getEntries(cmd *cobra.Command) []helpEntry {
 	entries = append(entries, helpEntry{
 		"LEARN MORE",
 		`Use 'jira <command> <subcommand> --help' for more information about a command.
-Read the doc or get help at https://github.com/ankitpokhrel/jira-cli`,
+Read the doc or get help at https://github.com/rethab/jira-cli`,
 	})
 
 	return entries

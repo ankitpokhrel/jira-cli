@@ -3,7 +3,7 @@ package release
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/ankitpokhrel/jira-cli/internal/cmd/release/list"
+	"github.com/rethab/jira-cli/internal/cmd/release/list"
 )
 
 const helpText = `Release manages Jira Project versions. See available commands below.`

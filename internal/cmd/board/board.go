@@ -3,7 +3,7 @@ package board
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/ankitpokhrel/jira-cli/internal/cmd/board/list"
+	"github.com/rethab/jira-cli/internal/cmd/board/list"
 )
 
 const helpText = `Board manages Jira boards in a project. See available commands below.`

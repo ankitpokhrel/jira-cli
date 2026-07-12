@@ -3,7 +3,7 @@ package comment
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/comment/add"
+	"github.com/rethab/jira-cli/internal/cmd/issue/comment/add"
 )
 
 const helpText = `Comment command helps you manage issue comments. See available commands below.`

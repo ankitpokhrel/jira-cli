@@ -8,7 +8,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
-	"github.com/ankitpokhrel/jira-cli/pkg/tui/primitive"
+	"github.com/rethab/jira-cli/pkg/tui/primitive"
 )
 
 const (

@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/zalando/go-keyring"
 
-	"github.com/ankitpokhrel/jira-cli/pkg/jira"
-	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter"
-	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
+	"github.com/rethab/jira-cli/pkg/jira"
+	"github.com/rethab/jira-cli/pkg/jira/filter"
+	"github.com/rethab/jira-cli/pkg/netrc"
 )
 
 const clientTimeout = 15 * time.Second

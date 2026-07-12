@@ -16,9 +16,9 @@ import (
 	"github.com/mgutz/ansi"
 	"github.com/rivo/tview"
 
-	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
-	"github.com/ankitpokhrel/jira-cli/pkg/browser"
-	"github.com/ankitpokhrel/jira-cli/pkg/tui"
+	"github.com/rethab/jira-cli/internal/cmdutil"
+	"github.com/rethab/jira-cli/pkg/browser"
+	"github.com/rethab/jira-cli/pkg/tui"
 )
 
 const (
