@@ -21,12 +21,16 @@ const (
 $ jira issue view ISSUE-1 --comments 5
 
 # Get the raw JSON data
-$ jira issue view ISSUE-1 --raw`
+$ jira issue view ISSUE-1 --raw
 
-	flagRaw      = "raw"
-	flagDebug    = "debug"
-	flagComments = "comments"
-	flagPlain    = "plain"
+# Print only the summary and description
+$ jira issue view ISSUE-1 --description`
+
+	flagRaw         = "raw"
+	flagDebug       = "debug"
+	flagComments    = "comments"
+	flagPlain       = "plain"
+	flagDescription = "description"
 
 	configProject = "project.key"
 	configServer  = "server"
@@ -52,6 +56,7 @@ func NewCmdView() *cobra.Command {
 	cmd.Flags().Uint(flagComments, 1, "Show N comments")
 	cmd.Flags().Bool(flagPlain, false, "Display output in plain mode")
 	cmd.Flags().Bool(flagRaw, false, "Print raw Jira API response")
+	cmd.Flags().Bool(flagDescription, false, "Print only the summary and description of the issue")
 
 	return &cmd
 }
@@ -64,6 +69,15 @@ func view(cmd *cobra.Command, args []string) {
 		viewRaw(cmd, args)
 		return
 	}
+
+	desc, err := cmd.Flags().GetBool(flagDescription)
+	cmdutil.ExitIfError(err)
+
+	if desc {
+		viewDescription(cmd, args)
+		return
+	}
+
 	viewPretty(cmd, args)
 }
 
@@ -83,6 +97,24 @@ func viewRaw(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	fmt.Println(apiResp)
+}
+
+func viewDescription(cmd *cobra.Command, args []string) {
+	debug, err := cmd.Flags().GetBool(flagDebug)
+	cmdutil.ExitIfError(err)
+
+	key := cmdutil.GetJiraIssueKey(viper.GetString(configProject), args[0])
+	iss, err := func() (*jira.Issue, error) {
+		s := cmdutil.Info(messageFetchingData)
+		defer s.Stop()
+
+		client := api.DefaultClient(debug)
+		return api.ProxyGetIssue(client, key, issue.NewNumCommentsFilter(0))
+	}()
+	cmdutil.ExitIfError(err)
+
+	v := tuiView.Issue{Data: iss}
+	fmt.Printf("%s\n\n%s\n", iss.Fields.Summary, v.Description())
 }
 
 func viewPretty(cmd *cobra.Command, args []string) {

@@ -239,6 +239,11 @@ func (i Issue) header() string {
 	)
 }
 
+// Description returns the issue description translated to markdown.
+func (i Issue) Description() string {
+	return i.description()
+}
+
 func (i Issue) description() string {
 	if i.Data.Fields.Description == nil {
 		return ""

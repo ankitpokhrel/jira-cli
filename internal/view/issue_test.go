@@ -238,6 +238,50 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 	assert.Equal(t, tui.TextData(expected), tui.TextData(actual))
 }
 
+func TestIssueDescription(t *testing.T) {
+	t.Parallel()
+
+	t.Run("it translates ADF description to markdown", func(t *testing.T) {
+		t.Parallel()
+
+		issue := Issue{
+			Data: &jira.Issue{
+				Key: "TEST-1",
+				Fields: jira.IssueFields{
+					Summary: "This is a test",
+					Description: &adf.ADF{
+						Version: 1,
+						DocType: "doc",
+						Content: []*adf.Node{
+							{
+								NodeType: "paragraph",
+								Content: []*adf.Node{
+									{NodeType: "text", NodeValue: adf.NodeValue{Text: "Test description"}},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		assert.Equal(t, "Test description\n\n", issue.Description())
+	})
+
+	t.Run("it returns an empty string when there is no description", func(t *testing.T) {
+		t.Parallel()
+
+		issue := Issue{
+			Data: &jira.Issue{
+				Key:    "TEST-1",
+				Fields: jira.IssueFields{Summary: "This is a test"},
+			},
+		}
+
+		assert.Equal(t, "", issue.Description())
+	})
+}
+
 func TestSeparator(t *testing.T) {
 	t.Parallel()
 
