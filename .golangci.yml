@@ -2,41 +2,93 @@ version: "2"
 linters:
   default: none
   enable:
+    - asasalint
+    - bidichk
     - bodyclose
+    - contextcheck
+    - copyloopvar
     - dupl
+    - durationcheck
     - errcheck
+    - errorlint
+    - fatcontext
+    - gocheckcompilerdirectives
     - gocritic
     - gocyclo
     - godot
+    - gosec
     - govet
     - ineffassign
+    - makezero
+    - misspell
     - mnd
+    - nilerr
+    - noctx
+    - nolintlint
     - prealloc
+    - reassign
     - revive
     - staticcheck
+    - testifylint
+    - unconvert
     - unparam
     - unused
+    - usetesting
+    - wastedassign
   settings:
     gocyclo:
       min-complexity: 20
+    gosec:
+      excludes:
+        # Launching a subprocess named by a variable is the feature, not the
+        # bug: the CLI shells out to $EDITOR, $PAGER and the browser by design,
+        # and those values come from the user's own environment.
+        - G204
+        # Same for reading a path held in a variable: the config file, .netrc
+        # and attachments are all paths the user hands us.
+        - G304
     mnd:
       ignored-numbers:
         - "0"
         - "1"
         - "2"
         - "3"
+    nolintlint:
+      # A directive that no longer suppresses anything is a lie about the code:
+      # the linter it names may have been renamed, or the finding already fixed.
+      allow-unused: false
+      require-specific: true
     revive:
       rules:
         - name: package-comments
           disabled: true
+    testifylint:
+      disable:
+        # The suite asserts errors with assert throughout. Moving it to require
+        # is worth doing, but as a mechanical change of its own.
+        - require-error
     testpackage:
       skip-regexp: .*
   exclusions:
     generated: lax
+    rules:
+      # The uint -> int conversions the display layer has to make for APIs that
+      # take an int: column widths, fixed-column counts, how many comments to
+      # show, a filter's numeric value. All are bounded by the terminal or by
+      # what a human typed, so none can realistically overflow.
+      - path: (pkg/tui|internal/view|pkg/jira/filter)/
+        linters:
+          - gosec
+        text: G115
     paths:
       - third_party$
       - builtin$
       - examples$
+issues:
+  # The defaults (50 per linter, 3 per identical message) silently hide the tail
+  # of a repeated finding, which is how a systematic mistake reads as a handful.
+  max-issues-per-linter: 0
+  max-same-issues: 0
 formatters:
   enable:
     - gofmt

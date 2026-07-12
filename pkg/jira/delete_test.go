@@ -31,7 +31,7 @@ func TestDeleteIssue(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.DeleteIssue("BAD", false)
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestDeleteIssueWithCascade(t *testing.T) {

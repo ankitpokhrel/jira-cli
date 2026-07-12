@@ -101,7 +101,7 @@ func TestSprints(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.Sprints(2, "state=active,closed", 0, 10)
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestSprintsInBoards(t *testing.T) {
@@ -303,7 +303,7 @@ func TestSprintIssues(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.SprintIssues(2, "project=TEST", 0, 100)
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestSprintIssuesAdd(t *testing.T) {
@@ -338,7 +338,7 @@ func TestSprintIssuesAdd(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.SprintIssuesAdd("5", "TEST-1")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestGetSprint(t *testing.T) {
@@ -366,13 +366,13 @@ func TestGetSprint(t *testing.T) {
 
 	sprint, err := client.GetSprint(5)
 	assert.NoError(t, err)
-	assert.Equal(t, sprint.ID, 5)
-	assert.Equal(t, sprint.Status, "active")
+	assert.Equal(t, 5, sprint.ID)
+	assert.Equal(t, "active", sprint.Status)
 
 	unexpectedStatusCode = true
 
 	_, err = client.GetSprint(5)
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestEndSprint(t *testing.T) {
@@ -412,5 +412,5 @@ func TestEndSprint(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.EndSprint(5)
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }

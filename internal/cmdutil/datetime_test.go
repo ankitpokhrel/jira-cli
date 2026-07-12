@@ -90,10 +90,10 @@ func TestDateStringToJiraFormatInLocation(t *testing.T) {
 
 			dt, err := DateStringToJiraFormatInLocation(tc.input, tc.timezone)
 			if tc.err != "" {
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				assert.Equal(t, tc.err, err.Error())
 			} else {
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 			}
 			assert.Equal(t, tc.expected, dt)
 		})

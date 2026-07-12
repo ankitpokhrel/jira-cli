@@ -59,8 +59,6 @@ func TestFormatDateTimeHuman(t *testing.T) {
 }
 
 func TestGetConfigHome(t *testing.T) {
-	t.Parallel()
-
 	userHome, err := homedir.Dir()
 	assert.NoError(t, err)
 
@@ -70,7 +68,7 @@ func TestGetConfigHome(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, userHome+"/.config", configHome)
 
-	assert.NoError(t, os.Setenv("XDG_CONFIG_HOME", "./test"))
+	t.Setenv("XDG_CONFIG_HOME", "./test")
 
 	configHome, err = GetConfigHome()
 	assert.NoError(t, err)

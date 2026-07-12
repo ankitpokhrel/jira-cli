@@ -112,7 +112,8 @@ func PagerOut(out string) error {
 		pagerEnv = append(pagerEnv, "LESS=R")
 	}
 
-	cmd := exec.Command(pager, pagerArgs...)
+	// Same as the editor: the pager belongs to the user, not to a request.
+	cmd := exec.Command(pager, pagerArgs...) //nolint:noctx
 	cmd.Env = pagerEnv
 	cmd.Stdin = strings.NewReader(out)
 	cmd.Stdout = os.Stdout

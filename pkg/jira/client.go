@@ -146,8 +146,9 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{
-			MinVersion:         tls.VersionTLS12,
-			InsecureSkipVerify: client.insecure,
+			MinVersion: tls.VersionTLS12,
+			// Opt-in only, via --insecure, which `jira init` warns loudly about.
+			InsecureSkipVerify: client.insecure, //nolint:gosec
 		},
 		DialContext: (&net.Dialer{
 			Timeout: client.timeout,
@@ -251,7 +252,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		err error
 	)
 
-	req, err = http.NewRequest(method, endpoint, bytes.NewReader(body))
+	req, err = http.NewRequestWithContext(ctx, method, endpoint, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +288,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 
 	httpClient := &http.Client{Transport: c.transport}
 
-	return httpClient.Do(req.WithContext(ctx))
+	return httpClient.Do(req)
 }
 
 func dump(req *http.Request, res *http.Response) {

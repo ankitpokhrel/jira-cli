@@ -66,5 +66,5 @@ func TestReleases(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.Release("1000")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }

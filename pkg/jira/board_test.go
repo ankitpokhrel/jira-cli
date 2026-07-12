@@ -51,10 +51,10 @@ func TestBoards(t *testing.T) {
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
 	_, err := client.Boards("BAD", "scrum")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 
 	_, err = client.BoardSearch("BAD", "scrum")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 
 	actual, err := client.Boards("TEST", "scrum")
 	assert.NoError(t, err)

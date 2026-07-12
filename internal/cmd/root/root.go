@@ -30,8 +30,9 @@ import (
 )
 
 const (
-	jiraCLIHelpLink  = "https://github.com/rethab/jira-cli#getting-started"
-	jiraAPITokenLink = "https://id.atlassian.com/manage-profile/security/api-tokens"
+	jiraCLIHelpLink = "https://github.com/rethab/jira-cli#getting-started"
+	// Where users go to mint a token, not a token itself.
+	jiraAPITokenLink = "https://id.atlassian.com/manage-profile/security/api-tokens" //nolint:gosec
 )
 
 var (

@@ -19,7 +19,7 @@ var (
 
 // Info returns version and build information.
 func Info() string {
-	i, err := strconv.ParseInt(SourceDateEpoch, 10, 64) //nolint:gomnd
+	i, err := strconv.ParseInt(SourceDateEpoch, 10, 64)
 	if err != nil {
 		panic(err)
 	}

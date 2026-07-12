@@ -87,7 +87,7 @@ func TestGetCreateMeta(t *testing.T) {
 		IssueTypeNames: "Epic",
 		Expand:         "projects.issuetypes.fields",
 	})
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestGetCreateMetaForJiraServerV9(t *testing.T) {
@@ -152,5 +152,5 @@ func TestGetCreateMetaForJiraServerV9(t *testing.T) {
 		Projects: "TEST",
 		Expand:   "projects.issuetypes.fields",
 	})
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }

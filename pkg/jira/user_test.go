@@ -67,10 +67,10 @@ func TestUserSearch(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.UserSearch(nil)
-	assert.Error(t, ErrInvalidSearchOption, err)
+	assert.ErrorIs(t, err, ErrInvalidSearchOption)
 
 	_, err = client.UserSearch(&UserSearchOptions{})
-	assert.Error(t, ErrInvalidSearchOption, err)
+	assert.ErrorIs(t, err, ErrInvalidSearchOption)
 }
 
 func TestUserSearchV2(t *testing.T) {

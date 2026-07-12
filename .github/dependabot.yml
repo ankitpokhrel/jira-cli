@@ -8,3 +8,28 @@ updates:
     # versions are usually yanked within days of publication.
     cooldown:
       default-days: 7
+
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    groups:
+      # Patch and minor bumps get reviewed as a batch anyway; majors are the
+      # ones worth looking at on their own.
+      go-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # The published image inherits whatever is in the base image, including its
+  # vulnerabilities.
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7

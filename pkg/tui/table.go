@@ -263,7 +263,6 @@ func (t *Table) initHelp() {
 	})
 }
 
-//nolint:gocyclo
 func (t *Table) initTable() {
 	t.view.SetSelectable(true, false).
 		SetSelectedStyle(customTUIStyle(t.style)).

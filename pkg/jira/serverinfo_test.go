@@ -48,5 +48,5 @@ func TestServerInfo(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.ServerInfo()
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }

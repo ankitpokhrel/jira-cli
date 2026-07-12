@@ -68,7 +68,7 @@ func TestTransitions(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.TransitionsV2("TEST")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestTransition(t *testing.T) {
@@ -102,5 +102,5 @@ func TestTransition(t *testing.T) {
 	}}
 	code, err := client.Transition("TEST", &requestData)
 	assert.NoError(t, err)
-	assert.Equal(t, code, 204)
+	assert.Equal(t, 204, code)
 }

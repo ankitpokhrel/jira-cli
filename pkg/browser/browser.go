@@ -32,7 +32,8 @@ func Browse(url string) error {
 	}
 
 	args = append(args[1:], url)
-	cmd := exec.Command(exe, args...)
+	// No context to hang this on: the browser is handed the URL and outlives us.
+	cmd := exec.Command(exe, args...) //nolint:noctx
 
 	// io.Writer to which executed commands write standard output and error.
 	// We are not interested in any output from cmd, so let's discard them.

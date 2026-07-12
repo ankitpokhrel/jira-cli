@@ -79,7 +79,7 @@ func TestCreate(t *testing.T) {
 	testServer.statusCode(400)
 
 	_, err = client.CreateV2(&requestData)
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestCreateSubtask(t *testing.T) {
@@ -111,7 +111,7 @@ func TestCreateSubtask(t *testing.T) {
 	testServer.statusCode(500)
 
 	_, err = client.CreateV2(&requestData)
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestCreateEpic(t *testing.T) {
@@ -143,7 +143,7 @@ func TestCreateEpic(t *testing.T) {
 	testServer.statusCode(400)
 
 	_, err = client.CreateV2(&requestData)
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestCreateEpicNextGen(t *testing.T) {
@@ -176,5 +176,5 @@ func TestCreateEpicNextGen(t *testing.T) {
 	testServer.statusCode(401)
 
 	_, err = client.CreateV2(&requestData)
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }

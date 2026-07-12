@@ -9,8 +9,19 @@ name: Build
 permissions:
   contents: read
 
+# Keyed by SHA outside of pull requests, so that a merge to main never cancels
+# the run of the commit before it.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+env:
+  # Must stay in step with the Makefile, which builds into $(CURDIR)/.gocache:
+  # the cache steps below can only reach paths inside the workspace.
+  GOCACHE: ${{ github.workspace }}/.gocache
+
 jobs:
-  tests:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,6 +35,39 @@ jobs:
           # Lint and test on the toolchain the release builds use; a floating
           # constraint would drift CI away from what actually ships.
           go-version-file: 'go.mod'
+          # Not setup-go's cache: its key carries no job discriminator, so every
+          # job here races to save one entry and the fastest wins, leaving the
+          # rest to restore artifacts they cannot use. Hence a per-job cache
+          # below, keyed by what the job actually compiles. The trailing SHA
+          # makes every run save, so the cache follows the source instead of
+          # freezing at the first run; restore falls back to the newest entry
+          # for the same dependencies.
+          cache: false
+
+      - name: Cache Go build and module cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .gocache
+            ~/go/pkg/mod
+          key: go-lint-${{ runner.os }}-${{ hashFiles('go.mod', 'go.sum') }}-${{ github.sha }}
+          restore-keys: |
+            go-lint-${{ runner.os }}-${{ hashFiles('go.mod', 'go.sum') }}-
+            go-lint-${{ runner.os }}-
+
+      - name: Resolve pinned linter version
+        id: linter
+        run: echo "version=$(make -s golangci-lint-version)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache golangci-lint
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            bin/golangci-lint
+            ~/.cache/golangci-lint
+          key: golangci-${{ runner.os }}-${{ steps.linter.outputs.version }}-${{ hashFiles('**/go.sum', '.golangci.yml') }}
+          restore-keys: |
+            golangci-${{ runner.os }}-${{ steps.linter.outputs.version }}-
 
       - name: Install dependencies
         run: make deps
@@ -31,5 +75,97 @@ jobs:
       - name: Run linter
         run: make lint
 
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: 'go.mod'
+          cache: false
+
+      - name: Cache Go build and module cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .gocache
+            ~/go/pkg/mod
+          key: go-test-${{ runner.os }}-${{ hashFiles('go.mod', 'go.sum') }}-${{ github.sha }}
+          restore-keys: |
+            go-test-${{ runner.os }}-${{ hashFiles('go.mod', 'go.sum') }}-
+            go-test-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: make deps
+
       - name: Run tests
-        run: make test
+        run: make test GOTESTFLAGS="-covermode=atomic -coverprofile=coverage.out"
+
+      - name: Report coverage
+        run: |
+          {
+            echo '### Coverage'
+            echo
+            echo '```'
+            go tool cover -func=coverage.out | tail -n 1
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage profile
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage
+          path: coverage.out
+          if-no-files-found: error
+
+  # Releases cross-compile for seven targets, but only two of them can fail on
+  # their own: with cgo off and no OS-specific source in the tree, every 64-bit
+  # unix target type-checks exactly like the linux/amd64 built above. linux/386
+  # is where an int is 32 bits wide, and windows is the one GOOS that is not
+  # unix; the other four would only ever fail together with these.
+  cross-compile:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: windows
+            goarch: amd64
+          - goos: linux
+            goarch: '386'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: 'go.mod'
+          cache: false
+
+      - name: Cache Go build and module cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .gocache
+            ~/go/pkg/mod
+          key: go-cross-${{ matrix.goos }}-${{ matrix.goarch }}-${{ runner.os }}-${{ hashFiles('go.mod', 'go.sum') }}-${{ github.sha }}
+          restore-keys: |
+            go-cross-${{ matrix.goos }}-${{ matrix.goarch }}-${{ runner.os }}-${{ hashFiles('go.mod', 'go.sum') }}-
+            go-cross-${{ matrix.goos }}-${{ matrix.goarch }}-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: make deps
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: go build ./...

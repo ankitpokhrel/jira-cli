@@ -418,7 +418,7 @@ func TestIssueDescription(t *testing.T) {
 			},
 		}
 
-		assert.Equal(t, "", issue.Description())
+		assert.Empty(t, issue.Description())
 	})
 }
 

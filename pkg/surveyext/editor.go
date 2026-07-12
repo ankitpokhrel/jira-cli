@@ -65,8 +65,6 @@ type EditorTemplateData struct {
 }
 
 // EXTENDED to augment prompt text and keypress handling.
-//
-//nolint:gocyclo
 func (e *JiraEditor) prompt(initialValue string, config *survey.PromptConfig) (any, error) {
 	err := e.Render(
 		EditorQuestionTemplate,

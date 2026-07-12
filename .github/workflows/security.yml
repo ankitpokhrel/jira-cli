@@ -1,0 +1,75 @@
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  # A dependency becomes vulnerable when someone else publishes an advisory, not
+  # when we push. Without a schedule we would only find out on our next commit.
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+name: Security
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  # Reports only the advisories that actually reach a function we call, so a
+  # finding here is a reason to act rather than a number to argue down.
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.6.0
+
+      # Deliberately no `make deps`: that vendors the dependencies, and
+      # govulncheck needs the module graph to map packages to advisories.
+      - name: Run govulncheck
+        run: govulncheck ./...
+
+  # Workflows are the most privileged code in the repository, and their mistakes
+  # (template injection, over-broad permissions, credentials left on disk) are
+  # invisible to the linters that cover the Go code.
+  workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Install actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+
+      - name: Run actionlint
+        run: actionlint -color
+
+      - name: Install zizmor
+        run: pipx install zizmor==1.26.1
+
+      - name: Run zizmor
+        env:
+          # Lets zizmor check whether a pinned action has a known advisory
+          # against it; the audit is skipped without a token.
+          GH_TOKEN: ${{ github.token }}
+        run: zizmor --color=always .github/workflows/

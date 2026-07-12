@@ -80,7 +80,9 @@ func edit(editorCommand, fn, initialValue string, stdin io.Reader, stdout io.Wri
 	}
 	args = append(editorExe, args[1:]...)
 
-	cmd := exec.Command(args[0], args[1:]...)
+	// The user's editor runs until they quit it; a cancellable context would
+	// only give us a way to kill it out from under them mid-edit.
+	cmd := exec.Command(args[0], args[1:]...) //nolint:noctx
 	cmd.Env = env
 	cmd.Stdin = stdin
 	cmd.Stdout = stdout

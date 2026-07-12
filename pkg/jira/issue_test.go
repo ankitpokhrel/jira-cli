@@ -102,7 +102,7 @@ func TestGetIssue(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.GetIssue("TEST-1")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestGetIssueWithoutDescription(t *testing.T) {
@@ -204,7 +204,7 @@ func TestGetIssueV2(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.GetIssueV2("TEST-1")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestGetIssueRaw(t *testing.T) {
@@ -385,7 +385,7 @@ func TestAssignIssue(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.AssignIssueV2("TEST-1", "default")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestGetIssueLinkTypes(t *testing.T) {
@@ -435,7 +435,7 @@ func TestGetIssueLinkTypes(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.GetIssueLinkTypes()
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestLinkIssue(t *testing.T) {
@@ -462,7 +462,7 @@ func TestLinkIssue(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.LinkIssue("TEST-1", "TEST-2", "invalid")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestUnlinkIssue(t *testing.T) {
@@ -490,7 +490,7 @@ func TestUnlinkIssue(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.UnlinkIssue("123")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestGetLinkID(t *testing.T) {
@@ -515,7 +515,7 @@ func TestGetLinkID(t *testing.T) {
 	assert.Equal(t, expected, actual)
 
 	_, err = client.GetLinkID("TEST-1", "TEST-1234")
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	assert.Equal(t, "no link found between provided issues", err.Error())
 }
 
@@ -551,7 +551,7 @@ func TestAddIssueComment(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.AddIssueComment("TEST-1", "comment", false)
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestAddIssueWorklog(t *testing.T) {
@@ -605,7 +605,7 @@ func TestAddIssueWorklog(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.AddIssueWorklog("TEST-1", "", "1h", "comment", "")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestGetField(t *testing.T) {
@@ -677,7 +677,7 @@ func TestGetField(t *testing.T) {
 	unexpectedStatusCode = true
 
 	_, err = client.GetField()
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }
 
 func TestRemoteLinkIssue(t *testing.T) {
@@ -705,7 +705,7 @@ func TestRemoteLinkIssue(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.RemoteLinkIssue("TEST-1", "weblink title", "https://weblink.com")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }
 
 func TestWatchIssue(t *testing.T) {
@@ -743,5 +743,5 @@ func TestWatchIssue(t *testing.T) {
 	unexpectedStatusCode = true
 
 	err = client.WatchIssueV2("TEST-1", "a12b3")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assertUnexpectedResponse(t, err)
 }

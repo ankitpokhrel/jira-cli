@@ -13,6 +13,10 @@ $ jira man --generate
 
 # Generate man pages in specified location
 $ jira man --generate --output /path/to/man-pages`
+
+	// The default output lives under /tmp, so keep the directory unwritable by
+	// others: anyone able to drop files in there could tamper with the pages.
+	manDirPerm = 0o750
 )
 
 // NewCmdMan is a man command.
@@ -49,7 +53,7 @@ func man(cmd *cobra.Command, _ []string) error {
 	// Create directory if it doesn't exist.
 	_, err = os.Stat(out)
 	if err != nil {
-		if err := os.MkdirAll(out, os.ModePerm); err != nil {
+		if err := os.MkdirAll(out, manDirPerm); err != nil {
 			return err
 		}
 	}
