@@ -107,3 +107,63 @@ func main\(\) {
 
 	assert.Equal(t, expected, ToJiraMD(jfm))
 }
+
+func TestToJiraMDPreservesMentions(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "plain mention",
+			input:    `[~ankit]`,
+			expected: "[~ankit]",
+		},
+		{
+			name:     "mention with display name containing spaces",
+			input:    `[~display name with spaces]`,
+			expected: "[~display name with spaces]",
+		},
+		{
+			name:     "mention inline in text",
+			input:    `Hey [~ankit], can you take a look?`,
+			expected: "Hey [~ankit], can you take a look?",
+		},
+		{
+			name:     "mention inside a list item",
+			input:    "- [~ankit] please review\n- [~jane doe] please approve",
+			expected: "* [~ankit] please review\n* [~jane doe] please approve\n\n",
+		},
+		{
+			name:     "multiple mentions",
+			input:    `cc [~ankit] and [~jane]`,
+			expected: "cc [~ankit] and [~jane]",
+		},
+		{
+			name:     "more than ten mentions",
+			input:    "[~user0] [~user1] [~user2] [~user3] [~user4] [~user5] [~user6] [~user7] [~user8] [~user9] [~user10] [~user11]",
+			expected: "[~user0] [~user1] [~user2] [~user3] [~user4] [~user5] [~user6] [~user7] [~user8] [~user9] [~user10] [~user11]",
+		},
+		{
+			name:     "mention in inline code",
+			input:    "Use `[~ankit]` here",
+			expected: "Use {{[~ankit]}} here\n\n",
+		},
+		{
+			name:     "mention in code fence",
+			input:    "```\n[~ankit]\n```",
+			expected: "{code}\n[~ankit]\n{code}\n\n",
+		},
+		{
+			name:     "non-mention brackets stay escaped",
+			input:    `a [not a mention] b`,
+			expected: `a \[not a mention\] b`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, ToJiraMD(tc.input))
+		})
+	}
+}
