@@ -1,6 +1,7 @@
 package md
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -40,8 +41,29 @@ func ToJiraMD(md string) string {
 	renderer := &cf.Renderer{Flags: cf.IgnoreMacroEscaping}
 	r := bf.New(bf.WithRenderer(renderer), bf.WithExtensions(bf.CommonExtensions))
 
-	out := string(renderer.Render(r.Parse([]byte(protected))))
+	var buf bytes.Buffer
+	ast := r.Parse([]byte(protected))
+	ast.Walk(func(node *bf.Node, entering bool) bf.WalkStatus {
+		// Jira wiki image syntax (!url!) has no place for alt text, so the
+		// image node's children (the alt text) must be skipped, otherwise
+		// they get concatenated into the same !...! markers by the renderer.
+		// SkipChildren also suppresses the walker's "leaving" visit for this
+		// node, so both markers are emitted up front while entering. They go
+		// through RenderNode rather than the buffer directly because the
+		// renderer tracks how much it last wrote to decide whether a
+		// following block needs a leading newline; writing behind its back
+		// leaves that stale and glues the next table or list onto this line.
+		if node.Type == bf.Image {
+			if entering {
+				renderer.RenderNode(&buf, node, true)
+				renderer.RenderNode(&buf, node, false)
+			}
+			return bf.SkipChildren
+		}
+		return renderer.RenderNode(&buf, node, entering)
+	})
 
+	out := buf.String()
 	for i, mention := range mentions {
 		out = strings.ReplaceAll(out, placeholder(nonce, i), mention)
 	}
