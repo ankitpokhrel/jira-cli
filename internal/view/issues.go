@@ -181,9 +181,10 @@ func (l *IssueList) header() []string {
 		}
 	}
 
-	// Key field is required in TUI to fetch relevant data later.
-	// So, we will prepend the field if it is not available.
-	if !hasKeyCol {
+	// Key field is required in the interactive TUI to fetch relevant data
+	// later (view/move/copy actions). Plain output has no such actions, so
+	// we respect the user-supplied columns as-is and don't force it in.
+	if !hasKeyCol && !l.Display.Plain {
 		headers = append([]string{fieldKey}, headers...)
 	}
 

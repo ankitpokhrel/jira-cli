@@ -148,6 +148,30 @@ TEST-2	Story	Open	2020-12-13 14:05:20
 	assert.Equal(t, expected, b.String())
 }
 
+func TestIssueRenderInPlainViewWithoutKeyColumn(t *testing.T) {
+	var b bytes.Buffer
+
+	data := getIssues()
+
+	issue := IssueList{
+		Project: "TEST",
+		Server:  "https://test.local",
+		Data:    data,
+		Display: DisplayFormat{
+			Plain:     true,
+			NoHeaders: false,
+			Columns:   []string{"type"},
+		},
+	}
+	assert.NoError(t, issue.renderPlain(&b, "\t"))
+
+	expected := `TYPE
+Bug
+Story
+`
+	assert.Equal(t, expected, b.String())
+}
+
 func TestIssueRenderInCSVFormat(t *testing.T) {
 	var b bytes.Buffer
 
