@@ -812,11 +812,18 @@ func (c *JiraCLIConfigGenerator) getBoardSuggestions(project string) error {
 
 	resp, err := c.jiraClient.Boards(project, "")
 	if err != nil {
-		if c.value.installation == jira.InstallationTypeCloud {
-			return err
+		// A failed board fetch is not fatal: the board API may not exist (local instance without the
+		// agile add-on) or may fail for a project that doesn't support Jira Software boards (Cloud can
+		// return a 500 for e.g. business/JWM projects). Login/credentials are already verified at this
+		// point, so we fall back to "None" and let the user complete `init` without a board.
+		s.Stop()
+
+		reason := err.Error()
+		if e, ok := err.(*jira.ErrUnexpectedResponse); ok {
+			reason = fmt.Sprintf("received unexpected response '%s'", e.Status)
 		}
-		// We don't care about the error in the local instance since board API may not exist if agile-addon is not installed.
-		// The only option available for board selection, in this case, is "None" if not passed directly from the flag.
+		cmdutil.Warn("Unable to fetch boards for project '%s': %s. Falling back to board 'None'.", project, reason)
+
 		c.boardSuggestions = append(c.boardSuggestions, optionNone)
 		return nil
 	}
