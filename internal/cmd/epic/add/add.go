@@ -90,8 +90,7 @@ func add(cmd *cobra.Command, args []string) {
 		// in a loop. We will print failed requests with exit code 1 at the end if there are any.
 		for _, iss := range params.issues {
 			if err := client.Edit(iss, &jira.EditRequest{ParentIssueKey: params.epicKey, SkipNotify: params.skipNotify}); err != nil {
-				msg := fmt.Sprintf("\n  - %s: %s", iss, cmdutil.NormalizeJiraError(err.Error()))
-				failed.WriteString(msg)
+				fmt.Fprintf(&failed, "\n  - %s: %s", iss, cmdutil.NormalizeJiraError(err.Error()))
 			} else {
 				// We will show success message if at-least one request reports success.
 				passed = true

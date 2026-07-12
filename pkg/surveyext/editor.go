@@ -67,7 +67,7 @@ type EditorTemplateData struct {
 // EXTENDED to augment prompt text and keypress handling.
 //
 //nolint:gocyclo
-func (e *JiraEditor) prompt(initialValue string, config *survey.PromptConfig) (interface{}, error) {
+func (e *JiraEditor) prompt(initialValue string, config *survey.PromptConfig) (any, error) {
 	err := e.Render(
 		EditorQuestionTemplate,
 		// EXTENDED to support printing editor in prompt and BlankAllowed.
@@ -152,7 +152,7 @@ func (e *JiraEditor) prompt(initialValue string, config *survey.PromptConfig) (i
 }
 
 // Prompt is EXTENDED to get our overridden prompt called. This is straight copy-paste from survey.
-func (e *JiraEditor) Prompt(config *survey.PromptConfig) (interface{}, error) {
+func (e *JiraEditor) Prompt(config *survey.PromptConfig) (any, error) {
 	initialValue := ""
 	if e.Default != "" && e.AppendDefault {
 		initialValue = e.Default

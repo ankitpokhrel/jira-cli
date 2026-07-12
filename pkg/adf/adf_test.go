@@ -3,7 +3,6 @@ package adf
 import (
 	"encoding/json"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,6 +35,6 @@ func TestADFReplaceAll(t *testing.T) {
 	dump, err := json.Marshal(adf)
 	assert.NoError(t, err)
 
-	assert.False(t, strings.Contains(string(dump), "Prefix:"))
-	assert.True(t, strings.Contains(string(dump), "Replaced:"))
+	assert.NotContains(t, string(dump), "Prefix:")
+	assert.Contains(t, string(dump), "Replaced:")
 }

@@ -21,8 +21,8 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
-          # Follow the toolchain declared in go.mod: a floating constraint
-          # resolves to Go versions golangci-lint cannot typecheck yet.
+          # Lint and test on the toolchain the release builds use; a floating
+          # constraint would drift CI away from what actually ships.
           go-version-file: 'go.mod'
 
       - name: Install dependencies

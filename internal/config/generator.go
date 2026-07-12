@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -129,7 +130,7 @@ func (c *JiraCLIConfigGenerator) Generate() (string, error) {
 		isExtValid := func() bool {
 			cf := strings.ToLower(cfgFile)
 			for _, ext := range []string{FileType, "yaml"} {
-				if strings.HasSuffix(cf, fmt.Sprintf(".%s", ext)) {
+				if strings.HasSuffix(cf, "."+ext) {
 					return true
 				}
 			}
@@ -315,7 +316,7 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 				Message: "Link to Jira server:",
 				Help:    "This is a link to your jira server, eg: https://company.atlassian.net",
 			},
-			Validate: func(val interface{}) error {
+			Validate: func(val any) error {
 				errInvalidURL := fmt.Errorf("not a valid URL")
 
 				str, ok := val.(string)
@@ -344,7 +345,7 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 					Message: "Login email:",
 					Help:    "This is the email you use to login to your jira account.",
 				},
-				Validate: func(val interface{}) error {
+				Validate: func(val any) error {
 					var (
 						emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9]" +
 							"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
@@ -373,7 +374,7 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 					Message: "Login username:",
 					Help:    "This is the username you use to login to your jira account.",
 				},
-				Validate: func(val interface{}) error {
+				Validate: func(val any) error {
 					errInvalidUser := fmt.Errorf("not a valid user")
 
 					str, ok := val.(string)
@@ -515,7 +516,7 @@ func (c *JiraCLIConfigGenerator) configureProjectAndBoardDetails() error {
 					Help:    "This is your default project board that you want to access by default when using the cli.",
 					Options: c.boardSuggestions,
 				},
-				Validate: func(val interface{}) error {
+				Validate: func(val any) error {
 					errInvalidSelection := fmt.Errorf("invalid selection")
 
 					ans, ok := val.(core.OptionAnswer)
@@ -577,7 +578,7 @@ func (*JiraCLIConfigGenerator) getSearchKeyword() (string, error) {
 			Message: "Search board:",
 			Help:    "Type board name to search",
 		},
-		Validate: func(val interface{}) error {
+		Validate: func(val any) error {
 			errInvalidKeyword := fmt.Errorf("enter atleast 3 characters to search")
 
 			str, ok := val.(string)
@@ -819,8 +820,10 @@ func (c *JiraCLIConfigGenerator) getBoardSuggestions(project string) error {
 		s.Stop()
 
 		reason := err.Error()
-		if e, ok := err.(*jira.ErrUnexpectedResponse); ok {
-			reason = fmt.Sprintf("received unexpected response '%s'", e.Status)
+
+		var errUnexpectedResponse *jira.ErrUnexpectedResponse
+		if errors.As(err, &errUnexpectedResponse) {
+			reason = fmt.Sprintf("received unexpected response '%s'", errUnexpectedResponse.Status)
 		}
 		cmdutil.Warn("Unable to fetch boards for project '%s': %s. Falling back to board 'None'.", project, reason)
 

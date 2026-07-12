@@ -1,7 +1,6 @@
 package browser
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,49 +9,34 @@ import (
 func TestBrowserENVPrecedence(t *testing.T) {
 	cases := []struct {
 		name     string
-		setup    func()
+		env      map[string]string
 		expected string
-		teardown func()
 	}{
 		{
-			name: "it uses JIRA_BROWSER env",
-			setup: func() {
-				_ = os.Setenv("JIRA_BROWSER", "firefox")
-			},
+			name:     "it uses JIRA_BROWSER env",
+			env:      map[string]string{"JIRA_BROWSER": "firefox"},
 			expected: "firefox",
-			teardown: func() {
-				_ = os.Unsetenv("JIRA_BROWSER")
-			},
 		},
 		{
-			name: "it uses BROWSER env",
-			setup: func() {
-				_ = os.Setenv("BROWSER", "chrome")
-			},
+			name:     "it uses BROWSER env",
+			env:      map[string]string{"BROWSER": "chrome"},
 			expected: "chrome",
-			teardown: func() {
-				_ = os.Unsetenv("BROWSER")
-			},
 		},
 		{
-			name: "JIRA_BROWSER gets precedence over BROWSER env if both are set",
-			setup: func() {
-				_ = os.Setenv("BROWSER", "chrome")
-				_ = os.Setenv("JIRA_BROWSER", "firefox")
-			},
+			name:     "JIRA_BROWSER gets precedence over BROWSER env if both are set",
+			env:      map[string]string{"BROWSER": "chrome", "JIRA_BROWSER": "firefox"},
 			expected: "firefox",
-			teardown: func() {
-				_ = os.Unsetenv("BROWSER")
-				_ = os.Unsetenv("JIRA_BROWSER")
-			},
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup()
+			t.Setenv("JIRA_BROWSER", "")
+			t.Setenv("BROWSER", "")
+			for k, v := range tc.env {
+				t.Setenv(k, v)
+			}
 			assert.Equal(t, tc.expected, getBrowserFromENV())
-			tc.teardown()
 		})
 	}
 }

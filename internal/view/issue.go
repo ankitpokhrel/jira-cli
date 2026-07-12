@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/charmbracelet/glamour"
@@ -394,7 +394,7 @@ func (i Issue) linkedIssues() string {
 	}
 
 	// We are sorting keys to respect the order we see in the UI.
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	sep := i.fieldSeparator()
 	for _, k := range keys {

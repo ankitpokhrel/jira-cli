@@ -1,7 +1,9 @@
 package cmdutil
 
 import (
+	"cmp"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -28,26 +30,29 @@ func ExitIfError(err error) {
 
 	var msg string
 
-	if e, ok := err.(*jira.ErrUnexpectedResponse); ok {
+	var (
+		errUnexpectedResponse *jira.ErrUnexpectedResponse
+		errMultipleFailed     *jira.ErrMultipleFailed
+	)
+
+	switch {
+	case errors.As(err, &errUnexpectedResponse):
 		dm := fmt.Sprintf(
 			"\njira: Received unexpected response '%s'.\nPlease check the parameters you supplied and try again.",
-			e.Status,
+			errUnexpectedResponse.Status,
 		)
-		bd := e.Error()
+		bd := errUnexpectedResponse.Error()
 
 		msg = dm
 		if len(bd) > 0 {
-			msg = fmt.Sprintf("%s%s", bd, dm)
+			msg = bd + dm
 		}
-	} else if e, ok := err.(*jira.ErrMultipleFailed); ok {
-		msg = fmt.Sprintf("\n%s%s", "SOME REQUESTS REPORTED ERROR:", e.Error())
-	} else {
-		switch err {
-		case jira.ErrEmptyResponse:
-			msg = "jira: Received empty response.\nPlease try again."
-		default:
-			msg = fmt.Sprintf("Error: %s", err.Error())
-		}
+	case errors.As(err, &errMultipleFailed):
+		msg = "\nSOME REQUESTS REPORTED ERROR:" + errMultipleFailed.Error()
+	case errors.Is(err, jira.ErrEmptyResponse):
+		msg = "jira: Received empty response.\nPlease try again."
+	default:
+		msg = fmt.Sprintf("Error: %s", err.Error())
 	}
 
 	fmt.Fprintf(os.Stderr, "%s\n", msg)
@@ -71,22 +76,22 @@ func Info(msg string) *spinner.Spinner {
 }
 
 // Success prints success message in stdout.
-func Success(msg string, args ...interface{}) {
+func Success(msg string, args ...any) {
 	_, _ = fmt.Fprintf(os.Stdout, fmt.Sprintf("\n\u001B[0;32m✓\u001B[0m %s\n", msg), args...)
 }
 
 // Warn prints warning message in stderr.
-func Warn(msg string, args ...interface{}) {
+func Warn(msg string, args ...any) {
 	_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("\u001B[0;33m%s\u001B[0m\n", msg), args...)
 }
 
 // Fail prints failure message in stderr.
-func Fail(msg string, args ...interface{}) {
+func Fail(msg string, args ...any) {
 	_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("\u001B[0;31m✗\u001B[0m %s\n", msg), args...)
 }
 
 // Failed prints failure message in stderr and exits.
-func Failed(msg string, args ...interface{}) {
+func Failed(msg string, args ...any) {
 	Fail(msg, args...)
 	os.Exit(1)
 }
@@ -110,9 +115,7 @@ func Navigate(server, path string) error {
 // The server section can be overridden via `browse_server` in config.
 // This is useful if your API endpoint is separate from the web client endpoint.
 func GenerateServerBrowseURL(server, key string) string {
-	if viper.GetString("browse_server") != "" {
-		server = viper.GetString("browse_server")
-	}
+	server = cmp.Or(viper.GetString("browse_server"), server)
 	return fmt.Sprintf("%s/browse/%s", server, key)
 }
 

@@ -85,11 +85,8 @@ func (tr *MarkdownTranslator) Open(n Connector, _ int) string {
 			nl := true
 			if attrs != nil {
 				a := attrs.(map[string]any)
-				for k := range a {
-					if k == "language" {
-						nl = false
-						break
-					}
+				if _, ok := a["language"]; ok {
+					nl = false
 				}
 			}
 			if nl {
@@ -199,7 +196,7 @@ func (tr *MarkdownTranslator) Close(n Connector) string {
 		case ChildNodeTableRow:
 			tag.WriteString("\n")
 			if tr.table.sep {
-				for i := 0; i < tr.table.cols; i++ {
+				for i := range tr.table.cols {
 					tag.WriteString("---")
 					if i != tr.table.cols-1 {
 						tag.WriteString(" | ")

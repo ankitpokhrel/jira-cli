@@ -1,6 +1,7 @@
 package init
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -117,20 +118,20 @@ server's certificate chain and host name in requests to the jira server.`)
 
 	file, err := c.Generate()
 	if err != nil {
-		if e, ok := err.(*jira.ErrUnexpectedResponse); ok {
+		var e *jira.ErrUnexpectedResponse
+
+		switch {
+		case errors.As(err, &e):
 			fmt.Println()
 			cmdutil.Failed("Received unexpected response '%s' from jira. Please try again.", e.Status)
-		} else {
-			switch err {
-			case jiraConfig.ErrSkip:
-				cmdutil.Success("Skipping config generation. Current config: %s", viper.ConfigFileUsed())
-			case jiraConfig.ErrUnexpectedResponseFormat:
-				fmt.Println()
-				cmdutil.Failed("Got response in unexpected format when fetching metadata. Please try again.")
-			default:
-				fmt.Println()
-				cmdutil.Failed("Unable to generate configuration: %s", err.Error())
-			}
+		case errors.Is(err, jiraConfig.ErrSkip):
+			cmdutil.Success("Skipping config generation. Current config: %s", viper.ConfigFileUsed())
+		case errors.Is(err, jiraConfig.ErrUnexpectedResponseFormat):
+			fmt.Println()
+			cmdutil.Failed("Got response in unexpected format when fetching metadata. Please try again.")
+		default:
+			fmt.Println()
+			cmdutil.Failed("Unable to generate configuration: %s", err.Error())
 		}
 		os.Exit(1)
 	}

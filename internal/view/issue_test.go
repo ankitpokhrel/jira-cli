@@ -54,10 +54,10 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 			}{{Name: "BE"}, {Name: "FE"}},
 			Comment: struct {
 				Comments []struct {
-					ID      string      `json:"id"`
-					Author  jira.User   `json:"author"`
-					Body    interface{} `json:"body"`
-					Created string      `json:"created"`
+					ID      string    `json:"id"`
+					Author  jira.User `json:"author"`
+					Body    any       `json:"body"`
+					Created string    `json:"created"`
 				} `json:"comments"`
 				Total int `json:"total"`
 			}{Total: 0},
@@ -122,18 +122,18 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 			}{{Name: "BE"}, {Name: "FE"}},
 			Comment: struct {
 				Comments []struct {
-					ID      string      `json:"id"`
-					Author  jira.User   `json:"author"`
-					Body    interface{} `json:"body"`
-					Created string      `json:"created"`
+					ID      string    `json:"id"`
+					Author  jira.User `json:"author"`
+					Body    any       `json:"body"`
+					Created string    `json:"created"`
 				} `json:"comments"`
 				Total int `json:"total"`
 			}{
 				Comments: []struct {
-					ID      string      `json:"id"`
-					Author  jira.User   `json:"author"`
-					Body    interface{} `json:"body"`
-					Created string      `json:"created"`
+					ID      string    `json:"id"`
+					Author  jira.User `json:"author"`
+					Body    any       `json:"body"`
+					Created string    `json:"created"`
 				}{
 					{ID: "10033", Author: jira.User{Name: "Person A"}, Body: "Test comment A", Created: "2021-11-22T23:44:13.782+0100"},
 					{ID: "10034", Author: jira.User{Name: "Person B"}, Body: "Test comment B", Created: "2021-11-23T23:44:13.782+0100"},
@@ -282,18 +282,18 @@ func decoratedIssue() *jira.Issue {
 			}{{Name: "BE"}},
 			Comment: struct {
 				Comments []struct {
-					ID      string      `json:"id"`
-					Author  jira.User   `json:"author"`
-					Body    interface{} `json:"body"`
-					Created string      `json:"created"`
+					ID      string    `json:"id"`
+					Author  jira.User `json:"author"`
+					Body    any       `json:"body"`
+					Created string    `json:"created"`
 				} `json:"comments"`
 				Total int `json:"total"`
 			}{
 				Comments: []struct {
-					ID      string      `json:"id"`
-					Author  jira.User   `json:"author"`
-					Body    interface{} `json:"body"`
-					Created string      `json:"created"`
+					ID      string    `json:"id"`
+					Author  jira.User `json:"author"`
+					Body    any       `json:"body"`
+					Created string    `json:"created"`
 				}{
 					{ID: "10033", Author: jira.User{Name: "Person A"}, Body: "Test comment A", Created: "2021-11-22T23:44:13.782+0100"},
 				},
@@ -474,8 +474,6 @@ func TestSeparator(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 

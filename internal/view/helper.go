@@ -157,9 +157,9 @@ func renderPlain(w io.Writer, data tui.TableData, delimiter string) error {
 	for _, items := range data {
 		n := len(items)
 		for j, v := range items {
-			_, _ = fmt.Fprintf(w, "%s", unescape(v))
+			_, _ = fmt.Fprint(w, unescape(v))
 			if j != n-1 {
-				_, _ = fmt.Fprintf(w, "%s", delimiter)
+				_, _ = fmt.Fprint(w, delimiter)
 			}
 		}
 		_, _ = fmt.Fprintln(w)
@@ -225,17 +225,8 @@ func shortenAndPad(msg string, limit int, ellipsis string) string {
 }
 
 func pad(msg string, limit int) string {
-	var out strings.Builder
-	out.WriteString(msg)
-	for i := len(msg); i < limit; i++ {
-		out.WriteRune(' ')
+	if len(msg) >= limit {
+		return msg
 	}
-	return out.String()
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
+	return msg + strings.Repeat(" ", limit-len(msg))
 }

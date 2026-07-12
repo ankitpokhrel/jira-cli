@@ -38,12 +38,12 @@ type Project struct {
 
 // ProjectVersion holds project version info.
 type ProjectVersion struct {
-	Archived    bool        `json:"archived"`
-	Description interface{} `json:"description"`
-	ID          string      `json:"id"`
-	Name        string      `json:"name"`
-	ProjectID   int         `json:"projectId"`
-	Released    bool        `json:"released"`
+	Archived    bool   `json:"archived"`
+	Description any    `json:"description"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	ProjectID   int    `json:"projectId"`
+	Released    bool   `json:"released"`
 }
 
 // Board holds board info.
@@ -67,9 +67,9 @@ type Issue struct {
 
 // IssueFields holds issue fields.
 type IssueFields struct {
-	Summary     string      `json:"summary"`
-	Description interface{} `json:"description"` // string in v1/v2, adf.ADF in v3
-	Labels      []string    `json:"labels"`
+	Summary     string   `json:"summary"`
+	Description any      `json:"description"` // string in v1/v2, adf.ADF in v3
+	Labels      []string `json:"labels"`
 	Resolution  struct {
 		Name string `json:"name"`
 	} `json:"resolution"`
@@ -104,10 +104,10 @@ type IssueFields struct {
 	} `json:"versions"`
 	Comment struct {
 		Comments []struct {
-			ID      string      `json:"id"`
-			Author  User        `json:"author"`
-			Body    interface{} `json:"body"` // string in v1/v2, adf.ADF in v3
-			Created string      `json:"created"`
+			ID      string `json:"id"`
+			Author  User   `json:"author"`
+			Body    any    `json:"body"` // string in v1/v2, adf.ADF in v3
+			Created string `json:"created"`
 		} `json:"comments"`
 		Total int `json:"total"`
 	} `json:"comment"`

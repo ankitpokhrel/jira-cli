@@ -26,7 +26,7 @@ type CreateRequest struct {
 	// This can also be used to attach epic for next-gen project.
 	ParentIssueKey   string
 	Summary          string
-	Body             interface{} // string in v1/v2 and adf.ADF in v3
+	Body             any // string in v1/v2 and adf.ADF in v3
 	Reporter         string
 	Assignee         string
 	Priority         string
@@ -249,7 +249,7 @@ func constructCustomFields(fields map[string]string, configuredFields []IssueTyp
 			case customFieldFormatArray:
 				pieces := strings.Split(strings.TrimSpace(val), ",")
 				if configured.Schema.Items == customFieldFormatOption {
-					items := make([]customFieldTypeOption, 0)
+					items := make([]customFieldTypeOption, 0, len(pieces))
 					for _, p := range pieces {
 						items = append(items, customFieldTypeOption{Value: p})
 					}
@@ -294,7 +294,7 @@ type createFields struct {
 	} `json:"parent,omitempty"`
 	Name        string           `json:"name,omitempty"`
 	Summary     string           `json:"summary"`
-	Description interface{}      `json:"description,omitempty"`
+	Description any              `json:"description,omitempty"`
 	Reporter    *nameOrAccountID `json:"reporter,omitempty"`
 	Assignee    *nameOrAccountID `json:"assignee,omitempty"`
 	Priority    *struct {
@@ -328,11 +328,11 @@ func (cfm *createFieldsMarshaler) MarshalJSON() ([]byte, error) {
 		return m, err
 	}
 
-	var temp interface{}
+	var temp any
 	if err := json.Unmarshal(m, &temp); err != nil {
 		return nil, err
 	}
-	dm := temp.(map[string]interface{})
+	dm := temp.(map[string]any)
 
 	if epic, ok := dm["name"]; ok {
 		if cfm.M.epicField != "" {

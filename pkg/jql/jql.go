@@ -3,6 +3,7 @@ package jql
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -119,40 +120,16 @@ func (j *JQL) Lt(field, value string, wrap bool) *JQL {
 
 // In constructs a query with IN clause.
 func (j *JQL) In(field string, value ...string) *JQL {
-	n := len(value)
-	if field != "" && n > 0 {
-		var q strings.Builder
-
-		fmt.Fprintf(&q, "%s IN (", field)
-		for i, v := range value {
-			fmt.Fprintf(&q, "%q", v)
-			if i != n-1 {
-				q.WriteString(", ")
-			}
-		}
-		q.WriteString(")")
-
-		j.filters = append(j.filters, q.String())
+	if field != "" && len(value) > 0 {
+		j.filters = append(j.filters, fmt.Sprintf("%s IN (%s)", field, quoteAll(value)))
 	}
 	return j
 }
 
 // NotIn constructs a query with NOT IN clause.
 func (j *JQL) NotIn(field string, value ...string) *JQL {
-	n := len(value)
-	if field != "" && n > 0 {
-		var q strings.Builder
-
-		fmt.Fprintf(&q, "%s NOT IN (", field)
-		for i, v := range value {
-			fmt.Fprintf(&q, "%q", v)
-			if i != n-1 {
-				q.WriteString(", ")
-			}
-		}
-		q.WriteString(")")
-
-		j.filters = append(j.filters, q.String())
+	if field != "" && len(value) > 0 {
+		j.filters = append(j.filters, fmt.Sprintf("%s NOT IN (%s)", field, quoteAll(value)))
 	}
 	return j
 }
@@ -196,23 +173,10 @@ func (j *JQL) String() string {
 }
 
 func (j *JQL) mergeFilters(separator string) {
-	fLen := len(j.filters)
-
-	var qs strings.Builder
-
-	for i, filter := range j.filters {
-		qs.WriteString(filter)
-
-		if i != fLen-1 {
-			fmt.Fprintf(&qs, " %s ", separator)
-		}
-	}
-
-	s := qs.String()
+	s := strings.Join(j.filters, " "+separator+" ")
 
 	if s != "" {
-		j.filters = nil
-		j.filters = append(j.filters, qs.String())
+		j.filters = []string{s}
 	}
 }
 
@@ -223,6 +187,14 @@ func (j *JQL) compile() string {
 	}
 
 	return q
+}
+
+func quoteAll(values []string) string {
+	quoted := make([]string, 0, len(values))
+	for _, v := range values {
+		quoted = append(quoted, strconv.Quote(v))
+	}
+	return strings.Join(quoted, ", ")
 }
 
 func hasProjectFilter(str string) bool {

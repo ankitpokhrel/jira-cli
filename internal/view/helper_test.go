@@ -56,8 +56,6 @@ func TestFormatDateTime(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -97,8 +95,6 @@ func TestPrepareTitle(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -183,48 +179,10 @@ func TestShortenAndPad(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			assert.Equal(t, tc.expected, shortenAndPad(tc.input, tc.limit, tc.ellipsis))
-		})
-	}
-}
-
-func TestMax(t *testing.T) {
-	t.Parallel()
-
-	cases := []struct {
-		name     string
-		input    []int
-		expected int
-	}{
-		{
-			name:     "a > b",
-			input:    []int{5, 3},
-			expected: 5,
-		},
-		{
-			name:     "a < b",
-			input:    []int{-5, 5},
-			expected: 5,
-		},
-		{
-			name:     "a == b",
-			input:    []int{3, 3},
-			expected: 3,
-		},
-	}
-
-	for _, tc := range cases {
-		tc := tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			assert.Equal(t, tc.expected, max(tc.input[0], tc.input[1]))
 		})
 	}
 }

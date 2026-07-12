@@ -157,7 +157,7 @@ func (ac *watchCmd) setWatcher(project string) error {
 				Help:    "Can't find the user? Select search and look for a keyword or cancel to abort",
 				Options: ac.getOptions(last),
 			},
-			Validate: func(val interface{}) error {
+			Validate: func(val any) error {
 				errInvalidSelection := fmt.Errorf("invalid selection")
 
 				ans, ok := val.(core.OptionAnswer)
@@ -227,7 +227,7 @@ func (ac *watchCmd) getSearchKeyword() error {
 			Message: "Search user:",
 			Help:    "Type user email or display name to search for a user",
 		},
-		Validate: func(val interface{}) error {
+		Validate: func(val any) error {
 			errInvalidKeyword := fmt.Errorf("enter atleast 3 characters to search")
 
 			str, ok := val.(string)

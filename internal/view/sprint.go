@@ -51,14 +51,14 @@ func (sl *SprintList) Render() error {
 			tui.WithFixedColumns(sl.Display.FixedColumns),
 			tui.WithTableStyle(sl.Display.TableStyle),
 			tui.WithSelectedFunc(navigate(sl.Server)),
-			tui.WithViewModeFunc(func(r, c int, d interface{}) (func() interface{}, func(interface{}) (string, error)) {
-				dataFn := func() interface{} {
+			tui.WithViewModeFunc(func(r, c int, d any) (func() any, func(any) (string, error)) {
+				dataFn := func() any {
 					data := d.(tui.TableData)
 					ci := data.GetIndex(fieldKey)
 					iss, _ := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(1))
 					return iss
 				}
-				renderFn := func(i interface{}) (string, error) {
+				renderFn := func(i any) (string, error) {
 					iss := Issue{
 						Server:  sl.Server,
 						Data:    i.(*jira.Issue),
@@ -110,7 +110,7 @@ func (sl *SprintList) data() []tui.PreviewData {
 	data = append(data, tui.PreviewData{
 		Key:  "help",
 		Menu: "?",
-		Contents: func(s string) interface{} {
+		Contents: func(s string) any {
 			return helpText
 		},
 	})
@@ -126,7 +126,7 @@ func (sl *SprintList) data() []tui.PreviewData {
 				cmdutil.FormatDateTimeHuman(s.StartDate, time.RFC3339),
 				cmdutil.FormatDateTimeHuman(s.EndDate, time.RFC3339),
 			)),
-			Contents: func(key string) interface{} {
+			Contents: func(key string) any {
 				issues := sl.Issues(bid, sid)
 				return sl.tabularize(issues)
 			},

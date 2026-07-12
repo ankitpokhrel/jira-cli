@@ -42,8 +42,6 @@ func TestExists(t *testing.T) {
 	assert.NoError(t, err)
 
 	for _, tc := range cases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -90,8 +88,6 @@ func TestGetBoardSuggestionsFallsBackToNoneOnError(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			gen := NewJiraCLIConfigGenerator(&JiraCLIConfig{})
 			gen.value.installation = tc.installation

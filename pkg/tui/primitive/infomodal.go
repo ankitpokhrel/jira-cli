@@ -69,10 +69,7 @@ func (i *InfoModal) Draw(screen tcell.Screen) {
 	i.info.Clear()
 	lines := strings.Split(i.text, "\n")
 	for _, line := range lines {
-		w := utf8.RuneCountInString(line)
-		if w > width {
-			width = w
-		}
+		width = max(width, utf8.RuneCountInString(line))
 	}
 
 	// Set the modal's position and size.

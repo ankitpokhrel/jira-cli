@@ -38,8 +38,8 @@ func splitPositiveNegative(labels []string) ([]string, []string) {
 	positive := make([]string, 0)
 	negative := make([]string, 0)
 	for _, label := range labels {
-		if strings.HasPrefix(label, "~") {
-			negative = append(negative, label[1:])
+		if negated, ok := strings.CutPrefix(label, "~"); ok {
+			negative = append(negative, negated)
 		} else {
 			positive = append(positive, label)
 		}

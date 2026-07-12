@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 )
 
 // Sprint states.
@@ -148,7 +149,7 @@ func (c *Client) SprintsInBoards(boardIDs []int, qp string, limit int) []*Sprint
 
 	seen := make(map[int]struct{}, n)
 
-	for i := 0; i < n; i++ {
+	for range n {
 		v := <-ch
 
 		for _, s := range v {
@@ -159,7 +160,7 @@ func (c *Client) SprintsInBoards(boardIDs []int, qp string, limit int) []*Sprint
 			seen[s.ID] = struct{}{}
 		}
 	}
-	reverse(sprints)
+	slices.Reverse(sprints)
 
 	return sprints
 }
@@ -263,16 +264,5 @@ func (c *Client) lastNSprints(boardID int, qp string, limit int) (*SprintResult,
 func injectBoardID(sprints []*Sprint, boardID int) {
 	for _, s := range sprints {
 		s.BoardID = boardID
-	}
-}
-
-func reverse(s []*Sprint) {
-	n := len(s)
-	if n < 2 {
-		return
-	}
-	for i := 0; i < n/2; i++ {
-		j := n - i - 1
-		s[i], s[j] = s[j], s[i]
 	}
 }

@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -19,10 +20,10 @@ const (
 var errNoData = fmt.Errorf("no data")
 
 // SelectedFunc is fired when a user press enter key in the table cell.
-type SelectedFunc func(row, column int, data interface{})
+type SelectedFunc func(row, column int, data any)
 
 // ViewModeFunc sets view mode handler func which gets triggered when a user press 'v'.
-type ViewModeFunc func(row, col int, data interface{}) (func() interface{}, func(data interface{}) (string, error))
+type ViewModeFunc func(row, col int, data any) (func() any, func(data any) (string, error))
 
 // RefreshFunc is fired when a user press 'CTRL+R' or `F5` character in the table.
 type RefreshFunc func()
@@ -37,10 +38,10 @@ type MoveHandlerFunc func(state string) error
 type MoveFunc func(row, col int) func() (key string, actions []string, handler MoveHandlerFunc, status string, refresh RefreshTableStateFunc)
 
 // CopyFunc is fired when a user press 'c' character in the table cell.
-type CopyFunc func(row, column int, data interface{})
+type CopyFunc func(row, column int, data any)
 
 // CopyKeyFunc is fired when a user press 'CTRL+K' character in the table cell.
-type CopyKeyFunc func(row, column int, data interface{})
+type CopyKeyFunc func(row, column int, data any)
 
 // TableData is the data to be displayed in a table.
 type TableData [][]string
@@ -342,16 +343,9 @@ func (t *Table) initTable() {
 							r, c := t.view.GetSelection()
 							key, actions, handler, currentStatus, refreshFunc := t.moveFunc(r, c)()
 
-							currentStatusIdx := func() int {
-								for i, btn := range actions {
-									if btn == currentStatus {
-										return i
-									}
-								}
-								return 0
-							}
+							currentStatusIdx := max(slices.Index(actions, currentStatus), 0)
 
-							t.action.ClearButtons().AddButtons(actions).SetFocus(currentStatusIdx())
+							t.action.ClearButtons().AddButtons(actions).SetFocus(currentStatusIdx)
 							t.action.SetText(
 								fmt.Sprintf("Select desired state to transition %s to:", key),
 							)
@@ -391,8 +385,8 @@ func (t *Table) initTable() {
 func renderTableHeader(t *Table, data []string) {
 	style := tcell.StyleDefault.Bold(true)
 
-	for c := 0; c < len(data); c++ {
-		text := " " + data[c]
+	for c, col := range data {
+		text := " " + col
 
 		cell := tview.NewTableCell(text).
 			SetStyle(style).
@@ -408,7 +402,7 @@ func renderTableCell(t *Table, data TableData) {
 	rows, cols := len(data), len(data[0])
 
 	for r := 1; r < rows; r++ {
-		for c := 0; c < cols; c++ {
+		for c := range cols {
 			cell := tview.NewTableCell(pad(data.Get(r, c), t.colPad)).
 				SetMaxWidth(int(t.maxColWidth)).
 				SetTextColor(tcell.ColorDefault)

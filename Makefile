@@ -46,12 +46,18 @@ install:
 ldflags:
 	@echo '$(LDFLAGS)'
 
+# Built from source rather than installed as a release binary: the published
+# binaries are compiled with an older Go than the one in go.mod, and golangci-lint
+# refuses to typecheck a language version newer than the one it was built with.
+# `go install` compiles it with our toolchain, keeping the two in lockstep.
+GOLANGCI_LINT_VERSION = v2.12.2
+GOLANGCI_LINT = $(shell go env GOPATH)/bin/golangci-lint
+
 lint:
-	@if ! command -v golangci-lint > /dev/null 2>&1; then \
-		curl -sSfL https://golangci-lint.run/install.sh | \
-		sh -s -- -b "$$(go env GOPATH)/bin" v2.12.2 ; \
+	@if ! $(GOLANGCI_LINT) version 2>/dev/null | grep -q "$(GOLANGCI_LINT_VERSION:v%=%)"; then \
+		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
 	fi
-	golangci-lint run ./...
+	$(GOLANGCI_LINT) run ./...
 
 test:
 	@go clean -testcache

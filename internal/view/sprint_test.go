@@ -89,7 +89,7 @@ func TestSprintPreviewLayoutData(t *testing.T) {
 	expected := []struct {
 		Key      string
 		Menu     string
-		Contents interface{}
+		Contents any
 	}{
 		{
 			Key:      "help",

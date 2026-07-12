@@ -2,10 +2,12 @@ package tui
 
 import (
 	"bufio"
+	"cmp"
 	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/cli/safeexec"
@@ -21,18 +23,15 @@ func pad(in string, n uint) string {
 		return in
 	}
 
-	var (
-		i   uint
-		out strings.Builder
-	)
+	var out strings.Builder
 
-	for i = 0; i < n; i++ {
+	for range n {
 		out.WriteString(" ")
 	}
 
 	out.WriteString(in)
 
-	for i = 0; i < n; i++ {
+	for range n {
 		out.WriteString(" ")
 	}
 
@@ -89,16 +88,7 @@ func GetPager() string {
 	if IsDumbTerminal() {
 		return "cat"
 	}
-	pager := os.Getenv("JIRA_PAGER")
-	if pager == "" {
-		pgr := os.Getenv("PAGER")
-		if pgr == "" {
-			pager = "less"
-		} else {
-			pager = pgr
-		}
-	}
-	return pager
+	return cmp.Or(os.Getenv("JIRA_PAGER"), os.Getenv("PAGER"), "less")
 }
 
 // PagerOut outputs to configured pager if possible.
@@ -115,12 +105,9 @@ func PagerOut(out string) error {
 		return err
 	}
 
-	pagerEnv := os.Environ()
-	for i := len(pagerEnv) - 1; i >= 0; i-- {
-		if strings.HasPrefix(pagerEnv[i], "PAGER=") {
-			pagerEnv = append(pagerEnv[0:i], pagerEnv[i+1:]...)
-		}
-	}
+	pagerEnv := slices.DeleteFunc(os.Environ(), func(env string) bool {
+		return strings.HasPrefix(env, "PAGER=")
+	})
 	if _, ok := os.LookupEnv("LESS"); !ok {
 		pagerEnv = append(pagerEnv, "LESS=R")
 	}

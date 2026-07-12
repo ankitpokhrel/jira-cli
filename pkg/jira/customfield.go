@@ -7,7 +7,7 @@ const (
 	customFieldFormatProject = "project"
 )
 
-type customField map[string]interface{}
+type customField map[string]any
 
 type customFieldTypeNumber float64
 

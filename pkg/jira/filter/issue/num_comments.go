@@ -27,6 +27,6 @@ func (ncf NumCommentsFilter) Key() filter.Key {
 }
 
 // Val returns value of this filter.
-func (ncf NumCommentsFilter) Val() interface{} {
+func (ncf NumCommentsFilter) Val() any {
 	return ncf.value
 }

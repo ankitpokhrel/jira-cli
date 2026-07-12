@@ -13,7 +13,7 @@ const sidebarMaxWidth = 60
 type PreviewData struct {
 	Key      string
 	Menu     string
-	Contents func(string) interface{}
+	Contents func(string) any
 }
 
 // Preview is the preview layout.
@@ -29,7 +29,7 @@ type Preview struct {
 	initialText         string
 	footerText          string
 	sidebarSelectedFunc SelectedFunc
-	contentsCache       map[string]interface{}
+	contentsCache       map[string]any
 }
 
 // PreviewOption is a functional option that wraps preview properties.
@@ -44,7 +44,7 @@ func NewPreview(opts ...PreviewOption) *Preview {
 		sidebar:       tview.NewTable(),
 		contents:      NewTable(),
 		footer:        tview.NewTextView(),
-		contentsCache: make(map[string]interface{}),
+		contentsCache: make(map[string]any),
 	}
 	for _, opt := range opts {
 		opt(&pv)
@@ -203,7 +203,7 @@ func (pv *Preview) initContents() {
 		SetBorder(true).
 		SetBorderColor(tcell.ColorDarkGray).
 		SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
-			contents := func() interface{} {
+			contents := func() any {
 				sr, _ := pv.sidebar.GetSelection()
 				return pv.contentsCache[pv.data[sr].Key]
 			}

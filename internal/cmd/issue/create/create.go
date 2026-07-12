@@ -166,12 +166,12 @@ type createCmd struct {
 
 func (cc *createCmd) setIssueTypes() error {
 	issueTypes := make([]*jira.IssueType, 0)
-	availableTypes, ok := viper.Get("issue.types").([]interface{})
+	availableTypes, ok := viper.Get("issue.types").([]any)
 	if !ok {
 		return fmt.Errorf("invalid issue types in config")
 	}
 	for _, at := range availableTypes {
-		tp := at.(map[string]interface{})
+		tp := at.(map[string]any)
 		name := tp["name"].(string)
 		handle, _ := tp["handle"].(string)
 		if handle == jira.IssueTypeEpic || name == jira.IssueTypeEpic {

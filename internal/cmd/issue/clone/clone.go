@@ -145,7 +145,7 @@ func clone(cmd *cobra.Command, args []string) {
 type createParams struct {
 	parent     string
 	summary    string
-	body       interface{}
+	body       any
 	priority   string
 	assignee   string
 	labels     []string
@@ -196,7 +196,7 @@ func (cc *cloneCmd) getActualCreateParams(project string, issue *jira.Issue) *cr
 	}
 
 	var (
-		body  interface{}
+		body  any
 		isADF bool
 	)
 

@@ -222,8 +222,7 @@ func (a *Translator) visit(n *Node, depth int) {
 		tag.WriteString(sanitize(n.Text))
 
 		// Close tags in reverse order.
-		for i := len(opened) - 1; i >= 0; i-- {
-			m := opened[i]
+		for _, m := range slices.Backward(opened) {
 			tag.WriteString(a.tsl.Close(m))
 		}
 

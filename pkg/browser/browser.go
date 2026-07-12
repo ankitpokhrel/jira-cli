@@ -2,6 +2,7 @@ package browser
 
 import (
 	"bytes"
+	"cmp"
 	"os"
 	"os/exec"
 
@@ -42,9 +43,5 @@ func Browse(url string) error {
 }
 
 func getBrowserFromENV() string {
-	br := os.Getenv("JIRA_BROWSER")
-	if br == "" {
-		br = os.Getenv("BROWSER")
-	}
-	return br
+	return cmp.Or(os.Getenv("JIRA_BROWSER"), os.Getenv("BROWSER"))
 }

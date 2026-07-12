@@ -3,7 +3,7 @@ package filter
 // Filter groups filterable config.
 type Filter interface {
 	Key() Key
-	Val() interface{}
+	Val() any
 }
 
 // Key represents filter key for issue.
@@ -13,7 +13,7 @@ type Key string
 type Collection []Filter
 
 // Get returns filter value as it is passed.
-func (flt Collection) Get(key Key) interface{} {
+func (flt Collection) Get(key Key) any {
 	for _, f := range flt {
 		if f.Key() == key {
 			return f.Val()

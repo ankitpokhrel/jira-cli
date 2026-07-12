@@ -116,23 +116,21 @@ func (m *ActionModal) SetText(text string) *ActionModal {
 // a "done" handler so the window can be closed again.
 func (m *ActionModal) AddButtons(labels []string) *ActionModal {
 	for index, label := range labels {
-		func(i int, l string) {
-			m.form.AddButton(label, func() {
-				if m.done != nil {
-					m.done(i, l)
-				}
-			})
-			button := m.form.GetButton(m.form.GetButtonCount() - 1)
-			button.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-				switch event.Key() {
-				case tcell.KeyDown, tcell.KeyRight:
-					return tcell.NewEventKey(tcell.KeyTab, 0, tcell.ModNone)
-				case tcell.KeyUp, tcell.KeyLeft:
-					return tcell.NewEventKey(tcell.KeyBacktab, 0, tcell.ModNone)
-				}
-				return event
-			})
-		}(index, label)
+		m.form.AddButton(label, func() {
+			if m.done != nil {
+				m.done(index, label)
+			}
+		})
+		button := m.form.GetButton(m.form.GetButtonCount() - 1)
+		button.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+			switch event.Key() {
+			case tcell.KeyDown, tcell.KeyRight:
+				return tcell.NewEventKey(tcell.KeyTab, 0, tcell.ModNone)
+			case tcell.KeyUp, tcell.KeyLeft:
+				return tcell.NewEventKey(tcell.KeyBacktab, 0, tcell.ModNone)
+			}
+			return event
+		})
 	}
 	return m
 }
@@ -165,16 +163,13 @@ func (m *ActionModal) HasFocus() bool {
 func (m *ActionModal) Draw(screen tcell.Screen) {
 	// Calculate the width of this modal.
 	buttonsWidth := 0
-	for i := 0; i < m.form.GetButtonCount(); i++ {
+	for i := range m.form.GetButtonCount() {
 		button := m.form.GetButton(i)
 		buttonsWidth += tview.TaggedStringWidth(button.GetLabel()) + 4 + 2
 	}
 	buttonsWidth -= 2
 	screenWidth, screenHeight := screen.Size()
-	width := screenWidth / 3
-	if width < buttonsWidth {
-		width = buttonsWidth
-	}
+	width := max(screenWidth/3, buttonsWidth)
 	// width is now without the box border.
 
 	// Reset the text and find out how wide it is.

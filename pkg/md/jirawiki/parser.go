@@ -493,9 +493,7 @@ func (t *Token) handleTable(line string, out *strings.Builder) int {
 		sep.WriteString("|---")
 	}
 
-	row := fmt.Sprintf("%s\n%s|", headers, sep.String())
-
-	out.WriteString(row)
+	fmt.Fprintf(out, "%s\n%s|", headers, sep.String())
 
 	return t.endIdx
 }

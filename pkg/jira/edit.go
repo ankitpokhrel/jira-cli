@@ -380,10 +380,10 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 			case customFieldFormatArray:
 				pieces := strings.Split(strings.TrimSpace(val), ",")
 				if configured.Schema.Items == customFieldFormatOption {
-					items := make([]customFieldTypeOptionAddRemove, 0)
+					items := make([]customFieldTypeOptionAddRemove, 0, len(pieces))
 					for _, p := range pieces {
-						if strings.HasPrefix(p, separatorMinus) {
-							items = append(items, customFieldTypeOptionAddRemove{Remove: &customFieldTypeOption{Value: strings.TrimPrefix(p, separatorMinus)}})
+						if v, ok := strings.CutPrefix(p, separatorMinus); ok {
+							items = append(items, customFieldTypeOptionAddRemove{Remove: &customFieldTypeOption{Value: v}})
 						} else {
 							items = append(items, customFieldTypeOptionAddRemove{Add: &customFieldTypeOption{Value: p}})
 						}
@@ -412,8 +412,8 @@ func splitAddAndRemove(input []string) ([]string, []string) {
 	sub := make([]string, 0, len(input))
 
 	for _, inp := range input {
-		if strings.HasPrefix(inp, separatorMinus) {
-			sub = append(sub, strings.TrimPrefix(inp, separatorMinus))
+		if v, ok := strings.CutPrefix(inp, separatorMinus); ok {
+			sub = append(sub, v)
 		}
 	}
 	for _, inp := range input {

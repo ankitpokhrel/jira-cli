@@ -5,7 +5,11 @@
 # Pinned to the build platform so Go cross-compiles for the target instead of
 # the whole toolchain running emulated under QEMU. The image is built for four
 # platforms on every merge to main, and emulation makes that take hours.
-FROM --platform=$BUILDPLATFORM golang:1.26-alpine3.24 AS builder
+#
+# Pinned to the same patch as the `toolchain` directive in go.mod: whenever a
+# floating tag lags it, GOTOOLCHAIN=auto downloads the pinned toolchain during
+# every one of the four platform builds, and fails outright without a proxy.
+FROM --platform=$BUILDPLATFORM golang:1.26.5-alpine3.24 AS builder
 
 ARG TARGETOS
 ARG TARGETARCH
