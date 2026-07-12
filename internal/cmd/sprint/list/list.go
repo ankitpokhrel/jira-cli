@@ -37,15 +37,15 @@ $ jira sprint list --table
 $ jira sprint list <SPRINT_ID> --table
 
 # Display sprints or sprint issues in a plain table view
-$ jira sprint list --table --plain
+$ jira sprint list --plain
 $ jira sprint list <SPRINT_ID> --plain
 
 # Display sprints or sprint issues in a plain table view without headers
-$ jira sprint list --table --plain --no-headers
+$ jira sprint list --plain --no-headers
 $ jira sprint list <SPRINT_ID> --no-headers
 
 # Display some columns of sprint or sprint issues in a plain table view
-$ jira sprint list --table --plain --columns name,start,end
+$ jira sprint list --plain --columns name,start,end
 $ jira sprint list <SPRINT_ID> --plain --columns type,key,summary
 
 # Display sprint issues in a plain table view and show all fields
@@ -284,7 +284,7 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 	table, err := flags.GetBool("table")
 	cmdutil.ExitIfError(err)
 
-	if table || plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
+	if shouldRenderSprintsInTable(table, plain, tui.IsDumbTerminal(), tui.IsNotTTY()) {
 		cmdutil.ExitIfError(v.RenderInTable())
 	} else {
 		cmdutil.ExitIfError(v.Render())
@@ -308,6 +308,13 @@ func resolveBoardName(configuredID int, configuredName string, boardID int) stri
 		return fmt.Sprintf("#%d", boardID)
 	}
 	return configuredName
+}
+
+// shouldRenderSprintsInTable decides whether the sprint list should be
+// rendered as a non-interactive table instead of the interactive TUI
+// explorer. --plain implies --table since plain output isn't interactive.
+func shouldRenderSprintsInTable(table, plain, dumbTerminal, notTTY bool) bool {
+	return table || plain || dumbTerminal || notTTY
 }
 
 func getIssueQuery(project string, flags query.FlagParser, showAll bool) (*query.Issue, error) {

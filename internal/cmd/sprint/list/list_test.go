@@ -256,3 +256,58 @@ func TestResolveBoardName(t *testing.T) {
 		})
 	}
 }
+
+func TestShouldRenderSprintsInTable(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		table    bool
+		plain    bool
+		expected bool
+	}{
+		{
+			name:     "neither table nor plain is set and terminal is interactive",
+			table:    false,
+			plain:    false,
+			expected: false,
+		},
+		{
+			name:     "table alone implies table view",
+			table:    true,
+			plain:    false,
+			expected: true,
+		},
+		{
+			name:     "plain alone implies table view",
+			table:    false,
+			plain:    true,
+			expected: true,
+		},
+		{
+			name:     "table and plain both set",
+			table:    true,
+			plain:    true,
+			expected: true,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			// dumbTerminal and notTTY are held false here to isolate the
+			// effect of the table/plain flags from the actual test runner
+			// environment.
+			assert.Equal(t, tc.expected, shouldRenderSprintsInTable(tc.table, tc.plain, false, false))
+		})
+	}
+
+	t.Run("dumb terminal or non-tty always implies table view", func(t *testing.T) {
+		t.Parallel()
+
+		assert.True(t, shouldRenderSprintsInTable(false, false, true, false))
+		assert.True(t, shouldRenderSprintsInTable(false, false, false, true))
+	})
+}
