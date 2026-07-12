@@ -71,3 +71,41 @@ func TestProjects(t *testing.T) {
 	_, err = client.Project()
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
+
+func TestProjectRaw(t *testing.T) {
+	var unexpectedStatusCode bool
+
+	expected, err := os.ReadFile("./testdata/projects.json")
+	assert.NoError(t, err)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/2/project", r.URL.Path)
+
+		if unexpectedStatusCode {
+			w.WriteHeader(400)
+		} else {
+			assert.Equal(t, url.Values{
+				"expand": []string{"lead"},
+			}, r.URL.Query())
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			_, _ = w.Write(expected)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	actual, err := client.ProjectRaw()
+	assert.NoError(t, err)
+
+	// The response is passed through untouched, so fields that the Project
+	// struct doesn't model, like id and projectTypeKey, survive.
+	assert.Equal(t, string(expected), actual)
+
+	unexpectedStatusCode = true
+
+	_, err = client.ProjectRaw()
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}

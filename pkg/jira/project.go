@@ -3,7 +3,9 @@ package jira
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -15,22 +17,38 @@ const (
 
 // Project fetches response from /project endpoint.
 func (c *Client) Project() ([]*Project, error) {
-	res, err := c.GetV2(context.Background(), "/project?expand=lead", nil)
+	raw, err := c.ProjectRaw()
 	if err != nil {
 		return nil, err
-	}
-	if res == nil {
-		return nil, ErrEmptyResponse
-	}
-	defer func() { _ = res.Body.Close() }()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, formatUnexpectedResponse(res)
 	}
 
 	var out []*Project
 
-	err = json.NewDecoder(res.Body).Decode(&out)
+	err = json.Unmarshal([]byte(raw), &out)
 
 	return out, err
+}
+
+// ProjectRaw fetches response from /project endpoint same as Project but returns the raw API response body string.
+func (c *Client) ProjectRaw() (string, error) {
+	res, err := c.GetV2(context.Background(), "/project?expand=lead", nil)
+	if err != nil {
+		return "", err
+	}
+	if res == nil {
+		return "", ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusOK {
+		return "", formatUnexpectedResponse(res)
+	}
+
+	var b strings.Builder
+
+	_, err = io.Copy(&b, res.Body)
+	if err != nil {
+		return "", err
+	}
+	return b.String(), nil
 }

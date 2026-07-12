@@ -731,6 +731,13 @@ jira open KEY-1
 ```sh
 jira project list
 ```
+
+The `--raw` option prints the Jira API response as-is, which includes fields
+that are not part of the rendered table, like the project `id`.
+
+```sh
+jira project list --raw
+```
 </details>
 
 <details><summary>List all boards in a project</summary>

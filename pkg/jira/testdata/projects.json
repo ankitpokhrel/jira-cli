@@ -1,10 +1,12 @@
 [
   {
+    "id": "10000",
     "key": "PRJ1",
     "lead": {
       "displayName": "Person A"
     },
-    "name": "Project 1"
+    "name": "Project 1",
+    "projectTypeKey": "software"
   },
   {
     "key": "PRJ2",
