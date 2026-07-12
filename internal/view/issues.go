@@ -73,17 +73,13 @@ func (l *IssueList) Render() error {
 		tui.WithViewModeFunc(func(r, c int, _ any) (func() any, func(any) (string, error)) {
 			dataFn := func() any {
 				ci := data.GetIndex(fieldKey)
-				iss, _ := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(l.Display.Comments))
+				iss, err := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(l.Display.Comments))
+				if err != nil {
+					return err
+				}
 				return iss
 			}
-			renderFn := func(i any) (string, error) {
-				iss := Issue{
-					Server:  l.Server,
-					Data:    i.(*jira.Issue),
-					Options: IssueOption{NumComments: l.Display.Comments},
-				}
-				return iss.RenderedOut(renderer)
-			}
+			renderFn := issuePreviewRenderFn(l.Server, IssueOption{NumComments: l.Display.Comments}, renderer)
 			return dataFn, renderFn
 		}),
 		tui.WithCopyFunc(copyURL(l.Server)),

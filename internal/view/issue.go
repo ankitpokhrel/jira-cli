@@ -19,6 +19,15 @@ import (
 
 const defaultSummaryLength = 73 // +1 to take ellipsis '…' into account.
 
+var (
+	// errNoIssueData is returned instead of dereferencing a nil issue, which every
+	// accessor below would otherwise do. A nil issue means the fetch failed and its
+	// error was dropped on the way here.
+	errNoIssueData = fmt.Errorf("no issue data to render")
+
+	errUnexpectedPreviewData = fmt.Errorf("unexpected preview data")
+)
+
 type fragment struct {
 	Body  string
 	Parse bool
@@ -55,6 +64,9 @@ type Issue struct {
 
 // Render renders the view.
 func (i Issue) Render() error {
+	if i.Data == nil {
+		return errNoIssueData
+	}
 	if i.Display.Plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		// A dumb terminal or a pipe needs the same ASCII-only treatment as an
 		// explicit --plain; everything below renderPlain branches on this flag.
@@ -72,8 +84,35 @@ func (i Issue) Render() error {
 	return tui.PagerOut(out)
 }
 
+// issuePreviewRenderFn builds a renderFn for tui.WithViewModeFunc that renders the issue
+// fetched by the matching dataFn. It propagates a fetch error (e.g. from api.ProxyGetIssue)
+// instead of letting a nil *jira.Issue reach Issue.RenderedOut and panic. Anything the
+// dataFn was not supposed to hand over becomes an error too: the preview must not take
+// the TUI down with it, whatever it is given.
+func issuePreviewRenderFn(server string, opts IssueOption, renderer *glamour.TermRenderer) func(i any) (string, error) {
+	return func(i any) (string, error) {
+		switch data := i.(type) {
+		case error:
+			return "", data
+		case *jira.Issue:
+			iss := Issue{
+				Server:  server,
+				Data:    data,
+				Options: opts,
+			}
+			return iss.RenderedOut(renderer)
+		default:
+			return "", fmt.Errorf("%w of type %T", errUnexpectedPreviewData, i)
+		}
+	}
+}
+
 // RenderedOut translates raw data to the format we want to display in.
 func (i Issue) RenderedOut(renderer *glamour.TermRenderer) (string, error) {
+	if i.Data == nil {
+		return "", errNoIssueData
+	}
+
 	var res strings.Builder
 
 	for _, p := range i.fragments() {

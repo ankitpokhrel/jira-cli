@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/gdamore/tcell/v2"
@@ -25,6 +26,7 @@ type Preview struct {
 	sidebar             *tview.Table
 	contents            *Table
 	footer              *tview.TextView
+	errorModal          *tview.Modal
 	data                []PreviewData
 	initialText         string
 	footerText          string
@@ -44,6 +46,7 @@ func NewPreview(opts ...PreviewOption) *Preview {
 		sidebar:       tview.NewTable(),
 		contents:      NewTable(),
 		footer:        tview.NewTextView(),
+		errorModal:    getErrorModal(),
 		contentsCache: make(map[string]any),
 	}
 	for _, opt := range opts {
@@ -166,12 +169,26 @@ func (pv *Preview) init() {
 		AddItem(pv.contents.view, 0, 2, 2, 1, 0, 0, false).
 		AddItem(pv.footer, 2, 0, 1, 3, 0, 0, false)
 
+	pv.errorModal.SetDoneFunc(func(int, string) {
+		pv.painter.HidePage("error")
+		pv.screen.SetFocus(pv.contents.view)
+	})
+
 	pv.painter = tview.NewPages().
 		AddPage("primary", grid, true, true).
-		AddPage("secondary", getInfoModal(), true, false)
+		AddPage("secondary", getInfoModal(), true, false).
+		AddPage("error", pv.errorModal, true, false)
 
 	pv.initLayout(pv.sidebar)
 	pv.initLayout(pv.contents.view)
+}
+
+// showError reports a failed action to the user, who would otherwise be left
+// staring at an unchanged screen wondering whether the key press registered.
+func (pv *Preview) showError(err error) {
+	pv.errorModal.SetText(fmt.Sprintf("Error: %s", err.Error()))
+	pv.painter.ShowPage("error")
+	pv.screen.SetFocus(pv.errorModal)
 }
 
 func (pv *Preview) initSidebar() {
@@ -240,7 +257,7 @@ func (pv *Preview) initContents() {
 					r, c := pv.contents.view.GetSelection()
 
 					go func() {
-						func() {
+						err := func() error {
 							pv.painter.ShowPage("secondary")
 							defer func() {
 								pv.painter.HidePage("secondary")
@@ -251,10 +268,16 @@ func (pv *Preview) initContents() {
 							dataFn, renderFn := pv.contents.viewModeFunc(r, c, contents)
 
 							out, err := renderFn(dataFn())
-							if err == nil {
-								pv.screen.Suspend(func() { _ = PagerOut(out) })
+							if err != nil {
+								return err
 							}
+							pv.screen.Suspend(func() { _ = PagerOut(out) })
+
+							return nil
 						}()
+						if err != nil {
+							pv.showError(err)
+						}
 
 						// Refresh the screen.
 						pv.screen.Draw()

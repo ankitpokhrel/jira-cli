@@ -2,6 +2,7 @@ package view
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 	"unicode"
@@ -624,6 +625,76 @@ func TestSeparator(t *testing.T) {
 			} else {
 				assert.Equal(t, tc.expected, issue.separator(tc.body))
 			}
+		})
+	}
+}
+
+func TestIssuePreviewRenderFn(t *testing.T) {
+	t.Parallel()
+
+	fetchErr := errors.New("failed to fetch issue")
+
+	cases := []struct {
+		name     string
+		dataFn   func() any
+		expected error
+		contains string
+	}{
+		{
+			name: "it renders the issue fetched by the dataFn",
+			dataFn: func() any {
+				return &jira.Issue{
+					Key: "TEST-1",
+					Fields: jira.IssueFields{
+						Summary: "This is a test",
+					},
+				}
+			},
+			contains: "TEST-1",
+		},
+		{
+			name: "it propagates an error from the dataFn",
+			dataFn: func() any {
+				return fetchErr
+			},
+			expected: fetchErr,
+		},
+		{
+			// The fetch failing used to leave a nil issue behind a non-nil
+			// interface, which took the whole TUI down in Issue.header().
+			name: "it reports a nil issue instead of panicking",
+			dataFn: func() any {
+				var iss *jira.Issue
+				return iss
+			},
+			expected: errNoIssueData,
+		},
+		{
+			name: "it reports data it does not know how to render",
+			dataFn: func() any {
+				return "TEST-1"
+			},
+			expected: errUnexpectedPreviewData,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			renderer, err := MDRenderer()
+			assert.NoError(t, err)
+
+			out, err := issuePreviewRenderFn("https://test.local", IssueOption{}, renderer)(tc.dataFn())
+
+			if tc.expected != nil {
+				assert.ErrorIs(t, err, tc.expected)
+				assert.Empty(t, out)
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.Contains(t, out, tc.contains)
 		})
 	}
 }

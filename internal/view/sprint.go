@@ -30,8 +30,6 @@ type SprintList struct {
 }
 
 // Render renders the sprint explorer view.
-//
-//nolint:dupl
 func (sl *SprintList) Render() error {
 	renderer, err := MDRenderer()
 	if err != nil {
@@ -55,17 +53,13 @@ func (sl *SprintList) Render() error {
 				dataFn := func() any {
 					data := d.(tui.TableData)
 					ci := data.GetIndex(fieldKey)
-					iss, _ := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(1))
+					iss, err := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(1))
+					if err != nil {
+						return err
+					}
 					return iss
 				}
-				renderFn := func(i any) (string, error) {
-					iss := Issue{
-						Server:  sl.Server,
-						Data:    i.(*jira.Issue),
-						Options: IssueOption{NumComments: 1},
-					}
-					return iss.RenderedOut(renderer)
-				}
+				renderFn := issuePreviewRenderFn(sl.Server, IssueOption{NumComments: 1}, renderer)
 				return dataFn, renderFn
 			}),
 			tui.WithCopyFunc(copyURL(sl.Server)),

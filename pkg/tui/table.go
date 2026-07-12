@@ -88,6 +88,7 @@ type Table struct {
 	view         *tview.Table
 	footer       *tview.TextView
 	secondary    *tview.Modal
+	errorModal   *tview.Modal
 	help         *primitive.InfoModal
 	action       *primitive.ActionModal
 	style        TableStyle
@@ -118,6 +119,7 @@ func NewTable(opts ...TableOption) *Table {
 		footer:      tview.NewTextView(),
 		help:        primitive.NewInfoModal(),
 		secondary:   getInfoModal(),
+		errorModal:  getErrorModal(),
 		action:      getActionModal(),
 		colPad:      defaultColPad,
 		maxColWidth: defaultColWidth,
@@ -143,13 +145,27 @@ func NewTable(opts ...TableOption) *Table {
 		return ev
 	})
 
+	tbl.errorModal.SetDoneFunc(func(int, string) {
+		tbl.painter.HidePage("error")
+		tbl.screen.SetFocus(tbl.view)
+	})
+
 	tbl.painter = tview.NewPages().
 		AddPage("primary", grid, true, true).
 		AddPage("secondary", tbl.secondary, true, false).
 		AddPage("help", tbl.help, true, false).
-		AddPage("action", tbl.action, true, false)
+		AddPage("action", tbl.action, true, false).
+		AddPage("error", tbl.errorModal, true, false)
 
 	return &tbl
+}
+
+// showError reports a failed action to the user, who would otherwise be left
+// staring at an unchanged screen wondering whether the key press registered.
+func (t *Table) showError(err error) {
+	t.errorModal.SetText(fmt.Sprintf("Error: %s", err.Error()))
+	t.painter.ShowPage("error")
+	t.screen.SetFocus(t.errorModal)
 }
 
 // WithTableStyle sets the style of the table.
@@ -306,17 +322,23 @@ func (t *Table) initTable() {
 					r, c := t.view.GetSelection()
 
 					go func() {
-						func() {
+						err := func() error {
 							t.painter.ShowPage("secondary")
 							defer t.painter.HidePage("secondary")
 
 							dataFn, renderFn := t.viewModeFunc(r, c, t.data)
 
 							out, err := renderFn(dataFn())
-							if err == nil {
-								t.screen.Suspend(func() { _ = PagerOut(out) })
+							if err != nil {
+								return err
 							}
+							t.screen.Suspend(func() { _ = PagerOut(out) })
+
+							return nil
 						}()
+						if err != nil {
+							t.showError(err)
+						}
 
 						// Refresh the screen.
 						t.screen.Draw()

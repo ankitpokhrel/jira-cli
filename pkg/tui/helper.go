@@ -58,6 +58,15 @@ func getInfoModal() *tview.Modal {
 	return modal
 }
 
+func getErrorModal() *tview.Modal {
+	modal := tview.NewModal()
+	modal.SetBackgroundColor(tcell.ColorSpecial).
+		SetTextColor(tcell.ColorRed).
+		AddButtons([]string{"OK"})
+	modal.Box.SetBackgroundColor(tcell.ColorSpecial)
+	return modal
+}
+
 func getActionModal() *primitive.ActionModal {
 	return primitive.NewActionModal().
 		SetBackgroundColor(tcell.ColorSpecial).
