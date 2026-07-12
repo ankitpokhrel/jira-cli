@@ -101,6 +101,9 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 			}{Name: "Fixed"},
 			Description: "h1. Title\nh2. Subtitle\n\nThis is a *bold* and _italic_ text with [a link|https://ankit.pl] in between.",
 			IssueType:   jira.IssueType{Name: "Bug"},
+			Parent: &struct {
+				Key string `json:"key"`
+			}{Key: "TEST-0"},
 			Assignee: struct {
 				Name string `json:"displayName"`
 			}{Name: "Person A"},
@@ -225,7 +228,7 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 	}
 	assert.NoError(t, issue.renderPlain(&b))
 
-	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  💭 3 comments  \U0001F9F5 2 linked\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 0 watchers\n\n------------------------ Description ------------------------\n\n# Title\n## Subtitle\nThis is a **bold** and _italic_ text with [a link](https://ankit.pl) in between.\n\n\n------------------------ 2 Subtasks ------------------------\n\n\n SUBTASKS\n\n  TEST-2 Subtask 1 • High   • TO DO\n  TEST-3 Subtask 2 • Normal • Done \n\n\n\n------------------------ Linked Issues ------------------------\n\n\n BLOCKS\n\n  TEST-2 Something is broken   • Bug • High   • TO DO\n\n RELATES TO\n\n  TEST-3 Everything is on fire • Bug • Urgent • Done \n\n\n\n------------------------ 3 Comments ------------------------\n\n\n Person C • Wed, 24 Nov 21 • Latest comment\n\nTest comment C\n\n\n\n Person B • Tue, 23 Nov 21\n\nTest comment B\n\n"
+	expected := "🐞 Bug  ✅ Done  ⌛ Sun, 13 Dec 20  👷 Person A  🔑️ TEST-1  👪 TEST-0  💭 3 comments  \U0001F9F5 2 linked\n# This is a test\n⏱️  Sun, 13 Dec 20  🔎 Person Z  🚀 High  📦 BE, FE  🏷️  None  👀 0 watchers\n\n------------------------ Description ------------------------\n\n# Title\n## Subtitle\nThis is a **bold** and _italic_ text with [a link](https://ankit.pl) in between.\n\n\n------------------------ 2 Subtasks ------------------------\n\n\n SUBTASKS\n\n  TEST-2 Subtask 1 • High   • TO DO\n  TEST-3 Subtask 2 • Normal • Done \n\n\n\n------------------------ Linked Issues ------------------------\n\n\n BLOCKS\n\n  TEST-2 Something is broken   • Bug • High   • TO DO\n\n RELATES TO\n\n  TEST-3 Everything is on fire • Bug • Urgent • Done \n\n\n\n------------------------ 3 Comments ------------------------\n\n\n Person C • Wed, 24 Nov 21 • Latest comment\n\nTest comment C\n\n\n\n Person B • Tue, 23 Nov 21\n\nTest comment B\n\n"
 	if xterm256() {
 		expected += "\x1b[38;5;242mUse --comments <limit> with `jira issue view` to load more comments\x1b[m\n\n"
 		expected += "\x1b[38;5;242mView this issue on Jira: https://test.local/browse/TEST-1\x1b[m"
