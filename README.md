@@ -63,7 +63,27 @@ nature of the data. Yet, we've attempted to make the experience as similar as po
 | **Jira**  | <a href="#"><img alt="Jira Cloud" src="https://img.shields.io/badge/Jira Cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Jira Server" src="https://img.shields.io/badge/Jira Server-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a> |
 
 ## Installation
-`jira-cli` is available as a downloadable packaged binary for Linux, macOS, and Windows from the [releases page](https://github.com/ankitpokhrel/jira-cli/releases).
+`jira-cli` is available as a downloadable packaged binary for Linux, macOS, and Windows from the [releases page](https://github.com/rethab/jira-cli/releases).
+
+Install it with Homebrew from the [tap](https://github.com/rethab/homebrew-jira-cli):
+
+```sh
+brew install --cask rethab/jira-cli/jira-cli
+```
+
+Every release carries [SLSA build provenance](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations): a signed attestation that the archive was built by this repository's release workflow from the tagged commit. To verify a downloaded archive:
+
+```sh
+gh attestation verify jira_1.8.0_macOS_arm64.tar.gz --repo rethab/jira-cli
+```
+
+Each archive also ships an SPDX SBOM (`*.sbom.json` on the release page) listing the full dependency tree, ready for scanners like `grype`.
+
+Every merge to `main` also publishes a snapshot build with the same checksums, provenance, and SBOMs as a release:
+
+```sh
+brew install --cask rethab/jira-cli/jira-cli-snapshot
+```
 
 You can use Docker to quickly try out `jira-cli`.
 

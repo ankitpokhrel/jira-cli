@@ -1,0 +1,53 @@
+on:
+  push:
+    tags: ['v*']
+
+name: Release
+
+permissions: {}
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release and upload assets
+      id-token: write # OIDC token for keyless provenance signing
+      attestations: write # store the provenance attestation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # GoReleaser derives the changelog and build metadata from history.
+          fetch-depth: 0
+          # GoReleaser authenticates via env, not the checkout credentials;
+          # don't leave the token behind in .git/config.
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          # Build releases with the exact toolchain declared in go.mod; a
+          # floating constraint makes builds unreproducible.
+          go-version-file: 'go.mod'
+          # Release builds must not restore a shared cache anyone with cache
+          # write access could poison.
+          cache: false
+
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          # Pinned exactly: a floating constraint would pull whatever the
+          # newest GoReleaser release is at tag time.
+          version: v2.17.0
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-checksums: dist/checksums.txt

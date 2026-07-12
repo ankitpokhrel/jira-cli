@@ -1,0 +1,10 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Don't pick up brand-new action releases immediately; compromised
+    # versions are usually yanked within days of publication.
+    cooldown:
+      default-days: 7

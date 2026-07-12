@@ -1,0 +1,95 @@
+on:
+  push:
+    branches: [main]
+
+name: Snapshot
+
+permissions: {}
+
+# One snapshot at a time; a newer merge supersedes an in-flight build.
+concurrency:
+  group: snapshot
+  cancel-in-progress: true
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the snapshot prerelease
+      id-token: write # OIDC token for keyless provenance signing
+      attestations: write # store the provenance attestation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: 'go.mod'
+          # Snapshot artifacts are published too; same cache-poisoning
+          # rationale as the release workflow.
+          cache: false
+
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+
+      - name: Build snapshot
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          version: v2.17.0
+          # Snapshot mode never publishes; the steps below publish explicitly.
+          args: release --snapshot --clean
+
+      - name: Publish snapshot prerelease
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(jq -r .version dist/metadata.json)
+          tag="snapshot-${version}"
+          gh release create "$tag" \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "snapshot ${version}" \
+            --notes "Automated snapshot of main at ${GITHUB_SHA}. Not a stable release." \
+            dist/*.tar.gz dist/*.zip dist/checksums.txt dist/*.sbom.json
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-checksums: dist/checksums.txt
+
+      - name: Update snapshot cask in tap
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          TAG: ${{ steps.publish.outputs.tag }}
+        # The contents API commits without the token ever touching disk, and
+        # GitHub signs the commit (shows as verified).
+        run: |
+          ./.github/scripts/render-snapshot-cask.sh dist "$TAG" > jira-cli-snapshot.rb
+          existing=$(gh api repos/rethab/homebrew-jira-cli/contents/Casks/jira-cli-snapshot.rb --jq .sha 2>/dev/null || true)
+          gh api -X PUT repos/rethab/homebrew-jira-cli/contents/Casks/jira-cli-snapshot.rb \
+            -f message="Snapshot cask update for $TAG" \
+            -f content="$(base64 -w0 jira-cli-snapshot.rb)" \
+            -f "committer[name]=github-actions[bot]" \
+            -f "committer[email]=41898282+github-actions[bot]@users.noreply.github.com" \
+            ${existing:+-f sha="$existing"} > /dev/null
+
+      - name: Prune old snapshots
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KEEP: '5'
+        # Tolerates failure: with immutable releases enabled, old snapshots
+        # cannot be deleted and simply accumulate.
+        run: |
+          gh release list --limit 100 --json tagName,createdAt \
+            --jq '[.[] | select(.tagName | startswith("snapshot-"))] | sort_by(.createdAt) | reverse | .[].tagName' \
+            | tail -n "+$((KEEP + 1))" \
+            | while read -r tag; do
+                gh release delete "$tag" --cleanup-tag --yes \
+                  || echo "could not prune $tag (immutable releases?)"
+              done
