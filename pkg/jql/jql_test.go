@@ -299,6 +299,68 @@ func TestJQL(t *testing.T) {
 			},
 			expected: "type=\"Story\" OR summary ~ cli AND project IN (TEST1,TEST2)",
 		},
+		{
+			name: "it omits the project clause when project is empty",
+			initialize: func() *JQL {
+				return NewJQL("")
+			},
+			expected: "",
+		},
+		{
+			name: "it sets order by without a project clause",
+			initialize: func() *JQL {
+				jql := NewJQL("")
+				jql.OrderBy("updated", "DESC")
+				return jql
+			},
+			expected: "ORDER BY updated DESC",
+		},
+		{
+			name: "it filters without a project clause",
+			initialize: func() *JQL {
+				jql := NewJQL("")
+				jql.And(func() {
+					jql.FilterBy("type", "Story").
+						FilterBy("resolution", "Done")
+				})
+				return jql
+			},
+			expected: "type=\"Story\" AND resolution=\"Done\"",
+		},
+		{
+			name: "it keeps raw project filter when project is empty",
+			initialize: func() *JQL {
+				jql := NewJQL("")
+				jql.And(func() {
+					jql.FilterBy("type", "Story").
+						Raw("project = TEST1")
+				})
+				return jql
+			},
+			expected: "type=\"Story\" AND project = TEST1",
+		},
+		{
+			name: "it keeps the default project scope when a quoted value mentions project",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+				jql.And(func() {
+					jql.Raw(`summary ~ "project in progress"`)
+				})
+				return jql
+			},
+			expected: `project="TEST" AND summary ~ "project in progress"`,
+		},
+		{
+			name: "it replaces the default project scope when raw has a real project filter",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+				jql.And(func() {
+					jql.Raw("project = OTHER")
+				})
+				return jql
+			},
+			expected: "project = OTHER",
+		},
 	}
 
 	for _, tc := range cases {
@@ -355,6 +417,10 @@ func TestHasProject(t *testing.T) {
 			expected: true,
 		},
 		{
+			input:    "project IS EMPTY",
+			expected: true,
+		},
+		{
 			input:    "project",
 			expected: false,
 		},
@@ -369,6 +435,62 @@ func TestHasProject(t *testing.T) {
 		{
 			input:    "projectType=\"classic\" AND type=\"Story\" AND assignee IS EMPTY",
 			expected: false,
+		},
+		{
+			input:    "myproject = TEST",
+			expected: false,
+		},
+		{
+			input:    "summary ~ \"my project\"",
+			expected: false,
+		},
+		{
+			input:    "summary ~ \"the project is late\" AND type=\"Bug\"",
+			expected: false,
+		},
+		{
+			input:    "summary ~ \"project in progress\"",
+			expected: false,
+		},
+		{
+			input:    "summary ~ \"project = done\"",
+			expected: false,
+		},
+		{
+			input:    "summary ~ \"project is empty by now\"",
+			expected: false,
+		},
+		{
+			input:    "summary ~ \"blocked on project\" AND project = TEST",
+			expected: true,
+		},
+		{
+			input:    "project=TEST",
+			expected: true,
+		},
+		{
+			input:    "project!=TEST",
+			expected: true,
+		},
+		{
+			input:    "project IS NOT EMPTY",
+			expected: true,
+		},
+		{
+			input:    "project = \"quoted = value\"",
+			expected: true,
+		},
+		{
+			input:    "project.property IS EMPTY",
+			expected: false,
+		},
+		{
+			input:    "summary ~ \"escaped \\\" project = x\"",
+			expected: false,
+		},
+		{
+			input:    "project\n=\nTEST",
+			expected: true,
 		},
 	}
 

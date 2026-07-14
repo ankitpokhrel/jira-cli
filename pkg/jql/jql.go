@@ -2,8 +2,8 @@ package jql
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
+	"unicode"
 )
 
 const (
@@ -25,10 +25,11 @@ type JQL struct {
 
 // NewJQL initializes jql query builder.
 func NewJQL(project string) *JQL {
-	return &JQL{
-		project: project,
-		filters: []string{fmt.Sprintf("project=%q", project)},
+	j := &JQL{project: project}
+	if project != "" {
+		j.filters = append(j.filters, fmt.Sprintf("project=%q", project))
 	}
+	return j
 }
 
 // History search through user issue history.
@@ -183,7 +184,7 @@ func (j *JQL) Raw(q string) *JQL {
 	if q == "" {
 		return j
 	}
-	if hasProjectFilter(q) {
+	if j.project != "" && hasProjectFilter(q) {
 		j.filters = j.filters[1:]
 	}
 	j.filters = append(j.filters, q)
@@ -219,14 +220,131 @@ func (j *JQL) mergeFilters(separator string) {
 func (j *JQL) compile() string {
 	q := strings.Join(j.filters, " ")
 	if j.orderBy != "" {
-		q += " " + j.orderBy
+		if q != "" {
+			q += " "
+		}
+		q += j.orderBy
 	}
 
 	return q
 }
 
+type tokenKind int
+
+const (
+	tokenWord   tokenKind = iota // an identifier or keyword, e.g. project, IN, EMPTY
+	tokenString                  // a quoted string literal
+	tokenOp                      // an operator, e.g. =, !=, ~, <=
+	tokenPunct                   // any other single character, e.g. ( ) ,
+)
+
+type token struct {
+	kind  tokenKind
+	value string
+}
+
+// hasProjectFilter reports whether the query already contains a `project` field
+// clause, e.g. `project = X`, `project IN (...)` or `project IS NOT EMPTY`.
 func hasProjectFilter(str string) bool {
-	regx := "(?i)((project)[\\s]*?={0,1}\\b)[^'.']"
-	m, _ := regexp.MatchString(regx, str)
-	return m
+	tokens := tokenize(str)
+	for i, t := range tokens {
+		if t.kind == tokenWord && strings.EqualFold(t.value, "project") && isProjectOperator(tokens[i+1:]) {
+			return true
+		}
+	}
+	return false
+}
+
+// isProjectOperator reports whether the tokens immediately following a `project`
+// field form a supported project operator: =, !=, IN, NOT IN or IS [NOT] EMPTY.
+func isProjectOperator(tokens []token) bool {
+	if len(tokens) == 0 {
+		return false
+	}
+	first := tokens[0]
+
+	if first.kind == tokenOp {
+		return first.value == "=" || first.value == "!="
+	}
+	if first.kind != tokenWord {
+		return false
+	}
+
+	switch {
+	case strings.EqualFold(first.value, "in"):
+		return true
+	case strings.EqualFold(first.value, "not"):
+		return len(tokens) > 1 && tokens[1].kind == tokenWord && strings.EqualFold(tokens[1].value, "in")
+	case strings.EqualFold(first.value, "is"):
+		rest := tokens[1:]
+		if len(rest) > 0 && rest[0].kind == tokenWord && strings.EqualFold(rest[0].value, "not") {
+			rest = rest[1:]
+		}
+		return len(rest) > 0 && rest[0].kind == tokenWord && strings.EqualFold(rest[0].value, "empty")
+	}
+	return false
+}
+
+// tokenize splits a JQL string into tokens, consuming quoted string literals.
+func tokenize(str string) []token {
+	var tokens []token
+
+	runes := []rune(str)
+	n := len(runes)
+
+	for i := 0; i < n; {
+		c := runes[i]
+
+		switch {
+		case unicode.IsSpace(c):
+			i++
+		case c == '"' || c == '\'':
+			var sb strings.Builder
+			i++ // opening quote
+			for i < n {
+				if runes[i] == '\\' && i+1 < n {
+					sb.WriteRune(runes[i+1])
+					i += 2
+					continue
+				}
+				if runes[i] == c {
+					i++ // closing quote
+					break
+				}
+				sb.WriteRune(runes[i])
+				i++
+			}
+			tokens = append(tokens, token{kind: tokenString, value: sb.String()})
+		case isWordRune(c):
+			start := i
+			for i < n && isWordRune(runes[i]) {
+				i++
+			}
+			tokens = append(tokens, token{kind: tokenWord, value: string(runes[start:i])})
+		case isOperatorRune(c):
+			start := i
+			for i < n && isOperatorRune(runes[i]) {
+				i++
+			}
+			tokens = append(tokens, token{kind: tokenOp, value: string(runes[start:i])})
+		default:
+			tokens = append(tokens, token{kind: tokenPunct, value: string(c)})
+			i++
+		}
+	}
+
+	return tokens
+}
+
+func isWordRune(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '.'
+}
+
+func isOperatorRune(r rune) bool {
+	switch r {
+	case '=', '!', '~', '<', '>':
+		return true
+	default:
+		return false
+	}
 }
