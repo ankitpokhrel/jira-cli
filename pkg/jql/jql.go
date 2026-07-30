@@ -123,9 +123,9 @@ func (j *JQL) In(field string, value ...string) *JQL {
 	if field != "" && n > 0 {
 		var q strings.Builder
 
-		q.WriteString(fmt.Sprintf("%s IN (", field))
+		fmt.Fprintf(&q, "%s IN (", field)
 		for i, v := range value {
-			q.WriteString(fmt.Sprintf("%q", v))
+			fmt.Fprintf(&q, "%q", v)
 			if i != n-1 {
 				q.WriteString(", ")
 			}
@@ -143,9 +143,9 @@ func (j *JQL) NotIn(field string, value ...string) *JQL {
 	if field != "" && n > 0 {
 		var q strings.Builder
 
-		q.WriteString(fmt.Sprintf("%s NOT IN (", field))
+		fmt.Fprintf(&q, "%s NOT IN (", field)
 		for i, v := range value {
-			q.WriteString(fmt.Sprintf("%q", v))
+			fmt.Fprintf(&q, "%q", v)
 			if i != n-1 {
 				q.WriteString(", ")
 			}
@@ -204,7 +204,7 @@ func (j *JQL) mergeFilters(separator string) {
 		qs.WriteString(filter)
 
 		if i != fLen-1 {
-			qs.WriteString(fmt.Sprintf(" %s ", separator))
+			fmt.Fprintf(&qs, " %s ", separator)
 		}
 	}
 
