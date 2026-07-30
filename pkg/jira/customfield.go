@@ -1,10 +1,13 @@
 package jira
 
+import "strings"
+
 const (
-	customFieldFormatOption  = "option"
-	customFieldFormatArray   = "array"
-	customFieldFormatNumber  = "number"
-	customFieldFormatProject = "project"
+	customFieldFormatOption    = "option"
+	customFieldFormatArray     = "array"
+	customFieldFormatNumber    = "number"
+	customFieldFormatProject   = "project"
+	customFieldFormatCascading = "option-with-child"
 )
 
 type customField map[string]interface{}
@@ -38,4 +41,29 @@ type customFieldTypeProject struct {
 
 type customFieldTypeProjectSet struct {
 	Set customFieldTypeProject `json:"set"`
+}
+
+type customFieldTypeCascadingChild struct {
+	Value string `json:"value"`
+}
+
+type customFieldTypeCascading struct {
+	Value string                         `json:"value"`
+	Child *customFieldTypeCascadingChild `json:"child,omitempty"`
+}
+
+type customFieldTypeCascadingSet struct {
+	Set customFieldTypeCascading `json:"set"`
+}
+
+// parseCascadingValue parses a cascading select value in "Parent->Child" format.
+func parseCascadingValue(val string) customFieldTypeCascading {
+	parts := strings.SplitN(val, "->", 2)
+	parent := strings.TrimSpace(parts[0])
+	cf := customFieldTypeCascading{Value: parent}
+	if len(parts) == 2 {
+		child := strings.TrimSpace(parts[1])
+		cf.Child = &customFieldTypeCascadingChild{Value: child}
+	}
+	return cf
 }
