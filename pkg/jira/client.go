@@ -76,17 +76,17 @@ func (e Errors) String() string {
 	if len(e.ErrorMessages) > 0 || len(e.Errors) > 0 {
 		out.WriteString("\nError:\n")
 		for _, v := range e.ErrorMessages {
-			out.WriteString(fmt.Sprintf("  - %s\n", v))
+			fmt.Fprintf(&out, "  - %s\n", v)
 		}
 		for k, v := range e.Errors {
-			out.WriteString(fmt.Sprintf("  - %s: %s\n", k, v))
+			fmt.Fprintf(&out, "  - %s: %s\n", k, v)
 		}
 	}
 
 	if len(e.WarningMessages) > 0 {
 		out.WriteString("\nWarning:\n")
 		for _, v := range e.WarningMessages {
-			out.WriteString(fmt.Sprintf("  - %s\n", v))
+			fmt.Fprintf(&out, "  - %s\n", v)
 		}
 	}
 
