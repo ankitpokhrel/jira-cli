@@ -1,6 +1,7 @@
 package jira
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -177,4 +178,161 @@ func TestCreateEpicNextGen(t *testing.T) {
 
 	_, err = client.CreateV2(&requestData)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
+func TestCreateWithUserCustomField(t *testing.T) {
+	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Bug"},` +
+		`"summary":"Test bug","customfield_12574":{"accountId":"5f7e1b2c"}}}`
+	testServer := createTestServer{code: 201}
+	server := testServer.serve(t, expectedBody)
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+	requestData := CreateRequest{
+		Project:   "TEST",
+		IssueType: "Bug",
+		Summary:   "Test bug",
+		CustomFields: map[string]string{
+			"pm-owner": "5f7e1b2c",
+		},
+	}
+	requestData.ForInstallationType(InstallationTypeCloud)
+	requestData.WithCustomFields([]IssueTypeField{
+		{
+			Name: "PM owner",
+			Key:  "customfield_12574",
+			Schema: struct {
+				DataType string `json:"type"`
+				Items    string `json:"items,omitempty"`
+			}{DataType: "user"},
+		},
+	})
+
+	actual, err := client.CreateV2(&requestData)
+	assert.NoError(t, err)
+
+	expected := &CreateResponse{
+		ID:  "10057",
+		Key: "TEST-3",
+	}
+	assert.Equal(t, expected, actual)
+}
+
+func TestCreateWithMultiUserCustomField(t *testing.T) {
+	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Bug"},` +
+		`"summary":"Test bug","customfield_10100":[{"accountId":"user1"},{"accountId":"user2"}]}}`
+	testServer := createTestServer{code: 201}
+	server := testServer.serve(t, expectedBody)
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+	requestData := CreateRequest{
+		Project:   "TEST",
+		IssueType: "Bug",
+		Summary:   "Test bug",
+		CustomFields: map[string]string{
+			"reviewers": "user1,user2",
+		},
+	}
+	requestData.ForInstallationType(InstallationTypeCloud)
+	requestData.WithCustomFields([]IssueTypeField{
+		{
+			Name: "Reviewers",
+			Key:  "customfield_10100",
+			Schema: struct {
+				DataType string `json:"type"`
+				Items    string `json:"items,omitempty"`
+			}{DataType: "array", Items: "user"},
+		},
+	})
+
+	actual, err := client.CreateV2(&requestData)
+	assert.NoError(t, err)
+
+	expected := &CreateResponse{
+		ID:  "10057",
+		Key: "TEST-3",
+	}
+	assert.Equal(t, expected, actual)
+}
+
+func TestConstructCustomFieldsUser(t *testing.T) {
+	data := &createRequest{}
+
+	fields := map[string]string{
+		"pm-owner": "5f7e1b2c",
+	}
+	configuredFields := []IssueTypeField{
+		{
+			Name: "PM owner",
+			Key:  "customfield_12574",
+			Schema: struct {
+				DataType string `json:"type"`
+				Items    string `json:"items,omitempty"`
+			}{DataType: "user"},
+		},
+	}
+
+	constructCustomFields(fields, configuredFields, InstallationTypeCloud, data)
+
+	result, ok := data.Fields.M.customFields["customfield_12574"]
+	assert.True(t, ok)
+
+	b, err := json.Marshal(result)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `{"accountId":"5f7e1b2c"}`, string(b))
+}
+
+func TestConstructCustomFieldsMultiUser(t *testing.T) {
+	data := &createRequest{}
+
+	fields := map[string]string{
+		"reviewers": "user1,user2",
+	}
+	configuredFields := []IssueTypeField{
+		{
+			Name: "Reviewers",
+			Key:  "customfield_10100",
+			Schema: struct {
+				DataType string `json:"type"`
+				Items    string `json:"items,omitempty"`
+			}{DataType: "array", Items: "user"},
+		},
+	}
+
+	constructCustomFields(fields, configuredFields, InstallationTypeCloud, data)
+
+	result, ok := data.Fields.M.customFields["customfield_10100"]
+	assert.True(t, ok)
+
+	b, err := json.Marshal(result)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `[{"accountId":"user1"},{"accountId":"user2"}]`, string(b))
+}
+
+func TestConstructCustomFieldsUserLocal(t *testing.T) {
+	data := &createRequest{}
+
+	fields := map[string]string{
+		"pm-owner": "john.doe",
+	}
+	configuredFields := []IssueTypeField{
+		{
+			Name: "PM owner",
+			Key:  "customfield_12574",
+			Schema: struct {
+				DataType string `json:"type"`
+				Items    string `json:"items,omitempty"`
+			}{DataType: "user"},
+		},
+	}
+
+	constructCustomFields(fields, configuredFields, InstallationTypeLocal, data)
+
+	result, ok := data.Fields.M.customFields["customfield_12574"]
+	assert.True(t, ok)
+
+	b, err := json.Marshal(result)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `{"name":"john.doe"}`, string(b))
 }

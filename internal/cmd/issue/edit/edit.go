@@ -163,6 +163,7 @@ func edit(cmd *cobra.Command, args []string) {
 			cmdcommon.ValidateCustomFields(edr.CustomFields, configuredCustomFields)
 			edr.WithCustomFields(configuredCustomFields)
 		}
+		edr.ForInstallationType(viper.GetString("installation"))
 
 		return client.Edit(params.issueKey, &edr)
 	}()

@@ -56,7 +56,7 @@ func (cr *CreateRequest) ForProjectType(pt string) {
 	cr.projectType = pt
 }
 
-// ForInstallationType sets jira project type.
+// ForInstallationType sets jira installation type for the create request.
 func (cr *CreateRequest) ForInstallationType(it string) {
 	cr.installationType = it
 }
@@ -222,12 +222,12 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 		}{OriginalEstimate: req.OriginalEstimate}
 	}
 
-	constructCustomFields(req.CustomFields, req.configuredCustomFields, &data)
+	constructCustomFields(req.CustomFields, req.configuredCustomFields, req.installationType, &data)
 
 	return &data
 }
 
-func constructCustomFields(fields map[string]string, configuredFields []IssueTypeField, data *createRequest) {
+func constructCustomFields(fields map[string]string, configuredFields []IssueTypeField, installationType string, data *createRequest) {
 	if len(fields) == 0 || len(configuredFields) == 0 {
 		return
 	}
@@ -248,13 +248,20 @@ func constructCustomFields(fields map[string]string, configuredFields []IssueTyp
 				data.Fields.M.customFields[configured.Key] = customFieldTypeProject{Value: val}
 			case customFieldFormatArray:
 				pieces := strings.Split(strings.TrimSpace(val), ",")
-				if configured.Schema.Items == customFieldFormatOption {
+				switch configured.Schema.Items {
+				case customFieldFormatOption:
 					items := make([]customFieldTypeOption, 0)
 					for _, p := range pieces {
 						items = append(items, customFieldTypeOption{Value: p})
 					}
 					data.Fields.M.customFields[configured.Key] = items
-				} else {
+				case customFieldFormatUser:
+					items := make([]customFieldTypeUser, 0, len(pieces))
+					for _, p := range pieces {
+						items = append(items, newCustomFieldTypeUser(strings.TrimSpace(p), installationType))
+					}
+					data.Fields.M.customFields[configured.Key] = items
+				default:
 					data.Fields.M.customFields[configured.Key] = pieces
 				}
 			case customFieldFormatNumber:
@@ -265,6 +272,8 @@ func constructCustomFields(fields map[string]string, configuredFields []IssueTyp
 				} else {
 					data.Fields.M.customFields[configured.Key] = customFieldTypeNumber(num)
 				}
+			case customFieldFormatUser:
+				data.Fields.M.customFields[configured.Key] = newCustomFieldTypeUser(val, installationType)
 			default:
 				data.Fields.M.customFields[configured.Key] = val
 			}
