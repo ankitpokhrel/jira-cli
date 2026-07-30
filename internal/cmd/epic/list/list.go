@@ -225,10 +225,13 @@ func epicExplorerView(cmd *cobra.Command, flags query.FlagParser, project, proje
 		},
 	}
 
+	plain, err := flags.GetBool("plain")
+	cmdutil.ExitIfError(err)
+
 	table, err := flags.GetBool("table")
 	cmdutil.ExitIfError(err)
 
-	if table || tui.IsDumbTerminal() || tui.IsNotTTY() {
+	if table || plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		list.List(cmd, nil)
 	} else {
 		cmdutil.ExitIfError(v.Render())
