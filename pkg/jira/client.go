@@ -14,6 +14,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -116,14 +118,15 @@ type Config struct {
 
 // Client is a jira client.
 type Client struct {
-	transport http.RoundTripper
-	insecure  bool
-	server    string
-	login     string
-	authType  *AuthType
-	token     string
-	timeout   time.Duration
-	debug     bool
+	transport   http.RoundTripper
+	insecure    bool
+	server      string
+	login       string
+	authType    *AuthType
+	token       string
+	timeout     time.Duration
+	debug       bool
+	tokenSource oauth2.TokenSource
 }
 
 // ClientFunc decorates option for client.
@@ -142,8 +145,8 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 	for _, opt := range opts {
 		opt(&client)
 	}
-
-	transport := &http.Transport{
+	var transport http.RoundTripper
+	transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{
 			MinVersion:         tls.VersionTLS12,
@@ -152,6 +155,15 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 		DialContext: (&net.Dialer{
 			Timeout: client.timeout,
 		}).DialContext,
+	}
+
+	if c.AuthType != nil && *c.AuthType == AuthTypeOAuth && client.tokenSource != nil {
+		// Use OAuth2 transport with automatic token refresh
+		baseTransport := transport
+		transport = &oauth2.Transport{
+			Base:   baseTransport,
+			Source: oauth2.ReuseTokenSource(nil, client.tokenSource),
+		}
 	}
 
 	if c.AuthType != nil && *c.AuthType == AuthTypeMTLS {
@@ -170,9 +182,10 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 		}
 
 		// Add the MTLS specific configuration.
-		transport.TLSClientConfig.RootCAs = caCertPool
-		transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
-		transport.TLSClientConfig.Renegotiation = tls.RenegotiateFreelyAsClient
+		tlsConfig := transport.(*http.Transport).TLSClientConfig
+		tlsConfig.RootCAs = caCertPool
+		tlsConfig.Certificates = []tls.Certificate{cert}
+		tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
 	}
 
 	client.transport = transport
@@ -191,6 +204,13 @@ func WithTimeout(to time.Duration) ClientFunc {
 func WithInsecureTLS(ins bool) ClientFunc {
 	return func(c *Client) {
 		c.insecure = ins
+	}
+}
+
+// WithOAuth2TokenSource is a functional opt to attach OAuth2 token source to the client.
+func WithOAuth2TokenSource(tokenSource oauth2.TokenSource) ClientFunc {
+	return func(c *Client) {
+		c.tokenSource = tokenSource
 	}
 }
 
@@ -279,9 +299,15 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		if c.token != "" {
 			req.Header.Add("Authorization", "Bearer "+c.token)
 		}
+	case string(AuthTypeOAuth):
+		// OAuth authentication is handled by [oauth2.Transport] automatically
+		// Only add manual auth header if we don't have a TokenSource (fallback mode)
+		if c.tokenSource == nil && c.token != "" {
+			req.Header.Add("Authorization", "Bearer "+c.token)
+		}
 	case string(AuthTypeBearer):
 		req.Header.Add("Authorization", "Bearer "+c.token)
-	case string(AuthTypeBasic):
+	case string(AuthTypeBasic), string(AuthTypeCloud):
 		req.SetBasicAuth(c.login, c.token)
 	}
 

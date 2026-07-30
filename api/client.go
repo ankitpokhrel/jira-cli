@@ -9,11 +9,52 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter"
 	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
+	"github.com/ankitpokhrel/jira-cli/pkg/oauth"
+	"github.com/ankitpokhrel/jira-cli/pkg/terminal"
 )
 
 const clientTimeout = 15 * time.Second
 
 var jiraClient *jira.Client
+
+// getAPIToken retrieves the API token from various sources in order of priority:
+// 1. Viper configuration
+// 2. OAuth access token (if available and valid)
+// 3. Netrc file
+// 4. Keyring.
+func getAPIToken(config *jira.Config) string {
+	if config.APIToken != "" {
+		return config.APIToken
+	}
+
+	// Try viper config first
+	if token := viper.GetString("api_token"); token != "" {
+		return token
+	}
+
+	// Try OAuth access token if available and valid
+	// And should only do this assertion if the AuthType is oauth
+	isAuthTypeOAuth := config.AuthType != nil && *config.AuthType == jira.AuthTypeOAuth
+	if isAuthTypeOAuth && oauth.HasOAuthCredentials(config.Login) {
+		tk, _ := oauth.LoadOAuth2TokenSource(config.Login)
+		token, _ := tk.Token()
+		return token.AccessToken
+	}
+
+	// Try netrc file
+	if netrcConfig, _ := netrc.Read(config.Server, config.Login); netrcConfig != nil {
+		if netrcConfig.Password != "" {
+			return netrcConfig.Password
+		}
+	}
+
+	// Try keyring
+	if secret, _ := keyring.Get("jira-cli", config.Login); secret != "" {
+		return secret
+	}
+
+	return ""
+}
 
 // Client initializes and returns jira client.
 func Client(config jira.Config) *jira.Client {
@@ -27,19 +68,6 @@ func Client(config jira.Config) *jira.Client {
 	if config.Login == "" {
 		config.Login = viper.GetString("login")
 	}
-	if config.APIToken == "" {
-		config.APIToken = viper.GetString("api_token")
-	}
-	if config.APIToken == "" {
-		netrcConfig, _ := netrc.Read(config.Server, config.Login)
-		if netrcConfig != nil {
-			config.APIToken = netrcConfig.Password
-		}
-	}
-	if config.APIToken == "" {
-		secret, _ := keyring.Get("jira-cli", config.Login)
-		config.APIToken = secret
-	}
 	if config.AuthType == nil {
 		authType := jira.AuthType(viper.GetString("auth_type"))
 		config.AuthType = &authType
@@ -48,6 +76,34 @@ func Client(config jira.Config) *jira.Client {
 		insecure := viper.GetBool("insecure")
 		config.Insecure = &insecure
 	}
+
+	// Check if we have OAuth credentials and should use OAuth
+	if oauth.HasOAuthCredentials(config.Login) && config.AuthType != nil && *config.AuthType == jira.AuthTypeOAuth {
+		apiServer := viper.GetString("api_server")
+		if apiServer != "" {
+			config.Server = apiServer
+		} else {
+			// Fallback to server URL if api_server is not set
+			terminal.Warn("api_server key is not set, falling back to server URL")
+		}
+
+		// Try to create OAuth2 token source
+		tokenSource, err := oauth.LoadOAuth2TokenSource(config.Login)
+		if err == nil {
+			// We have valid OAuth credentials, use OAuth authentication
+			// Pass the TokenSource to the client via a custom option
+			jiraClient = jira.NewClient(
+				config,
+				jira.WithTimeout(clientTimeout),
+				jira.WithInsecureTLS(*config.Insecure),
+				jira.WithOAuth2TokenSource(tokenSource),
+			)
+			return jiraClient
+		}
+	}
+
+	// Get API token from various sources (fallback for non-OAuth auth)
+	config.APIToken = getAPIToken(&config)
 
 	// MTLS
 
