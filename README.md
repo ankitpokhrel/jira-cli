@@ -1,19 +1,13 @@
 <div align="center">
-    <a href="#">
-        <img alt="stargazers over time" src="https://stars.medv.io/ankitpokhrel/jira-cli.svg" />
-    </a>
     <h1 align="center">JiraCLI</h1>
 </div>
 
 <div>
     <p align="center">
-        <a href="https://github.com/ankitpokhrel/jira-cli/actions?query=workflow%3Abuild+branch%3Amaster">
+        <a href="https://github.com/ankitpokhrel/jira-cli/actions?query=workflow%3Abuild+branch%3Amain">
             <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/ankitpokhrel/jira-cli/ci.yml?branch=main&style=flat-square" />
         </a>
-        <a href="https://goreportcard.com/report/github.com/ankitpokhrel/jira-cli">
-            <img alt="GO Report-card" src="https://goreportcard.com/badge/github.com/ankitpokhrel/jira-cli?style=flat-square" />
-        </a>
-        <a href="https://github.com/ankitpokhrel/jira-cli/blob/master/LICENSE">
+        <a href="https://github.com/ankitpokhrel/jira-cli/blob/main/LICENSE">
             <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square" />
         </a>
         <a href="#">
@@ -50,7 +44,7 @@
    </p>
 </div>
 
-JiraCLI is an interactive command line tool for Atlassian Jira that will help you avoid Jira UI to some extent. This
+JiraCLI is an interactive command line tool for Atlassian Jira that will help you avoid using the Jira UI to some extent. This
 tool may not be able to do everything, but it has all the essential features required to improve your day-to-day workflow with Jira.
 
 The tool started with the idea of making issue search and navigation as straightforward as possible. However, with the
@@ -61,7 +55,7 @@ features like issue creation, cloning, linking, ticket transition, and much more
 
 ## Supported platforms
 > [!NOTE]
-> Some features might work slightly differently in cloud installation versus on-premise installation due to the
+> Some features might work slightly differently in Jira Cloud versus on-premises installations due to the
 nature of the data. Yet, we've attempted to make the experience as similar as possible.
 
 | Platform | <a href="#"><img alt="Linux" src="https://img.shields.io/badge/Linux-%E2%9C%93-dark--green?logo=linux&logoColor=white&style=flat-square" /></a><a href="#"><img alt="macOS" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=apple&style=flat-square" /></a><a href="#"><img alt="FreeBSD" src="https://img.shields.io/badge/FreeBSD-%E2%9C%93-dark--green?logo=freebsd&style=flat-square" /></a><a href="#"><img alt="NetBSD" src="https://img.shields.io/badge/NetBSD-%E2%9C%93-dark--green?logo=netbsd&logoColor=white&style=flat-square" /></a><a href="#"><img alt="Windows" src="https://img.shields.io/badge/Windows-partial-yellow?logo=windows&style=flat-square" /></a> |
@@ -94,23 +88,23 @@ Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/In
 2. Run `jira init`, select installation type as `Cloud`, and provide required details to generate a config file required
    for the tool.
 
-#### On-premise installation
+#### On-premises installation
 
 1. Export required environment variables:
    - If you are using basic auth, export the `password` you use to login to Jira as a `JIRA_API_TOKEN` variable.
-   - If you are using personal access token (PAT), get the `token` from your jira profile and export it as
+   - If you are using personal access token (PAT), get the `token` from your Jira profile and export it as
      a `JIRA_API_TOKEN` variable. In addition to this, set `JIRA_AUTH_TYPE` env to `bearer`.
    - Add these ENVs to your shell configuration file, for instance, `$HOME/.bashrc`, so that they are always available.
    - Alternatively, you can also use `.netrc` file or `keychain` to set the token. Learn
      more [here](https://github.com/ankitpokhrel/jira-cli/discussions/356).
 2. Run `jira init`, select installation type as `Local`, and provide the required details to generate a config file required
    for the tool.
-   - The most common auth type for on-premise installation is `basic`. If you are using your jira login credentials
+   - The most common auth type for an on-premises installation is `basic`. If you are using your Jira login credentials
      (username and password), select the `basic` auth type.
    - If you want to use `mtls` (client certificates), select auth type `mtls` and provide the CA Cert, client Key, and client cert.
 
 > [!IMPORTANT]
-> If your on-premise Jira installation is using a language other than `English`, then the issue/epic creation
+> If your on-premises Jira installation is using a language other than `English`, then the issue/epic creation
    may not work because the older version of Jira API doesn't return the untranslated name for `issuetypes`. In that case,
    you will have to fill in `epic.name`, `epic.link` and `issue.types.*.handle` fields manually in the generated config
    to get the expected behavior.
@@ -127,7 +121,7 @@ default.
   * In case `JIRA_API_TOKEN` variable is set it will be used together with `mtls`.
 
 #### Shell completion
-Check `jira completion --help` for more info on setting up a bash/zsh shell completion.
+Check `jira completion --help` for more info on setting up a Bash/Zsh shell completion.
 
 #### Multiple projects
 
@@ -136,7 +130,7 @@ You can load a specific configuration file by using the `--config/-c` flag, or b
 ```sh
 $ JIRA_CONFIG_FILE=./local_jira_config.yaml jira issue list
 
-// Or, you can use `--config/-c` flag
+# Alternatively, use the `--config/-c` flag
 $ jira issue list -c ./local_jira_config.yaml
 ```
 
@@ -158,7 +152,7 @@ The lists are displayed in an interactive UI by default.
 - Press `m` to transition the selected issue.
 - Press `CTRL + r` or `F5` to refresh the issues list.
 - Hit `ENTER` to open the selected issue in the browser.
-- Press `c` to copy issue URL to the system clipboard. This requires `xclip` / `xsel` in linux.
+- Press `c` to copy issue URL to the system clipboard. This requires `xclip` / `xsel` on Linux.
 - Press `CTRL + k` to copy issue key to the system clipboard.
 - In an explorer view, press `w` or `TAB` to toggle focus between the sidebar and the contents screen.
 - Press `q` / `ESC` / `CTRL + c` to quit.
@@ -168,9 +162,6 @@ The lists are displayed in an interactive UI by default.
 - [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs)
 - [Introduction and Motivation](https://medium.com/@ankitpokhrel/introducing-jira-cli-the-missing-command-line-tool-for-atlassian-jira-fe44982cc1de)
 - [Getting Started with JiraCLI](https://www.mslinn.com/blog/2022/08/12/jiracli.html)
-
-> [!TIP]
-> Like this tool? Checkout [similar tool for Shopify!](https://github.com/ankitpokhrel/shopctl)
 
 ## Commands
 ### Issue
@@ -290,7 +281,7 @@ jira issue list -r$(jira me) --reverse
 <details><summary>What was the first bug I ever fixed in the current board? :beetle:</summary>
 
 ```sh
-jira issue list -a$(jira me) -tBug sDone -rFixed --reverse
+jira issue list -a$(jira me) -tBug -sDone -rFixed --reverse
 ```
 </details>
 
@@ -331,8 +322,8 @@ $  jira issue create -tStory -s"Epic during creation" -PEPIC-42
 
 You can use a `--custom` flag to set custom fields while creating the issue. See [this post](https://github.com/ankitpokhrel/jira-cli/discussions/346) for more details.
 
-The command supports both [Github-flavored](https://github.github.com/gfm/)
-and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) markdown for writing
+The command supports both [GitHub-flavored](https://github.github.com/gfm/)
+and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) Markdown for writing
 description. You can load pre-defined templates using `--template` flag.
 
 ```sh
@@ -347,7 +338,7 @@ $ echo "Description from stdin" | jira issue create -s"Summary" -tTask
 ```
 
 ![Markdown render preview](.github/assets/markdown.jpg)
-> The preview above shows markdown template passed in Jira CLI and how it is rendered in the Jira UI.
+> The preview above shows a Markdown template passed in JiraCLI and how it is rendered in the Jira UI.
 
 #### Edit
 The `edit` command lets you edit an issue.
@@ -420,7 +411,7 @@ $ jira issue move ISSUE-1 Done -RFixed -a$(jira me)
 To transition the selected issue from the TUI, press `m`.
 
 #### View
-The `view` command lets you see issue details in a terminal. Atlassian document is roughly converted to a markdown
+The `view` command lets you see issue details in a terminal. Atlassian document is roughly converted to Markdown
 and is nicely displayed in the terminal.
 
 The command uses `less` as a pager by default. To set your own pager, see https://github.com/ankitpokhrel/jira-cli/discussions/569.
@@ -506,8 +497,8 @@ $ jira issue delete ISSUE-1 --cascade
 The `comment` command provides a list of sub-commands to manage issue comments.
 
 ##### Add
-The `add` command lets you add a comment to an issue. The command supports both [Github-flavored](https://github.github.com/gfm/)
-and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) markdown for writing
+The `add` command lets you add a comment to an issue. The command supports both [GitHub-flavored](https://github.github.com/gfm/)
+and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) Markdown for writing
 comment. You can load pre-defined templates using `--template` flag.
 
 ```sh
@@ -543,7 +534,7 @@ EOF
 The `worklog` command provides a list of sub-commands to manage issue worklog (timelog).
 
 ##### Add
-The `add` command lets you add a worklog to an issue. The command supports markdown for worklog comments.
+The `add` command lets you add a worklog to an issue. The command supports Markdown for worklog comments.
 
 ```sh
 # Add a worklog using an interactive prompt
@@ -584,7 +575,7 @@ $ jira epic list KEY-1 -ax -yHigh
 # List high priority epics
 $ jira epic list KEY-1 -yHigh
 
-# List epic issues order by the rank in ASC order
+# List epic issues ordered by rank in ascending order
 $ jira epic list KEY-1 --order-by rank --reverse
 ```
 
@@ -659,7 +650,7 @@ $ jira sprint list SPRINT_ID
 # List high priority issues in a sprint are assigned to me
 $ jira sprint list SPRINT_ID -yHigh -a$(jira me)
 
-# List sprint issues order by the rank in ASC order
+# List sprint issues ordered by rank in ascending order
 $ jira sprint list SPRINT_ID --order-by rank --reverse
 ```
 
@@ -811,7 +802,7 @@ Please [open a discussion](https://github.com/ankitpokhrel/jira-cli/discussions/
    ```
 
 2. Optional: If you want to run a Jira instance locally, you can use the following make recipe.
-   The trial license key can be generated from the "Licenses" section in the [atlassian admin](https://my.atlassian.com).
+   The trial license key can be generated from the "Licenses" section in the [Atlassian admin](https://my.atlassian.com).
    ```sh
    make jira.server
    ```

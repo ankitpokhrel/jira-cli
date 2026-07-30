@@ -89,7 +89,7 @@ func (el *EpicList) data() []tui.PreviewData {
 }
 
 func (el *EpicList) tabularize(issues []*jira.Issue) tui.TableData {
-	var data tui.TableData
+	data := make(tui.TableData, 0, 1+len(issues))
 
 	data = append(data, []string{
 		"TYPE",
