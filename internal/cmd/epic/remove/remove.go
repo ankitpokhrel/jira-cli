@@ -21,7 +21,7 @@ const (
 
 // NewCmdRemove is a remove command.
 func NewCmdRemove() *cobra.Command {
-	return &cobra.Command{
+	cmd := cobra.Command{
 		Use:     "remove ISSUE-1 [...ISSUE-N]",
 		Short:   "Remove/unassign epic from issues",
 		Long:    helpText,
@@ -32,6 +32,14 @@ func NewCmdRemove() *cobra.Command {
 		},
 		Run: remove,
 	}
+
+	setFlags(&cmd)
+
+	return &cmd
+}
+
+func setFlags(cmd *cobra.Command) {
+	cmd.Flags().Bool("skip-notify", false, "Do not notify watchers when removing epic from issues")
 }
 
 func remove(cmd *cobra.Command, args []string) {
@@ -72,7 +80,7 @@ func remove(cmd *cobra.Command, args []string) {
 		}
 
 		for _, iss := range params.issues {
-			if err := client.Edit(iss, &jira.EditRequest{ParentIssueKey: jira.AssigneeNone, SkipNotify: true}); err != nil {
+			if err := client.Edit(iss, &jira.EditRequest{ParentIssueKey: jira.AssigneeNone, SkipNotify: params.skipNotify}); err != nil {
 				msg := fmt.Sprintf("\n  - %s: %s", iss, cmdutil.NormalizeJiraError(err.Error()))
 				failed.WriteString(msg)
 			} else {
@@ -107,12 +115,16 @@ func parseFlags(flags query.FlagParser, args []string, project string) *removePa
 		issues = append(issues, cmdutil.GetJiraIssueKey(project, iss))
 	}
 
+	skipNotify, err := flags.GetBool("skip-notify")
+	cmdutil.ExitIfError(err)
+
 	debug, err := flags.GetBool("debug")
 	cmdutil.ExitIfError(err)
 
 	return &removeParams{
-		issues: issues,
-		debug:  debug,
+		issues:     issues,
+		skipNotify: skipNotify,
+		debug:      debug,
 	}
 }
 
@@ -134,6 +146,7 @@ func getQuestions(params *removeParams) []*survey.Question {
 }
 
 type removeParams struct {
-	issues []string
-	debug  bool
+	issues     []string
+	skipNotify bool
+	debug      bool
 }
