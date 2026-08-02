@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 	"golang.org/x/term"
 
@@ -121,11 +121,14 @@ func GetConfigHome() (string, error) {
 	if home != "" {
 		return home, nil
 	}
-	home, err := homedir.Dir()
+	if dir, err := os.UserConfigDir(); err == nil {
+		return dir, nil
+	}
+	u, err := user.Current()
 	if err != nil {
 		return "", err
 	}
-	return home + "/.config", nil
+	return u.HomeDir + "/.config", nil
 }
 
 // StdinHasData checks if standard input has any data to be processed.

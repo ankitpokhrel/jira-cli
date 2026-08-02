@@ -66,6 +66,8 @@ func init() {
 		if err := viper.ReadInConfig(); err == nil && debug {
 			fmt.Printf("Using config file: %s\n", viper.ConfigFileUsed())
 		}
+
+		mergeProjectConfig()
 	})
 }
 
@@ -187,4 +189,35 @@ For more details, see: %s
 
 	cmdutil.Warn(msg)
 	os.Exit(1)
+}
+
+// mergeProjectConfig walks up from the current working directory looking for
+// a .jira-config.{yml,yaml,json} file and merges its values on top of the
+// already-loaded viper config. Search stops at $HOME, at a .git boundary, or
+// at the filesystem root.
+func mergeProjectConfig() {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	home, _ := os.UserHomeDir()
+
+	found, ok := jiraConfig.FindProjectConfig(os.DirFS("/"), cwd, home)
+	if !ok {
+		return
+	}
+
+	pv := viper.New()
+	pv.SetConfigFile("/" + found)
+	if err := pv.ReadInConfig(); err != nil {
+		cmdutil.Failed("invalid project config /%s: %s", found, err)
+		return
+	}
+	if err := viper.MergeConfigMap(pv.AllSettings()); err != nil {
+		cmdutil.Failed("failed to merge project config: %s", err)
+		return
+	}
+	if debug {
+		fmt.Printf("Merged project config: /%s\n", found)
+	}
 }
