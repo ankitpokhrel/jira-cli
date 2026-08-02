@@ -207,3 +207,59 @@ func TestDeleteV2(t *testing.T) {
 
 	_ = resp.Body.Close()
 }
+
+func TestGetWithCookieAuth(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/3/myself", r.URL.Path)
+
+		// Verify JSESSIONID cookie is set
+		cookie, err := r.Cookie("JSESSIONID")
+		assert.NoError(t, err)
+		assert.Equal(t, "test-session-id", cookie.Value)
+
+		// Verify no Authorization header is set
+		assert.Empty(t, r.Header.Get("Authorization"))
+
+		w.WriteHeader(200)
+	}))
+	defer server.Close()
+
+	authType := AuthTypeCookie
+	client := NewClient(Config{
+		Server:   server.URL,
+		APIToken: "test-session-id",
+		AuthType: &authType,
+	}, WithTimeout(3*time.Second))
+
+	resp, err := client.Get(context.Background(), "/myself", nil)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	_ = resp.Body.Close()
+}
+
+func TestGetWithCookieAuthEmptyToken(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Verify no JSESSIONID cookie is set when token is empty
+		_, err := r.Cookie("JSESSIONID")
+		assert.Error(t, err)
+
+		w.WriteHeader(200)
+	}))
+	defer server.Close()
+
+	authType := AuthTypeCookie
+	client := NewClient(Config{
+		Server:   server.URL,
+		APIToken: "",
+		AuthType: &authType,
+	}, WithTimeout(3*time.Second))
+
+	resp, err := client.Get(context.Background(), "/myself", nil)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	_ = resp.Body.Close()
+}
