@@ -148,16 +148,17 @@ func edit(cmd *cobra.Command, args []string) {
 		}
 
 		edr := jira.EditRequest{
-			ParentIssueKey:  parent,
-			Summary:         params.summary,
-			Body:            body,
-			Priority:        params.priority,
-			Labels:          labels,
-			Components:      components,
-			FixVersions:     fixVersions,
-			AffectsVersions: affectsVersions,
-			CustomFields:    params.customFields,
-			SkipNotify:      params.skipNotify,
+			ParentIssueKey:   parent,
+			Summary:          params.summary,
+			Body:             body,
+			Priority:         params.priority,
+			Labels:           labels,
+			OriginalEstimate: params.originalEstimate,
+			Components:       components,
+			FixVersions:      fixVersions,
+			AffectsVersions:  affectsVersions,
+			CustomFields:     params.customFields,
+			SkipNotify:       params.skipNotify,
 		}
 		if configuredCustomFields, err := cmdcommon.GetConfiguredCustomFields(); err == nil {
 			cmdcommon.ValidateCustomFields(edr.CustomFields, configuredCustomFields)
@@ -195,11 +196,12 @@ func getAnswers(params *editParams, issue *jira.Issue) {
 			if len(ans.Metadata) > 0 {
 				qs := getMetadataQuestions(ans.Metadata, issue)
 				ans := struct {
-					Priority        string
-					Labels          string
-					Components      string
-					FixVersions     string
-					AffectsVersions string
+					Priority         string
+					Labels           string
+					OriginalEstimate string
+					Components       string
+					FixVersions      string
+					AffectsVersions  string
 				}{}
 				err := survey.Ask(qs, &ans)
 				cmdutil.ExitIfError(err)
@@ -209,6 +211,9 @@ func getAnswers(params *editParams, issue *jira.Issue) {
 				}
 				if len(ans.Labels) > 0 {
 					params.labels = strings.Split(ans.Labels, ",")
+				}
+				if ans.OriginalEstimate != "" {
+					params.originalEstimate = ans.OriginalEstimate
 				}
 				if len(ans.Components) > 0 {
 					params.components = strings.Split(ans.Components, ",")
@@ -301,20 +306,21 @@ func (ec *editCmd) askQuestions(issue *jira.Issue, originalBody string) error {
 }
 
 type editParams struct {
-	issueKey        string
-	parentIssueKey  string
-	summary         string
-	body            string
-	priority        string
-	assignee        string
-	labels          []string
-	components      []string
-	fixVersions     []string
-	affectsVersions []string
-	customFields    map[string]string
-	skipNotify      bool
-	noInput         bool
-	debug           bool
+	issueKey         string
+	parentIssueKey   string
+	summary          string
+	body             string
+	priority         string
+	assignee         string
+	labels           []string
+	originalEstimate string
+	components       []string
+	fixVersions      []string
+	affectsVersions  []string
+	customFields     map[string]string
+	noInput          bool
+	debug            bool
+	skipNotify       bool
 }
 
 func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *editParams {
@@ -334,6 +340,9 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	cmdutil.ExitIfError(err)
 
 	labels, err := flags.GetStringArray("label")
+	cmdutil.ExitIfError(err)
+
+	originalEstimate, err := flags.GetString("original-estimate")
 	cmdutil.ExitIfError(err)
 
 	components, err := flags.GetStringArray("component")
@@ -358,20 +367,21 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	cmdutil.ExitIfError(err)
 
 	return &editParams{
-		issueKey:        cmdutil.GetJiraIssueKey(project, args[0]),
-		parentIssueKey:  parentIssueKey,
-		summary:         summary,
-		body:            body,
-		priority:        priority,
-		assignee:        assignee,
-		labels:          labels,
-		components:      components,
-		fixVersions:     fixVersions,
-		affectsVersions: affectsVersions,
-		customFields:    custom,
-		skipNotify:      skipNotify,
-		noInput:         noInput,
-		debug:           debug,
+		issueKey:         cmdutil.GetJiraIssueKey(project, args[0]),
+		parentIssueKey:   parentIssueKey,
+		summary:          summary,
+		body:             body,
+		priority:         priority,
+		assignee:         assignee,
+		labels:           labels,
+		originalEstimate: originalEstimate,
+		components:       components,
+		fixVersions:      fixVersions,
+		affectsVersions:  affectsVersions,
+		customFields:     custom,
+		noInput:          noInput,
+		debug:            debug,
+		skipNotify:       skipNotify,
 	}
 }
 
@@ -412,6 +422,15 @@ func getMetadataQuestions(meta []string, issue *jira.Issue) []*survey.Question {
 					Default: strings.Join(issue.Fields.Labels, ","),
 				},
 			})
+		case "OriginalEstimate":
+			qs = append(qs, &survey.Question{
+				Name: "originalestimate",
+				Prompt: &survey.Input{
+					Message: "Estimate",
+					Help:    "Estimate in hours",
+					Default: issue.Fields.OriginalEstimate,
+				},
+			})
 		case "FixVersions":
 			qs = append(qs, &survey.Question{
 				Name: "fixversions",
@@ -447,6 +466,7 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("priority", "y", "", "Edit priority")
 	cmd.Flags().StringP("assignee", "a", "", "Edit assignee (email or display name)")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Append labels")
+	cmd.Flags().StringP("original-estimate", "e", "", "Original estimate (1w 2d 3h 4m: weeks, days, hours, minutes)")
 	cmd.Flags().StringArrayP("component", "C", []string{}, "Replace components")
 	cmd.Flags().StringArray("fix-version", []string{}, "Add/Append release info (fixVersions)")
 	cmd.Flags().StringArray("affects-version", []string{}, "Add/Append release info (affectsVersions)")
