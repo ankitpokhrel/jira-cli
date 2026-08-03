@@ -49,8 +49,9 @@ type issueTypeFieldConf struct {
 	Name   string `yaml:"name"`
 	Key    string `yaml:"key"`
 	Schema struct {
-		DataType string `yaml:"datatype"`
-		Items    string `yaml:"items,omitempty"`
+		DataType   string `yaml:"datatype"`
+		Items      string `yaml:"items,omitempty"`
+		CustomType string `yaml:"custom,omitempty"`
 	}
 }
 
@@ -718,11 +719,13 @@ func (c *JiraCLIConfigGenerator) configureFields() error {
 			Name: field.Name,
 			Key:  field.ID,
 			Schema: struct {
-				DataType string `yaml:"datatype"`
-				Items    string `yaml:"items,omitempty"`
+				DataType   string `yaml:"datatype"`
+				Items      string `yaml:"items,omitempty"`
+				CustomType string `yaml:"custom,omitempty"`
 			}{
-				DataType: field.Schema.DataType,
-				Items:    field.Schema.Items,
+				DataType:   field.Schema.DataType,
+				Items:      field.Schema.Items,
+				CustomType: field.Schema.CustomType,
 			},
 		})
 	}

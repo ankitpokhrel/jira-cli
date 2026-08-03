@@ -132,9 +132,10 @@ type Field struct {
 	Name   string `json:"name"`
 	Custom bool   `json:"custom"`
 	Schema struct {
-		DataType string `json:"type"`
-		Items    string `json:"items,omitempty"`
-		FieldID  int    `json:"customId,omitempty"`
+		DataType   string `json:"type"`
+		Items      string `json:"items,omitempty"`
+		FieldID    int    `json:"customId,omitempty"`
+		CustomType string `json:"custom,omitempty"`
 	} `json:"schema"`
 }
 
@@ -143,8 +144,9 @@ type IssueTypeField struct {
 	Name   string `json:"name"`
 	Key    string `json:"key"`
 	Schema struct {
-		DataType string `json:"type"`
-		Items    string `json:"items,omitempty"`
+		DataType   string `json:"type"`
+		Items      string `json:"items,omitempty"`
+		CustomType string `json:"custom,omitempty"`
 	} `json:"schema"`
 	FieldID string `json:"fieldId,omitempty"`
 }
