@@ -1,7 +1,9 @@
 package config
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -639,6 +641,17 @@ func (c *JiraCLIConfigGenerator) configureIssueTypes() error {
 		Expand:   "projects.issuetypes.fields",
 	})
 	if err != nil {
+		if code, ok := isCreateMetaFallbackEligible(err); ok {
+			cmdutil.Warn("Call to Metadata API endpoint is fialing; thus, using alternative API endpoint: project issue types (expand=issueTypes).")
+
+			its, ferr := c.jiraClient.ProjectIssueTypes(c.value.project.Key)
+			if ferr != nil {
+				return fmt.Errorf("failed to fetch issue types via fallback endpoint after createmeta returned %d: %w", code, ferr)
+			}
+
+			c.value.issueTypes = its
+			return nil
+		}
 		return err
 	}
 	if len(meta.Projects) == 0 || len(meta.Projects[0].IssueTypes) == 0 {
@@ -671,6 +684,17 @@ func (c *JiraCLIConfigGenerator) configureIssueTypesForJiraServerV9() error {
 		Expand:   "projects.issuetypes.fields",
 	})
 	if err != nil {
+		if code, ok := isCreateMetaFallbackEligible(err); ok {
+			cmdutil.Warn("Call to Metadata API endpoint is fialing; thus, using alternative API endpoint: project issue types (expand=issueTypes).")
+
+			its, ferr := c.jiraClient.ProjectIssueTypes(c.value.project.Key)
+			if ferr != nil {
+				return fmt.Errorf("failed to fetch issue types via fallback endpoint after createmeta returned %d: %w", code, ferr)
+			}
+
+			c.value.issueTypes = its
+			return nil
+		}
 		return err
 	}
 	if len(meta.Values) == 0 {
@@ -691,6 +715,19 @@ func (c *JiraCLIConfigGenerator) configureIssueTypesForJiraServerV9() error {
 	c.value.issueTypes = issueTypes
 
 	return nil
+}
+
+func isCreateMetaFallbackEligible(err error) (int, bool) {
+	var uerr *jira.ErrUnexpectedResponse
+	if !errors.As(err, &uerr) {
+		return 0, false
+	}
+	switch uerr.StatusCode {
+	case http.StatusNotFound, http.StatusForbidden, http.StatusUnauthorized:
+		return uerr.StatusCode, true
+	default:
+		return uerr.StatusCode, false
+	}
 }
 
 func (c *JiraCLIConfigGenerator) configureFields() error {
