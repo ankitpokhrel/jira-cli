@@ -11,6 +11,8 @@ const (
 	AuthTypeBearer AuthType = "bearer"
 	// AuthTypeMTLS is a mTLS auth.
 	AuthTypeMTLS AuthType = "mtls"
+	// AuthTypeCFAccess is auth through cloudflare access.
+	AuthTypeCFAccess AuthType = "cf-access"
 )
 
 // AuthType is a jira authentication type.

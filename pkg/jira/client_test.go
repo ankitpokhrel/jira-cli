@@ -207,3 +207,31 @@ func TestDeleteV2(t *testing.T) {
 
 	_ = resp.Body.Close()
 }
+
+type mockRoundTripperFunc func(*http.Request) (*http.Response, error)
+
+func (f mockRoundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+// TestCFAccessRoundTripper provides a **very** narrow unit test to ensure the
+// CF Access Header token value is set by the custom round-tripper.
+func TestCFAccessRoundTripper(t *testing.T) {
+	token := "tmp-access-token"
+	wantResponse := &http.Response{StatusCode: http.StatusOK, Body: http.NoBody}
+	next := mockRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		assert.Equal(t, token, req.Header.Get(cfAccessHeader))
+		return wantResponse, nil
+	})
+
+	req := httptest.NewRequest(http.MethodGet,
+		"https://jira.example.com", nil)
+	req.Header.Set(cfAccessHeader, "stale-token")
+
+	resp, err := NewCFAccessRoundTripper(token, next).RoundTrip(req)
+
+	assert.NoError(t, err)
+	assert.Same(t, wantResponse, resp)
+
+	_ = resp.Body.Close()
+}
