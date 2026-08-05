@@ -76,12 +76,21 @@ func create(cmd *cobra.Command, _ []string) {
 	projectType := viper.GetString("project.type")
 	installation := viper.GetString("installation")
 
+	cmdcommon.EnsureProject(project)
+
+	projectOverridden := cmd.Flags().Changed("project")
+
 	params := parseFlags(cmd.Flags())
 	client := api.DefaultClient(params.Debug)
 	cc := createCmd{
-		client: client,
-		params: params,
+		client:            client,
+		params:            params,
+		project:           project,
+		projectOverridden: projectOverridden,
 	}
+
+	projectType, err := cmdcommon.ResolveProjectType(client, project, projectType, installation, projectOverridden)
+	cmdutil.ExitIfError(err)
 
 	if cc.isNonInteractive() || cc.params.NoInput || tui.IsDumbTerminal() {
 		cc.params.NoInput = true
@@ -159,34 +168,80 @@ func create(cmd *cobra.Command, _ []string) {
 }
 
 type createCmd struct {
-	client     *jira.Client
-	issueTypes []*jira.IssueType
-	params     *cmdcommon.CreateParams
+	client            *jira.Client
+	issueTypes        []*jira.IssueType
+	params            *cmdcommon.CreateParams
+	project           string
+	projectOverridden bool
 }
 
 func (cc *createCmd) setIssueTypes() error {
-	issueTypes := make([]*jira.IssueType, 0)
-	availableTypes, ok := viper.Get("issue.types").([]interface{})
-	if !ok {
-		return fmt.Errorf("invalid issue types in config")
-	}
-	for _, at := range availableTypes {
-		tp := at.(map[string]interface{})
-		name := tp["name"].(string)
-		handle, _ := tp["handle"].(string)
-		if handle == jira.IssueTypeEpic || name == jira.IssueTypeEpic {
-			continue
+	if !cc.projectOverridden {
+		if availableTypes, ok := viper.Get("issue.types").([]interface{}); ok && len(availableTypes) > 0 {
+			if configured := parseConfiguredIssueTypes(availableTypes); len(configured) > 0 {
+				cc.issueTypes = configured
+				return nil
+			}
 		}
-		issueTypes = append(issueTypes, &jira.IssueType{
-			ID:      tp["id"].(string),
-			Name:    name,
-			Handle:  handle,
-			Subtask: tp["subtask"].(bool),
-		})
+	}
+
+	issueTypes, err := fetchIssueTypes(cc.client, cc.project)
+	if err != nil {
+		return err
 	}
 	cc.issueTypes = issueTypes
 
 	return nil
+}
+
+func parseConfiguredIssueTypes(availableTypes []interface{}) []*jira.IssueType {
+	issueTypes := make([]*jira.IssueType, 0, len(availableTypes))
+	for _, at := range availableTypes {
+		tp, ok := at.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		id, _ := tp["id"].(string)
+		name, _ := tp["name"].(string)
+		handle, _ := tp["handle"].(string)
+		subtask, _ := tp["subtask"].(bool)
+		issueTypes = append(issueTypes, &jira.IssueType{
+			ID:      id,
+			Name:    name,
+			Handle:  handle,
+			Subtask: subtask,
+		})
+	}
+	return filterOutEpics(issueTypes)
+}
+
+func fetchIssueTypes(client *jira.Client, project string) ([]*jira.IssueType, error) {
+	serverV9 := jira.SupportsV9CreateMeta(
+		viper.GetString("installation"),
+		viper.GetInt("version.major"),
+		viper.GetInt("version.minor"),
+	)
+	issueTypes, err := client.ProjectIssueTypes(project, serverV9)
+	if err != nil {
+		return nil, err
+	}
+
+	filtered := filterOutEpics(issueTypes)
+	if len(filtered) == 0 {
+		return nil, fmt.Errorf("no issue types found for project %q", project)
+	}
+	return filtered, nil
+}
+
+func filterOutEpics(issueTypes []*jira.IssueType) []*jira.IssueType {
+	filtered := make([]*jira.IssueType, 0, len(issueTypes))
+	for _, it := range issueTypes {
+		if it.Handle == jira.IssueTypeEpic || it.Name == jira.IssueTypeEpic {
+			continue
+		}
+		filtered = append(filtered, it)
+	}
+	return filtered
 }
 
 func (cc *createCmd) getIssueType() *survey.Question {

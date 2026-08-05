@@ -20,7 +20,9 @@ type initParams struct {
 	login        string
 	authType     string
 	project      string
+	noProject    bool
 	board        string
+	noBoard      bool
 	force        bool
 	insecure     bool
 }
@@ -42,7 +44,9 @@ func NewCmdInit() *cobra.Command {
 	cmd.Flags().String("login", "", "Jira login username or email based on your setup")
 	cmd.Flags().String("auth-type", "", "Authentication type can be basic, bearer or mtls")
 	cmd.Flags().String("project", "", "Your default project key")
+	cmd.Flags().Bool("no-project", false, "Configure without a default project (work across multiple projects and pass -p/--project per command)")
 	cmd.Flags().String("board", "", "Name of your default board in the project")
+	cmd.Flags().Bool("no-board", false, "Configure without a default board")
 	cmd.Flags().Bool("force", false, "Forcefully override existing config if it exists")
 	cmd.Flags().Bool("insecure", false, `If set, the tool will skip TLS certificate verification.
 This can be useful if your server is using self-signed certificates.`)
@@ -72,7 +76,13 @@ func parseFlags(flags query.FlagParser) *initParams {
 	project, err := flags.GetString("project")
 	cmdutil.ExitIfError(err)
 
+	noProject, err := flags.GetBool("no-project")
+	cmdutil.ExitIfError(err)
+
 	board, err := flags.GetString("board")
+	cmdutil.ExitIfError(err)
+
+	noBoard, err := flags.GetBool("no-board")
 	cmdutil.ExitIfError(err)
 
 	force, err := flags.GetBool("force")
@@ -87,7 +97,9 @@ func parseFlags(flags query.FlagParser) *initParams {
 		login:        login,
 		authType:     authType,
 		project:      project,
+		noProject:    noProject,
 		board:        board,
+		noBoard:      noBoard,
 		force:        force,
 		insecure:     insecure,
 	}
@@ -103,7 +115,9 @@ func initialize(cmd *cobra.Command, _ []string) {
 			Login:        params.login,
 			AuthType:     params.authType,
 			Project:      params.project,
+			NoProject:    params.noProject,
 			Board:        params.board,
+			NoBoard:      params.noBoard,
 			Force:        params.force,
 			Insecure:     params.insecure,
 		},

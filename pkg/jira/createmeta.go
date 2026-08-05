@@ -98,3 +98,52 @@ func (c *Client) GetCreateMetaForJiraServerV9(req *CreateMetaRequest) (*CreateMe
 
 	return &out, err
 }
+
+// ProjectIssueTypes returns the issue types available for creating issues
+// in the given project.
+func (c *Client) ProjectIssueTypes(project string, serverV9 bool) ([]*IssueType, error) {
+	req := &CreateMetaRequest{
+		Projects: project,
+		Expand:   "projects.issuetypes.fields",
+	}
+
+	if serverV9 {
+		meta, err := c.GetCreateMetaForJiraServerV9(req)
+		if err != nil {
+			return nil, err
+		}
+
+		issueTypes := make([]*IssueType, 0, len(meta.Values))
+
+		for _, it := range meta.Values {
+			issueTypes = append(issueTypes, &IssueType{
+				ID:      it.ID,
+				Name:    it.Name,
+				Subtask: it.Subtask,
+			})
+		}
+
+		return issueTypes, nil
+	}
+
+	meta, err := c.GetCreateMeta(req)
+	if err != nil {
+		return nil, err
+	}
+	if len(meta.Projects) == 0 {
+		return []*IssueType{}, nil
+	}
+
+	issueTypes := make([]*IssueType, 0, len(meta.Projects[0].IssueTypes))
+
+	for _, it := range meta.Projects[0].IssueTypes {
+		issueTypes = append(issueTypes, &IssueType{
+			ID:      it.ID,
+			Name:    it.Name,
+			Handle:  it.Handle,
+			Subtask: it.Subtask,
+		})
+	}
+
+	return issueTypes, nil
+}

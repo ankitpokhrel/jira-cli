@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -27,7 +28,6 @@ const (
 
 	optionSearch = "[Search...]"
 	optionBack   = "Go-back"
-	optionNone   = "None"
 	lineBreak    = "----------"
 )
 
@@ -68,7 +68,9 @@ type JiraCLIConfig struct {
 	AuthType     string
 	Login        string
 	Project      string
+	NoProject    bool
 	Board        string
+	NoBoard      bool
 	Force        bool
 	Insecure     bool
 	MTLS         JiraCLIMTLSConfig
@@ -485,20 +487,45 @@ func (c *JiraCLIConfigGenerator) configureProjectAndBoardDetails() error {
 		return err
 	}
 
-	if c.usrCfg.Project == "" {
+	if !c.usrCfg.NoProject && c.usrCfg.Project == "" {
+		setDefault := true
+		confirm := &survey.Confirm{
+			Message: "Set a default project?",
+			Help:    "Choose No to work across multiple projects and pass -p/--project on each command.",
+			Default: true,
+		}
+		if err := survey.AskOne(confirm, &setDefault); err != nil {
+			return err
+		}
+		if !setDefault {
+			c.value.project = nil
+			return nil
+		}
+
 		projectPrompt := survey.Select{
 			Message: "Default project:",
-			Help:    "This is your project key that you want to access by default when using the cli.",
+			Help:    "Project key to access by default when using the cli.",
 			Options: c.projectSuggestions,
 		}
 		if err := survey.AskOne(&projectPrompt, &project, survey.WithValidator(survey.Required)); err != nil {
 			return err
 		}
 	}
+
+	if c.usrCfg.NoProject {
+		c.value.project = nil
+		return nil
+	}
+
 	c.value.project = c.projectsMap[strings.ToLower(project)]
 
 	if c.value.project == nil {
 		return fmt.Errorf("project not found\n  Please check the project key and try again")
+	}
+
+	if c.usrCfg.NoBoard {
+		c.value.board = nil
+		return nil
 	}
 
 	if err := c.getBoardSuggestions(project); err != nil {
@@ -507,6 +534,25 @@ func (c *JiraCLIConfigGenerator) configureProjectAndBoardDetails() error {
 	defaultBoardSuggestions := c.boardSuggestions
 
 	if c.usrCfg.Board == "" {
+		if len(c.boardsMap) == 0 {
+			c.value.board = nil
+			return nil
+		}
+
+		setDefault := true
+		confirm := &survey.Confirm{
+			Message: "Set a default board?",
+			Help:    "Choose No to use the CLI without a default board.",
+			Default: true,
+		}
+		if err := survey.AskOne(confirm, &setDefault); err != nil {
+			return err
+		}
+		if !setDefault {
+			c.value.board = nil
+			return nil
+		}
+
 		for {
 			boardPrompt := &survey.Question{
 				Name: "",
@@ -552,17 +598,19 @@ func (c *JiraCLIConfigGenerator) configureProjectAndBoardDetails() error {
 	}
 	c.value.board = c.boardsMap[strings.ToLower(board)]
 
-	if c.value.board == nil && !strings.EqualFold(board, optionNone) {
-		var suggest string
-		if len(defaultBoardSuggestions) > 2 {
-			suggest = strings.Join(defaultBoardSuggestions[2:], ", ")
-		} else {
-			suggest = strings.Join(defaultBoardSuggestions, ", ")
+	if c.value.board == nil {
+		names := make([]string, 0, len(c.boardsMap))
+		for _, b := range c.boardsMap {
+			names = append(names, b.Name)
+		}
+		sort.Strings(names)
+
+		if len(names) == 0 {
+			return fmt.Errorf("board %q not found\n  No boards are available for project %q", board, c.value.project.Key)
 		}
 		return fmt.Errorf(
-			"board not found\n  Boards available for the project '%s' are '%s'",
-			c.value.project.Key,
-			suggest,
+			"board %q not found\n  Boards available for project %q are: %s",
+			board, c.value.project.Key, strings.Join(names, ", "),
 		)
 	}
 	return nil
@@ -614,17 +662,10 @@ func (c *JiraCLIConfigGenerator) searchAndAssignBoard(project, keyword string) e
 }
 
 func (c *JiraCLIConfigGenerator) configureMetadata() error {
-	var err error
-
-	//nolint:mnd
-	isV9Compatible := c.value.version.major >= 9 || (c.value.version.major == 8 && c.value.version.minor > 4)
-	if c.value.installation == jira.InstallationTypeLocal && isV9Compatible {
-		err = c.configureIssueTypesForJiraServerV9()
-	} else {
-		err = c.configureIssueTypes()
-	}
-	if err != nil {
-		return err
+	if c.value.project != nil {
+		if err := c.configureIssueTypes(); err != nil {
+			return err
+		}
 	}
 
 	return c.configureFields()
@@ -634,60 +675,14 @@ func (c *JiraCLIConfigGenerator) configureIssueTypes() error {
 	s := cmdutil.Info("Configuring metadata. Please wait...")
 	defer s.Stop()
 
-	meta, err := c.jiraClient.GetCreateMeta(&jira.CreateMetaRequest{
-		Projects: c.value.project.Key,
-		Expand:   "projects.issuetypes.fields",
-	})
+	serverV9 := jira.SupportsV9CreateMeta(c.value.installation, c.value.version.major, c.value.version.minor)
+	issueTypes, err := c.jiraClient.ProjectIssueTypes(c.value.project.Key, serverV9)
 	if err != nil {
 		return err
 	}
-	if len(meta.Projects) == 0 || len(meta.Projects[0].IssueTypes) == 0 {
+	if len(issueTypes) == 0 {
 		return ErrUnexpectedResponseFormat
 	}
-
-	issueTypes := make([]*jira.IssueType, 0, len(meta.Projects[0].IssueTypes))
-
-	for _, it := range meta.Projects[0].IssueTypes {
-		issueType := jira.IssueType{
-			ID:      it.ID,
-			Name:    it.Name,
-			Handle:  it.Handle,
-			Subtask: it.Subtask,
-		}
-		issueTypes = append(issueTypes, &issueType)
-	}
-
-	c.value.issueTypes = issueTypes
-
-	return nil
-}
-
-func (c *JiraCLIConfigGenerator) configureIssueTypesForJiraServerV9() error {
-	s := cmdutil.Info("Configuring metadata. Please wait...")
-	defer s.Stop()
-
-	meta, err := c.jiraClient.GetCreateMetaForJiraServerV9(&jira.CreateMetaRequest{
-		Projects: c.value.project.Key,
-		Expand:   "projects.issuetypes.fields",
-	})
-	if err != nil {
-		return err
-	}
-	if len(meta.Values) == 0 {
-		return ErrUnexpectedResponseFormat
-	}
-
-	issueTypes := make([]*jira.IssueType, 0, len(meta.Values))
-
-	for _, it := range meta.Values {
-		issueType := jira.IssueType{
-			ID:      it.ID,
-			Name:    it.Name,
-			Subtask: it.Subtask,
-		}
-		issueTypes = append(issueTypes, &issueType)
-	}
-
 	c.value.issueTypes = issueTypes
 
 	return nil
@@ -754,9 +749,7 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	config.Set("installation", c.value.installation)
 	config.Set("server", c.value.server)
 	config.Set("login", c.value.login)
-	config.Set("project", c.value.project)
 	config.Set("epic", c.value.epic)
-	config.Set("issue.types", c.value.issueTypes)
 	config.Set("issue.fields.custom", c.value.customFields)
 	config.Set("auth_type", c.value.authType.String())
 	config.Set("timezone", c.value.timezone)
@@ -773,6 +766,19 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 		config.Set("version.major", c.value.version.major)
 		config.Set("version.minor", c.value.version.minor)
 		config.Set("version.patch", c.value.version.patch)
+	}
+
+	// Project.
+	if c.value.project != nil {
+		config.Set("project", c.value.project)
+	} else {
+		config.Set("project", "")
+	}
+
+	if c.value.issueTypes != nil {
+		config.Set("issue.types", c.value.issueTypes)
+	} else {
+		config.Set("issue.types", []*jira.IssueType{})
 	}
 
 	if c.value.board != nil {
@@ -815,9 +821,9 @@ func (c *JiraCLIConfigGenerator) getBoardSuggestions(project string) error {
 		if c.value.installation == jira.InstallationTypeCloud {
 			return err
 		}
-		// We don't care about the error in the local instance since board API may not exist if agile-addon is not installed.
-		// The only option available for board selection, in this case, is "None" if not passed directly from the flag.
-		c.boardSuggestions = append(c.boardSuggestions, optionNone)
+		// We don't care about the error in the local instance since the board
+		// API may not exist if the agile add-on is not installed. In that case
+		// there are simply no boards to choose from.
 		return nil
 	}
 	c.boardSuggestions = append(c.boardSuggestions, optionSearch, lineBreak)
@@ -825,7 +831,6 @@ func (c *JiraCLIConfigGenerator) getBoardSuggestions(project string) error {
 		c.boardsMap[strings.ToLower(board.Name)] = board
 		c.boardSuggestions = append(c.boardSuggestions, board.Name)
 	}
-	c.boardSuggestions = append(c.boardSuggestions, optionNone)
 
 	return nil
 }
