@@ -326,10 +326,6 @@ func getPaginateParams(paginate string) (uint, uint, error) {
 		errInvalidPaginateArg = fmt.Errorf(
 			"invalid argument for paginate: must be a positive integer in format <from>:<limit>, where <from> is optional",
 		)
-		errOutOfBounds = fmt.Errorf(
-			"invalid argument for paginate: Format <from>:<limit>, where <from> is optional and "+
-				"<limit> must be between %d and %d (inclusive)", 1, defaultLimit,
-		)
 	)
 
 	paginate = strings.TrimSpace(paginate)
@@ -360,10 +356,11 @@ func getPaginateParams(paginate string) (uint, uint, error) {
 		}
 	}
 
+	errOutOfBounds := fmt.Errorf(
+		"invalid argument for paginate: <from> must be a non-negative integer and <limit> must be a positive integer",
+	)
+
 	if from < 0 || limit <= 0 {
-		return 0, 0, errOutOfBounds
-	}
-	if limit > defaultLimit {
 		return 0, 0, errOutOfBounds
 	}
 
