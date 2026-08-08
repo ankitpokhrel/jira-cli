@@ -290,8 +290,28 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 	return httpClient.Do(req.WithContext(ctx))
 }
 
+// redactedValue is used to replace sensitive header values in debug output.
+const redactedValue = "[REDACTED]"
+
+// sensitiveHeaders lists headers whose values must be redacted in debug output.
+var sensitiveHeaders = []string{"Authorization"}
+
 func dump(req *http.Request, res *http.Response) {
+	// Clone headers so we never mutate the original request.
+	origHeader := req.Header
+	req.Header = origHeader.Clone()
+
+	for _, h := range sensitiveHeaders {
+		if req.Header.Get(h) != "" {
+			req.Header.Set(h, redactedValue)
+		}
+	}
+
 	reqDump, _ := httputil.DumpRequest(req, true)
+
+	// Restore the original headers.
+	req.Header = origHeader
+
 	prettyPrintDump("Request Details", reqDump)
 
 	if res != nil {
