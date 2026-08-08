@@ -118,7 +118,11 @@ func loadList(cmd *cobra.Command, args []string) {
 			return nil, err
 		}
 
-		resp, err := api.ProxySearch(api.DefaultClient(debug), q.Get(), q.Params().From, q.Params().Limit)
+		resp, err := api.ProxySearchWithOptions(api.DefaultClient(debug), q.Get(), func(options *api.ProxySearchOptions) {
+			options.From = q.Params().From
+			options.Limit = q.Params().Limit
+			options.MaxResults = &q.Params().MaxResults
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -239,6 +243,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().String("order-by", "created", "Field to order the list with")
 	cmd.Flags().Bool("reverse", false, "Reverse the display order (default \"DESC\")")
 	cmd.Flags().String("paginate", "0:100", "Paginate the result. Max 100 at a time, format: <from>:<limit> where <from> is optional")
+	cmd.Flags().Uint("max-results", 0, "Max results (automatically makes several paginated requests)")
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
