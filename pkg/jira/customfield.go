@@ -1,10 +1,11 @@
 package jira
 
 const (
-	customFieldFormatOption  = "option"
-	customFieldFormatArray   = "array"
-	customFieldFormatNumber  = "number"
-	customFieldFormatProject = "project"
+	customFieldFormatOption     = "option"
+	customFieldFormatArray      = "array"
+	customFieldFormatNumber     = "number"
+	customFieldFormatProject    = "project"
+	customFieldFormatCMDBObject = "cmdb-object-field"
 )
 
 type customField map[string]interface{}
