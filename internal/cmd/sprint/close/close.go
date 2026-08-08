@@ -37,6 +37,9 @@ func closeSprint(cmd *cobra.Command, args []string) {
 
 	qs := getQuestions(params)
 	if len(qs) > 0 {
+		if cmdutil.IsNoInputMode() {
+			cmdutil.Failed("Sprint ID is required in non-interactive mode")
+		}
 		ans := struct {
 			SprintID string
 		}{}
