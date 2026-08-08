@@ -136,7 +136,12 @@ func create(cmd *cobra.Command, _ []string) {
 			cr.SubtaskField = handle
 		}
 
-		return client.CreateV2(&cr)
+		resp, err := client.CreateV2(&cr)
+		if err != nil {
+			fmt.Printf("\nCreation failed. Text dump follows.\nSummary:\n--------\n%s\n\nBody:\n-----\n%s\n", params.Summary, params.Body)
+			return resp, err
+		}
+		return resp, nil
 	}()
 
 	cmdutil.ExitIfError(err)
