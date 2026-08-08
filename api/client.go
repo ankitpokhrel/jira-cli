@@ -61,6 +61,11 @@ func Client(config jira.Config) *jira.Client {
 		config.MTLSConfig.ClientKey = viper.GetString("mtls.client_key")
 	}
 
+	// Custom Headers
+	if config.CustomHeaders == nil {
+		config.CustomHeaders = viper.GetStringMapString("custom_headers")
+	}
+
 	jiraClient = jira.NewClient(
 		config,
 		jira.WithTimeout(clientTimeout),
