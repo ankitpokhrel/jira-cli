@@ -3,6 +3,7 @@ package create
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
@@ -171,22 +172,53 @@ func (cc *createCmd) setIssueTypes() error {
 		return fmt.Errorf("invalid issue types in config")
 	}
 	for _, at := range availableTypes {
-		tp := at.(map[string]interface{})
-		name := tp["name"].(string)
-		handle, _ := tp["handle"].(string)
+		tp, ok := at.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("invalid issue types in config")
+		}
+		name, ok := configString(tp["name"])
+		if !ok || name == "" {
+			return fmt.Errorf("invalid issue types in config")
+		}
+		handle, _ := configString(tp["handle"])
 		if handle == jira.IssueTypeEpic || name == jira.IssueTypeEpic {
 			continue
 		}
+		id, ok := configString(tp["id"])
+		if !ok || id == "" {
+			return fmt.Errorf("invalid issue types in config")
+		}
+		subtask, _ := tp["subtask"].(bool)
 		issueTypes = append(issueTypes, &jira.IssueType{
-			ID:      tp["id"].(string),
+			ID:      id,
 			Name:    name,
 			Handle:  handle,
-			Subtask: tp["subtask"].(bool),
+			Subtask: subtask,
 		})
 	}
 	cc.issueTypes = issueTypes
 
 	return nil
+}
+
+// configString coerces a value decoded from the profile config to a string.
+// Issue-type IDs are written to the config unquoted, so viper decodes them as
+// int (YAML) or float64 (JSON) rather than string. The previous unchecked
+// `.(string)` assertion therefore panicked on every config `jira init` has
+// ever generated, instead of returning the error above.
+func configString(v interface{}) (string, bool) {
+	switch t := v.(type) {
+	case string:
+		return t, true
+	case int:
+		return strconv.Itoa(t), true
+	case int64:
+		return strconv.FormatInt(t, 10), true
+	case float64:
+		return strconv.FormatFloat(t, 'f', -1, 64), true
+	default:
+		return "", false
+	}
 }
 
 func (cc *createCmd) getIssueType() *survey.Question {
