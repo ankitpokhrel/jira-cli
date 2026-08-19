@@ -189,6 +189,7 @@ type IssueParams struct {
 	From          uint
 	Limit         uint
 	JQL           string
+	MaxResults    uint
 
 	debug bool
 }
@@ -235,6 +236,10 @@ func (ip *IssueParams) init(flags FlagParser) error {
 	if err != nil {
 		return err
 	}
+	maxResults, err := flags.GetUint("max-results")
+	if err != nil {
+		return err
+	}
 
 	ip.setBoolParams(boolParamsMap)
 	ip.setStringParams(stringParamsMap)
@@ -242,6 +247,7 @@ func (ip *IssueParams) init(flags FlagParser) error {
 	ip.Status = status
 	ip.From = from
 	ip.Limit = limit
+	ip.MaxResults = maxResults
 
 	return nil
 }
