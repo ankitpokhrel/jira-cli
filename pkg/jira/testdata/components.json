@@ -1,0 +1,17 @@
+[
+  {
+    "id": "10000",
+    "name": "Backend",
+    "description": "Backend component"
+  },
+  {
+    "id": "10001",
+    "name": "Frontend",
+    "description": "Frontend component"
+  },
+  {
+    "id": "10002",
+    "name": "Mobile",
+    "description": "Mobile component"
+  }
+]
