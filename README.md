@@ -511,6 +511,10 @@ $ jira issue comment add ISSUE-1 "My comment body"
 # Same as above but as an internal comment
 $ jira issue comment add ISSUE-1 "My comment body" --internal
 
+# Restrict visibility to a project role or group (Jira REST API v3; mutually exclusive with --internal)
+$ jira issue comment add ISSUE-1 "Team note" --visibility-role Developers
+$ jira issue comment add ISSUE-1 "Team note" --visibility-group jira-developers
+
 # Load comment from template file
 $ jira issue comment add ISSUE-1 --template /path/to/template.tmpl
 
@@ -520,6 +524,9 @@ $ jira issue comment add ISSUE-1 --template -
 # Or, use pipe to read input directly from standard input
 $ echo "Comment from stdin" | jira issue comment add ISSUE-1
 ```
+
+> [!NOTE]
+> `--visibility-role` and `--visibility-group` use Jira REST API v3 with an ADF comment body derived from plain text (paragraphs split on blank lines; single newlines become line breaks). The default path still converts markdown to Jira wiki via REST API v2.
 
 > [!NOTE]
 > For the comment body, the positional argument always takes precedence over the `--template` flag if both of them are passed. In the
