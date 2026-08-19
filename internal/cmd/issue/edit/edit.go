@@ -107,11 +107,6 @@ func edit(cmd *cobra.Command, args []string) {
 		}
 		params.body = string(b)
 	}
-	// Keep body as is if there were no changes.
-	if params.body != "" && params.body == originalBody {
-		params.body = ""
-	}
-
 	labels := params.labels
 	labels = append(labels, issue.Fields.Labels...)
 
@@ -137,10 +132,7 @@ func edit(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Updating an issue...")
 		defer s.Stop()
 
-		body := params.body
-		if isADF {
-			body = md.ToJiraMD(body)
-		}
+		body := bodyForEdit(params.body, originalBody, isADF)
 
 		parent := cmdutil.GetJiraIssueKey(project, params.parentIssueKey)
 		if parent == "" && issue.Fields.Parent != nil {
@@ -176,6 +168,56 @@ func edit(cmd *cobra.Command, args []string) {
 		err := cmdutil.Navigate(server, params.issueKey)
 		cmdutil.ExitIfError(err)
 	}
+}
+
+func bodyForEdit(body, originalBody string, isADF bool) string {
+	if body == "" || body == originalBody {
+		return ""
+	}
+	if !isADF && hasJiraWikiMarkup(body) {
+		return body
+	}
+	return md.ToJiraMD(body)
+}
+
+func hasJiraWikiMarkup(body string) bool {
+	inFencedCode := false
+	for line := range strings.SplitSeq(body, "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "```") {
+			inFencedCode = !inFencedCode
+			continue
+		}
+		if !inFencedCode && (isJiraWikiBlock(line) || hasJiraWikiLink(line)) {
+			return true
+		}
+	}
+	return false
+}
+
+func isJiraWikiBlock(line string) bool {
+	if len(line) >= 3 && line[0] == 'h' && line[1] >= '1' && line[1] <= '6' && line[2] == '.' {
+		return true
+	}
+	if strings.HasPrefix(line, "bq.") || strings.HasPrefix(line, "||") {
+		return true
+	}
+	for _, macro := range []string{"{code", "{noformat", "{panel", "{quote"} {
+		if strings.HasPrefix(line, macro+"}") || strings.HasPrefix(line, macro+":") {
+			return true
+		}
+	}
+	return false
+}
+
+func hasJiraWikiLink(line string) bool {
+	open := strings.IndexByte(line, '[')
+	if open == -1 {
+		return false
+	}
+	pipe := strings.IndexByte(line[open+1:], '|')
+	close := strings.IndexByte(line[open+1:], ']')
+	return pipe >= 0 && close > pipe
 }
 
 func getAnswers(params *editParams, issue *jira.Issue) {
