@@ -19,6 +19,10 @@ type customFieldTypeStringSet struct {
 	Set string `json:"set"`
 }
 
+type customFieldTypeAnySet struct {
+	Set any `json:"set"`
+}
+
 type customFieldTypeOption struct {
 	Value string `json:"value"`
 }

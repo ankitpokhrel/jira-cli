@@ -240,6 +240,10 @@ func constructCustomFields(fields map[string]string, configuredFields []IssueTyp
 			if identifier != strings.ToLower(key) {
 				continue
 			}
+			if parsed, ok := parseCustomFieldJSONContainer(val); ok {
+				data.Fields.M.customFields[configured.Key] = parsed
+				continue
+			}
 
 			switch configured.Schema.DataType {
 			case customFieldFormatOption:
