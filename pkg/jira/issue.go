@@ -304,14 +304,30 @@ type issueCommentProperty struct {
 	Key   string                    `json:"key"`
 	Value issueCommentPropertyValue `json:"value"`
 }
+
+type issueCommentVisibility struct {
+	Type  string `json:"type,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
 type issueCommentRequest struct {
 	Body       string                 `json:"body"`
 	Properties []issueCommentProperty `json:"properties"`
+	Visibility issueCommentVisibility `json:"visibility,omitempty"`
 }
 
 // AddIssueComment adds comment to an issue using POST /issue/{key}/comment endpoint.
-func (c *Client) AddIssueComment(key, comment string, internal bool) error {
-	body, err := json.Marshal(&issueCommentRequest{Body: md.ToJiraMD(comment), Properties: []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: internal}}}})
+func (c *Client) AddIssueComment(key, comment string, internal bool, visibilityGroup string) error {
+	issueReq := issueCommentRequest{
+		Body:       md.ToJiraMD(comment),
+		Properties: []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: internal}}},
+	}
+
+	if visibilityGroup != "" {
+		issueReq.Visibility = issueCommentVisibility{Type: "group", Value: visibilityGroup}
+	}
+
+	body, err := json.Marshal(issueReq)
 	if err != nil {
 		return err
 	}
