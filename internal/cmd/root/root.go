@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/board"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/completion"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/epic"
@@ -24,9 +25,6 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	jiraConfig "github.com/ankitpokhrel/jira-cli/internal/config"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
-	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
-
-	"github.com/zalando/go-keyring"
 )
 
 const (
@@ -157,17 +155,10 @@ func cmdRequireToken(cmd string) bool {
 }
 
 func checkForJiraToken(server string, login string) {
-	if os.Getenv("JIRA_API_TOKEN") != "" {
-		return
-	}
-
-	netrcConfig, _ := netrc.Read(server, login)
-	if netrcConfig != nil {
-		return
-	}
-
-	secret, _ := keyring.Get("jira-cli", login)
-	if secret != "" {
+	if api.GetAPIToken(jira.Config{
+		Server: server,
+		Login:  login,
+	}) != "" {
 		return
 	}
 

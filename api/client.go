@@ -27,19 +27,7 @@ func Client(config jira.Config) *jira.Client {
 	if config.Login == "" {
 		config.Login = viper.GetString("login")
 	}
-	if config.APIToken == "" {
-		config.APIToken = viper.GetString("api_token")
-	}
-	if config.APIToken == "" {
-		netrcConfig, _ := netrc.Read(config.Server, config.Login)
-		if netrcConfig != nil {
-			config.APIToken = netrcConfig.Password
-		}
-	}
-	if config.APIToken == "" {
-		secret, _ := keyring.Get("jira-cli", config.Login)
-		config.APIToken = secret
-	}
+	config.APIToken = GetAPIToken(config)
 	if config.AuthType == nil {
 		authType := jira.AuthType(viper.GetString("auth_type"))
 		config.AuthType = &authType
@@ -68,6 +56,25 @@ func Client(config jira.Config) *jira.Client {
 	)
 
 	return jiraClient
+}
+
+func GetAPIToken(config jira.Config) string {
+	if config.APIToken != "" {
+		return config.APIToken
+	}
+	if apiToken := viper.GetString("api_token"); apiToken != "" {
+		return apiToken
+	}
+
+	if netrcConfig, _ := netrc.Read(config.Server, config.Login); netrcConfig != nil && netrcConfig.Password != "" {
+		return netrcConfig.Password
+	}
+
+	if secret, _ := keyring.Get("jira-cli", config.Login); secret != "" {
+		return secret
+	}
+
+	return ""
 }
 
 // DefaultClient returns default jira client.
