@@ -23,6 +23,15 @@
     "watches": {
       "watchCount": 1,
       "isWatching": true
-    }
+    },
+    "attachment": [
+      {
+        "id": "10001",
+        "filename": "test.txt",
+        "size": 1024,
+        "created": "2020-12-03T14:05:20.974+0100",
+        "content": "https://test.local/secure/attachment/10001/test.txt"
+      }
+    ]
   }
 }

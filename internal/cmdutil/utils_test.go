@@ -264,3 +264,49 @@ func TestGetSubtaskHandle(t *testing.T) {
 		})
 	}
 }
+
+func TestFormatBytes(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    int64
+		expected string
+	}{
+		{
+			name:     "bytes",
+			input:    512,
+			expected: "512 B",
+		},
+		{
+			name:     "kilobytes",
+			input:    1024,
+			expected: "1.0 KiB",
+		},
+		{
+			name:     "kilobytes boundary",
+			input:    1024*1024 - 1,
+			expected: "1024.0 KiB",
+		},
+		{
+			name:     "megabytes",
+			input:    1024 * 1024,
+			expected: "1.0 MiB",
+		},
+		{
+			name:     "gigabytes",
+			input:    1024 * 1024 * 1024,
+			expected: "1.0 GiB",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, FormatBytes(tc.input))
+		})
+	}
+}
