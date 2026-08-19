@@ -241,6 +241,12 @@ func constructCustomFields(fields map[string]string, configuredFields []IssueTyp
 				continue
 			}
 
+			// Check custom type first for specialized handling
+			if configured.Schema.CustomType == customFieldFormatTeam {
+				data.Fields.M.customFields[configured.Key] = customFieldTypeTeam{ID: val}
+				continue
+			}
+
 			switch configured.Schema.DataType {
 			case customFieldFormatOption:
 				data.Fields.M.customFields[configured.Key] = customFieldTypeOption{Value: val}
