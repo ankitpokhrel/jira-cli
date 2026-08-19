@@ -450,6 +450,9 @@ $ jira issue link remote
 
 # Pass required parameters to skip prompt
 $ jira issue link remote ISSUE-1 https://example.com "Example text"
+
+# Provide global ID to update an existing remote link when matched
+$ jira issue link remote ISSUE-1 https://example.com "Example text" --global-id "system=https://example.com&id=123"
 ```
 
 #### Unlink
@@ -667,7 +670,7 @@ $ jira sprint add SPRINT_ID ISSUE-1 ISSUE-2
 
 ### Releases
 
-Interact with releases (project versions).  
+Interact with releases (project versions).
 Ensure the [feature is enabled](https://support.atlassian.com/jira-software-cloud/docs/enable-releases-and-versions/) on your instance.
 
 #### List

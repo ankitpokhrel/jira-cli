@@ -1,6 +1,7 @@
 package jira
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -682,12 +683,18 @@ func TestGetField(t *testing.T) {
 
 func TestRemoteLinkIssue(t *testing.T) {
 	var unexpectedStatusCode bool
+	var body map[string]interface{}
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/rest/api/2/issue/TEST-1/remotelink", r.URL.Path)
 		assert.Equal(t, http.MethodPost, r.Method)
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
+		var reqBody map[string]interface{}
+		err := json.NewDecoder(r.Body).Decode(&reqBody)
+		assert.NoError(t, err)
+		body = reqBody
 
 		if unexpectedStatusCode {
 			w.WriteHeader(400)
@@ -699,13 +706,17 @@ func TestRemoteLinkIssue(t *testing.T) {
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
-	err := client.RemoteLinkIssue("TEST-1", "weblink title", "http://weblink.com")
+	err := client.RemoteLinkIssue("TEST-1", "weblink title", "http://weblink.com", "system=http://www.mycompany.com/support&id=1")
 	assert.NoError(t, err)
+	assert.Equal(t, "system=http://www.mycompany.com/support&id=1", body["globalId"])
+	assert.Equal(t, map[string]interface{}{"title": "weblink title", "url": "http://weblink.com"}, body["object"])
 
 	unexpectedStatusCode = true
 
-	err = client.RemoteLinkIssue("TEST-1", "weblink title", "https://weblink.com")
+	err = client.RemoteLinkIssue("TEST-1", "weblink title", "https://weblink.com", "")
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	_, hasGlobalID := body["globalId"]
+	assert.False(t, hasGlobalID)
 }
 
 func TestWatchIssue(t *testing.T) {
