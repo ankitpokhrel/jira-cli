@@ -425,6 +425,8 @@ $ jira issue view ISSUE-1
 The view screen will display linked issues and the latest comment after the description. Note that the displayed comment may
 not be the latest one if you for some reason have more than 5k comments in a ticket.
 
+If the issue has a parent (for example, a sub-task or a story under an epic), the parent's key is shown in the header next to a 👪 marker.
+
 ```sh
 # Show 5 recent comments when viewing the issue
 $ jira issue view ISSUE-1 --comments 5

@@ -229,10 +229,14 @@ func (i Issue) header() string {
 	} else if i.Data.Fields.Watches.IsWatching {
 		wch = fmt.Sprintf("You + %d watchers", i.Data.Fields.Watches.WatchCount-1)
 	}
+	var parent string
+	if i.Data.Fields.Parent != nil && i.Data.Fields.Parent.Key != "" {
+		parent = fmt.Sprintf("  👪 %s", i.Data.Fields.Parent.Key)
+	}
 	return fmt.Sprintf(
-		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s  💭 %d comments  \U0001F9F5 %d linked\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s  👀 %s",
+		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s  💭 %d comments  \U0001F9F5 %d linked%s\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s  👀 %s",
 		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as, i.Data.Key,
-		i.Data.Fields.Comment.Total, len(i.Data.Fields.IssueLinks),
+		i.Data.Fields.Comment.Total, len(i.Data.Fields.IssueLinks), parent,
 		i.Data.Fields.Summary,
 		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
 		i.Data.Fields.Priority.Name, cmpt, lbl, wch,
