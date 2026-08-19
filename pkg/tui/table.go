@@ -88,7 +88,7 @@ type Table struct {
 	footer       *tview.TextView
 	secondary    *tview.Modal
 	help         *primitive.InfoModal
-	action       *primitive.ActionModal
+	choice       *primitive.ChoiceModal
 	style        TableStyle
 	data         TableData
 	colPad       uint
@@ -117,7 +117,7 @@ func NewTable(opts ...TableOption) *Table {
 		footer:      tview.NewTextView(),
 		help:        primitive.NewInfoModal(),
 		secondary:   getInfoModal(),
-		action:      getActionModal(),
+		choice:      getChoiceModal(),
 		colPad:      defaultColPad,
 		maxColWidth: defaultColWidth,
 	}
@@ -135,9 +135,9 @@ func NewTable(opts ...TableOption) *Table {
 		AddItem(tview.NewTextView(), 1, 0, 1, 1, 0, 0, false). // Dummy view to fake row padding.
 		AddItem(tbl.footer, 2, 0, 1, 1, 0, 0, false)
 
-	tbl.action.SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
+	tbl.choice.SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
 		if ev.Key() == tcell.KeyEsc || (ev.Key() == tcell.KeyRune && ev.Rune() == 'q') {
-			tbl.painter.HidePage("action")
+			tbl.painter.HidePage("choice")
 		}
 		return ev
 	})
@@ -146,7 +146,7 @@ func NewTable(opts ...TableOption) *Table {
 		AddPage("primary", grid, true, true).
 		AddPage("secondary", tbl.secondary, true, false).
 		AddPage("help", tbl.help, true, false).
-		AddPage("action", tbl.action, true, false)
+		AddPage("choice", tbl.choice, true, false)
 
 	return &tbl
 }
@@ -327,7 +327,7 @@ func (t *Table) initTable() {
 					}
 
 					refreshContextInFooter := func() {
-						t.action.GetFooter().SetText("Use TAB or ← → to navigate, ENTER to select, ESC or q to cancel.").SetTextColor(tcell.ColorGray)
+						t.choice.GetFooter().SetText("Use TAB or ↑ ↓ to navigate, ENTER to select, ESC or q to cancel.").SetTextColor(tcell.ColorGray)
 					}
 
 					go func() {
@@ -335,7 +335,7 @@ func (t *Table) initTable() {
 							t.painter.ShowPage("secondary").SendToFront("secondary")
 							defer func() {
 								t.painter.HidePage("secondary")
-								t.painter.ShowPage("action")
+								t.painter.ShowPage("choice")
 							}()
 							refreshContextInFooter()
 
@@ -351,23 +351,23 @@ func (t *Table) initTable() {
 								return 0
 							}
 
-							t.action.ClearButtons().AddButtons(actions).SetFocus(currentStatusIdx())
-							t.action.SetText(
+							t.choice.SetChoices(actions).SetSelected(currentStatusIdx())
+							t.choice.SetText(
 								fmt.Sprintf("Select desired state to transition %s to:", key),
 							)
 
-							t.action.SetDoneFunc(func(btnIndex int, btnLabel string) {
-								t.action.GetFooter().SetText("Processing. Please wait...").SetTextColor(tcell.ColorGray)
+							t.choice.SetDoneFunc(func(_ int, btnLabel string) {
+								t.choice.GetFooter().SetText("Processing. Please wait...").SetTextColor(tcell.ColorGray)
 								t.screen.ForceDraw()
 
 								err := handler(btnLabel)
 								if err != nil {
-									t.action.GetFooter().SetText(
+									t.choice.GetFooter().SetText(
 										fmt.Sprintf("Error: %s", err.Error()),
 									).SetTextColor(tcell.ColorRed)
 									return
 								}
-								t.painter.HidePage("action")
+								t.painter.HidePage("choice")
 								refreshContextInFooter()
 
 								if refreshFunc != nil {
