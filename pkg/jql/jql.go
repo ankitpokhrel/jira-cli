@@ -157,6 +157,16 @@ func (j *JQL) NotIn(field string, value ...string) *JQL {
 	return j
 }
 
+// InFunc constructs a query of the form `field IN fn`, where fn is a
+// JQL function call like `openSprints()`. Unlike In, the right-hand
+// side is emitted verbatim rather than quoted.
+func (j *JQL) InFunc(field, fn string) *JQL {
+	if field != "" && fn != "" {
+		j.filters = append(j.filters, fmt.Sprintf("%s IN %s", field, fn))
+	}
+	return j
+}
+
 // OrderBy orders the output in given direction.
 func (j *JQL) OrderBy(field, dir string) *JQL {
 	j.orderBy = fmt.Sprintf("ORDER BY %s %s", field, dir)

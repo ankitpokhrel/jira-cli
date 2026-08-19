@@ -299,6 +299,22 @@ jira issue list -w -pXYZ
 ```
 </details>
 
+<details><summary>What's in the current sprint? :running:</summary>
+
+```sh
+# The --sprint flag accepts a sprint name, numeric ID, or one of the
+# keywords: current/active, closed/previous, future/next.
+jira issue list --sprint current
+
+# Filter by a named sprint or its ID.
+jira issue list --sprint "Sprint 42"
+jira issue list --sprint 123
+
+# Combine multiple sprints (e.g. this sprint and the previous one).
+jira issue list --sprint "Sprint 41" --sprint "Sprint 42"
+```
+</details>
+
 #### Create
 The `create` command lets you create an issue.
 

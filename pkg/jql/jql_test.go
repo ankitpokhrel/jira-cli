@@ -248,6 +248,42 @@ func TestJQL(t *testing.T) {
 			expected: "project=\"TEST\" AND type=\"Story\" AND labels IN (\"first\", \"second\") AND labels NOT IN (\"third\", \"fourth\")",
 		},
 		{
+			name: "it queries with IN and a JQL function",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+				jql.And(func() {
+					jql.FilterBy("type", "Story").
+						InFunc("sprint", "openSprints()")
+				})
+				return jql
+			},
+			expected: "project=\"TEST\" AND type=\"Story\" AND sprint IN openSprints()",
+		},
+		{
+			name: "InFunc ignores empty field",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+				jql.And(func() {
+					jql.FilterBy("type", "Story").
+						InFunc("", "openSprints()")
+				})
+				return jql
+			},
+			expected: "project=\"TEST\" AND type=\"Story\"",
+		},
+		{
+			name: "InFunc ignores empty function",
+			initialize: func() *JQL {
+				jql := NewJQL("TEST")
+				jql.And(func() {
+					jql.FilterBy("type", "Story").
+						InFunc("sprint", "")
+				})
+				return jql
+			},
+			expected: "project=\"TEST\" AND type=\"Story\"",
+		},
+		{
 			name: "it queries with raw jql",
 			initialize: func() *JQL {
 				jql := NewJQL("TEST")

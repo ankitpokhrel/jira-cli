@@ -309,5 +309,6 @@ func hideFlags(cmd *cobra.Command) {
 	cmdutil.ExitIfError(cmd.Flags().MarkHidden("created-before"))
 	cmdutil.ExitIfError(cmd.Flags().MarkHidden("updated-before"))
 	cmdutil.ExitIfError(cmd.Flags().MarkHidden("label"))
+	cmdutil.ExitIfError(cmd.Flags().MarkHidden("sprint"))
 	cmdutil.ExitIfError(cmd.Flags().MarkHidden("reverse"))
 }
