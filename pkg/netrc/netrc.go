@@ -30,6 +30,9 @@ func Read(machine string, login string) (*Entry, error) {
 	if err != nil {
 		return nil, err
 	}
+	if serverURL.Host == "" {
+		return nil, fmt.Errorf("netrc config: invalid machine URL %q: missing host", machine)
+	}
 
 	for _, line := range netrc {
 		if line.machine == serverURL.Host && line.login == login {

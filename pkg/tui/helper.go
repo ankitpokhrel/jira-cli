@@ -10,6 +10,7 @@ import (
 
 	"github.com/cli/safeexec"
 	"github.com/gdamore/tcell/v2"
+	"github.com/google/shlex"
 	"github.com/mattn/go-isatty"
 	"github.com/rivo/tview"
 
@@ -109,7 +110,10 @@ func PagerOut(out string) error {
 		return err
 	}
 
-	pa := strings.Split(pagerCmd, " ")
+	pa, err := shlex.Split(pagerCmd)
+	if err != nil || len(pa) == 0 {
+		return fmt.Errorf("invalid pager command %q: %w", pagerCmd, err)
+	}
 	pager, pagerArgs := pa[0], pa[1:]
 	if err := cmdExists(pager); err != nil {
 		return err
