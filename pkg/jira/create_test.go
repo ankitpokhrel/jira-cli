@@ -47,7 +47,7 @@ func TestCreate(t *testing.T) {
 	expectedBody := `{"update":{},"fields":{"project":{"key":"TEST"},"issuetype":{"name":"Bug"},` +
 		`"summary":"Test bug","description":"Test description","priority":{"name":"Normal"},"labels":["test","dev"],` +
 		`"components":[{"name":"BE"},{"name":"FE"}],"fixVersions":[{"name":"v2.0"},{"name":"v2.1-hotfix"}],"versions":[{"name":"v3.0"},{"name":"v3.1-hotfix"}],` +
-		`"timetracking":{"originalEstimate":"2d"}}}`
+		`"timetracking":{"originalEstimate":"2d"},"duedate":"2006-01-02"}}`
 	testServer := createTestServer{code: 201}
 	server := testServer.serve(t, expectedBody)
 	defer server.Close()
@@ -65,6 +65,7 @@ func TestCreate(t *testing.T) {
 		FixVersions:      []string{"v2.0", "v2.1-hotfix"},
 		AffectsVersions:  []string{"v3.0", "v3.1-hotfix"},
 		OriginalEstimate: "2d",
+		DueDate:          "2006-01-02",
 	}
 	actual, err := client.CreateV2(&requestData)
 	assert.NoError(t, err)
