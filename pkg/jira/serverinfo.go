@@ -36,3 +36,13 @@ func (c *Client) ServerInfo() (*ServerInfo, error) {
 
 	return &info, err
 }
+
+// SupportsV9CreateMeta reports whether the installation should use the Jira
+// Server v9 createmeta endpoint.
+func SupportsV9CreateMeta(installation string, major, minor int) bool {
+	if installation != InstallationTypeLocal {
+		return false
+	}
+	//nolint:mnd
+	return major >= 9 || (major == 8 && minor > 4)
+}

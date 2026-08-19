@@ -71,3 +71,43 @@ func TestProjects(t *testing.T) {
 	_, err = client.Project()
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
+
+func TestProjectByKey(t *testing.T) {
+	var unexpectedStatusCode bool
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/2/project/PRJ1", r.URL.Path)
+
+		if unexpectedStatusCode {
+			w.WriteHeader(400)
+		} else {
+			resp, err := os.ReadFile("./testdata/project.json")
+			assert.NoError(t, err)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			_, _ = w.Write(resp)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	actual, err := client.ProjectByKey("PRJ1")
+	assert.NoError(t, err)
+
+	expected := &Project{
+		Key:  "PRJ1",
+		Name: "Project 1",
+		Lead: struct {
+			Name string `json:"displayName"`
+		}{Name: "Person A"},
+		Type: "next-gen",
+	}
+	assert.Equal(t, expected, actual)
+
+	unexpectedStatusCode = true
+
+	_, err = client.ProjectByKey("PRJ1")
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
