@@ -1,7 +1,9 @@
 package init
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 
@@ -93,13 +95,50 @@ func parseFlags(flags query.FlagParser) *initParams {
 	}
 }
 
+func fetchTenantInfo(server string) (*jira.TenantInfo, error) {
+	server = strings.TrimSuffix(server, "/")
+	req, err := http.NewRequest(http.MethodGet, server+"/_edge/tenant_info", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, nil // It's okay if this fails.
+	}
+
+	var info jira.TenantInfo
+	if err := json.NewDecoder(res.Body).Decode(&info); err != nil {
+		return nil, nil // Also okay if this fails.
+	}
+	if info.CloudID == "" {
+		return nil, nil
+	}
+
+	return &info, nil
+}
+
 func initialize(cmd *cobra.Command, _ []string) {
 	params := parseFlags(cmd.Flags())
+
+	var browseServer string
+	if strings.EqualFold(params.installation, jira.InstallationTypeCloud) {
+		if info, err := fetchTenantInfo(params.server); err == nil && info != nil {
+			browseServer = params.server
+			params.server = "https://api.atlassian.com/ex/jira/" + info.CloudID
+		}
+	}
 
 	c := jiraConfig.NewJiraCLIConfigGenerator(
 		&jiraConfig.JiraCLIConfig{
 			Installation: strings.ToLower(params.installation),
 			Server:       params.server,
+			BrowseServer: browseServer,
 			Login:        params.login,
 			AuthType:     params.authType,
 			Project:      params.project,
