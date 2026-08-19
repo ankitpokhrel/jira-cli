@@ -460,6 +460,37 @@ func (c *Client) RemoteLinkIssue(issueID, title, url string) error {
 	return nil
 }
 
+// GetIssueRemoteLinks fetches remote links for an issue using GET /issue/{issueId}/remotelink endpoint.
+func (c *Client) GetIssueRemoteLinks(issueID string) ([]RemoteLink, error) {
+	path := fmt.Sprintf("/issue/%s/remotelink", issueID)
+
+	res, err := c.GetV2(context.Background(), path, nil)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, formatUnexpectedResponse(res)
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var remoteLinks []RemoteLink
+	err = json.Unmarshal(body, &remoteLinks)
+	if err != nil {
+		return nil, err
+	}
+
+	return remoteLinks, nil
+}
+
 // WatchIssue adds user as a watcher using v2 version of the POST /issue/{key}/watchers endpoint.
 func (c *Client) WatchIssue(key, watcher string) error {
 	return c.watchIssue(key, watcher, apiVersion3)

@@ -107,6 +107,7 @@ func ProxyGetIssueRaw(c *jira.Client, key string) (string, error) {
 // ProxyGetIssue uses either a v2 or v3 version of the Jira GET /issue/{key}
 // endpoint to fetch the issue details based on configured installation type.
 // Defaults to v3 if installation type is not defined in the config.
+// Also fetches remote links for the issue.
 func ProxyGetIssue(c *jira.Client, key string, opts ...filter.Filter) (*jira.Issue, error) {
 	var (
 		iss *jira.Issue
@@ -120,6 +121,19 @@ func ProxyGetIssue(c *jira.Client, key string, opts ...filter.Filter) (*jira.Iss
 	} else {
 		iss, err = c.GetIssue(key, opts...)
 	}
+
+	if err != nil {
+		return iss, err
+	}
+
+	// Fetch remote links for the issue
+	remoteLinks, err := c.GetIssueRemoteLinks(key)
+	if err != nil {
+		// Don't fail the entire request if remote links can't be fetched
+		// Just log and continue without remote links
+		remoteLinks = []jira.RemoteLink{}
+	}
+	iss.Fields.RemoteLinks = remoteLinks
 
 	return iss, err
 }

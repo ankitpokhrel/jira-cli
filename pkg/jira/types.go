@@ -124,8 +124,9 @@ type IssueFields struct {
 		InwardIssue  *Issue `json:"inwardIssue,omitempty"`
 		OutwardIssue *Issue `json:"outwardIssue,omitempty"`
 	} `json:"issueLinks"`
-	Created string `json:"created"`
-	Updated string `json:"updated"`
+	RemoteLinks []RemoteLink `json:"remoteLinks,omitempty"`
+	Created     string       `json:"created"`
+	Updated     string       `json:"updated"`
 }
 
 // Field holds field info.
@@ -165,6 +166,16 @@ type IssueLinkType struct {
 	Name    string `json:"name"`
 	Inward  string `json:"inward"`
 	Outward string `json:"outward"`
+}
+
+// RemoteLink holds remote link info.
+type RemoteLink struct {
+	ID     int    `json:"id"`
+	Self   string `json:"self"`
+	Object struct {
+		URL   string `json:"url"`
+		Title string `json:"title"`
+	} `json:"object"`
 }
 
 // Sprint holds sprint info.
