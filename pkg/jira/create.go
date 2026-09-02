@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
-	"github.com/ankitpokhrel/jira-cli/pkg/md"
 )
 
 // CreateResponse struct holds response from POST /issue endpoint.
@@ -137,7 +136,7 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 
 	switch v := req.Body.(type) {
 	case string:
-		cf.Description = md.ToJiraMD(v)
+		cf.Description = v
 	case *adf.ADF:
 		cf.Description = v
 	}

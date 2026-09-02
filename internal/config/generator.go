@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdcommon"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 )
@@ -762,6 +763,7 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 	config.Set("issue.fields.custom", c.value.customFields)
 	config.Set("auth_type", c.value.authType.String())
 	config.Set("timezone", c.value.timezone)
+	config.Set(cmdcommon.ConfigKeyBodyFormat, cmdcommon.FormatMarkdown)
 
 	// MTLS.
 	if c.value.mtls.caCert != "" {
