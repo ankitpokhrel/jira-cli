@@ -400,6 +400,14 @@ $ jira issue move ISSUE-1 "In Progress"
 If your workflow allows to add comment, resolution or assignee while moving an issue, you can do so as shown below.
 See [this documentation](https://confluence.atlassian.com/jirakb/how-to-add-a-comment-during-a-transition-779160682.html) on how to setup your workflow to allow these fields.
 
+> [!IMPORTANT]
+> Jira applies `--comment` only when the target transition has a screen containing the
+> Comment field. When it doesn't, Jira performs the transition and **silently discards the
+> comment**: the API returns success in both cases, so nothing distinguishes them in the
+> response. JiraCLI warns when it can tell the transition has no screen at all, but a screen
+> that omits the Comment field cannot be detected. If you're unsure whether your workflow
+> allows it, add the comment separately with `jira issue comment add` instead.
+
 ```sh
 # Move an issue and add comment
 $ jira issue move ISSUE-1 "In Progress" --comment "Started working on it"
