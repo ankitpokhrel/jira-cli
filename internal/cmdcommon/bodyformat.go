@@ -32,7 +32,12 @@ func AddBodyFormatFlag(flags *pflag.FlagSet) {
 // flag value > viper "body.format" config key > FormatMarkdown default. The returned
 // value is validated against the allowed values and an error is returned otherwise.
 func ResolveBodyFormat(flags *pflag.FlagSet) (string, error) {
-	v, _ := flags.GetString(FlagBodyFormat)
+	// A lookup error here means the flag was never registered on this command, which is a
+	// wiring bug: silently falling back to the config would make --body-format look ignored.
+	v, err := flags.GetString(FlagBodyFormat)
+	if err != nil {
+		return "", err
+	}
 	if v == "" {
 		v = viper.GetString(ConfigKeyBodyFormat)
 	}

@@ -322,9 +322,9 @@ $  jira issue create -tStory -s"Epic during creation" -PEPIC-42
 
 You can use a `--custom` flag to set custom fields while creating the issue. See [this post](https://github.com/ankitpokhrel/jira-cli/discussions/346) for more details.
 
-The command supports both [GitHub-flavored](https://github.github.com/gfm/)
-and [Jira-flavored](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all) Markdown for writing
-description.
+The command accepts a description written either as [GitHub-flavored
+Markdown](https://github.github.com/gfm/) or directly as
+[Jira wiki markup](https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all).
 
 By default, the description is treated as [CommonMark
 Markdown](https://commonmark.org/) and converted to
@@ -342,11 +342,17 @@ $ jira issue create -tTask -s"Summary" -b"# foo"
 $ jira issue create -tTask -s"Summary" -b"# foo" --body-format=wiki
 ```
 
-The flag accepts `markdown` (default) or `wiki`. To skip the flag on every call,
-set `body.format: wiki` in `~/.config/.jira/.config.yml`; `jira init` writes this
-key with the `markdown` default. The same flag and config key work on `jira issue
-edit`, `jira issue comment add`, `jira issue worklog add`, `jira issue move
---comment`, and `jira epic create`.
+The flag accepts `markdown` (default) or `wiki`. To avoid passing it on every call, set the
+`body.format` key in `~/.config/.jira/.config.yml` — `jira init` writes it with the
+`markdown` default:
+
+```yaml
+body:
+  format: wiki
+```
+
+The same flag and config key work on `jira issue edit`, `jira issue comment add`,
+`jira issue worklog add`, `jira issue move --comment`, and `jira epic create`.
 
 You can load pre-defined templates using `--template` flag. Template, stdin,
 editor, and `-b` content all flow through the same body-format pipeline.

@@ -72,6 +72,18 @@ func TestResolveBodyFormat(t *testing.T) {
 	}
 }
 
+func TestResolveBodyFormatUnregisteredFlag(t *testing.T) {
+	// Forgetting AddBodyFormatFlag on a command is a wiring bug. It must surface as an
+	// error rather than silently resolving from config, which would make the flag look
+	// like it was ignored.
+	viper.Reset()
+	viper.Set(ConfigKeyBodyFormat, FormatWiki)
+	defer viper.Reset()
+
+	_, err := ResolveBodyFormat(pflag.NewFlagSet("empty", pflag.ContinueOnError))
+	assert.Error(t, err)
+}
+
 func TestConvertBody(t *testing.T) {
 	t.Run("markdown is converted to JIRA wiki", func(t *testing.T) {
 		// `# foo` is a CommonMark H1; the wiki form is `h1. foo`.
