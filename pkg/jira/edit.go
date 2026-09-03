@@ -390,7 +390,9 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 					}
 					data.Update.M.customFields[configured.Key] = items
 				} else {
-					data.Update.M.customFields[configured.Key] = pieces
+					// Custom fields live in the `update` block, which expects
+					// verb-value pairs. A bare array is rejected by the API.
+					data.Update.M.customFields[configured.Key] = []customFieldTypeStringsSet{{Set: pieces}}
 				}
 			case customFieldFormatNumber:
 				num, err := strconv.ParseFloat(val, 64) //nolint:gomnd
