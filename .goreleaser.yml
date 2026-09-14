@@ -96,20 +96,26 @@ homebrew_casks:
         - zsh
         - fish
 
-    url:
-      verified: "github.com/rethab/jira-cli/"
-
     conflicts:
       - cask: jira-cli-snapshot
 
-    hooks:
-      post:
-        # The released binaries are neither signed nor notarized, so Gatekeeper
-        # quarantines them on download and every run would be blocked.
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/bin/jira"]
-          end
+    # The released binaries are neither signed nor notarized, so Gatekeeper
+    # quarantines them on download and every run would be blocked.
+    #
+    # GoReleaser's `hooks.post.install` always renders a `postflight do`
+    # block, which Homebrew deprecated in favor of `postflight_steps`
+    # (https://github.com/goreleaser/goreleaser/issues/6870). Emitting the
+    # replacement stanza directly via `custom_block` is the only way around
+    # that until GoReleaser ships its own `install_steps` support
+    # (https://github.com/goreleaser/goreleaser/pull/6873). This does mean
+    # `brew style` will complain about stanza order, since custom_block is
+    # always placed at the top of the cask; that's cosmetic only.
+    custom_block: |
+      postflight_steps do
+        on_macos do
+          run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ "{{staged_path}}" }}/bin/jira"]
+        end
+      end
 
     repository:
       owner: rethab

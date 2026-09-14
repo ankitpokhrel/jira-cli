@@ -29,14 +29,12 @@ cask "jira-cli-snapshot" do
   on_macos do
     on_intel do
       sha256 "$MACOS_INTEL"
-      url "https://github.com/rethab/jira-cli/releases/download/$TAG/jira_#{version}_macOS_x86_64.tar.gz",
-        verified: "github.com/rethab/jira-cli/"
+      url "https://github.com/rethab/jira-cli/releases/download/$TAG/jira_#{version}_macOS_x86_64.tar.gz"
       rename "jira_#{version}_macOS_x86_64/bin/jira", "bin/jira"
     end
     on_arm do
       sha256 "$MACOS_ARM"
-      url "https://github.com/rethab/jira-cli/releases/download/$TAG/jira_#{version}_macOS_arm64.tar.gz",
-        verified: "github.com/rethab/jira-cli/"
+      url "https://github.com/rethab/jira-cli/releases/download/$TAG/jira_#{version}_macOS_arm64.tar.gz"
       rename "jira_#{version}_macOS_arm64/bin/jira", "bin/jira"
     end
   end
@@ -44,14 +42,12 @@ cask "jira-cli-snapshot" do
   on_linux do
     on_intel do
       sha256 "$LINUX_INTEL"
-      url "https://github.com/rethab/jira-cli/releases/download/$TAG/jira_#{version}_linux_x86_64.tar.gz",
-        verified: "github.com/rethab/jira-cli/"
+      url "https://github.com/rethab/jira-cli/releases/download/$TAG/jira_#{version}_linux_x86_64.tar.gz"
       rename "jira_#{version}_linux_x86_64/bin/jira", "bin/jira"
     end
     on_arm do
       sha256 "$LINUX_ARM"
-      url "https://github.com/rethab/jira-cli/releases/download/$TAG/jira_#{version}_linux_arm64.tar.gz",
-        verified: "github.com/rethab/jira-cli/"
+      url "https://github.com/rethab/jira-cli/releases/download/$TAG/jira_#{version}_linux_arm64.tar.gz"
       rename "jira_#{version}_linux_arm64/bin/jira", "bin/jira"
     end
   end
@@ -68,9 +64,9 @@ cask "jira-cli-snapshot" do
 
   binary "bin/jira"
 
-  postflight do
-    if OS.mac?
-      system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/bin/jira"]
+  postflight_steps do
+    on_macos do
+      run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{staged_path}}/bin/jira"]
     end
   end
   generate_completions_from_executable "bin/jira", "completion",
