@@ -1,0 +1,22 @@
+{
+  "isLast": true,
+  "nextPageToken": "",
+  "issues": [
+    {
+      "key": "TEST-3",
+      "fields": {
+        "issuetype": { "name": "Task" },
+        "resolution": { "name": "Done" },
+        "created": "2020-12-03T14:05:20.974+0100",
+        "priority": { "name": "Low" },
+        "labels": [],
+        "assignee": { "displayName": "Person A" },
+        "updated": "2020-12-03T14:05:20.974+0100",
+        "status": { "name": "Done" },
+        "summary": "Task summary",
+        "reporter": { "displayName": "Person C" },
+        "watches": { "watchCount": 3, "isWatching": false }
+      }
+    }
+  ]
+}
