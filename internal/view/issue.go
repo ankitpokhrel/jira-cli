@@ -97,6 +97,10 @@ func (i Issue) String() string {
 	if desc != "" {
 		fmt.Fprintf(&s, "\n\n%s\n\n%s", i.separator("Description"), desc)
 	}
+
+	if len(i.Data.Fields.Attachments) > 0 {
+		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s\n", i.separator("Attachments"), i.attachments()))
+	}
 	if len(i.Data.Fields.Subtasks) > 0 {
 		fmt.Fprintf(
 			&s,
@@ -134,6 +138,17 @@ func (i Issue) fragments() []fragment {
 			fragment{Body: i.separator("Description")},
 			newBlankFragment(2),
 			fragment{Body: desc, Parse: true},
+		)
+	}
+
+	if len(i.Data.Fields.Attachments) > 0 {
+		scraps = append(
+			scraps,
+			newBlankFragment(1),
+			fragment{Body: i.separator("Attachments")},
+			newBlankFragment(2),
+			fragment{Body: i.attachments()},
+			newBlankFragment(1),
 		)
 	}
 
@@ -229,10 +244,14 @@ func (i Issue) header() string {
 	} else if i.Data.Fields.Watches.IsWatching {
 		wch = fmt.Sprintf("You + %d watchers", i.Data.Fields.Watches.WatchCount-1)
 	}
+	att := fmt.Sprintf("%d attachments", len(i.Data.Fields.Attachments))
+	if len(i.Data.Fields.Attachments) == 1 {
+		att = "1 attachment"
+	}
 	return fmt.Sprintf(
-		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s  💭 %d comments  \U0001F9F5 %d linked\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s  👀 %s",
+		"%s %s  %s %s  ⌛ %s  👷 %s  🔑️ %s  📎 %s  💭 %d comments  \U0001F9F5 %d linked\n# %s\n⏱️  %s  🔎 %s  🚀 %s  📦 %s  🏷️  %s  👀 %s",
 		iti, it, sti, st, cmdutil.FormatDateTimeHuman(i.Data.Fields.Updated, jira.RFC3339), as, i.Data.Key,
-		i.Data.Fields.Comment.Total, len(i.Data.Fields.IssueLinks),
+		att, i.Data.Fields.Comment.Total, len(i.Data.Fields.IssueLinks),
 		i.Data.Fields.Summary,
 		cmdutil.FormatDateTimeHuman(i.Data.Fields.Created, jira.RFC3339), i.Data.Fields.Reporter.Name,
 		i.Data.Fields.Priority.Name, cmpt, lbl, wch,
@@ -369,6 +388,36 @@ func (i Issue) linkedIssues() string {
 	}
 
 	return linked.String()
+}
+
+func (i Issue) attachments() string {
+	if len(i.Data.Fields.Attachments) == 0 {
+		return ""
+	}
+
+	var (
+		attachments strings.Builder
+		maxNameLen  int
+		maxSizeLen  int
+	)
+
+	for _, a := range i.Data.Fields.Attachments {
+		maxNameLen = max(len(a.Filename), maxNameLen)
+		maxSizeLen = max(len(cmdutil.FormatBytes(int64(a.Size))), maxSizeLen)
+	}
+
+	for _, a := range i.Data.Fields.Attachments {
+		attachments.WriteString(
+			fmt.Sprintf(
+				"  📎 %s • %s • %s\n",
+				coloredOut(pad(a.Filename, maxNameLen), color.FgGreen, color.Bold),
+				pad(cmdutil.FormatBytes(int64(a.Size)), maxSizeLen),
+				coloredOut(cmdutil.FormatDateTimeHuman(a.Created, jira.RFC3339), color.FgWhite, color.Bold),
+			),
+		)
+	}
+
+	return attachments.String()
 }
 
 func (i Issue) comments() []issueComment {
