@@ -1,6 +1,7 @@
 package clone
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -211,13 +212,11 @@ func (cc *cloneCmd) getActualCreateParams(project string, issue *jira.Issue) *cr
 
 	if len(cc.params.replace) > 0 {
 		for _, r := range cc.params.replace {
-			pieces := strings.Split(r, ":")
-			if len(pieces) != 2 {
+			from, to, err := parseReplace(r)
+			if err != nil {
 				fmt.Println()
-				cmdutil.Fail("Invalid replace string, must be in format <find>:<replace>. Skipping replacement...")
+				cmdutil.Fail("Invalid replace string %q: %s. Skipping replacement...", r, err)
 			} else {
-				from, to := pieces[0], pieces[1]
-
 				cp.summary = strings.ReplaceAll(cp.summary, from, to)
 
 				if isADF {
@@ -231,6 +230,21 @@ func (cc *cloneCmd) getActualCreateParams(project string, issue *jira.Issue) *cr
 	cp.body = body
 
 	return &cp
+}
+
+// parseReplace parses a replace flag value in the format <search>:<replace>.
+// The value is split on the first colon only, so the replacement may contain
+// colons (eg: URLs) but the search string may not. An empty search string is
+// rejected as it would match between every character.
+func parseReplace(r string) (string, string, error) {
+	from, to, found := strings.Cut(r, ":")
+	if !found {
+		return "", "", errors.New("must be in format <search>:<replace>")
+	}
+	if from == "" {
+		return "", "", errors.New("search string cannot be empty")
+	}
+	return from, to, nil
 }
 
 type cloneParams struct {
@@ -290,6 +304,7 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("assignee", "a", "", "Issue assignee (email or display name)")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Issue labels")
 	cmd.Flags().StringArrayP("component", "C", []string{}, "Issue components")
-	cmd.Flags().StringArrayP("replace", "H", []string{}, "Replace strings in summary and body. Format <search>:<replace>, eg: \"find me:replace with me\"")
+	cmd.Flags().StringArrayP("replace", "H", []string{}, "Replace strings in summary and body. Format <search>:<replace>, eg: \"find me:replace with me\". "+
+		"Split on the first colon, so only the replacement may contain colons")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful cloning")
 }
