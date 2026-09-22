@@ -228,3 +228,14 @@ func ProxyWatchIssue(c *jira.Client, key string, user *jira.User) error {
 	}
 	return c.WatchIssue(key, assignee)
 }
+
+// ProxyGetIssueAttachments uses either v2 or v3 version of the Jira API
+// to fetch issue attachments based on configured installation type.
+func ProxyGetIssueAttachments(c *jira.Client, key string) ([]jira.Attachment, error) {
+	it := viper.GetString("installation")
+
+	if it == jira.InstallationTypeLocal {
+		return c.GetIssueAttachmentsV2(key)
+	}
+	return c.GetIssueAttachments(key)
+}
