@@ -61,6 +61,6 @@ state, it lists available states in the error output. If everything fails, ask t
 prints HTTP request details, including authorization headers.
 - ALWAYS request confirmation before destructive actions like deleting issues or making an externally visible
 change not explicitly requested by the user.
+- Avoid assuming flags and use `jira <command> [<subcommand>] --help` for command-specific flags and requirements.
 - Supply explicit arguments to avoid prompts; use `--no-input` when supported.
-- Read an issue before modifying it when its current state matters.
-- Use `jira <command> --help` for command-specific flags and requirements.
+- Cache useful discoveries for the session to avoid redundant lookups.
