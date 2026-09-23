@@ -12,7 +12,6 @@ import (
 
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter"
-	"github.com/ankitpokhrel/jira-cli/pkg/md"
 )
 
 const (
@@ -311,7 +310,7 @@ type issueCommentRequest struct {
 
 // AddIssueComment adds comment to an issue using POST /issue/{key}/comment endpoint.
 func (c *Client) AddIssueComment(key, comment string, internal bool) error {
-	body, err := json.Marshal(&issueCommentRequest{Body: md.ToJiraMD(comment), Properties: []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: internal}}}})
+	body, err := json.Marshal(&issueCommentRequest{Body: comment, Properties: []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: internal}}}})
 	if err != nil {
 		return err
 	}
@@ -346,7 +345,7 @@ type issueWorklogRequest struct {
 func (c *Client) AddIssueWorklog(key, started, timeSpent, comment, newEstimate string) error {
 	worklogReq := issueWorklogRequest{
 		TimeSpent: timeSpent,
-		Comment:   md.ToJiraMD(comment),
+		Comment:   comment,
 	}
 	if started != "" {
 		worklogReq.Started = started

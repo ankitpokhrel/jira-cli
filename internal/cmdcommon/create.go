@@ -67,6 +67,7 @@ And, this field is mandatory when creating a sub-task.`)
 	cmd.Flags().StringP("original-estimate", "e", "", prefix+" Original estimate")
 	cmd.Flags().StringToString("custom", custom, "Set custom fields")
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read body/description from")
+	AddBodyFormatFlag(cmd.Flags())
 	cmd.Flags().Bool("web", false, "Open in web browser after successful creation")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 }
