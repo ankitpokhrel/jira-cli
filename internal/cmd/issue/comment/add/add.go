@@ -2,6 +2,7 @@ package add
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
@@ -34,6 +35,9 @@ $ jira issue comment add ISSUE-1 --template -
 # Or, use pipe to read input directly from standard input
 $ echo "Comment from stdin" | jira issue comment add ISSUE-1
 
+# Mention a user by display name. The body must contain the matching @Name text.
+$ jira issue comment add ISSUE-1 "Hi @Person A, please review." --mention "Person A"
+
 # Positional argument takes precedence over the template flag
 # The example below will add "comment from arg" as a comment
 $ jira issue comment add ISSUE-1 "comment from arg" --template /path/to/template.tmpl`
@@ -57,6 +61,7 @@ func NewCmdCommentAdd() *cobra.Command {
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read comment body from")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 	cmd.Flags().Bool("internal", false, "Make comment internal")
+	cmd.Flags().StringArray("mention", []string{}, "Mention a user by display name; repeatable")
 
 	return &cmd
 }
@@ -89,6 +94,9 @@ func add(cmd *cobra.Command, args []string) {
 		params.body = ans.Body
 	}
 
+	mentions, err := ac.resolveMentions()
+	cmdutil.ExitIfError(err)
+
 	if !params.noInput {
 		answer := struct{ Action string }{}
 		err := survey.Ask([]*survey.Question{getNextAction()}, &answer)
@@ -99,11 +107,11 @@ func add(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	err := func() error {
+	err = func() error {
 		s := cmdutil.Info("Adding comment")
 		defer s.Stop()
 
-		return client.AddIssueComment(ac.params.issueKey, ac.params.body, ac.params.internal)
+		return client.AddIssueCommentWithMentions(ac.params.issueKey, ac.params.body, mentions, ac.params.internal)
 	}()
 	cmdutil.ExitIfError(err)
 
@@ -124,6 +132,7 @@ type addParams struct {
 	template string
 	noInput  bool
 	internal bool
+	mentions []string
 	debug    bool
 }
 
@@ -150,12 +159,16 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 	internal, err := flags.GetBool("internal")
 	cmdutil.ExitIfError(err)
 
+	mentions, err := flags.GetStringArray("mention")
+	cmdutil.ExitIfError(err)
+
 	return &addParams{
 		issueKey: issueKey,
 		body:     body,
 		template: template,
 		noInput:  noInput,
 		internal: internal,
+		mentions: mentions,
 		debug:    debug,
 	}
 }
@@ -221,6 +234,67 @@ func (ac *addCmd) getQuestions() []*survey.Question {
 	}
 
 	return qs
+}
+
+func (ac *addCmd) resolveMentions() ([]jira.CommentMention, error) {
+	if len(ac.params.mentions) == 0 {
+		return nil, nil
+	}
+
+	project := strings.SplitN(ac.params.issueKey, "-", 2)[0]
+	resolved := make([]jira.CommentMention, 0, len(ac.params.mentions))
+	for _, value := range ac.params.mentions {
+		query := strings.TrimSpace(strings.TrimPrefix(value, "@"))
+		if query == "" {
+			return nil, fmt.Errorf("mention query cannot be empty")
+		}
+
+		users, err := api.ProxyUserSearch(ac.client, &jira.UserSearchOptions{
+			Project:    project,
+			Query:      query,
+			MaxResults: 20,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("searching for mention %q: %w", query, err)
+		}
+
+		user, err := findMentionUser(query, users)
+		if err != nil {
+			return nil, err
+		}
+
+		displayName := user.DisplayName
+		if displayName == "" {
+			displayName = user.Name
+		}
+		resolved = append(resolved, jira.CommentMention{
+			Text:      "@" + displayName,
+			AccountID: user.AccountID,
+			Name:      user.Name,
+		})
+	}
+
+	return resolved, nil
+}
+
+func findMentionUser(query string, users []*jira.User) (*jira.User, error) {
+	matches := make([]*jira.User, 0, len(users))
+	for _, user := range users {
+		if strings.EqualFold(query, user.DisplayName) ||
+			strings.EqualFold(query, user.Name) ||
+			strings.EqualFold(query, user.Email) ||
+			strings.EqualFold(query, user.AccountID) {
+			matches = append(matches, user)
+		}
+	}
+
+	if len(matches) == 1 {
+		return matches[0], nil
+	}
+	if len(matches) > 1 {
+		return nil, fmt.Errorf("mention query %q matches multiple users", query)
+	}
+	return nil, fmt.Errorf("mention query %q did not match an exact user", query)
 }
 
 func getNextAction() *survey.Question {

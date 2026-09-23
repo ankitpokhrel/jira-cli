@@ -311,7 +311,38 @@ type issueCommentRequest struct {
 
 // AddIssueComment adds comment to an issue using POST /issue/{key}/comment endpoint.
 func (c *Client) AddIssueComment(key, comment string, internal bool) error {
-	body, err := json.Marshal(&issueCommentRequest{Body: md.ToJiraMD(comment), Properties: []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: internal}}}})
+	return c.AddIssueCommentWithMentions(key, comment, nil, internal)
+}
+
+// CommentMention identifies a user mention in a comment body.
+type CommentMention struct {
+	Text      string
+	AccountID string
+	Name      string
+}
+
+// AddIssueCommentWithMentions adds a comment and replaces mention text with Jira wiki markup.
+func (c *Client) AddIssueCommentWithMentions(key, comment string, mentions []CommentMention, internal bool) error {
+	bodyText := md.ToJiraMD(comment)
+	for _, mention := range mentions {
+		if mention.Text == "" {
+			return fmt.Errorf("comment mention text is empty")
+		}
+		if mention.AccountID == "" && mention.Name == "" {
+			return fmt.Errorf("comment mention %q has no account ID or username", mention.Text)
+		}
+		if !strings.Contains(bodyText, mention.Text) {
+			return fmt.Errorf("comment mention %q was not found in comment body", mention.Text)
+		}
+
+		markup := fmt.Sprintf("[~%s]", mention.Name)
+		if mention.AccountID != "" {
+			markup = fmt.Sprintf("[~accountid:%s]", mention.AccountID)
+		}
+		bodyText = strings.ReplaceAll(bodyText, mention.Text, markup)
+	}
+
+	body, err := json.Marshal(&issueCommentRequest{Body: bodyText, Properties: []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: internal}}}})
 	if err != nil {
 		return err
 	}

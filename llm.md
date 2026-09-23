@@ -64,3 +64,16 @@ change not explicitly requested by the user.
 - Avoid assuming flags and use `jira <command> [<subcommand>] --help` for command-specific flags and requirements.
 - Supply explicit arguments to avoid prompts; use `--no-input` when supported.
 - Cache useful discoveries for the session to avoid redundant lookups.
+
+## Comment mentions
+
+Use `--mention` with the user's exact display name and include the matching
+`@Display Name` text in the comment body:
+
+```sh
+jira issue comment add ISSUE-1 "Hi @Person A, please review." --mention "Person A"
+```
+
+Repeat `--mention` for multiple users. The command resolves each user and
+serializes a Jira account-ID mention; do not type `@@Name` or rely on a plain
+`@Name` without the flag.
