@@ -17,6 +17,8 @@ import (
 )
 
 const (
+	mentionUserSearchMaxResults = 20
+
 	helpText = `Add adds comment to an issue.`
 	examples = `$ jira issue comment add
 
@@ -251,7 +253,7 @@ func (ac *addCmd) resolveMentions() ([]jira.CommentMention, error) {
 
 		users, err := api.ProxyMentionUserSearch(ac.client, &jira.UserSearchOptions{
 			Query:      query,
-			MaxResults: 20,
+			MaxResults: mentionUserSearchMaxResults,
 			Project:    project,
 		})
 		if err != nil {
