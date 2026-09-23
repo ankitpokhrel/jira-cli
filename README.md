@@ -523,6 +523,10 @@ $ jira issue comment add ISSUE-1 --template -
 
 # Or, use pipe to read input directly from standard input
 $ echo "Comment from stdin" | jira issue comment add ISSUE-1
+
+# Mention a user by display name. Repeat --mention for multiple users.
+# The comment body must contain the matching @Display Name text.
+$ jira issue comment add ISSUE-1 "Hi @Person A, please review." --mention "Person A"
 ```
 
 > [!NOTE]

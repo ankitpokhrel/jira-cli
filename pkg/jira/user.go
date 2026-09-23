@@ -24,7 +24,7 @@ type UserSearchOptions struct {
 
 // UserSearch search for user details using v3 version of the GET /user/assignable/search endpoint.
 func (c *Client) UserSearch(opt *UserSearchOptions) ([]*User, error) {
-	return c.userSearch(opt, apiVersion3)
+	return c.userSearch(opt, apiVersion3, "/user/assignable/search")
 }
 
 // UserSearchV2 search for user details using v2 version of the GET /user/assignable/search endpoint.
@@ -40,10 +40,24 @@ func (c *Client) UserSearchV2(opt *UserSearchOptions) ([]*User, error) {
 		opt.Username = opt.Query
 		opt.Query = ""
 	}
-	return c.userSearch(opt, apiVersion2)
+	return c.userSearch(opt, apiVersion2, "/user/assignable/search")
 }
 
-func (c *Client) userSearch(opt *UserSearchOptions, ver string) ([]*User, error) {
+// SearchUsers searches all visible users using the v3 user search endpoint.
+func (c *Client) SearchUsers(opt *UserSearchOptions) ([]*User, error) {
+	return c.userSearch(opt, apiVersion3, "/user/search")
+}
+
+// SearchUsersV2 searches all visible users using the v2 user search endpoint.
+func (c *Client) SearchUsersV2(opt *UserSearchOptions) ([]*User, error) {
+	if opt != nil && opt.Query != "" && opt.Username == "" {
+		opt.Username = opt.Query
+		opt.Query = ""
+	}
+	return c.userSearch(opt, apiVersion2, "/user/search")
+}
+
+func (c *Client) userSearch(opt *UserSearchOptions, ver, endpoint string) ([]*User, error) {
 	if opt == nil {
 		return nil, ErrInvalidSearchOption
 	}
@@ -76,7 +90,7 @@ func (c *Client) userSearch(opt *UserSearchOptions, ver string) ([]*User, error)
 		return nil, ErrInvalidSearchOption
 	}
 
-	path := fmt.Sprintf("%s?%s", "/user/assignable/search", strings.Join(opts, "&"))
+	path := fmt.Sprintf("%s?%s", endpoint, strings.Join(opts, "&"))
 
 	switch ver {
 	case apiVersion2:

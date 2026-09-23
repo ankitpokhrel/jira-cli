@@ -554,6 +554,25 @@ func TestAddIssueComment(t *testing.T) {
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
+func TestAddIssueCommentWithMentions(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		actualBody := new(strings.Builder)
+		_, _ = io.Copy(actualBody, r.Body)
+
+		expectedBody := `{"body":"Hi [~accountid:a123b]","properties":[{"key":"sd.public.comment","value":{"internal":false}}]}`
+		assert.Equal(t, expectedBody, actualBody.String())
+		w.WriteHeader(201)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+	err := client.AddIssueCommentWithMentions("TEST-1", "Hi @Person A", []CommentMention{
+		{Text: "@Person A", AccountID: "a123b"},
+	}, false)
+
+	assert.NoError(t, err)
+}
+
 func TestAddIssueWorklog(t *testing.T) {
 	var unexpectedStatusCode bool
 

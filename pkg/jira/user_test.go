@@ -129,3 +129,33 @@ func TestUserSearchV2(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 }
+
+func TestSearchUsers(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/3/user/search", r.URL.Path)
+		assert.Equal(t, "doe", r.URL.Query().Get("query"))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		_, _ = w.Write([]byte("[]"))
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+	_, err := client.SearchUsers(&UserSearchOptions{Query: "doe", MaxResults: 5})
+	assert.NoError(t, err)
+}
+
+func TestSearchUsersV2(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/2/user/search", r.URL.Path)
+		assert.Equal(t, "doe", r.URL.Query().Get("username"))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		_, _ = w.Write([]byte("[]"))
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+	_, err := client.SearchUsersV2(&UserSearchOptions{Query: "doe", MaxResults: 5})
+	assert.NoError(t, err)
+}
