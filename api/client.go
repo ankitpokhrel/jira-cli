@@ -170,24 +170,22 @@ func ProxyAssignIssue(c *jira.Client, key string, user *jira.User, def string) e
 // endpoint to search for the users assignable to the given issue.
 // Defaults to v3 if installation type is not defined in the config.
 func ProxyUserSearch(c *jira.Client, opts *jira.UserSearchOptions) ([]*jira.User, error) {
-	var (
-		users []*jira.User
-		err   error
-	)
-
-	it := viper.GetString("installation")
-
-	if it == jira.InstallationTypeLocal {
-		users, err = c.UserSearchV2(opts)
-	} else {
-		users, err = c.UserSearch(opts)
-	}
-
-	return users, err
+	return proxyUserSearch(c, opts, assignableUserSearch)
 }
 
-// ProxySearchUsers uses either v2 or v3 of the user search endpoint.
-func ProxySearchUsers(c *jira.Client, opts *jira.UserSearchOptions) ([]*jira.User, error) {
+// ProxyMentionUserSearch uses either v2 or v3 of the general user search endpoint.
+func ProxyMentionUserSearch(c *jira.Client, opts *jira.UserSearchOptions) ([]*jira.User, error) {
+	return proxyUserSearch(c, opts, visibleUserSearch)
+}
+
+type userSearchMode uint8
+
+const (
+	assignableUserSearch userSearchMode = iota
+	visibleUserSearch
+)
+
+func proxyUserSearch(c *jira.Client, opts *jira.UserSearchOptions, mode userSearchMode) ([]*jira.User, error) {
 	var (
 		users []*jira.User
 		err   error
@@ -195,9 +193,16 @@ func ProxySearchUsers(c *jira.Client, opts *jira.UserSearchOptions) ([]*jira.Use
 
 	it := viper.GetString("installation")
 	if it == jira.InstallationTypeLocal {
-		users, err = c.SearchUsersV2(opts)
+		if mode == visibleUserSearch {
+			return c.SearchUsersV2(opts)
+		}
+		return c.UserSearchV2(opts)
+	}
+
+	if mode == visibleUserSearch {
+		return c.SearchUsers(opts)
 	} else {
-		users, err = c.SearchUsers(opts)
+		users, err = c.UserSearch(opts)
 	}
 
 	return users, err

@@ -249,7 +249,7 @@ func (ac *addCmd) resolveMentions() ([]jira.CommentMention, error) {
 			return nil, fmt.Errorf("mention query cannot be empty")
 		}
 
-		users, err := api.ProxySearchUsers(ac.client, &jira.UserSearchOptions{
+		users, err := api.ProxyMentionUserSearch(ac.client, &jira.UserSearchOptions{
 			Query:      query,
 			MaxResults: 20,
 			Project:    project,
