@@ -97,12 +97,9 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 		s := cmdutil.Info("Fetching sprint issues...")
 		defer s.Stop()
 
-		q, err := query.NewIssue(project, flags)
+		q, err := getIssueQuery(project, flags, sprintQuery.Params().ShowAllIssues)
 		if err != nil {
 			return nil, err
-		}
-		if sprintQuery.Params().ShowAllIssues {
-			q.Params().JQL = "project IS NOT EMPTY"
 		}
 		resp, err := client.SprintIssues(sprintID, q.Get(), q.Params().From, q.Params().Limit)
 		if err != nil {
@@ -234,7 +231,7 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 			if err != nil {
 				return []*jira.Issue{}
 			}
-			resp, err := client.SprintIssues(sprintID, iq, sprintQuery.Params().From, sprintQuery.Params().Limit)
+			resp, err := client.SprintIssues(sprintID, iq.Get(), sprintQuery.Params().From, sprintQuery.Params().Limit)
 			if err != nil {
 				return []*jira.Issue{}
 			}
@@ -258,22 +255,27 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 	table, err := flags.GetBool("table")
 	cmdutil.ExitIfError(err)
 
-	if table || tui.IsDumbTerminal() || tui.IsNotTTY() {
+	if table || plain || tui.IsDumbTerminal() || tui.IsNotTTY() {
 		cmdutil.ExitIfError(v.RenderInTable())
 	} else {
 		cmdutil.ExitIfError(v.Render())
 	}
 }
 
-func getIssueQuery(project string, flags query.FlagParser, showAll bool) (string, error) {
+func getIssueQuery(project string, flags query.FlagParser, showAll bool) (*query.Issue, error) {
 	q, err := query.NewIssue(project, flags)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if showAll {
-		q.Params().JQL = "project IS NOT EMPTY"
+		allIssues := "project IS NOT EMPTY"
+		if q.Params().JQL != "" {
+			allIssues += " AND " + q.Params().JQL
+		}
+		q.Params().JQL = allIssues
+
 	}
-	return q.Get(), nil
+	return q, nil
 }
 
 func setFlags(cmd *cobra.Command) {

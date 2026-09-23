@@ -229,10 +229,10 @@ func (c *JiraCLIConfigGenerator) configureLocalAuthType() error {
 	if c.usrCfg.AuthType == "" {
 		qs := &survey.Select{
 			Message: "Authentication type:",
-			Help: `Authentication type coud be: basic (login), bearer (PAT) or mtls (client certs)
+			Help: `Authentication type coud be: basic (login), bearer (PAT), mtls (client certs), cf-access
 ? If you are using your login credentials, the auth type is probably 'basic' (most common for local installation)
 ? If you are using a personal access token, the auth type is probably 'bearer'`,
-			Options: []string{"basic", "bearer", "mtls"},
+			Options: []string{"basic", "bearer", "mtls", "cf-access"},
 			Default: "basic",
 		}
 		if err := survey.AskOne(qs, &authType); err != nil {
@@ -245,6 +245,8 @@ func (c *JiraCLIConfigGenerator) configureLocalAuthType() error {
 		c.value.authType = jira.AuthTypeBearer
 	case jira.AuthTypeMTLS.String():
 		c.value.authType = jira.AuthTypeMTLS
+	case jira.AuthTypeCFAccess.String():
+		c.value.authType = jira.AuthTypeCFAccess
 	default:
 		c.value.authType = jira.AuthTypeBasic
 	}

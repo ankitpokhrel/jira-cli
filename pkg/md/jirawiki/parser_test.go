@@ -615,3 +615,49 @@ func TestTables(t *testing.T) {
 		})
 	}
 }
+
+func TestParseNonASCIIText(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "greek with bold",
+			input:    "Λέξη με *bold* κείμενο.",
+			expected: "Λέξη με **bold** κείμενο.\n",
+		},
+		{
+			name:     "cyrillic with bold",
+			input:    "Текст с *bold* словом.",
+			expected: "Текст с **bold** словом.\n",
+		},
+		{
+			name:     "cjk with bold",
+			input:    "これは *bold* です。",
+			expected: "これは **bold** です。\n",
+		},
+		{
+			name:     "accented latin with reference link",
+			input:    "Café [link|https://ankit.pl] señor.",
+			expected: "Café [link](https://ankit.pl) señor.\n",
+		},
+		{
+			name:     "emoji with bold",
+			input:    "Status 🚀 *done* ✅",
+			expected: "Status 🚀 **done** ✅\n",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, Parse(tc.input))
+		})
+	}
+}

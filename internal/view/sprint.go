@@ -137,7 +137,7 @@ func (sl *SprintList) data() []tui.PreviewData {
 }
 
 func (sl *SprintList) tabularize(issues []*jira.Issue) tui.TableData {
-	var data tui.TableData
+	data := make(tui.TableData, 0, 1+len(issues))
 
 	data = append(data, ValidIssueColumns())
 	for _, issue := range issues {
@@ -192,7 +192,7 @@ func (sl *SprintList) tableData() tui.TableData {
 	var data tui.TableData
 
 	headers := sl.tableHeader()
-	if !(sl.Display.Plain && sl.Display.NoHeaders) {
+	if !sl.Display.Plain || !sl.Display.NoHeaders {
 		data = append(data, headers)
 	}
 	if len(headers) == 0 {

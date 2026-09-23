@@ -94,7 +94,7 @@ func (l *IssueList) Render() error {
 				client := api.DefaultClient(false)
 				transitions, _ := api.ProxyTransitions(client, key)
 
-				var actions []string
+				actions := make([]string, 0, len(transitions))
 				for _, t := range transitions {
 					actions = append(actions, t.Name)
 				}

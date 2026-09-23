@@ -1,39 +1,53 @@
-run:
-  timeout: 5m
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
     - bodyclose
     - dupl
     - errcheck
     - gocritic
     - gocyclo
-    - gofmt
-    - goimports
-    - revive
     - godot
-    - gofumpt
-    - mnd
-    - gosimple
     - govet
     - ineffassign
+    - mnd
     - prealloc
+    - revive
+    - staticcheck
     - unparam
     - unused
-  fast: false
-linters-settings:
-  gofmt:
-    simplify: false
-  testpackage:
-    skip-regexp: ".*"
-  gocyclo:
-    min-complexity: 20
-  revive:
-    rules:
-      - name: package-comments
-        disabled: true
-  mnd:
-    ignored-numbers: ['0', '1', '2', '3']
-issues:
-  exclude-use-default: false
-  exclude-dirs-use-default: true
+  settings:
+    gocyclo:
+      min-complexity: 20
+    mnd:
+      ignored-numbers:
+        - "0"
+        - "1"
+        - "2"
+        - "3"
+    revive:
+      rules:
+        - name: package-comments
+          disabled: true
+    testpackage:
+      skip-regexp: .*
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    gofmt:
+      simplify: false
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
