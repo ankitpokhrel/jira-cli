@@ -249,10 +249,10 @@ func (ac *addCmd) resolveMentions() ([]jira.CommentMention, error) {
 			return nil, fmt.Errorf("mention query cannot be empty")
 		}
 
-		users, err := api.ProxyUserSearch(ac.client, &jira.UserSearchOptions{
-			Project:    project,
+		users, err := api.ProxySearchUsers(ac.client, &jira.UserSearchOptions{
 			Query:      query,
 			MaxResults: 20,
+			Project:    project,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("searching for mention %q: %w", query, err)
@@ -293,6 +293,19 @@ func findMentionUser(query string, users []*jira.User) (*jira.User, error) {
 	}
 	if len(matches) > 1 {
 		return nil, fmt.Errorf("mention query %q matches multiple users", query)
+	}
+	candidates := make([]string, 0, len(users))
+	for _, user := range users {
+		displayName := user.DisplayName
+		if displayName == "" {
+			displayName = user.Name
+		}
+		if displayName != "" {
+			candidates = append(candidates, displayName)
+		}
+	}
+	if len(candidates) > 0 {
+		return nil, fmt.Errorf("mention query %q did not match an exact user; candidates: %s", query, strings.Join(candidates, ", "))
 	}
 	return nil, fmt.Errorf("mention query %q did not match an exact user", query)
 }

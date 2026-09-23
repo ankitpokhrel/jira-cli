@@ -24,7 +24,7 @@ func TestFindMentionUser(t *testing.T) {
 	}{
 		{name: "display name", query: "person a", users: []*jira.User{user}, want: user},
 		{name: "email", query: "person.a@example.com", users: []*jira.User{user}, want: user},
-		{name: "no exact match", query: "person", users: []*jira.User{user}, wantErr: `mention query "person" did not match an exact user`},
+		{name: "no exact match", query: "person", users: []*jira.User{user}, wantErr: `mention query "person" did not match an exact user; candidates: Person A`},
 		{name: "ambiguous match", query: "person a", users: []*jira.User{user, user}, wantErr: `mention query "person a" matches multiple users`},
 	}
 
