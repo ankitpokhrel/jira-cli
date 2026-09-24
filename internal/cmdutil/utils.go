@@ -71,17 +71,17 @@ func Info(msg string) *spinner.Spinner {
 
 // Success prints success message in stdout.
 func Success(msg string, args ...interface{}) {
-	_, _ = fmt.Fprintf(os.Stdout, fmt.Sprintf("\n\u001B[0;32m✓\u001B[0m %s\n", msg), args...)
+	_, _ = fmt.Fprintf(os.Stdout, fmt.Sprintf("\n[0;32m✓[0m %s\n", msg), args...)
 }
 
 // Warn prints warning message in stderr.
 func Warn(msg string, args ...interface{}) {
-	_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("\u001B[0;33m%s\u001B[0m\n", msg), args...)
+	_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("[0;33m%s[0m\n", msg), args...)
 }
 
 // Fail prints failure message in stderr.
 func Fail(msg string, args ...interface{}) {
-	_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("\u001B[0;31m✗\u001B[0m %s\n", msg), args...)
+	_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("[0;31m✗[0m %s\n", msg), args...)
 }
 
 // Failed prints failure message in stderr and exits.
@@ -129,8 +129,20 @@ func GetConfigHome() (string, error) {
 }
 
 // StdinHasData checks if standard input has any data to be processed.
+// Returns true only when stdin is a named pipe or a regular file —
+// i.e. when the caller explicitly piped or redirected input. Sockets,
+// character devices, and other special files return false so that
+// commands do not block waiting for data that will never arrive.
 func StdinHasData() bool {
-	return !term.IsTerminal(int(os.Stdin.Fd()))
+	if term.IsTerminal(int(os.Stdin.Fd())) {
+		return false
+	}
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	mode := fi.Mode()
+	return mode&os.ModeNamedPipe != 0 || mode.IsRegular()
 }
 
 // ReadFile reads contents of the given file.
