@@ -40,7 +40,9 @@ STATE		State you want to transition the issue to`,
 
 	cmd.Flags().SortFlags = false
 
-	cmd.Flags().String("comment", "", "Add comment to the issue")
+	cmd.Flags().String("comment", "", `Add comment to the issue.
+Jira applies this only when the target transition has a screen containing the Comment field.
+Otherwise it is silently discarded; use "jira issue comment add" instead.`)
 	cmd.Flags().StringP("assignee", "a", "", "Assign issue to a user")
 	cmd.Flags().StringP("resolution", "R", "", "Set resolution")
 	cmd.Flags().Bool("web", false, "Open issue in web browser after successful transition")
@@ -73,6 +75,16 @@ func move(cmd *cobra.Command, args []string) {
 		fmt.Println()
 		cmdutil.Failed("Error: %s", err.Error())
 		return
+	}
+
+	// A transition with no screen cannot carry a comment: Jira accepts the request with
+	// 204 and drops the comment, so warn rather than let it vanish silently.
+	if mc.params.comment != "" && len(tr.Fields) == 0 {
+		fmt.Println()
+		cmdutil.Warn(
+			"Transition %q has no screen, so Jira will discard --comment.\nAdd it separately with: jira issue comment add %s",
+			tr.Name, mc.params.key,
+		)
 	}
 
 	err = func() error {

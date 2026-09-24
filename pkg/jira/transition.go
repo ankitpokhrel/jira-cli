@@ -55,7 +55,10 @@ func (c *Client) TransitionsV2(key string) ([]*Transition, error) {
 }
 
 func (c *Client) transitions(key, ver string) ([]*Transition, error) {
-	path := fmt.Sprintf("/issue/%s/transitions", key)
+	// The transitions.fields expansion tells us which fields each transition's screen
+	// carries. It costs nothing extra here and lets callers detect transitions that
+	// have no screen, where Jira silently drops a comment sent with the transition.
+	path := fmt.Sprintf("/issue/%s/transitions?expand=transitions.fields", key)
 
 	var (
 		res *http.Response
