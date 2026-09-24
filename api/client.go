@@ -138,7 +138,7 @@ func ProxySearch(c *jira.Client, jql string, from, limit uint) (*jira.SearchResu
 	if it == jira.InstallationTypeLocal {
 		issues, err = c.SearchV2(jql, from, limit)
 	} else {
-		issues, err = c.Search(jql, limit)
+		issues, err = c.Search(jql, from, limit)
 	}
 
 	return issues, err
