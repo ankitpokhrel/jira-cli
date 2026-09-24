@@ -25,9 +25,15 @@ type JQL struct {
 
 // NewJQL initializes jql query builder.
 func NewJQL(project string) *JQL {
+	var f string
+	if strings.HasPrefix(project, "(") && strings.HasSuffix(project, ")") {
+		f = "project in %s"
+	} else {
+		f = "project=%q"
+	}
 	return &JQL{
 		project: project,
-		filters: []string{fmt.Sprintf("project=%q", project)},
+		filters: []string{fmt.Sprintf(f, project)},
 	}
 }
 
