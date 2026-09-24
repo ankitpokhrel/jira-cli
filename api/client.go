@@ -124,24 +124,74 @@ func ProxyGetIssue(c *jira.Client, key string, opts ...filter.Filter) (*jira.Iss
 	return iss, err
 }
 
+type ProxySearchOptions struct {
+	From       uint
+	Limit      uint
+	MaxResults *uint
+}
+
+type ProxySearchOption func(*ProxySearchOptions)
+
+func ProxySearchWithOptions(c *jira.Client, jql string, options ...ProxySearchOption) (*jira.SearchResult, error) {
+	opts := &ProxySearchOptions{
+		From:  0,
+		Limit: jira.SearchLimitDefault,
+	}
+
+	for _, option := range options {
+		option(opts)
+	}
+
+	limit := opts.Limit
+
+	if opts.MaxResults != nil && *opts.MaxResults > opts.Limit {
+		limit = *opts.MaxResults
+	}
+
+	it := viper.GetString("installation")
+
+	searchResults := &jira.SearchResult{}
+	var err error
+	var nextPageToken string
+	var done bool
+
+	for uint(len(searchResults.Issues)) < limit && err == nil && !done {
+		var result *jira.SearchResult
+
+		sOpts := []jira.SearchOption{
+			func(options *jira.SearchOptions) {
+				options.NextPageToken = nextPageToken
+				options.From = &opts.From
+			},
+		}
+		if it == jira.InstallationTypeLocal {
+			sOpts = append(sOpts, jira.WithAPIVersion2())
+		}
+
+		result, err = c.SearchWith(jql, sOpts...)
+
+		if result != nil {
+			nextPageToken = result.NextPageToken
+		}
+
+		if nextPageToken == "" {
+			done = true
+		}
+
+		searchResults = jira.MergeSearchResults(searchResults, result)
+	}
+
+	return searchResults, err
+}
+
 // ProxySearch uses either a v2 or v3 version of the Jira GET /search endpoint
 // to search for the relevant issues based on configured installation type.
 // Defaults to v3 if installation type is not defined in the config.
 func ProxySearch(c *jira.Client, jql string, from, limit uint) (*jira.SearchResult, error) {
-	var (
-		issues *jira.SearchResult
-		err    error
-	)
-
-	it := viper.GetString("installation")
-
-	if it == jira.InstallationTypeLocal {
-		issues, err = c.SearchV2(jql, from, limit)
-	} else {
-		issues, err = c.Search(jql, limit)
-	}
-
-	return issues, err
+	return ProxySearchWithOptions(c, jql, func(options *ProxySearchOptions) {
+		options.Limit = limit
+		options.From = from
+	})
 }
 
 // ProxyAssignIssue uses either a v2 or v3 version of the PUT /issue/{key}/assignee
