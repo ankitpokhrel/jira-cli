@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter/issue"
@@ -53,7 +54,7 @@ func (c *Client) GetIssueV2(key string, _ ...filter.Filter) (*Issue, error) {
 }
 
 func (c *Client) getIssue(key, ver string) (*Issue, error) {
-	rawOut, err := c.getIssueRaw(key, ver)
+	rawOut, err := c.getIssueRaw(key, ver, "")
 	if err != nil {
 		return nil, err
 	}
@@ -67,17 +68,22 @@ func (c *Client) getIssue(key, ver string) (*Issue, error) {
 }
 
 // GetIssueRaw fetches issue details same as GetIssue but returns the raw API response body string.
-func (c *Client) GetIssueRaw(key string) (string, error) {
-	return c.getIssueRaw(key, apiVersion3)
+// If fields is empty, returns all fields.
+func (c *Client) GetIssueRaw(key string, fields string) (string, error) {
+	return c.getIssueRaw(key, apiVersion3, fields)
 }
 
 // GetIssueV2Raw fetches issue details same as GetIssueV2 but returns the raw API response body string.
-func (c *Client) GetIssueV2Raw(key string) (string, error) {
-	return c.getIssueRaw(key, apiVersion2)
+// If fields is empty, returns all fields.
+func (c *Client) GetIssueV2Raw(key string, fields string) (string, error) {
+	return c.getIssueRaw(key, apiVersion2, fields)
 }
 
-func (c *Client) getIssueRaw(key, ver string) (string, error) {
+func (c *Client) getIssueRaw(key, ver string, fields string) (string, error) {
 	path := fmt.Sprintf("/issue/%s", key)
+	if fields != "" {
+		path = fmt.Sprintf("%s?fields=%s", path, url.QueryEscape(fields))
+	}
 
 	var (
 		res *http.Response

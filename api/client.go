@@ -96,12 +96,13 @@ func ProxyCreate(c *jira.Client, cr *jira.CreateRequest) (*jira.CreateResponse, 
 }
 
 // ProxyGetIssueRaw executes the same request as ProxyGetIssue but returns raw API response body string.
-func ProxyGetIssueRaw(c *jira.Client, key string) (string, error) {
+// The fields parameter restricts which fields to fetch from Jira. Empty string returns all fields.
+func ProxyGetIssueRaw(c *jira.Client, key string, fields string) (string, error) {
 	it := viper.GetString("installation")
 	if it == jira.InstallationTypeLocal {
-		return c.GetIssueV2Raw(key)
+		return c.GetIssueV2Raw(key, fields)
 	}
-	return c.GetIssueRaw(key)
+	return c.GetIssueRaw(key, fields)
 }
 
 // ProxyGetIssue uses either a v2 or v3 version of the Jira GET /issue/{key}
@@ -127,7 +128,8 @@ func ProxyGetIssue(c *jira.Client, key string, opts ...filter.Filter) (*jira.Iss
 // ProxySearch uses either a v2 or v3 version of the Jira GET /search endpoint
 // to search for the relevant issues based on configured installation type.
 // Defaults to v3 if installation type is not defined in the config.
-func ProxySearch(c *jira.Client, jql string, from, limit uint) (*jira.SearchResult, error) {
+// The fields parameter controls which fields to fetch from Jira. Empty string uses defaults.
+func ProxySearch(c *jira.Client, jql string, from, limit uint, fields string) (*jira.SearchResult, error) {
 	var (
 		issues *jira.SearchResult
 		err    error
@@ -136,9 +138,9 @@ func ProxySearch(c *jira.Client, jql string, from, limit uint) (*jira.SearchResu
 	it := viper.GetString("installation")
 
 	if it == jira.InstallationTypeLocal {
-		issues, err = c.SearchV2(jql, from, limit)
+		issues, err = c.SearchV2(jql, from, limit, fields)
 	} else {
-		issues, err = c.Search(jql, limit)
+		issues, err = c.Search(jql, limit, fields)
 	}
 
 	return issues, err
