@@ -247,14 +247,25 @@ func constructCustomFields(fields map[string]string, configuredFields []IssueTyp
 			case customFieldFormatProject:
 				data.Fields.M.customFields[configured.Key] = customFieldTypeProject{Value: val}
 			case customFieldFormatArray:
-				pieces := strings.Split(strings.TrimSpace(val), ",")
-				if configured.Schema.Items == customFieldFormatOption {
+				switch configured.Schema.Items {
+				case customFieldFormatCMDBObject:
+					// CMDB object fields require JSON array format.
+					var jsonVal interface{}
+					if err := json.Unmarshal([]byte(val), &jsonVal); err == nil {
+						data.Fields.M.customFields[configured.Key] = jsonVal
+					} else {
+						// If JSON parsing fails, pass as-is and let Jira API handle it.
+						data.Fields.M.customFields[configured.Key] = val
+					}
+				case customFieldFormatOption:
+					pieces := strings.Split(strings.TrimSpace(val), ",")
 					items := make([]customFieldTypeOption, 0)
 					for _, p := range pieces {
 						items = append(items, customFieldTypeOption{Value: p})
 					}
 					data.Fields.M.customFields[configured.Key] = items
-				} else {
+				default:
+					pieces := strings.Split(strings.TrimSpace(val), ",")
 					data.Fields.M.customFields[configured.Key] = pieces
 				}
 			case customFieldFormatNumber:
