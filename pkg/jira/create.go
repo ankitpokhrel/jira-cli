@@ -35,6 +35,7 @@ type CreateRequest struct {
 	FixVersions      []string
 	AffectsVersions  []string
 	OriginalEstimate string
+	DueDate          string
 	// EpicField is the dynamic epic field name
 	// that changes per jira installation.
 	EpicField string
@@ -132,6 +133,7 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 		Name:      req.Name,
 		Summary:   req.Summary,
 		Labels:    req.Labels,
+		DueDate:   req.DueDate,
 		epicField: req.EpicField,
 	}
 
@@ -221,7 +223,6 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 			OriginalEstimate string `json:"originalEstimate,omitempty"`
 		}{OriginalEstimate: req.OriginalEstimate}
 	}
-
 	constructCustomFields(req.CustomFields, req.configuredCustomFields, &data)
 
 	return &data
@@ -313,6 +314,7 @@ type createFields struct {
 	TimeTracking *struct {
 		OriginalEstimate string `json:"originalEstimate,omitempty"`
 	} `json:"timetracking,omitempty"`
+	DueDate      string `json:"duedate,omitempty"`
 	epicField    string
 	customFields customField
 }

@@ -122,6 +122,7 @@ func create(cmd *cobra.Command, _ []string) {
 			FixVersions:      params.FixVersions,
 			AffectsVersions:  params.AffectsVersions,
 			OriginalEstimate: params.OriginalEstimate,
+			DueDate:          params.DueDate,
 			CustomFields:     params.CustomFields,
 			EpicField:        viper.GetString("epic.link"),
 		}
@@ -367,6 +368,10 @@ func parseFlags(flags query.FlagParser) *cmdcommon.CreateParams {
 	originalEstimate, err := flags.GetString("original-estimate")
 	cmdutil.ExitIfError(err)
 
+	dueDate, err := flags.GetString("due-date")
+	cmdutil.ExitIfError(err)
+	cmdutil.ExitIfError(cmdcommon.ValidateDueDate(dueDate))
+
 	custom, err := flags.GetStringToString("custom")
 	cmdutil.ExitIfError(err)
 
@@ -392,6 +397,7 @@ func parseFlags(flags query.FlagParser) *cmdcommon.CreateParams {
 		FixVersions:      fixVersions,
 		AffectsVersions:  affectsVersions,
 		OriginalEstimate: originalEstimate,
+		DueDate:          dueDate,
 		CustomFields:     custom,
 		Template:         template,
 		NoInput:          noInput,
