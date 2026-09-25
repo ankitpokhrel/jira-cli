@@ -310,3 +310,34 @@ func TestSeparator(t *testing.T) {
 		})
 	}
 }
+
+func TestIssueDetailsShowParentInHeader(t *testing.T) {
+	t.Parallel()
+
+	data := &jira.Issue{
+		Key: "TEST-2",
+		Fields: jira.IssueFields{
+			Summary:   "Sub-task with a parent",
+			IssueType: jira.IssueType{Name: "Sub-task"},
+			Status: struct {
+				Name string `json:"name"`
+			}{Name: "Open"},
+			Created: "2020-12-13T14:05:20.974+0100",
+			Updated: "2020-12-13T14:07:20.974+0100",
+		},
+	}
+	issue := Issue{
+		Server:  "https://test.local",
+		Data:    data,
+		Display: DisplayFormat{Plain: true},
+	}
+
+	// Without a parent, the header must not show the parent indicator.
+	assert.NotContains(t, issue.String(), "👪")
+
+	// With a parent, its key is shown in the header.
+	data.Fields.Parent = &struct {
+		Key string `json:"key"`
+	}{Key: "EPIC-1"}
+	assert.Contains(t, issue.String(), "👪 EPIC-1")
+}
