@@ -129,7 +129,7 @@ func loadList(cmd *cobra.Command, args []string) {
 
 	if len(issues) == 0 {
 		fmt.Println()
-		cmdutil.Failed("No result found for given query in project %q", project)
+		cmdutil.Failed("%s", cmdutil.NoResultMessage(project))
 		return
 	}
 

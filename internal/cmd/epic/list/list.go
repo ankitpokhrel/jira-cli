@@ -9,6 +9,7 @@ import (
 
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/list"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdcommon"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/internal/view"
@@ -78,10 +79,14 @@ func epicList(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	client := api.DefaultClient(debug)
+	projectType, err = cmdcommon.ResolveProjectType(client, project, projectType, viper.GetString("installation"), cmd.Flags().Changed("project"))
+	cmdutil.ExitIfError(err)
 
 	if len(args) == 0 {
 		epicExplorerView(cmd, cmd.Flags(), project, projectType, server, client)
 	} else {
+		cmdcommon.EnsureProject(project)
+
 		key := cmdutil.GetJiraIssueKey(project, args[0])
 		singleEpicView(cmd.Flags(), key, project, projectType, server, client)
 	}
@@ -120,7 +125,7 @@ func singleEpicView(flags query.FlagParser, key, project, projectType, server st
 
 	if len(issues) == 0 {
 		fmt.Println()
-		cmdutil.Failed("No result found for given query in project %q", project)
+		cmdutil.Failed("%s", cmdutil.NoResultMessage(project))
 		return
 	}
 
@@ -191,7 +196,7 @@ func epicExplorerView(cmd *cobra.Command, flags query.FlagParser, project, proje
 
 	if len(epics) == 0 {
 		fmt.Println()
-		cmdutil.Failed("No result found for given query in project %q", project)
+		cmdutil.Failed("%s", cmdutil.NoResultMessage(project))
 		return
 	}
 
