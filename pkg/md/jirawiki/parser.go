@@ -420,7 +420,7 @@ func (t *Token) handleList(line string, out *strings.Builder) int {
 
 func (t *Token) handleFencedCodeBlock(idx int, lines []string, out *strings.Builder) int {
 	if idx == len(lines)-1 {
-		return t.endIdx
+		return idx
 	}
 
 	fmt.Fprintf(out, "\n%s", replacements[t.tag])
