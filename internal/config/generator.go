@@ -11,6 +11,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/spf13/viper"
+	"github.com/zalando/go-keyring"
 
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
@@ -18,6 +19,7 @@ import (
 )
 
 const (
+
 	// Dir is a jira-cli config directory.
 	Dir = ".jira"
 	// FileName is a jira-cli config file name.
@@ -410,8 +412,30 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 		}
 	}
 
+	// Cloud installations don't set an auth type, so exclude the non-token types.
+	needsToken := c.value.authType != jira.AuthTypeMTLS && c.value.authType != jira.AuthTypeCFAccess
+
+	if needsToken && !HasStoredToken(c.value.server, c.value.login) {
+		var token string
+		prompt := &survey.Password{
+			Message: "API token (saved to system keyring):",
+			Help:    "You can also set the API token using the JIRA_API_TOKEN environment variable or a .netrc file.",
+		}
+		if err := survey.AskOne(prompt, &token); err != nil {
+			return err
+		}
+		if token = strings.TrimSpace(token); token != "" {
+			if err := keyring.Set("jira-cli", c.value.login, token); err != nil {
+				cmdutil.Warn("Unable to save token to keyring: %s\n"+
+					"Export it as JIRA_API_TOKEN or use a .netrc file instead.", err.Error())
+			}
+		}
+	}
+
 	return c.verifyLoginDetails(c.value.server, c.value.login)
 }
+
+
 
 func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error {
 	s := cmdutil.Info("Verifying login details...")
