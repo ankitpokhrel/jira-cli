@@ -21,6 +21,6 @@ func HasStoredToken(server string, login string) bool {
 	if secret, _ := keyring.Get("jira-cli", login); secret != "" {
 		return true
 	}
-	
+
 	return false
 }

@@ -96,7 +96,7 @@ type JiraCLIConfigGenerator struct {
 			caCert, clientCert, clientKey string
 		}
 		tokenEntered bool
-		timezone       string
+		timezone     string
 	}
 	jiraClient         *jira.Client
 	projectSuggestions []string
