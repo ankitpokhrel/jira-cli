@@ -417,27 +417,42 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 	needsToken := c.value.authType != jira.AuthTypeMTLS && c.value.authType != jira.AuthTypeCFAccess
 
 	if needsToken && !HasStoredToken(c.value.server, c.value.login) {
-		var token string
-		// Survey help line overwrites the line above without a spacer
-		fmt.Fprintln(os.Stderr)
-		prompt := &survey.Password{
-			Message: "API token (saved to system keyring):",
-			Help:    "You can also set the API token using the JIRA_API_TOKEN environment variable or a .netrc file.",
-		}
-		if err := survey.AskOne(prompt, &token); err != nil {
+		if err := c.promptAndStoreToken(); err != nil {
 			return err
-		}
-		if token = strings.TrimSpace(token); token != "" {
-			if err := keyring.Set("jira-cli", c.value.login, token); err != nil {
-				cmdutil.Warn("Unable to save token to keyring: %s\n"+
-					"Export it as JIRA_API_TOKEN or use a .netrc file instead.", err.Error())
-			} else {
-				c.value.tokenEntered = true
-			}
 		}
 	}
 
 	return c.verifyLoginDetails(c.value.server, c.value.login)
+}
+
+// promptAndStoreToken asks for an API token and saves it to the system keyring.
+func (c *JiraCLIConfigGenerator) promptAndStoreToken() error {
+	var token string
+
+	// Survey help line overwrites the line above without a spacer
+	fmt.Fprintln(os.Stderr)
+
+	prompt := &survey.Password{
+		Message: "API token (saved to system keyring):",
+		Help:    "You can also set the API token using the JIRA_API_TOKEN environment variable or a .netrc file.",
+	}
+	if err := survey.AskOne(prompt, &token); err != nil {
+		return err
+	}
+
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return nil
+	}
+
+	if err := keyring.Set("jira-cli", c.value.login, token); err != nil {
+		cmdutil.Warn("Unable to save token to keyring: %s\n"+
+			"Export it as JIRA_API_TOKEN or use a .netrc file instead.", err.Error())
+		return nil
+	}
+	c.value.tokenEntered = true
+
+	return nil
 }
 
 func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error {

@@ -14,24 +14,17 @@ const (
 	testLogin  = "user@example.com"
 )
 
-// The netrc file is parsed once per process, so point NETRC at a fixed file before any test runs.
-func TestMain(m *testing.M) {
-	dir, err := os.MkdirTemp("", "jira-cli-netrc")
-	if err != nil {
-		panic(err)
-	}
+// setupNetrc points NETRC at a temp file. The netrc package parses the file once per process,
+// so every test sets it up to make sure the first read sees the same entry.
+func setupNetrc(t *testing.T) {
+	t.Helper()
 
-	path := filepath.Join(dir, "netrc")
+	path := filepath.Join(t.TempDir(), "netrc")
 	content := "machine example.atlassian.net login user@example.com password secret\n"
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
-	_ = os.Setenv("NETRC", path)
-
-	code := m.Run()
-
-	_ = os.RemoveAll(dir)
-	os.Exit(code)
+	t.Setenv("NETRC", path)
 }
 
 func TestHasStoredToken(t *testing.T) {
@@ -79,6 +72,7 @@ func TestHasStoredToken(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			setupNetrc(t)
 			keyring.MockInit()
 			t.Setenv("JIRA_API_TOKEN", tc.envToken)
 
@@ -92,6 +86,7 @@ func TestHasStoredToken(t *testing.T) {
 }
 
 func TestHasStoredTokenKeyringError(t *testing.T) {
+	setupNetrc(t)
 	keyring.MockInitWithError(assert.AnError)
 	t.Setenv("JIRA_API_TOKEN", "")
 
