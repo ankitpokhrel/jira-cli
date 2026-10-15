@@ -547,6 +547,42 @@ func main() {
 	println("Hello, World!")
 }` + "\n```\n\n2. Ordered list item B\n\n```\n// no code" + "\n```\n",
 		},
+		{
+			name: "inline code on the last line should not cause infinite loop #1033",
+			input: `1
+2
+3
+4
+5
+6
+7
+{code}x{code}`,
+			expected: "1\n2\n3\n4\n5\n6\n7\n",
+		},
+		{
+			name: "inline noformat on the last line should not cause infinite loop #1033",
+			input: `1
+2
+3
+4
+5
+6
+7
+{noformat}x{noformat}`,
+			expected: "1\n2\n3\n4\n5\n6\n7\n",
+		},
+		{
+			name: "inline code within text on the last line should not cause infinite loop #1033",
+			input: `Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+See {code}SomeName{code} for details.`,
+			expected: "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7See \n",
+		},
 	}
 
 	for _, tc := range cases {
