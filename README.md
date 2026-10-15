@@ -62,7 +62,7 @@ nature of the data. Yet, we've attempted to make the experience as similar as po
 | :------------- | :----------: |
 | **Jira**  | <a href="#"><img alt="Jira Cloud" src="https://img.shields.io/badge/Jira Cloud-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a><a href="#"><img alt="Jira Server" src="https://img.shields.io/badge/Jira Server-%E2%9C%93-dark--green?logo=jira&style=flat-square" /></a> |
 
-<sub><a href="./llm.md">llm.md</a> ← for agents</sub>
+<sub><a href="./skills/jira-cli/SKILL.md">SKILL.md</a> ← for agents</sub>
 
 JiraCLI works well with LLM-powered CLI tools like Claude Code, Codex, OpenCode, as well as shell-based automation.
 
