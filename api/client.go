@@ -1,6 +1,9 @@
 package api
 
 import (
+	"errors"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/spf13/viper"
@@ -31,9 +34,11 @@ func Client(config jira.Config) *jira.Client {
 		config.APIToken = viper.GetString("api_token")
 	}
 	if config.APIToken == "" {
-		netrcConfig, _ := netrc.Read(config.Server, config.Login)
-		if netrcConfig != nil {
+		netrcConfig, err := netrc.Read(config.Server, config.Login)
+		if err == nil {
 			config.APIToken = netrcConfig.Password
+		} else if !errors.Is(err, netrc.ErrNetrcEntryNotFound) {
+			fmt.Fprintf(os.Stderr, "warning: netrc lookup failed: %v\n", err)
 		}
 	}
 	if config.APIToken == "" {

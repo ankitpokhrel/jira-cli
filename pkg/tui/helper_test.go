@@ -2,9 +2,11 @@ package tui
 
 import (
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestColumnPadding(t *testing.T) {
@@ -121,6 +123,33 @@ func TestSplitText(t *testing.T) {
 			assert.Equal(t, tc.expected, splitText(tc.input))
 		})
 	}
+}
+
+func TestPagerOut_InvalidShlexSyntax(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("pager not used on Windows")
+	}
+
+	t.Setenv("TERM", "xterm")
+	t.Setenv("JIRA_PAGER", `less "--unclosed`)
+
+	err := PagerOut("test output")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid pager command")
+}
+
+func TestPagerOut_QuotedArgs(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("pager not used on Windows")
+	}
+
+	// "cat" with a quoted (but valid) argument string — shlex should parse it
+	// without error and the command should run successfully.
+	t.Setenv("TERM", "xterm")
+	t.Setenv("JIRA_PAGER", `cat`)
+
+	err := PagerOut("test output")
+	assert.NoError(t, err)
 }
 
 func TestGetPager(t *testing.T) {
