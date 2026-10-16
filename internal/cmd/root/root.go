@@ -60,12 +60,19 @@ func init() {
 			viper.SetConfigType(jiraConfig.FileType)
 		}
 
+		if err := viper.ReadInConfig(); err == nil {
+			if debug {
+				fmt.Printf("Using config file: %s\n", viper.ConfigFileUsed())
+			}
+
+			// Preserve config file token before AutomaticEnv binds JIRA_API_TOKEN.
+			if token := viper.GetString("api_token"); token != "" {
+				viper.Set("api_token", token)
+			}
+		}
+
 		viper.AutomaticEnv()
 		viper.SetEnvPrefix("jira")
-
-		if err := viper.ReadInConfig(); err == nil && debug {
-			fmt.Printf("Using config file: %s\n", viper.ConfigFileUsed())
-		}
 	})
 }
 
