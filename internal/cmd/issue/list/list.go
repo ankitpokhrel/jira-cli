@@ -63,7 +63,17 @@ $ jira issue list -tEpic -sDone
 $ jira issue list -s~Open -ax
 
 # List issues from all projects
-$ jira issue list -q"project IS NOT EMPTY"`
+$ jira issue list -q"project IS NOT EMPTY"
+
+# List issues in the active sprint(s)
+$ jira issue list --sprint current
+
+# List issues in a specific sprint by name or ID
+$ jira issue list --sprint "Sprint 42"
+$ jira issue list --sprint 123
+
+# List issues across multiple sprints
+$ jira issue list --sprint "Sprint 41" --sprint "Sprint 42"`
 )
 
 // NewCmdList is a list command.
@@ -221,6 +231,12 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("component", "C", "", "Filter issues by component")
 	cmd.Flags().StringArrayP("label", "l", []string{}, "Filter issues by label")
 	cmd.Flags().StringP("parent", "P", "", "Filter issues by parent")
+	cmd.Flags().StringArray("sprint", []string{}, "Filter issues by sprint.\n"+
+		"Accepts a sprint name, numeric ID, or one of the keywords:\n"+
+		"  current / active  → sprints currently in progress (openSprints())\n"+
+		"  closed / previous → closed sprints (closedSprints())\n"+
+		"  future  / next    → future sprints (futureSprints())\n"+
+		"Can be repeated to filter by multiple sprints.")
 	cmd.Flags().Bool("history", false, "Issues you accessed recently")
 	cmd.Flags().BoolP("watching", "w", false, "Issues you are watching")
 	cmd.Flags().String("created", "", "Filter issues by created date\n"+
