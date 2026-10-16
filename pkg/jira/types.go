@@ -7,7 +7,9 @@ import (
 const (
 	// AuthTypeBasic is a basic auth.
 	AuthTypeBasic AuthType = "basic"
-	// AuthTypeBearer is a bearer auth.
+	// AuthTypeCookie is a cookie (browser session) auth.
+	AuthTypeCookie AuthType = "cookie"
+	// AuthTypeBearer is a bearer (PAT) auth.
 	AuthTypeBearer AuthType = "bearer"
 	// AuthTypeMTLS is a mTLS auth.
 	AuthTypeMTLS AuthType = "mtls"
@@ -16,7 +18,7 @@ const (
 )
 
 // AuthType is a jira authentication type.
-// Currently supports basic and bearer (PAT).
+// Currently supports basic, cookie, bearer (PAT), mtls (client certificates) and cf-access.
 // Defaults to basic for empty or invalid value.
 type AuthType string
 
