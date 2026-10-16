@@ -221,7 +221,7 @@ func GetRelevantUser(client *jira.Client, project string, user string) string {
 // GetUserKeyForConfiguredInstallation returns either the user name or account ID based on jira installation type.
 func GetUserKeyForConfiguredInstallation(user *jira.User) string {
 	it := viper.GetString("installation")
-	if it == jira.InstallationTypeLocal {
+	if strings.EqualFold(it, jira.InstallationTypeLocal) {
 		return user.Name
 	}
 	return user.AccountID
