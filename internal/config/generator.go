@@ -11,6 +11,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/spf13/viper"
+	"github.com/zalando/go-keyring"
 
 	"github.com/ankitpokhrel/jira-cli/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
@@ -18,6 +19,7 @@ import (
 )
 
 const (
+
 	// Dir is a jira-cli config directory.
 	Dir = ".jira"
 	// FileName is a jira-cli config file name.
@@ -93,7 +95,8 @@ type JiraCLIConfigGenerator struct {
 		mtls         struct {
 			caCert, clientCert, clientKey string
 		}
-		timezone string
+		tokenEntered bool
+		timezone     string
 	}
 	jiraClient         *jira.Client
 	projectSuggestions []string
@@ -410,7 +413,46 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 		}
 	}
 
+	// Cloud installations don't set an auth type, so exclude the non-token types.
+	needsToken := c.value.authType != jira.AuthTypeMTLS && c.value.authType != jira.AuthTypeCFAccess
+
+	if needsToken && !HasStoredToken(c.value.server, c.value.login) {
+		if err := c.promptAndStoreToken(); err != nil {
+			return err
+		}
+	}
+
 	return c.verifyLoginDetails(c.value.server, c.value.login)
+}
+
+// promptAndStoreToken asks for an API token and saves it to the system keyring.
+func (c *JiraCLIConfigGenerator) promptAndStoreToken() error {
+	var token string
+
+	// Survey help line overwrites the line above without a spacer
+	fmt.Fprintln(os.Stderr)
+
+	prompt := &survey.Password{
+		Message: "API token (saved to system keyring):",
+		Help:    "You can also set the API token using the JIRA_API_TOKEN environment variable or a .netrc file.",
+	}
+	if err := survey.AskOne(prompt, &token); err != nil {
+		return err
+	}
+
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return nil
+	}
+
+	if err := keyring.Set("jira-cli", c.value.login, token); err != nil {
+		cmdutil.Warn("Unable to save token to keyring: %s\n"+
+			"Export it as JIRA_API_TOKEN or use a .netrc file instead.", err.Error())
+		return nil
+	}
+	c.value.tokenEntered = true
+
+	return nil
 }
 
 func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error {
@@ -433,6 +475,14 @@ func (c *JiraCLIConfigGenerator) verifyLoginDetails(server, login string) error 
 	})
 	ret, err := c.jiraClient.Me()
 	if err != nil {
+		if c.value.tokenEntered {
+			// Remove the stored token from the system keyring as it is no longer valid.
+			if err := keyring.Delete("jira-cli", c.value.login); err != nil {
+				cmdutil.Warn("Unable to remove token from keyring: %s\n", err.Error())
+			}
+			c.value.tokenEntered = false
+		}
+
 		return err
 	}
 	if c.value.authType == jira.AuthTypeBearer {
