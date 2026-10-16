@@ -228,3 +228,15 @@ func ProxyWatchIssue(c *jira.Client, key string, user *jira.User) error {
 	}
 	return c.WatchIssue(key, assignee)
 }
+
+// ProxyProjectComponents uses either a v2 or v3 version of the Jira
+// GET /project/{projectIdOrKey}/components endpoint to fetch project components.
+// Defaults to v3 if installation type is not defined in the config.
+func ProxyProjectComponents(c *jira.Client, project string) ([]*jira.ProjectComponent, error) {
+	it := viper.GetString("installation")
+
+	if it == jira.InstallationTypeLocal {
+		return c.ProjectComponentsV2(project)
+	}
+	return c.ProjectComponents(project)
+}
