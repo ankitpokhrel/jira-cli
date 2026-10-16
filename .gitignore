@@ -14,3 +14,6 @@ vendor/
 /.gocache
 
 .vscode/
+
+# binary
+/jira
