@@ -13,48 +13,60 @@ import (
 
 func TestBoards(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/rest/agile/1.0/board", r.URL.Path)
+		switch r.URL.Path {
+		case "/rest/agile/1.0/board":
+			qs := r.URL.Query()
 
-		qs := r.URL.Query()
+			switch qs.Get("projectKeyOrId") {
+			case "BAD":
+				w.WriteHeader(400)
+			case "TEST":
+				assert.Equal(t, url.Values{
+					"projectKeyOrId": []string{"TEST"},
+					"type":           []string{"scrum"},
+				}, qs)
 
-		switch qs.Get("projectKeyOrId") {
-		case "BAD":
-			w.WriteHeader(400)
-		case "TEST":
-			assert.Equal(t, url.Values{
-				"projectKeyOrId": []string{"TEST"},
-				"type":           []string{"scrum"},
-			}, qs)
+				resp, err := os.ReadFile("./testdata/boards.json")
+				assert.NoError(t, err)
 
-			resp, err := os.ReadFile("./testdata/boards.json")
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(200)
+				_, _ = w.Write(resp)
+			case "SEARCH":
+				assert.Equal(t, url.Values{
+					"projectKeyOrId": []string{"SEARCH"},
+					"name":           []string{"board"},
+				}, qs)
+
+				resp, err := os.ReadFile("./testdata/boards.json")
+				assert.NoError(t, err)
+
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(200)
+				_, _ = w.Write(resp)
+			}
+		case "/rest/agile/1.0/board/1":
+			resp, err := os.ReadFile("./testdata/board.json")
 			assert.NoError(t, err)
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(200)
 			_, _ = w.Write(resp)
-		case "SEARCH":
-			assert.Equal(t, url.Values{
-				"projectKeyOrId": []string{"SEARCH"},
-				"name":           []string{"board"},
-			}, qs)
-
-			resp, err := os.ReadFile("./testdata/boards.json")
-			assert.NoError(t, err)
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(200)
-			_, _ = w.Write(resp)
+		case "/rest/agile/1.0/board/999":
+			w.WriteHeader(404)
 		}
 	}))
 	defer server.Close()
 
 	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
 
+	var unexpectedResponseErr *ErrUnexpectedResponse
+
 	_, err := client.Boards("BAD", "scrum")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assert.ErrorAs(t, err, &unexpectedResponseErr)
 
 	_, err = client.BoardSearch("BAD", "scrum")
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	assert.ErrorAs(t, err, &unexpectedResponseErr)
 
 	actual, err := client.Boards("TEST", "scrum")
 	assert.NoError(t, err)
@@ -80,4 +92,37 @@ func TestBoards(t *testing.T) {
 	actual, err = client.BoardSearch("SEARCH", "board")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
+}
+
+func TestBoardByID(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/rest/agile/1.0/board/1":
+			resp, err := os.ReadFile("./testdata/board.json")
+			assert.NoError(t, err)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			_, _ = w.Write(resp)
+		case "/rest/agile/1.0/board/999":
+			w.WriteHeader(404)
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	actual, err := client.BoardByID(1)
+	assert.NoError(t, err)
+
+	expected := &Board{
+		ID:   1,
+		Name: "Board 1",
+		Type: "scrum",
+	}
+	assert.Equal(t, expected, actual)
+
+	var unexpectedResponseErr *ErrUnexpectedResponse
+	_, err = client.BoardByID(999)
+	assert.ErrorAs(t, err, &unexpectedResponseErr)
 }
