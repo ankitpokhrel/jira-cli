@@ -216,3 +216,15 @@ func GetTUIStyleConfig() tui.TableStyle {
 		SelectionTextIsBold: bold,
 	}
 }
+
+// IsNoInputMode returns true if non-interactive mode is enabled globally.
+// This checks both the config file and command-line flag.
+func IsNoInputMode() bool {
+	return viper.GetBool("no_input")
+}
+
+// ShouldPrompt returns true if interactive prompts should be shown.
+// Checks both local --no-input flag and global no_input config.
+func ShouldPrompt(localNoInput bool) bool {
+	return !localNoInput && !IsNoInputMode()
+}

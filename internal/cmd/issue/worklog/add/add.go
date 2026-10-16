@@ -87,7 +87,7 @@ func add(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if !params.noInput {
+	if cmdutil.ShouldPrompt(params.noInput) {
 		answer := struct{ Action string }{}
 		err := survey.Ask([]*survey.Question{getNextAction()}, &answer)
 		cmdutil.ExitIfError(err)
@@ -205,7 +205,7 @@ func (ac *addCmd) getQuestions() []*survey.Question {
 		})
 	}
 
-	if !ac.params.noInput && ac.params.comment == "" {
+	if cmdutil.ShouldPrompt(ac.params.noInput) && ac.params.comment == "" {
 		qs = append(qs, &survey.Question{
 			Name: "comment",
 			Prompt: &surveyext.JiraEditor{

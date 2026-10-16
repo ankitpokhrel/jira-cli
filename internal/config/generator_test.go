@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -68,4 +69,90 @@ func TestCreate(t *testing.T) {
 	assert.NoError(t, os.Remove(file))
 	assert.NoError(t, os.Remove(file+".bkp"))
 	assert.NoError(t, os.Remove(filepath.Dir(file)))
+}
+
+func TestShallOverwrite(t *testing.T) {
+	cases := []struct {
+		name     string
+		setup    func()
+		expected bool
+	}{
+		{
+			name: "returns false when no_input mode is enabled",
+			setup: func() {
+				viper.Reset()
+				viper.Set("no_input", true)
+			},
+			expected: false,
+		},
+		{
+			name: "returns false when no_input mode is disabled or unset",
+			setup: func() {
+				viper.Reset()
+				viper.Set("no_input", false)
+			},
+			expected: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup()
+			defer viper.Reset()
+
+			result := shallOverwrite()
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
+
+func TestConfigureInstallationTypeNoInput(t *testing.T) {
+	cases := []struct {
+		name             string
+		setup            func()
+		expectError      bool
+		expectedErrorMsg string
+	}{
+		{
+			name: "returns error when no_input mode is enabled and installation type not provided",
+			setup: func() {
+				viper.Reset()
+				viper.Set("no_input", true)
+			},
+			expectError:      true,
+			expectedErrorMsg: "installation type required in non-interactive mode",
+		},
+		{
+			name: "succeeds when installation type is provided in no_input mode",
+			setup: func() {
+				viper.Reset()
+				viper.Set("no_input", true)
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup()
+			defer viper.Reset()
+
+			cfg := &JiraCLIConfig{
+				Installation: "cloud",
+			}
+			if tc.expectError {
+				cfg.Installation = ""
+			}
+
+			gen := NewJiraCLIConfigGenerator(cfg)
+			err := gen.configureInstallationType()
+
+			if tc.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedErrorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }

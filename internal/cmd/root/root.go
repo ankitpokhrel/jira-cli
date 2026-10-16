@@ -113,12 +113,14 @@ func NewCmdRoot() *cobra.Command {
 		),
 	)
 	cmd.PersistentFlags().BoolVar(&debug, "debug", false, "Turn on debug output")
+	cmd.PersistentFlags().Bool("no-input", false, "Disable all interactive prompts (fails instead of prompting for input)")
 
 	cmd.SetHelpFunc(helpFunc)
 
 	_ = viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config"))
 	_ = viper.BindPFlag("project.key", cmd.PersistentFlags().Lookup("project"))
 	_ = viper.BindPFlag("debug", cmd.PersistentFlags().Lookup("debug"))
+	_ = viper.BindPFlag("no_input", cmd.PersistentFlags().Lookup("no-input"))
 
 	addChildCommands(&cmd)
 
