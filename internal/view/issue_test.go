@@ -87,6 +87,51 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 	assert.Equal(t, tui.TextData(expected), tui.TextData(actual))
 }
 
+func TestIssueDescriptionRenderInPlainView(t *testing.T) {
+	t.Parallel()
+
+	var b bytes.Buffer
+
+	data := &jira.Issue{
+		Key: "TEST-VIEW-DESCRIPTION",
+		Fields: jira.IssueFields{
+			Summary: "Test view description",
+			Resolution: struct {
+				Name string `json:"name"`
+			}{Name: "Fixed"},
+			Description: &adf.ADF{
+				Version: 1,
+				DocType: "doc",
+				Content: []*adf.Node{
+					{
+						NodeType: "paragraph",
+						Content: []*adf.Node{
+							{NodeType: "text", NodeValue: adf.NodeValue{Text: "Test view description"}},
+						},
+					},
+				},
+			},
+			IssueType: jira.IssueType{Name: "Bug"},
+			Created:   "2020-12-13T14:05:20.974+0100",
+			Updated:   "2020-12-13T14:07:20.974+0100",
+		},
+	}
+
+	issue := Issue{
+		Server:  "https://test.local",
+		Data:    data,
+		Display: DisplayFormat{Plain: true},
+		Options: IssueOption{Description: true},
+	}
+
+	expected := issue.description()
+
+	actual := issue.String()
+
+	assert.NoError(t, issue.renderPlain(&b))
+	assert.Equal(t, tui.TextData(expected), tui.TextData(actual))
+}
+
 func TestIssueDetailsWithV2Description(t *testing.T) {
 	t.Parallel()
 
