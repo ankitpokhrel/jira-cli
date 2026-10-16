@@ -219,7 +219,7 @@ func TestGetIssueRaw(t *testing.T) {
 			title:           "v3",
 			givePayloadFile: _testdataPathIssue,
 			giveClientCallFunc: func(c *Client) (string, error) {
-				return c.GetIssueRaw("KAN-1")
+				return c.GetIssueRaw("KAN-1", "")
 			},
 			wantReqURL: "/rest/api/3/issue/KAN-1",
 			wantOut: `{
@@ -282,7 +282,7 @@ func TestGetIssueRaw(t *testing.T) {
 			title:           "v2",
 			givePayloadFile: _testdataPathIssueV2,
 			giveClientCallFunc: func(c *Client) (string, error) {
-				return c.GetIssueV2Raw("KAN-1")
+				return c.GetIssueV2Raw("KAN-1", "")
 			},
 			wantReqURL: "/rest/api/2/issue/KAN-1",
 			wantOut: `{
