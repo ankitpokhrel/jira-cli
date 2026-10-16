@@ -90,6 +90,13 @@ func Failed(msg string, args ...interface{}) {
 	os.Exit(1)
 }
 
+func NoResultMessage(project string) string {
+	if project == "" {
+		return "No result found for the given query"
+	}
+	return fmt.Sprintf("No result found for given query in project %q", project)
+}
+
 // Navigate navigates to jira issue.
 func Navigate(server, path string) error {
 	url := GenerateServerBrowseURL(server, path)

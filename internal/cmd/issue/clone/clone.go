@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdcommon"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
@@ -50,8 +51,12 @@ func clone(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
 	projectType := viper.GetString("project.type")
 
+	cmdcommon.EnsureProject(project)
+
 	params := parseFlags(cmd.Flags())
 	client := api.DefaultClient(params.debug)
+	projectType, err := cmdcommon.ResolveProjectType(client, project, projectType, viper.GetString("installation"), cmd.Flags().Changed("project"))
+	cmdutil.ExitIfError(err)
 	cc := cloneCmd{
 		client: client,
 		params: params,
