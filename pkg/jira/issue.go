@@ -422,6 +422,7 @@ func ifaceToADF(v interface{}) *adf.ADF {
 }
 
 type remotelinkRequest struct {
+	GlobalID     string `json:"globalId,omitempty"`
 	RemoteObject struct {
 		URL   string `json:"url"`
 		Title string `json:"title"`
@@ -429,8 +430,9 @@ type remotelinkRequest struct {
 }
 
 // RemoteLinkIssue adds a remote link to an issue using POST /issue/{issueId}/remotelink endpoint.
-func (c *Client) RemoteLinkIssue(issueID, title, url string) error {
+func (c *Client) RemoteLinkIssue(issueID, title, url, globalID string) error {
 	body, err := json.Marshal(remotelinkRequest{
+		GlobalID: globalID,
 		RemoteObject: struct {
 			URL   string `json:"url"`
 			Title string `json:"title"`

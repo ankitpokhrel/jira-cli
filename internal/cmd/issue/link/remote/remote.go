@@ -34,6 +34,8 @@ func NewCmdRemoteLink() *cobra.Command {
 		Run: remotelink,
 	}
 
+	cmd.Flags().String("global-id", "", "Global ID for create-or-update remote links")
+
 	return &cmd
 }
 
@@ -54,7 +56,7 @@ func remotelink(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Creating remote web link for issue")
 		defer s.Stop()
 
-		return client.RemoteLinkIssue(lc.params.issueKey, lc.params.title, lc.params.url)
+		return client.RemoteLinkIssue(lc.params.issueKey, lc.params.title, lc.params.url, lc.params.globalID)
 	}()
 	cmdutil.ExitIfError(err)
 
@@ -73,6 +75,7 @@ type linkParams struct {
 	issueKey string
 	url      string
 	title    string
+	globalID string
 	debug    bool
 }
 
@@ -92,10 +95,14 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *l
 	debug, err := flags.GetBool("debug")
 	cmdutil.ExitIfError(err)
 
+	globalID, err := flags.GetString("global-id")
+	cmdutil.ExitIfError(err)
+
 	return &linkParams{
 		issueKey: issueKey,
 		url:      url,
 		title:    title,
+		globalID: globalID,
 		debug:    debug,
 	}
 }
