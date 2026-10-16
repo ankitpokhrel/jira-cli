@@ -729,10 +729,47 @@ func (c *JiraCLIConfigGenerator) configureFields() error {
 		})
 	}
 
+	if epic.Name == "" || epic.Link == "" {
+		c.configureEpicFieldsFromCreateMeta(&epic)
+	}
+
 	c.value.epic = &epic
 	c.value.customFields = customFields
 
 	return nil
+}
+
+// configureEpicFieldsFromCreateMeta fills empty epic name/link fields from the
+// project's create metadata. The global field endpoint may not report epic
+// fields for some setups (e.g. classic projects where the "Epic Link" custom
+// field is only visible on non-epic issue types), leaving `epic.link` empty in
+// the generated config and breaking epic association on issue create.
+func (c *JiraCLIConfigGenerator) configureEpicFieldsFromCreateMeta(epic *jira.Epic) {
+	meta, err := c.jiraClient.GetCreateMeta(&jira.CreateMetaRequest{
+		Projects: c.value.project.Key,
+		Expand:   "projects.issuetypes.fields",
+	})
+	if err != nil {
+		// Best effort: keep whatever was resolved from the global field list.
+		return
+	}
+
+	for _, project := range meta.Projects {
+		for _, issueType := range project.IssueTypes {
+			for _, field := range issueType.Fields {
+				switch field.Name {
+				case jira.EpicFieldName:
+					if epic.Name == "" {
+						epic.Name = field.Key
+					}
+				case jira.EpicFieldLink:
+					if epic.Link == "" {
+						epic.Link = field.Key
+					}
+				}
+			}
+		}
+	}
 }
 
 func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
