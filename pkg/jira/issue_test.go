@@ -554,6 +554,62 @@ func TestAddIssueComment(t *testing.T) {
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
 }
 
+func TestIssueCommentOptions_Validate(t *testing.T) {
+	t.Parallel()
+
+	assert.NoError(t, (IssueCommentOptions{}).Validate())
+	assert.NoError(t, (IssueCommentOptions{Internal: true}).Validate())
+	assert.NoError(t, (IssueCommentOptions{VisibilityRole: "Developers"}).Validate())
+	assert.NoError(t, (IssueCommentOptions{VisibilityGroup: "jira-developers"}).Validate())
+
+	err := (IssueCommentOptions{Internal: true, VisibilityRole: "Developers"}).Validate()
+	assert.Error(t, err)
+
+	err = (IssueCommentOptions{VisibilityRole: "Developers", VisibilityGroup: "jira-developers"}).Validate()
+	assert.Error(t, err)
+}
+
+func TestAddIssueCommentOpts_visibilityUsesV3(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "POST", r.Method)
+		assert.Equal(t, "/rest/api/3/issue/TEST-1/comment", r.URL.Path)
+
+		actualBody := new(strings.Builder)
+		_, _ = io.Copy(actualBody, r.Body)
+
+		expectedBody := `{"body":{"version":1,"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"hello"}]}]},"visibility":{"type":"role","value":"Developers"}}`
+		assert.JSONEq(t, expectedBody, actualBody.String())
+
+		w.WriteHeader(201)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	err := client.AddIssueCommentOpts("TEST-1", "hello", IssueCommentOptions{VisibilityRole: "Developers"})
+	assert.NoError(t, err)
+}
+
+func TestAddIssueCommentOpts_visibilityGroupUsesV3(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/rest/api/3/issue/TEST-1/comment", r.URL.Path)
+
+		actualBody := new(strings.Builder)
+		_, _ = io.Copy(actualBody, r.Body)
+
+		expectedBody := `{"body":{"version":1,"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"x"}]}]},"visibility":{"type":"group","value":"jira-developers"}}`
+		assert.JSONEq(t, expectedBody, actualBody.String())
+
+		w.WriteHeader(201)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	err := client.AddIssueCommentOpts("TEST-1", "x", IssueCommentOptions{VisibilityGroup: "jira-developers"})
+	assert.NoError(t, err)
+}
+
 func TestAddIssueWorklog(t *testing.T) {
 	var unexpectedStatusCode bool
 

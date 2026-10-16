@@ -309,9 +309,135 @@ type issueCommentRequest struct {
 	Properties []issueCommentProperty `json:"properties"`
 }
 
+type commentVisibility struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type issueCommentRequestV3 struct {
+	Body       *adf.ADF           `json:"body"`
+	Visibility *commentVisibility `json:"visibility,omitempty"`
+}
+
+// IssueCommentOptions configures AddIssueCommentOpts.
+type IssueCommentOptions struct {
+	Internal        bool
+	VisibilityRole  string
+	VisibilityGroup string
+}
+
+func (o IssueCommentOptions) visibility() *commentVisibility {
+	role := strings.TrimSpace(o.VisibilityRole)
+	group := strings.TrimSpace(o.VisibilityGroup)
+	switch {
+	case role != "":
+		return &commentVisibility{Type: "role", Value: role}
+	case group != "":
+		return &commentVisibility{Type: "group", Value: group}
+	default:
+		return nil
+	}
+}
+
+// Validate checks flag combinations for issue comments.
+func (o IssueCommentOptions) Validate() error {
+	role := strings.TrimSpace(o.VisibilityRole)
+	group := strings.TrimSpace(o.VisibilityGroup)
+	if role != "" && group != "" {
+		return fmt.Errorf("jira: visibility role and visibility group are mutually exclusive")
+	}
+	if o.Internal && (role != "" || group != "") {
+		return fmt.Errorf("jira: internal comments cannot be combined with role or group visibility")
+	}
+	return nil
+}
+
+// commentPlainToADF builds a minimal Atlassian Document body from plain text (paragraphs split on
+// blank lines; single newlines become hard breaks). Used for REST v3 comments when setting visibility.
+func commentPlainToADF(text string) *adf.ADF {
+	text = strings.ReplaceAll(text, "\r\n", "\n")
+	text = strings.TrimRight(text, "\n")
+	if text == "" {
+		return &adf.ADF{
+			Version: 1,
+			DocType: "doc",
+			Content: []*adf.Node{
+				{NodeType: adf.NodeParagraph, Content: []*adf.Node{}},
+			},
+		}
+	}
+	blocks := strings.Split(text, "\n\n")
+	var content []*adf.Node
+	for _, block := range blocks {
+		block = strings.TrimSpace(block)
+		if block == "" {
+			continue
+		}
+		lines := strings.Split(block, "\n")
+		inline := make([]*adf.Node, 0, len(lines)*2-1)
+		for i, line := range lines {
+			if i > 0 {
+				inline = append(inline, &adf.Node{NodeType: adf.InlineNodeHardBreak})
+			}
+			inline = append(inline, &adf.Node{
+				NodeType:  adf.ChildNodeText,
+				NodeValue: adf.NodeValue{Text: line},
+			})
+		}
+		content = append(content, &adf.Node{
+			NodeType: adf.NodeParagraph,
+			Content:  inline,
+		})
+	}
+	if len(content) == 0 {
+		content = []*adf.Node{{NodeType: adf.NodeParagraph, Content: []*adf.Node{}}}
+	}
+	return &adf.ADF{Version: 1, DocType: "doc", Content: content}
+}
+
 // AddIssueComment adds comment to an issue using POST /issue/{key}/comment endpoint.
 func (c *Client) AddIssueComment(key, comment string, internal bool) error {
-	body, err := json.Marshal(&issueCommentRequest{Body: md.ToJiraMD(comment), Properties: []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: internal}}}})
+	return c.AddIssueCommentOpts(key, comment, IssueCommentOptions{Internal: internal})
+}
+
+// AddIssueCommentOpts adds a comment like AddIssueComment. When VisibilityRole or VisibilityGroup is set,
+// it uses REST API v3 with an ADF body and a visibility restriction (mutually exclusive with Internal).
+func (c *Client) AddIssueCommentOpts(key, comment string, opts IssueCommentOptions) error {
+	if err := opts.Validate(); err != nil {
+		return err
+	}
+
+	vis := opts.visibility()
+	if vis != nil {
+		req := issueCommentRequestV3{
+			Body:       commentPlainToADF(comment),
+			Visibility: vis,
+		}
+		body, err := json.Marshal(&req)
+		if err != nil {
+			return err
+		}
+
+		path := fmt.Sprintf("/issue/%s/comment", key)
+		res, err := c.Post(context.Background(), path, body, Header{
+			"Accept":       "application/json",
+			"Content-Type": "application/json",
+		})
+		if err != nil {
+			return err
+		}
+		if res == nil {
+			return ErrEmptyResponse
+		}
+		defer func() { _ = res.Body.Close() }()
+
+		if res.StatusCode != http.StatusCreated {
+			return formatUnexpectedResponse(res)
+		}
+		return nil
+	}
+
+	body, err := json.Marshal(&issueCommentRequest{Body: md.ToJiraMD(comment), Properties: []issueCommentProperty{{Key: "sd.public.comment", Value: issueCommentPropertyValue{Internal: opts.Internal}}}})
 	if err != nil {
 		return err
 	}
