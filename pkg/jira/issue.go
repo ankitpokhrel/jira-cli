@@ -209,6 +209,41 @@ func (c *Client) GetIssueLinkTypes() ([]*IssueLinkType, error) {
 	return out.IssueLinkTypes, nil
 }
 
+// DownloadAttachment downloads attachment from the given URL.
+func (c *Client) DownloadAttachment(url string) (io.ReadCloser, error) {
+	if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
+		res, err := c.request(context.Background(), http.MethodGet, url, nil, Header{
+			"X-Atlassian-Token": "no-check",
+		})
+		if err != nil {
+			return nil, err
+		}
+		if res == nil {
+			return nil, ErrEmptyResponse
+		}
+		if res.StatusCode != http.StatusOK {
+			_ = res.Body.Close()
+			return nil, formatUnexpectedResponse(res)
+		}
+		return res.Body, nil
+	}
+
+	res, err := c.Get(context.Background(), url, nil)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, ErrEmptyResponse
+	}
+
+	if res.StatusCode != http.StatusOK {
+		_ = res.Body.Close()
+		return nil, formatUnexpectedResponse(res)
+	}
+
+	return res.Body, nil
+}
+
 type linkRequest struct {
 	InwardIssue struct {
 		Key string `json:"key"`
