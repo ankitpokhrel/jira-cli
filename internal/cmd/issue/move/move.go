@@ -180,6 +180,10 @@ func (mc *moveCmd) setIssueKey(project string) error {
 		return nil
 	}
 
+	if cmdutil.StdinHasData() {
+		return fmt.Errorf("ISSUE-KEY argument is required in non-interactive mode")
+	}
+
 	var ans string
 
 	qs := &survey.Question{
@@ -198,6 +202,10 @@ func (mc *moveCmd) setIssueKey(project string) error {
 func (mc *moveCmd) setDesiredState(it string) error {
 	if mc.params.state != "" {
 		return nil
+	}
+
+	if cmdutil.StdinHasData() {
+		return fmt.Errorf("desired state argument is required in non-interactive mode")
 	}
 
 	var (
