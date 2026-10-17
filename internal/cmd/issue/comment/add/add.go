@@ -55,6 +55,7 @@ func NewCmdCommentAdd() *cobra.Command {
 
 	cmd.Flags().Bool("web", false, "Open issue in web browser after adding comment")
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read comment body from")
+	cmdcommon.AddBodyFormatFlag(cmd.Flags())
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 	cmd.Flags().Bool("internal", false, "Make comment internal")
 
@@ -63,6 +64,11 @@ func NewCmdCommentAdd() *cobra.Command {
 
 func add(cmd *cobra.Command, args []string) {
 	params := parseArgsAndFlags(args, cmd.Flags())
+
+	// Validate before any prompt or API call so a bad value doesn't discard user input.
+	bodyFormat, err := cmdcommon.ResolveBodyFormat(cmd.Flags())
+	cmdutil.ExitIfError(err)
+
 	client := api.DefaultClient(params.debug)
 	ac := addCmd{
 		client:    client,
@@ -99,11 +105,13 @@ func add(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	err := func() error {
+	body := cmdcommon.ConvertBody(ac.params.body, bodyFormat)
+
+	err = func() error {
 		s := cmdutil.Info("Adding comment")
 		defer s.Stop()
 
-		return client.AddIssueComment(ac.params.issueKey, ac.params.body, ac.params.internal)
+		return client.AddIssueComment(ac.params.issueKey, body, ac.params.internal)
 	}()
 	cmdutil.ExitIfError(err)
 

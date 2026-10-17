@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
+	"github.com/ankitpokhrel/jira-cli/internal/cmdcommon"
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
@@ -41,6 +42,7 @@ STATE		State you want to transition the issue to`,
 	cmd.Flags().SortFlags = false
 
 	cmd.Flags().String("comment", "", "Add comment to the issue")
+	cmdcommon.AddBodyFormatFlag(cmd.Flags())
 	cmd.Flags().StringP("assignee", "a", "", "Assign issue to a user")
 	cmd.Flags().StringP("resolution", "R", "", "Set resolution")
 	cmd.Flags().Bool("web", false, "Open issue in web browser after successful transition")
@@ -52,6 +54,11 @@ func move(cmd *cobra.Command, args []string) {
 	project := viper.GetString("project.key")
 	installation := viper.GetString("installation")
 	params := parseArgsAndFlags(cmd.Flags(), args, project)
+
+	// Validate before any prompt or API call so a bad value doesn't discard user input.
+	bodyFormat, err := cmdcommon.ResolveBodyFormat(cmd.Flags())
+	cmdutil.ExitIfError(err)
+
 	client := api.DefaultClient(params.debug)
 	mc := moveCmd{
 		client:      client,
@@ -93,6 +100,8 @@ func move(cmd *cobra.Command, args []string) {
 			}{Name: mc.params.resolution}
 		}
 		if mc.params.comment != "" {
+			comment := cmdcommon.ConvertBody(mc.params.comment, bodyFormat)
+
 			trUpdateReq.Comment = []struct {
 				Add struct {
 					Body string `json:"body"`
@@ -100,7 +109,7 @@ func move(cmd *cobra.Command, args []string) {
 			}{
 				{Add: struct {
 					Body string `json:"body"`
-				}{Body: mc.params.comment}},
+				}{Body: comment}},
 			}
 		}
 

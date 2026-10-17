@@ -77,6 +77,11 @@ func create(cmd *cobra.Command, _ []string) {
 	installation := viper.GetString("installation")
 
 	params := parseFlags(cmd.Flags())
+
+	// Validate before any prompt or API call so a bad value doesn't discard user input.
+	bodyFormat, err := cmdcommon.ResolveBodyFormat(cmd.Flags())
+	cmdutil.ExitIfError(err)
+
 	client := api.DefaultClient(params.Debug)
 	cc := createCmd{
 		client: client,
@@ -103,6 +108,8 @@ func create(cmd *cobra.Command, _ []string) {
 
 	params.Reporter = cmdcommon.GetRelevantUser(client, project, params.Reporter)
 	params.Assignee = cmdcommon.GetRelevantUser(client, project, params.Assignee)
+
+	params.Body = cmdcommon.ConvertBody(params.Body, bodyFormat)
 
 	issue, err := func() (*jira.CreateResponse, error) {
 		s := cmdutil.Info("Creating an issue...")
