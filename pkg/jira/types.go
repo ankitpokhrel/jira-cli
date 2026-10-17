@@ -183,6 +183,10 @@ type Transition struct {
 	ID          json.Number `json:"id"`
 	Name        string      `json:"name"`
 	IsAvailable bool        `json:"isAvailable"`
+	// Fields holds the fields on the transition screen, from the transitions.fields
+	// expansion. It is empty when the transition has no screen, in which case Jira
+	// silently discards a comment submitted along with the transition.
+	Fields map[string]json.RawMessage `json:"fields,omitempty"`
 }
 
 // User holds user info.

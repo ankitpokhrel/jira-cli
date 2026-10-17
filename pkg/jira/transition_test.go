@@ -104,3 +104,45 @@ func TestTransition(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, code, 204)
 }
+
+func TestTransitionsScreenFields(t *testing.T) {
+	// Mirrors a real Jira response: a transition with no screen reports an empty
+	// fields object, while one with a screen lists the fields it carries. Note that
+	// Jira never advertises "comment" here, even on transitions that do accept one.
+	const body = `{
+		"expand": "transitions",
+		"transitions": [
+			{"id": "421", "name": "Ready for review", "isAvailable": true, "fields": {}},
+			{"id": "451", "name": "Done", "isAvailable": true, "fields": {
+				"resolution": {"required": true},
+				"summary": {"required": true}
+			}}
+		]
+	}`
+
+	var gotQuery string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "GET", r.Method)
+		assert.Equal(t, "/rest/api/3/issue/TEST/transitions", r.URL.Path)
+		gotQuery = r.URL.RawQuery
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		_, _ = w.Write([]byte(body))
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	actual, err := client.Transitions("TEST")
+	assert.NoError(t, err)
+
+	// The fields expansion must be requested, otherwise Fields is always empty and a
+	// screen-less transition is indistinguishable from one with a screen.
+	assert.Equal(t, "expand=transitions.fields", gotQuery)
+
+	assert.Len(t, actual, 2)
+	assert.Empty(t, actual[0].Fields, "transition without a screen should report no fields")
+	assert.Len(t, actual[1].Fields, 2, "transition with a screen should report its fields")
+}
