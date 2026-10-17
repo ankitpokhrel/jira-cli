@@ -238,7 +238,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("jql", "q", "", "Run a raw JQL query in a given project context")
 	cmd.Flags().String("order-by", "created", "Field to order the list with")
 	cmd.Flags().Bool("reverse", false, "Reverse the display order (default \"DESC\")")
-	cmd.Flags().String("paginate", "0:100", "Paginate the result. Max 100 at a time, format: <from>:<limit> where <from> is optional")
+	cmd.Flags().String("paginate", "0:100", "Paginate the result, format: <from>:<limit> where <from> is optional. Limits > 100 are auto-paginated")
 	cmd.Flags().Bool("plain", false, "Display output in plain mode")
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
