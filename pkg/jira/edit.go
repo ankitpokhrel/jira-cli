@@ -372,6 +372,12 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 				continue
 			}
 
+			// Check custom type first for specialized handling
+			if configured.Schema.CustomType == customFieldFormatTeam {
+				data.Update.M.customFields[configured.Key] = []customFieldTypeTeamSet{{Set: customFieldTypeTeam{ID: val}}}
+				continue
+			}
+
 			switch configured.Schema.DataType {
 			case customFieldFormatOption:
 				data.Update.M.customFields[configured.Key] = []customFieldTypeOptionSet{{Set: customFieldTypeOption{Value: val}}}

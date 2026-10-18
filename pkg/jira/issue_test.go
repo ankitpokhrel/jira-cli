@@ -638,9 +638,10 @@ func TestGetField(t *testing.T) {
 			Name:   "Fix Version/s",
 			Custom: false,
 			Schema: struct {
-				DataType string `json:"type"`
-				Items    string `json:"items,omitempty"`
-				FieldID  int    `json:"customId,omitempty"`
+				DataType   string `json:"type"`
+				Items      string `json:"items,omitempty"`
+				FieldID    int    `json:"customId,omitempty"`
+				CustomType string `json:"custom,omitempty"`
 			}{
 				DataType: "array",
 				Items:    "version",
@@ -651,12 +652,14 @@ func TestGetField(t *testing.T) {
 			Name:   "Original story points",
 			Custom: true,
 			Schema: struct {
-				DataType string `json:"type"`
-				Items    string `json:"items,omitempty"`
-				FieldID  int    `json:"customId,omitempty"`
+				DataType   string `json:"type"`
+				Items      string `json:"items,omitempty"`
+				FieldID    int    `json:"customId,omitempty"`
+				CustomType string `json:"custom,omitempty"`
 			}{
-				DataType: "number",
-				FieldID:  10111,
+				DataType:   "number",
+				FieldID:    10111,
+				CustomType: "com.atlassian.jpo:jpo-custom-field-original-story-points",
 			},
 		},
 		{
@@ -664,9 +667,10 @@ func TestGetField(t *testing.T) {
 			Name:   "Time Spent",
 			Custom: false,
 			Schema: struct {
-				DataType string `json:"type"`
-				Items    string `json:"items,omitempty"`
-				FieldID  int    `json:"customId,omitempty"`
+				DataType   string `json:"type"`
+				Items      string `json:"items,omitempty"`
+				FieldID    int    `json:"customId,omitempty"`
+				CustomType string `json:"custom,omitempty"`
 			}{
 				DataType: "number",
 			},
