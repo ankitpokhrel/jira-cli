@@ -21,7 +21,7 @@ const (
 
 // NewCmdAdd is an add command.
 func NewCmdAdd() *cobra.Command {
-	return &cobra.Command{
+	cmd := cobra.Command{
 		Use:     "add EPIC-KEY ISSUE-1 [...ISSUE-N]",
 		Short:   "Add issues to an epic",
 		Long:    helpText,
@@ -33,6 +33,14 @@ func NewCmdAdd() *cobra.Command {
 		},
 		Run: add,
 	}
+
+	setFlags(&cmd)
+
+	return &cmd
+}
+
+func setFlags(cmd *cobra.Command) {
+	cmd.Flags().Bool("skip-notify", false, "Do not notify watchers when adding issues to the epic")
 }
 
 func add(cmd *cobra.Command, args []string) {
@@ -81,7 +89,7 @@ func add(cmd *cobra.Command, args []string) {
 		// There is no way to send bulk update requests as of now, so we need to send these requests
 		// in a loop. We will print failed requests with exit code 1 at the end if there are any.
 		for _, iss := range params.issues {
-			if err := client.Edit(iss, &jira.EditRequest{ParentIssueKey: params.epicKey, SkipNotify: true}); err != nil {
+			if err := client.Edit(iss, &jira.EditRequest{ParentIssueKey: params.epicKey, SkipNotify: params.skipNotify}); err != nil {
 				msg := fmt.Sprintf("\n  - %s: %s", iss, cmdutil.NormalizeJiraError(err.Error()))
 				failed.WriteString(msg)
 			} else {
@@ -127,13 +135,17 @@ func parseFlags(flags query.FlagParser, args []string, project string) *addParam
 		}
 	}
 
+	skipNotify, err := flags.GetBool("skip-notify")
+	cmdutil.ExitIfError(err)
+
 	debug, err := flags.GetBool("debug")
 	cmdutil.ExitIfError(err)
 
 	return &addParams{
-		epicKey: epicKey,
-		issues:  issues,
-		debug:   debug,
+		epicKey:    epicKey,
+		issues:     issues,
+		skipNotify: skipNotify,
+		debug:      debug,
 	}
 }
 
@@ -162,7 +174,8 @@ func getQuestions(params *addParams) []*survey.Question {
 }
 
 type addParams struct {
-	epicKey string
-	issues  []string
-	debug   bool
+	epicKey    string
+	issues     []string
+	skipNotify bool
+	debug      bool
 }

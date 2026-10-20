@@ -40,7 +40,7 @@ func NewCmdInit() *cobra.Command {
 	cmd.Flags().String("installation", "", "Is this a 'cloud' or 'local' jira installation?")
 	cmd.Flags().String("server", "", "Link to your jira server")
 	cmd.Flags().String("login", "", "Jira login username or email based on your setup")
-	cmd.Flags().String("auth-type", "", "Authentication type can be basic, bearer or mtls")
+	cmd.Flags().String("auth-type", "", "Authentication type can be basic, bearer, mtls, or cf-access")
 	cmd.Flags().String("project", "", "Your default project key")
 	cmd.Flags().String("board", "", "Name of your default board in the project")
 	cmd.Flags().Bool("force", false, "Forcefully override existing config if it exists")

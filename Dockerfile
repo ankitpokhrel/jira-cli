@@ -2,7 +2,7 @@
 #   $ docker build -t jira-cli:latest .
 #   $ docker run --rm -it -v ~/.netrc:/root/.netrc -v ~/.config/.jira:/root/.config/.jira jira-cli
 
-FROM golang:1.25-alpine3.23 AS builder
+FROM golang:1.26-alpine3.24 AS builder
 
 ENV CGO_ENABLED=0
 ENV GOOS=linux
@@ -17,7 +17,7 @@ RUN set -eux; \
     apk add -U --no-cache make git ; \
     make deps install
 
-FROM alpine:3.19
+FROM alpine:3.24
 
 RUN apk --no-cache add ca-certificates
 

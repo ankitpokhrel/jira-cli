@@ -165,15 +165,15 @@ func secondPass(lines []string) string {
 						// If end is same as size of the input, it implies that
 						// we've found a closing token, and we will ignore it.
 						if token.endIdx != len(line)-1 {
-							out.WriteString(fmt.Sprintf("\n%s", replacements[token.tag]))
+							fmt.Fprintf(&out, "\n%s", replacements[token.tag])
 						}
 					} else {
-						out.WriteString(fmt.Sprintf("\n%s", replacements[token.tag]))
+						fmt.Fprintf(&out, "\n%s", replacements[token.tag])
 					}
 
 					if token.tag == TagPanel {
 						if t, ok := token.attrs[attrTitle]; ok {
-							out.WriteString(fmt.Sprintf("\n**%s**\n", t))
+							fmt.Fprintf(&out, "\n**%s**\n", t)
 						}
 
 						if token.endIdx != len(line)-1 {
@@ -184,7 +184,7 @@ func secondPass(lines []string) string {
 					end = token.endIdx
 				}
 			} else {
-				out.WriteRune(rune(line[beg]))
+				out.WriteByte(line[beg])
 			}
 
 			end++

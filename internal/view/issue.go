@@ -95,26 +95,25 @@ func (i Issue) String() string {
 
 	desc := i.description()
 	if desc != "" {
-		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s", i.separator("Description"), desc))
+		fmt.Fprintf(&s, "\n\n%s\n\n%s", i.separator("Description"), desc)
 	}
 	if len(i.Data.Fields.Subtasks) > 0 {
-		s.WriteString(
-			fmt.Sprintf(
-				"\n\n%s\n\n%s\n",
-				i.separator(fmt.Sprintf("%d Subtasks", len(i.Data.Fields.Subtasks))),
-				i.subtasks(),
-			),
+		fmt.Fprintf(
+			&s,
+			"\n\n%s\n\n%s\n",
+			i.separator(fmt.Sprintf("%d Subtasks", len(i.Data.Fields.Subtasks))),
+			i.subtasks(),
 		)
 	}
 	if len(i.Data.Fields.IssueLinks) > 0 {
-		s.WriteString(fmt.Sprintf("\n\n%s\n\n%s\n", i.separator("Linked Issues"), i.linkedIssues()))
+		fmt.Fprintf(&s, "\n\n%s\n\n%s\n", i.separator("Linked Issues"), i.linkedIssues())
 	}
 	total := i.Data.Fields.Comment.Total
 	if total > 0 && i.Options.NumComments > 0 {
 		sep := fmt.Sprintf("%d Comments", total)
-		s.WriteString(fmt.Sprintf("\n\n%s", i.separator(sep)))
+		fmt.Fprintf(&s, "\n\n%s", i.separator(sep))
 		for _, comment := range i.comments() {
-			s.WriteString(fmt.Sprintf("\n\n%s\n\n%s\n", comment.meta, comment.body))
+			fmt.Fprintf(&s, "\n\n%s\n\n%s\n", comment.meta, comment.body)
 		}
 	}
 	s.WriteString(i.footer())
@@ -284,19 +283,16 @@ func (i Issue) subtasks() string {
 		summaryLen = maxSummaryLen
 	}
 
-	subtasks.WriteString(
-		fmt.Sprintf("\n %s\n\n", coloredOut("SUBTASKS", color.FgWhite, color.Bold)),
-	)
+	fmt.Fprintf(&subtasks, "\n %s\n\n", coloredOut("SUBTASKS", color.FgWhite, color.Bold))
 	for idx := range i.Data.Fields.Subtasks {
 		task := i.Data.Fields.Subtasks[idx]
-		subtasks.WriteString(
-			fmt.Sprintf(
-				"  %s %s • %s • %s\n",
-				coloredOut(pad(task.Key, maxKeyLen), color.FgGreen, color.Bold),
-				shortenAndPad(task.Fields.Summary, summaryLen),
-				pad(task.Fields.Priority.Name, maxPriorityLen),
-				pad(task.Fields.Status.Name, maxStatusLen),
-			),
+		fmt.Fprintf(
+			&subtasks,
+			"  %s %s • %s • %s\n",
+			coloredOut(pad(task.Key, maxKeyLen), color.FgGreen, color.Bold),
+			shortenAndPad(task.Fields.Summary, summaryLen),
+			pad(task.Fields.Priority.Name, maxPriorityLen),
+			pad(task.Fields.Status.Name, maxStatusLen),
 		)
 	}
 
@@ -358,19 +354,16 @@ func (i Issue) linkedIssues() string {
 	sort.Strings(keys)
 
 	for _, k := range keys {
-		linked.WriteString(
-			fmt.Sprintf("\n %s\n\n", coloredOut(strings.ToUpper(k), color.FgWhite, color.Bold)),
-		)
+		fmt.Fprintf(&linked, "\n %s\n\n", coloredOut(strings.ToUpper(k), color.FgWhite, color.Bold))
 		for _, iss := range linkMap[k] {
-			linked.WriteString(
-				fmt.Sprintf(
-					"  %s %s • %s • %s • %s\n",
-					coloredOut(pad(iss.Key, maxKeyLen), color.FgGreen, color.Bold),
-					shortenAndPad(iss.Fields.Summary, summaryLen),
-					pad(iss.Fields.IssueType.Name, maxTypeLen),
-					pad(iss.Fields.Priority.Name, maxPriorityLen),
-					pad(iss.Fields.Status.Name, maxStatusLen),
-				),
+			fmt.Fprintf(
+				&linked,
+				"  %s %s • %s • %s • %s\n",
+				coloredOut(pad(iss.Key, maxKeyLen), color.FgGreen, color.Bold),
+				shortenAndPad(iss.Fields.Summary, summaryLen),
+				pad(iss.Fields.IssueType.Name, maxTypeLen),
+				pad(iss.Fields.Priority.Name, maxPriorityLen),
+				pad(iss.Fields.Status.Name, maxStatusLen),
 			)
 		}
 	}
@@ -428,7 +421,7 @@ func (i Issue) footer() string {
 		if i.Display.Plain {
 			out.WriteString("\n")
 		}
-		out.WriteString(fmt.Sprintf("%s\n", gray("Use --comments <limit> with `jira issue view` to load more comments")))
+		fmt.Fprintf(&out, "%s\n", gray("Use --comments <limit> with `jira issue view` to load more comments"))
 	}
 	if i.Display.Plain {
 		out.WriteString("\n")

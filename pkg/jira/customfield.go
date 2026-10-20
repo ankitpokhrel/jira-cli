@@ -50,6 +50,10 @@ type customFieldTypeUserSet struct {
 	Set customFieldTypeUser `json:"set"`
 }
 
+type customFieldTypeUsersSet struct {
+	Set []customFieldTypeUser `json:"set"`
+}
+
 // newCustomFieldTypeUser creates a user field value appropriate for the installation type.
 func newCustomFieldTypeUser(val, installationType string) customFieldTypeUser {
 	if installationType == InstallationTypeLocal {

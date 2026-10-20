@@ -397,11 +397,11 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 					}
 					data.Update.M.customFields[configured.Key] = items
 				case customFieldFormatUser:
-					items := make([]customFieldTypeUserSet, 0, len(pieces))
+					items := make([]customFieldTypeUser, 0, len(pieces))
 					for _, p := range pieces {
-						items = append(items, customFieldTypeUserSet{Set: newCustomFieldTypeUser(strings.TrimSpace(p), installationType)})
+						items = append(items, newCustomFieldTypeUser(strings.TrimSpace(p), installationType))
 					}
-					data.Update.M.customFields[configured.Key] = items
+					data.Update.M.customFields[configured.Key] = []customFieldTypeUsersSet{{Set: items}}
 				default:
 					data.Update.M.customFields[configured.Key] = pieces
 				}
