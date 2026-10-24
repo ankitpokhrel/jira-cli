@@ -225,8 +225,19 @@ func (j *JQL) compile() string {
 	return q
 }
 
+var (
+	quotedJQLValue = regexp.MustCompile(`"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'`)
+	projectClause  = regexp.MustCompile(`(?i)(^|[^[:alnum:]_.])project([[:space:]]*(=|!=|~|!~|>=|>|<=|<)|[[:space:]]+(not[[:space:]]+in|in|is|was|changed)\b)`)
+)
+
 func hasProjectFilter(str string) bool {
-	regx := "(?i)((project)[\\s]*?={0,1}\\b)[^'.']"
-	m, _ := regexp.MatchString(regx, str)
-	return m
+	stripped := quotedJQLValue.ReplaceAllStringFunc(str, func(value string) string {
+		// Quoted field names are valid JQL, but quoted values should not be
+		// mistaken for a project clause.
+		if strings.EqualFold(value[1:len(value)-1], "project") {
+			return "project"
+		}
+		return `""`
+	})
+	return projectClause.MatchString(stripped)
 }

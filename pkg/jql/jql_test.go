@@ -359,6 +359,38 @@ func TestHasProject(t *testing.T) {
 			expected: false,
 		},
 		{
+			input:    `summary ~ "project kickoff"`,
+			expected: false,
+		},
+		{
+			input:    `text ~ "my project notes"`,
+			expected: false,
+		},
+		{
+			input:    `comment ~ 'project review'`,
+			expected: false,
+		},
+		{
+			input:    `summary ~ "project = TEST"`,
+			expected: false,
+		},
+		{
+			input:    `summary ~ "project kickoff" AND project = TEST`,
+			expected: true,
+		},
+		{
+			input:    `parent.project = TEST`,
+			expected: false,
+		},
+		{
+			input:    `"project" = TEST`,
+			expected: true,
+		},
+		{
+			input:    `status = Done ORDER BY project ASC`,
+			expected: false,
+		},
+		{
 			input:    "projectType",
 			expected: false,
 		},
@@ -381,4 +413,13 @@ func TestHasProject(t *testing.T) {
 			assert.Equal(t, tc.expected, hasProjectFilter(tc.input))
 		})
 	}
+}
+
+func TestRawKeepsProjectScopeWhenFreeTextContainsProject(t *testing.T) {
+	t.Parallel()
+
+	query := NewJQL("TEST").Raw(`summary ~ "project kickoff"`)
+	query.And(func() {})
+
+	assert.Equal(t, `project="TEST" AND summary ~ "project kickoff"`, query.String())
 }
