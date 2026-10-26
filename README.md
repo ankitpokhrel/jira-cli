@@ -85,12 +85,16 @@ Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/In
 
 #### Cloud server
 
-1. [Get a Jira API token](https://id.atlassian.com/manage-profile/security/api-tokens) and export it to your shell as
-   a `JIRA_API_TOKEN` variable. Add it to your shell configuration file, for instance, `$HOME/.bashrc`, so that the
-   variable is always available. Alternatively, you can also use `.netrc` file or `keychain` to set the token. Learn
-   more [here](https://github.com/ankitpokhrel/jira-cli/discussions/356).
+1. [Get a Jira API token](https://id.atlassian.com/manage-profile/security/api-tokens)
+then use one of the following methods to provide it to `jira-cli`:
+   - Export it to your shell as a `JIRA_API_TOKEN` variable. 
+     Then add it to your shell configuration file, for instance, `$HOME/.bashrc`, so that the variable is always available.
+   - Use a `.netrc` file
+   - Add it to the system keyring (Windows Credential Manager, macOS Keychain, or Linux Secret Service) during initialization.
+   - Learn more [here](https://github.com/ankitpokhrel/jira-cli/discussions/356)
 2. Run `jira init`, select installation type as `Cloud`, and provide required details to generate a config file required
    for the tool.
+   - If `JIRA_API_TOKEN` or `.netrc` are not already set, `jira init` will prompt you to provide the API token during initialization and store it automatically in the system keyring.
 
 #### On-premises installation
 
@@ -106,7 +110,7 @@ Follow the [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/In
    - The most common auth type for an on-premises installation is `basic`. If you are using your Jira login credentials
      (username and password), select the `basic` auth type.
    - If you want to use `mtls` (client certificates), select auth type `mtls` and provide the CA Cert, client Key, and client cert.
-
+   - For other auth types, `jira init` offers to save your token in the system keyring if none is stored there yet.
 > [!IMPORTANT]
 > If your on-premises Jira installation is using a language other than `English`, then the issue/epic creation
    may not work because the older version of Jira API doesn't return the untranslated name for `issuetypes`. In that case,
