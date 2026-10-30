@@ -43,6 +43,7 @@ type issueComment struct {
 // IssueOption is filtering options for an issue.
 type IssueOption struct {
 	NumComments uint
+	Description bool
 }
 
 // Issue is a list view for issues.
@@ -90,6 +91,11 @@ func (i Issue) RenderedOut(renderer *glamour.TermRenderer) (string, error) {
 
 func (i Issue) String() string {
 	var s strings.Builder
+
+	if i.Options.Description {
+		s.WriteString(i.description())
+		return s.String()
+	}
 
 	s.WriteString(i.header())
 
