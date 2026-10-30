@@ -111,7 +111,7 @@ func singleSprintView(sprintQuery *query.Sprint, flags query.FlagParser, boardID
 
 	if len(issues) == 0 {
 		fmt.Println()
-		cmdutil.Failed("No result found for given query in project %q", project)
+		cmdutil.Failed("%s", cmdutil.NoResultMessage(project))
 		return
 	}
 
@@ -196,7 +196,7 @@ func sprintExplorerView(sprintQuery *query.Sprint, flags query.FlagParser, board
 	}()
 	if len(sprints) == 0 {
 		fmt.Println()
-		cmdutil.Failed("No result found for given query in project %q", project)
+		cmdutil.Failed("%s", cmdutil.NoResultMessage(project))
 		return
 	}
 

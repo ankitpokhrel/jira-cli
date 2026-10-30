@@ -51,8 +51,12 @@ func create(cmd *cobra.Command, _ []string) {
 	projectType := viper.GetString("project.type")
 	installation := viper.GetString("installation")
 
+	cmdcommon.EnsureProject(project)
+
 	params := parseFlags(cmd.Flags())
 	client := api.DefaultClient(params.Debug)
+	projectType, err := cmdcommon.ResolveProjectType(client, project, projectType, installation, cmd.Flags().Changed("project"))
+	cmdutil.ExitIfError(err)
 	cc := createCmd{
 		client: client,
 		params: params,
