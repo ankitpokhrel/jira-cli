@@ -45,6 +45,56 @@ func splitPositiveNegative(labels []string) ([]string, []string) {
 	return positive, negative
 }
 
+// resolveOrderBy returns the effective order-by field, switching from "created" to "updated"
+// when only updated filters are present and no explicit created filters exist.
+func (i *Issue) resolveOrderBy() string {
+	obf := i.params.OrderBy
+	if obf != "created" {
+		return obf
+	}
+	hasUpdated := i.params.Updated != "" || i.params.UpdatedBefore != "" || i.params.UpdatedAfter != ""
+	hasCreated := i.params.Created != "" || i.params.CreatedBefore != "" || i.params.CreatedAfter != ""
+	if hasUpdated && !hasCreated {
+		return "updated"
+	}
+	return obf
+}
+
+// applyFilters applies all field filters inside the JQL AND block.
+func (i *Issue) applyFilters(q *jql.JQL, obf *string) {
+	if i.params.Latest {
+		q.History()
+		*obf = "lastViewed"
+	}
+	if i.params.Watching {
+		q.Watching()
+	}
+
+	q.FilterBy("type", i.params.IssueType).
+		FilterBy("resolution", i.params.Resolution).
+		FilterBy("priority", i.params.Priority).
+		FilterBy("reporter", i.params.Reporter).
+		FilterBy("assignee", i.params.Assignee).
+		FilterBy("component", i.params.Component).
+		FilterBy("parent", i.params.Parent)
+
+	i.setCreatedFilters(q)
+	i.setUpdatedFilters(q)
+	i.applyMultiFilters(q, "labels", i.params.Labels)
+	i.applyMultiFilters(q, "status", i.params.Status)
+}
+
+// applyMultiFilters applies positive IN and negative NOT IN filters for a multi-value field.
+func (i *Issue) applyMultiFilters(q *jql.JQL, field string, values []string) {
+	positive, negative := splitPositiveNegative(values)
+	if len(positive) > 0 {
+		q.In(field, positive...)
+	}
+	if len(negative) > 0 {
+		q.NotIn(field, negative...)
+	}
+}
+
 // Get returns constructed jql query.
 func (i *Issue) Get() string {
 	var q *jql.JQL
@@ -55,60 +105,28 @@ func (i *Issue) Get() string {
 		}
 	}()
 
-	q, obf := jql.NewJQL(i.Project), i.params.OrderBy
-	if obf == "created" &&
-		(i.params.Updated != "" || i.params.UpdatedBefore != "" || i.params.UpdatedAfter != "") &&
-		(i.params.Created == "" && i.params.CreatedBefore == "" && i.params.CreatedAfter == "") {
-		obf = "updated"
-	}
+	q = jql.NewJQL(i.Project)
+	obf := i.resolveOrderBy()
 
 	if i.params.JQL != "" {
 		q.Raw(i.params.JQL)
+		if i.Project == "" {
+			q.RemoveDefaultProjectFilter()
+		}
+	} else if i.Project == "" {
+		q.RemoveDefaultProjectFilter()
 	}
 
 	q.And(func() {
-		if i.params.Latest {
-			q.History()
-			obf = "lastViewed"
-		}
-		if i.params.Watching {
-			q.Watching()
-		}
-
-		q.FilterBy("type", i.params.IssueType).
-			FilterBy("resolution", i.params.Resolution).
-			FilterBy("priority", i.params.Priority).
-			FilterBy("reporter", i.params.Reporter).
-			FilterBy("assignee", i.params.Assignee).
-			FilterBy("component", i.params.Component).
-			FilterBy("parent", i.params.Parent)
-
-		i.setCreatedFilters(q)
-		i.setUpdatedFilters(q)
-
-		positive, negative := splitPositiveNegative(i.params.Labels)
-		if len(positive) > 0 {
-			q.In("labels", positive...)
-		}
-
-		if len(negative) > 0 {
-			q.NotIn("labels", negative...)
-		}
-
-		positive, negative = splitPositiveNegative(i.params.Status)
-		if len(positive) > 0 {
-			q.In("status", positive...)
-		}
-
-		if len(negative) > 0 {
-			q.NotIn("status", negative...)
-		}
+		i.applyFilters(q, &obf)
 	})
 
-	if i.params.Reverse {
-		q.OrderBy(obf, jql.DirectionAscending)
-	} else {
-		q.OrderBy(obf, jql.DirectionDescending)
+	if i.params.JQL == "" || !strings.Contains(strings.ToUpper(i.params.JQL), "ORDER BY") {
+		if i.params.Reverse {
+			q.OrderBy(obf, jql.DirectionAscending)
+		} else {
+			q.OrderBy(obf, jql.DirectionDescending)
+		}
 	}
 
 	return q.String()

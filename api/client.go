@@ -1,6 +1,7 @@
 package api
 
 import (
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -30,6 +31,9 @@ func Client(config jira.Config) *jira.Client {
 	config.APIToken = GetAPIToken(config)
 	if config.AuthType == nil {
 		authType := jira.AuthType(viper.GetString("auth_type"))
+		if authType == "" {
+			authType = jira.AuthType(viper.GetString("auth-type"))
+		}
 		config.AuthType = &authType
 	}
 	if config.Insecure == nil {
@@ -93,7 +97,7 @@ func ProxyCreate(c *jira.Client, cr *jira.CreateRequest) (*jira.CreateResponse, 
 
 	it := viper.GetString("installation")
 
-	if it == jira.InstallationTypeLocal {
+	if strings.EqualFold(it, jira.InstallationTypeLocal) {
 		resp, err = c.CreateV2(cr)
 	} else {
 		resp, err = c.Create(cr)
@@ -105,7 +109,7 @@ func ProxyCreate(c *jira.Client, cr *jira.CreateRequest) (*jira.CreateResponse, 
 // ProxyGetIssueRaw executes the same request as ProxyGetIssue but returns raw API response body string.
 func ProxyGetIssueRaw(c *jira.Client, key string) (string, error) {
 	it := viper.GetString("installation")
-	if it == jira.InstallationTypeLocal {
+	if strings.EqualFold(it, jira.InstallationTypeLocal) {
 		return c.GetIssueV2Raw(key)
 	}
 	return c.GetIssueRaw(key)
@@ -122,7 +126,7 @@ func ProxyGetIssue(c *jira.Client, key string, opts ...filter.Filter) (*jira.Iss
 
 	it := viper.GetString("installation")
 
-	if it == jira.InstallationTypeLocal {
+	if strings.EqualFold(it, jira.InstallationTypeLocal) {
 		iss, err = c.GetIssueV2(key, opts...)
 	} else {
 		iss, err = c.GetIssue(key, opts...)
@@ -142,7 +146,7 @@ func ProxySearch(c *jira.Client, jql string, from, limit uint) (*jira.SearchResu
 
 	it := viper.GetString("installation")
 
-	if it == jira.InstallationTypeLocal {
+	if strings.EqualFold(it, jira.InstallationTypeLocal) {
 		issues, err = c.SearchV2(jql, from, limit)
 	} else {
 		issues, err = c.Search(jql, limit)
@@ -159,15 +163,15 @@ func ProxyAssignIssue(c *jira.Client, key string, user *jira.User, def string) e
 	assignee := def
 
 	if user != nil {
-		switch it {
-		case jira.InstallationTypeLocal:
+		switch {
+		case strings.EqualFold(it, jira.InstallationTypeLocal):
 			assignee = user.Name
 		default:
 			assignee = user.AccountID
 		}
 	}
 
-	if it == jira.InstallationTypeLocal {
+	if strings.EqualFold(it, jira.InstallationTypeLocal) {
 		return c.AssignIssueV2(key, assignee)
 	}
 	return c.AssignIssue(key, assignee)
@@ -184,7 +188,7 @@ func ProxyUserSearch(c *jira.Client, opts *jira.UserSearchOptions) ([]*jira.User
 
 	it := viper.GetString("installation")
 
-	if it == jira.InstallationTypeLocal {
+	if strings.EqualFold(it, jira.InstallationTypeLocal) {
 		users, err = c.UserSearchV2(opts)
 	} else {
 		users, err = c.UserSearch(opts)
@@ -204,7 +208,7 @@ func ProxyTransitions(c *jira.Client, key string) ([]*jira.Transition, error) {
 
 	it := viper.GetString("installation")
 
-	if it == jira.InstallationTypeLocal {
+	if strings.EqualFold(it, jira.InstallationTypeLocal) {
 		transitions, err = c.TransitionsV2(key)
 	} else {
 		transitions, err = c.Transitions(key)
@@ -222,15 +226,15 @@ func ProxyWatchIssue(c *jira.Client, key string, user *jira.User) error {
 	var assignee string
 
 	if user != nil {
-		switch it {
-		case jira.InstallationTypeLocal:
+		switch {
+		case strings.EqualFold(it, jira.InstallationTypeLocal):
 			assignee = user.Name
 		default:
 			assignee = user.AccountID
 		}
 	}
 
-	if it == jira.InstallationTypeLocal {
+	if strings.EqualFold(it, jira.InstallationTypeLocal) {
 		return c.WatchIssueV2(key, assignee)
 	}
 	return c.WatchIssue(key, assignee)

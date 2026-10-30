@@ -186,13 +186,28 @@ func (j *JQL) Raw(q string) *JQL {
 	if hasProjectFilter(q) {
 		j.filters = j.filters[1:]
 	}
-	j.filters = append(j.filters, q)
+	// Check if the raw query contains ORDER BY clause
+	if orderByIdx := strings.Index(strings.ToUpper(q), "ORDER BY"); orderByIdx != -1 {
+		// Find ORDER BY position and directly extract the entire tail
+		j.orderBy = strings.TrimSpace(q[orderByIdx:])
+		j.filters = append(j.filters, strings.TrimSpace(q[:orderByIdx]))
+	} else {
+		j.filters = append(j.filters, q)
+	}
 	return j
 }
 
 // String returns the constructed query.
 func (j *JQL) String() string {
 	return j.compile()
+}
+
+// RemoveDefaultProjectFilter removes the default project filter if project is empty.
+func (j *JQL) RemoveDefaultProjectFilter() *JQL {
+	if j.project == "" && len(j.filters) > 0 {
+		j.filters = j.filters[1:]
+	}
+	return j
 }
 
 func (j *JQL) mergeFilters(separator string) {
