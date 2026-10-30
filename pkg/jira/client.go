@@ -233,6 +233,32 @@ func WithInsecureTLS(ins bool) ClientFunc {
 	}
 }
 
+// Request sends a request to a REST path relative to the configured Jira server.
+// The endpoint includes its API prefix, such as /rest/api/3/project.
+// The caller must close the returned response body and check its status code.
+func (c *Client) Request(ctx context.Context, method, endpoint string, body []byte, headers Header) (*http.Response, error) {
+	path, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("invalid API endpoint: %w", err)
+	}
+	if path.IsAbs() || path.Host != "" || path.Path == "" || path.Fragment != "" {
+		return nil, fmt.Errorf("API endpoint must be a path relative to the configured Jira server, without a fragment")
+	}
+	server, err := url.Parse(c.server)
+	if err != nil {
+		return nil, fmt.Errorf("invalid Jira server URL: %w", err)
+	}
+	if (server.Scheme != "http" && server.Scheme != "https") || server.Host == "" {
+		return nil, fmt.Errorf("jira server URL must use http or https and include a host")
+	}
+
+	target := server.JoinPath(path.EscapedPath())
+	target.RawQuery = path.RawQuery
+	target.ForceQuery = path.ForceQuery
+	target.Fragment = ""
+	return c.request(ctx, method, target.String(), body, headers)
+}
+
 // Get sends GET request to v3 version of the jira api.
 func (c *Client) Get(ctx context.Context, path string, headers Header) (*http.Response, error) {
 	return c.request(ctx, http.MethodGet, c.server+baseURLv3+path, nil, headers)
@@ -305,28 +331,28 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		req.Header.Set(k, v)
 	}
 
-	// Set default auth type to `basic`.
-	if c.authType == nil {
-		basic := AuthTypeBasic
-		c.authType = &basic
+	authType := AuthTypeBasic
+	if c.authType != nil {
+		authType = *c.authType
 	}
 
-	// When need to compare using `String()` here, it is used to handle cases where the
-	// authentication type might be empty, ensuring it defaults to the appropriate value.
-	switch c.authType.String() {
-	case string(AuthTypeMTLS):
-		if c.token != "" {
-			req.Header.Add("Authorization", "Bearer "+c.token)
+	if _, hasAuth := req.Header["Authorization"]; !hasAuth {
+		switch authType.String() {
+		case string(AuthTypeMTLS):
+			if c.token != "" {
+				req.Header.Set("Authorization", "Bearer "+c.token)
+			}
+		case string(AuthTypeBearer):
+			req.Header.Set("Authorization", "Bearer "+c.token)
+		case string(AuthTypeBasic):
+			req.SetBasicAuth(c.login, c.token)
 		}
-	case string(AuthTypeBearer):
-		req.Header.Add("Authorization", "Bearer "+c.token)
-	case string(AuthTypeBasic):
-		req.SetBasicAuth(c.login, c.token)
 	}
 
 	httpClient := &http.Client{Transport: c.transport}
 
-	return httpClient.Do(req.WithContext(ctx))
+	res, err = httpClient.Do(req.WithContext(ctx))
+	return res, err
 }
 
 func dump(req *http.Request, res *http.Response) {
@@ -342,9 +368,7 @@ func dump(req *http.Request, res *http.Response) {
 func prettyPrintDump(heading string, data []byte) {
 	const separatorWidth = 60
 
-	fmt.Printf("\n\n%s", strings.ToUpper(heading))
-	fmt.Printf("\n%s\n\n", strings.Repeat("-", separatorWidth))
-	fmt.Print(string(data))
+	_, _ = fmt.Fprintf(os.Stderr, "\n\n%s\n%s\n\n%s", strings.ToUpper(heading), strings.Repeat("-", separatorWidth), data)
 }
 
 func formatUnexpectedResponse(res *http.Response) *ErrUnexpectedResponse {
