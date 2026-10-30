@@ -371,6 +371,10 @@ func constructCustomFieldsForEdit(fields map[string]string, configuredFields []I
 			if identifier != strings.ToLower(key) {
 				continue
 			}
+			if parsed, ok := parseCustomFieldJSONContainer(val); ok {
+				data.Update.M.customFields[configured.Key] = []customFieldTypeAnySet{{Set: parsed}}
+				continue
+			}
 
 			switch configured.Schema.DataType {
 			case customFieldFormatOption:
