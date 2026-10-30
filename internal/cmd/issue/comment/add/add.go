@@ -34,6 +34,10 @@ $ jira issue comment add ISSUE-1 --template -
 # Or, use pipe to read input directly from standard input
 $ echo "Comment from stdin" | jira issue comment add ISSUE-1
 
+# Restrict visibility to a project role or group (REST API v3; mutually exclusive with --internal)
+$ jira issue comment add ISSUE-1 "Team note" --visibility-role Developers
+$ jira issue comment add ISSUE-1 "Team note" --visibility-group jira-developers
+
 # Positional argument takes precedence over the template flag
 # The example below will add "comment from arg" as a comment
 $ jira issue comment add ISSUE-1 "comment from arg" --template /path/to/template.tmpl`
@@ -57,6 +61,8 @@ func NewCmdCommentAdd() *cobra.Command {
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read comment body from")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
 	cmd.Flags().Bool("internal", false, "Make comment internal")
+	cmd.Flags().String("visibility-role", "", "Restrict comment visibility to this project role (REST v3; mutually exclusive with --internal and --visibility-group)")
+	cmd.Flags().String("visibility-group", "", "Restrict comment visibility to this group (REST v3; mutually exclusive with --internal and --visibility-role)")
 
 	return &cmd
 }
@@ -103,7 +109,12 @@ func add(cmd *cobra.Command, args []string) {
 		s := cmdutil.Info("Adding comment")
 		defer s.Stop()
 
-		return client.AddIssueComment(ac.params.issueKey, ac.params.body, ac.params.internal)
+		opts := jira.IssueCommentOptions{
+			Internal:        ac.params.internal,
+			VisibilityRole:  ac.params.visibilityRole,
+			VisibilityGroup: ac.params.visibilityGroup,
+		}
+		return client.AddIssueCommentOpts(ac.params.issueKey, ac.params.body, opts)
 	}()
 	cmdutil.ExitIfError(err)
 
@@ -119,12 +130,14 @@ func add(cmd *cobra.Command, args []string) {
 }
 
 type addParams struct {
-	issueKey string
-	body     string
-	template string
-	noInput  bool
-	internal bool
-	debug    bool
+	issueKey        string
+	body            string
+	template        string
+	noInput         bool
+	internal        bool
+	visibilityRole  string
+	visibilityGroup string
+	debug           bool
 }
 
 func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
@@ -150,13 +163,21 @@ func parseArgsAndFlags(args []string, flags query.FlagParser) *addParams {
 	internal, err := flags.GetBool("internal")
 	cmdutil.ExitIfError(err)
 
+	visibilityRole, err := flags.GetString("visibility-role")
+	cmdutil.ExitIfError(err)
+
+	visibilityGroup, err := flags.GetString("visibility-group")
+	cmdutil.ExitIfError(err)
+
 	return &addParams{
-		issueKey: issueKey,
-		body:     body,
-		template: template,
-		noInput:  noInput,
-		internal: internal,
-		debug:    debug,
+		issueKey:        issueKey,
+		body:            body,
+		template:        template,
+		noInput:         noInput,
+		internal:        internal,
+		visibilityRole:  visibilityRole,
+		visibilityGroup: visibilityGroup,
+		debug:           debug,
 	}
 }
 
