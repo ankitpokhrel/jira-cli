@@ -89,7 +89,7 @@ func add(cmd *cobra.Command, args []string) {
 		params.body = ans.Body
 	}
 
-	if !params.noInput {
+	if cmdutil.ShouldPrompt(params.noInput) {
 		answer := struct{ Action string }{}
 		err := survey.Ask([]*survey.Question{getNextAction()}, &answer)
 		cmdutil.ExitIfError(err)
@@ -200,7 +200,7 @@ func (ac *addCmd) getQuestions() []*survey.Question {
 		defaultBody = string(b)
 	}
 
-	if ac.params.noInput && ac.params.body == "" {
+	if !cmdutil.ShouldPrompt(ac.params.noInput) && ac.params.body == "" {
 		ac.params.body = defaultBody
 		return qs
 	}
