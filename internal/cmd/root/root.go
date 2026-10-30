@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ankitpokhrel/jira-cli/api"
+	apiCmd "github.com/ankitpokhrel/jira-cli/internal/cmd/api"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/board"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/completion"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/epic"
@@ -62,7 +63,7 @@ func init() {
 		viper.SetEnvPrefix("jira")
 
 		if err := viper.ReadInConfig(); err == nil && debug {
-			fmt.Printf("Using config file: %s\n", viper.ConfigFileUsed())
+			_, _ = fmt.Fprintf(os.Stderr, "Using config file: %s\n", viper.ConfigFileUsed())
 		}
 	})
 }
@@ -125,6 +126,7 @@ func NewCmdRoot() *cobra.Command {
 
 func addChildCommands(cmd *cobra.Command) {
 	cmd.AddCommand(
+		apiCmd.NewCmdAPI(),
 		initCmd.NewCmdInit(),
 		issue.NewCmdIssue(),
 		epic.NewCmdEpic(),

@@ -168,6 +168,31 @@ The lists are displayed in an interactive UI by default.
 - [Getting Started with JiraCLI](https://www.mslinn.com/blog/2022/08/12/jiracli.html)
 
 ## Commands
+### API
+Use `jira api` to send authenticated requests to Jira REST endpoints using your existing configuration.
+Specify the full REST path relative to the configured server, including the API version.
+
+```sh
+# Get the current user
+jira api /rest/api/2/myself
+
+# Include query parameters and process the JSON response
+jira api '/rest/api/3/project/search?maxResults=10' | jq '.values[].key'
+
+# Send a JSON body from a file or standard input
+jira api -X POST /rest/api/3/issue --input payload.json
+cat payload.json | jira api -X POST /rest/api/3/issue --input -
+
+# Override headers (repeat -H for additional headers)
+jira api /rest/api/3/project -H 'Accept: application/json'
+```
+
+The method defaults to `GET`, even with `--input`; use `-X` to select another method.
+Request bodies are sent unchanged with `Content-Type: application/json` by default.
+Headers supplied with `-H` override defaults, including authentication; the last value for a header wins.
+Response bodies are written unchanged to stdout, while errors and `--debug` output go to stderr.
+HTTP 4xx and 5xx responses preserve the response body and exit with status `1`.
+
 ### Issue
 Issues are displayed in an interactive table view by default. You can output the results in a plain view using the `--plain` flag.
 
