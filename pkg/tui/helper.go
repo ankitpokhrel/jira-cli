@@ -59,11 +59,8 @@ func getInfoModal() *tview.Modal {
 	return modal
 }
 
-func getActionModal() *primitive.ActionModal {
-	return primitive.NewActionModal().
-		SetBackgroundColor(tcell.ColorSpecial).
-		SetButtonBackgroundColor(tcell.ColorDarkCyan).
-		SetTextColor(tcell.ColorDefault)
+func getChoiceModal() *primitive.ChoiceModal {
+	return primitive.NewChoiceModal()
 }
 
 // IsDumbTerminal checks TERM/WT_SESSION environment variable and returns true if they indicate a dumb terminal.
