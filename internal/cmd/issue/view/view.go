@@ -68,8 +68,7 @@ func view(cmd *cobra.Command, args []string) {
 }
 
 func viewRaw(cmd *cobra.Command, args []string) {
-	debug, err := cmd.Flags().GetBool(flagDebug)
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
 
 	key := cmdutil.GetJiraIssueKey(viper.GetString(configProject), args[0])
 
@@ -86,8 +85,8 @@ func viewRaw(cmd *cobra.Command, args []string) {
 }
 
 func viewPretty(cmd *cobra.Command, args []string) {
-	debug, err := cmd.Flags().GetBool(flagDebug)
-	cmdutil.ExitIfError(err)
+	debug := viper.GetBool("debug")
+	var err error
 
 	var comments uint
 	if cmd.Flags().Changed(flagComments) {
