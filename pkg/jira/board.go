@@ -38,6 +38,30 @@ func (c *Client) BoardSearch(project, name string) (*BoardResult, error) {
 	return c.board(path)
 }
 
+// BoardByID fetches a single board by its ID.
+func (c *Client) BoardByID(boardID int) (*Board, error) {
+	path := fmt.Sprintf("/board/%d", boardID)
+
+	res, err := c.GetV1(context.Background(), path, nil)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, ErrEmptyResponse
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, formatUnexpectedResponse(res)
+	}
+
+	var out Board
+
+	err = json.NewDecoder(res.Body).Decode(&out)
+
+	return &out, err
+}
+
 func (c *Client) board(path string) (*BoardResult, error) {
 	res, err := c.GetV1(context.Background(), path, nil)
 	if err != nil {
