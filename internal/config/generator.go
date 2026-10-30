@@ -65,6 +65,7 @@ type JiraCLIMTLSConfig struct {
 type JiraCLIConfig struct {
 	Installation string
 	Server       string
+	BrowseServer string
 	AuthType     string
 	Login        string
 	Project      string
@@ -80,6 +81,7 @@ type JiraCLIConfigGenerator struct {
 	value  struct {
 		installation string
 		server       string
+		browseServer string
 		version      struct {
 			major, minor, patch int
 		}
@@ -308,6 +310,7 @@ func (c *JiraCLIConfigGenerator) configureServerAndLoginDetails() error {
 	var qs []*survey.Question
 
 	c.value.server = c.usrCfg.Server
+	c.value.browseServer = c.usrCfg.BrowseServer
 	c.value.login = c.usrCfg.Login
 
 	if c.usrCfg.Server == "" {
@@ -755,6 +758,11 @@ func (c *JiraCLIConfigGenerator) write(path string) (string, error) {
 
 	config.Set("installation", c.value.installation)
 	config.Set("server", c.value.server)
+
+	if c.value.browseServer != "" {
+		config.Set("browse_server", c.value.browseServer)
+	}
+
 	config.Set("login", c.value.login)
 	config.Set("project", c.value.project)
 	config.Set("epic", c.value.epic)
