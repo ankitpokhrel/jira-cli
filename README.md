@@ -551,6 +551,26 @@ $ jira issue worklog add ISSUE-1 "2d 3h 30m" --no-input
 $ jira issue worklog add ISSUE-1 "10m" --comment "This is a comment" --no-input
 ```
 
+#### Attachments
+The `attach` command provides sub-commands to manage issue attachments.
+
+```sh
+# Upload one or more files as attachments
+$ jira issue attach upload ISSUE-1 ./screenshot.png ./logs.txt
+
+# List attachments of an issue
+$ jira issue attach list ISSUE-1
+
+# Download specific attachments
+$ jira issue attach download ISSUE-1 10000 10001 --dir ./downloads
+
+# Download all attachments of an issue
+$ jira issue attach download ISSUE-1 --all --dir ./downloads
+
+# Delete attachments from an issue
+$ jira issue attach delete ISSUE-1 10000 10001
+```
+
 ### Epic
 Epics are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing epic issues, you can use all filters available for the issue command.
