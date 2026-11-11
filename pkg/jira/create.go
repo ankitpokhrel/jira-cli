@@ -22,8 +22,8 @@ type CreateRequest struct {
 	Project   string
 	Name      string
 	IssueType string
-	// ParentIssueKey is required when creating a sub-task for classic project.
-	// This can also be used to attach epic for next-gen project.
+	// ParentIssueKey sets the parent for Cloud issues and sub-tasks.
+	// For classic projects on local installations, it sets the epic link.
 	ParentIssueKey   string
 	Summary          string
 	Body             interface{} // string in v1/v2 and adf.ADF in v3
@@ -153,7 +153,7 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 			subtaskField = req.SubtaskField
 		}
 
-		if req.projectType == ProjectTypeNextGen || strings.EqualFold(data.Fields.M.IssueType.Name, subtaskField) {
+		if req.installationType == InstallationTypeCloud || req.projectType == ProjectTypeNextGen || strings.EqualFold(data.Fields.M.IssueType.Name, subtaskField) {
 			data.Fields.M.Parent = &struct {
 				Key string `json:"key"`
 			}{Key: req.ParentIssueKey}
