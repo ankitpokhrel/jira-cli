@@ -117,6 +117,15 @@ func (c *Client) create(req *CreateRequest, ver string) (*CreateResponse, error)
 	return &out, err
 }
 
+func (cr *CreateRequest) usesParentField() bool {
+	subtaskField := IssueTypeSubTask
+	if cr.SubtaskField != "" {
+		subtaskField = cr.SubtaskField
+	}
+
+	return cr.installationType == InstallationTypeCloud || cr.projectType == ProjectTypeNextGen || strings.EqualFold(cr.IssueType, subtaskField)
+}
+
 func (*Client) getRequestData(req *CreateRequest) *createRequest {
 	if req.Labels == nil {
 		req.Labels = []string{}
@@ -148,12 +157,7 @@ func (*Client) getRequestData(req *CreateRequest) *createRequest {
 	}
 
 	if req.ParentIssueKey != "" {
-		subtaskField := IssueTypeSubTask
-		if req.SubtaskField != "" {
-			subtaskField = req.SubtaskField
-		}
-
-		if req.installationType == InstallationTypeCloud || req.projectType == ProjectTypeNextGen || strings.EqualFold(data.Fields.M.IssueType.Name, subtaskField) {
+		if req.usesParentField() {
 			data.Fields.M.Parent = &struct {
 				Key string `json:"key"`
 			}{Key: req.ParentIssueKey}
