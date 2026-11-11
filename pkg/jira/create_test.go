@@ -1,6 +1,7 @@
 package jira
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -177,4 +178,44 @@ func TestCreateEpicNextGen(t *testing.T) {
 
 	_, err = client.CreateV2(&requestData)
 	assert.Error(t, &ErrUnexpectedResponse{}, err)
+}
+
+func TestCreateParentFields(t *testing.T) {
+	for _, tt := range []struct {
+		name, installation, project, issueType, subtaskField, epicField string
+		wantParent                                                      bool
+	}{
+		{"cloud classic", InstallationTypeCloud, ProjectTypeClassic, "Story", "", "", true},
+		{"cloud unspecified project", InstallationTypeCloud, "", "Story", "", "", true},
+		{"cloud legacy epic field", InstallationTypeCloud, ProjectTypeClassic, "Story", "", "customfield_10001", true},
+		{"cloud next gen", InstallationTypeCloud, ProjectTypeNextGen, "Story", "", "", true},
+		{"local epic link", InstallationTypeLocal, ProjectTypeClassic, "Story", "", "customfield_10001", false},
+		{"local subtask", InstallationTypeLocal, ProjectTypeClassic, "Sub-task", "", "", true},
+		{"local custom subtask", InstallationTypeLocal, ProjectTypeClassic, "Child", "Child", "", true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			req := CreateRequest{Project: "TEST", IssueType: tt.issueType, Summary: "child", ParentIssueKey: "PARENT-1", SubtaskField: tt.subtaskField, EpicField: tt.epicField}
+			req.ForInstallationType(tt.installation)
+			req.ForProjectType(tt.project)
+			data := new(Client).getRequestData(&req)
+			body, err := json.Marshal(data)
+			if !assert.NoError(t, err) {
+				return
+			}
+			var payload struct {
+				Fields map[string]interface{} `json:"fields"`
+			}
+			if !assert.NoError(t, json.Unmarshal(body, &payload)) {
+				return
+			}
+			if tt.wantParent {
+				assert.Equal(t, map[string]interface{}{"key": "PARENT-1"}, payload.Fields["parent"])
+				assert.NotContains(t, payload.Fields, "customfield_10001")
+			} else {
+				assert.Equal(t, "PARENT-1", payload.Fields[tt.epicField])
+				assert.NotContains(t, payload.Fields, "parent")
+			}
+			assert.NotContains(t, payload.Fields, "name")
+		})
+	}
 }
