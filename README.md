@@ -356,6 +356,9 @@ $ jira issue edit ISSUE-1 -s"New Bug" -yHigh -lbug -lurgent -CBackend -b"Bug des
 # Use --no-input option to disable interactive prompt
 $ jira issue edit ISSUE-1 -s"New updated summary" --no-input
 
+# Replace the people in a configured Jira Cloud multi-user field with these account IDs
+$ jira issue edit ISSUE-1 --custom "backend-developers=account-id-1,account-id-2" --no-input
+
 # Use minus (-) to remove label, component or fixVersion
 # For instance, to edit issue to
 #   - remove label p2, component FE, fixVersion v1.0
