@@ -5,6 +5,7 @@ const (
 	customFieldFormatArray   = "array"
 	customFieldFormatNumber  = "number"
 	customFieldFormatProject = "project"
+	customFieldFormatUser    = "user"
 )
 
 type customField map[string]interface{}
@@ -38,4 +39,12 @@ type customFieldTypeProject struct {
 
 type customFieldTypeProjectSet struct {
 	Set customFieldTypeProject `json:"set"`
+}
+
+type customFieldTypeUser struct {
+	AccountID string `json:"accountId"`
+}
+
+type customFieldTypeUsersSet struct {
+	Set []customFieldTypeUser `json:"set"`
 }
