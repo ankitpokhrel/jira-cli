@@ -3,6 +3,8 @@ package jira
 
 import (
 	"context"
+	"errors"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -234,4 +236,78 @@ func TestCFAccessRoundTripper(t *testing.T) {
 	assert.Same(t, wantResponse, resp)
 
 	_ = resp.Body.Close()
+}
+
+// isTimeout reports whether err is a network timeout.
+func isTimeout(err error) bool {
+	var netErr net.Error
+	return errors.As(err, &netErr) && netErr.Timeout()
+}
+
+func TestResponseTimeout(t *testing.T) {
+	// The server accepts the request and then never answers.
+	stalled := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
+		<-stalled
+	}))
+	defer server.Close()
+	defer close(stalled)
+
+	client := NewClient(
+		Config{Server: server.URL},
+		WithTimeout(3*time.Second),
+		WithResponseTimeout(200*time.Millisecond),
+	)
+
+	start := time.Now()
+	resp, err := client.Get(context.Background(), "/myself", nil)
+	if resp != nil {
+		_ = resp.Body.Close()
+	}
+
+	assert.Error(t, err)
+	assert.True(t, isTimeout(err), "expected a timeout error, got: %v", err)
+	assert.Less(t, time.Since(start), 3*time.Second)
+}
+
+func TestTLSHandshakeTimeout(t *testing.T) {
+	// The listener accepts TCP connections and never starts a TLS handshake.
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	assert.NoError(t, err)
+
+	var conns []net.Conn
+	accepted := make(chan struct{})
+	go func() {
+		defer close(accepted)
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				return
+			}
+			conns = append(conns, conn)
+		}
+	}()
+	defer func() {
+		_ = listener.Close()
+		<-accepted
+		for _, conn := range conns {
+			_ = conn.Close()
+		}
+	}()
+
+	client := NewClient(
+		Config{Server: "https://" + listener.Addr().String()},
+		WithTimeout(200*time.Millisecond),
+		WithInsecureTLS(true),
+	)
+
+	start := time.Now()
+	resp, err := client.Get(context.Background(), "/myself", nil)
+	if resp != nil {
+		_ = resp.Body.Close()
+	}
+
+	assert.Error(t, err)
+	assert.True(t, isTimeout(err), "expected a timeout error, got: %v", err)
+	assert.Less(t, time.Since(start), 3*time.Second)
 }

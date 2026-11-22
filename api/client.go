@@ -11,7 +11,14 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
 )
 
-const clientTimeout = 15 * time.Second
+const (
+	// clientTimeout limits the TCP connect and the TLS handshake.
+	clientTimeout = 15 * time.Second
+	// responseTimeout limits the wait for a response once the request
+	// is sent. It is larger than clientTimeout because some Jira
+	// endpoints are slow to answer.
+	responseTimeout = 60 * time.Second
+)
 
 var jiraClient *jira.Client
 
@@ -52,6 +59,7 @@ func Client(config jira.Config) *jira.Client {
 	jiraClient = jira.NewClient(
 		config,
 		jira.WithTimeout(clientTimeout),
+		jira.WithResponseTimeout(responseTimeout),
 		jira.WithInsecureTLS(*config.Insecure),
 	)
 
