@@ -127,7 +127,10 @@ type Client struct {
 	authType  *AuthType
 	token     string
 	timeout   time.Duration
-	debug     bool
+	// responseTimeout is the time to wait for response headers
+	// after the request is written. Zero means no limit.
+	responseTimeout time.Duration
+	debug           bool
 }
 
 // ClientFunc decorates option for client.
@@ -156,6 +159,11 @@ func NewClient(c Config, opts ...ClientFunc) *Client {
 		DialContext: (&net.Dialer{
 			Timeout: client.timeout,
 		}).DialContext,
+		// The dialer timeout only covers the TCP connect. Without the
+		// limits below, a server that accepts the connection and then
+		// stops responding makes the request wait forever.
+		TLSHandshakeTimeout:   client.timeout,
+		ResponseHeaderTimeout: client.responseTimeout,
 	}
 
 	if c.AuthType != nil && *c.AuthType == AuthTypeMTLS {
@@ -223,6 +231,14 @@ func (rt *cfAccessRoundTripper) RoundTrip(req *http.Request) (*http.Response, er
 func WithTimeout(to time.Duration) ClientFunc {
 	return func(c *Client) {
 		c.timeout = to
+	}
+}
+
+// WithResponseTimeout is a functional opt to limit the time spent waiting
+// for the server to start responding once the request has been sent.
+func WithResponseTimeout(to time.Duration) ClientFunc {
+	return func(c *Client) {
+		c.responseTimeout = to
 	}
 }
 
