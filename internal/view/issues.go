@@ -55,11 +55,6 @@ func (l *IssueList) Render() error {
 		return l.renderPlain(w, delimeter)
 	}
 
-	renderer, err := MDRenderer()
-	if err != nil {
-		return err
-	}
-
 	data := l.data()
 	if l.FooterText == "" {
 		l.FooterText = fmt.Sprintf("Showing %d results for project %q", len(data)-1, l.Project)
@@ -68,23 +63,10 @@ func (l *IssueList) Render() error {
 	view := tui.NewTable(
 		tui.WithTableStyle(l.Display.TableStyle),
 		tui.WithTableFooterText(l.FooterText),
-		tui.WithTableHelpText(tableHelpText),
+		tui.WithTableHelpText(issueTableHelpText),
 		tui.WithSelectedFunc(navigate(l.Server)),
-		tui.WithViewModeFunc(func(r, c int, _ any) (func() any, func(any) (string, error)) {
-			dataFn := func() any {
-				ci := data.GetIndex(fieldKey)
-				iss, _ := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(l.Display.Comments))
-				return iss
-			}
-			renderFn := func(i any) (string, error) {
-				iss := Issue{
-					Server:  l.Server,
-					Data:    i.(*jira.Issue),
-					Options: IssueOption{NumComments: l.Display.Comments},
-				}
-				return iss.RenderedOut(renderer)
-			}
-			return dataFn, renderFn
+		tui.WithDetailViewFunc(func(r, _ int, _ any) tui.DetailView {
+			return l.detailView(api.DefaultClient(false), data.Get(r, data.GetIndex(fieldKey)))
 		}),
 		tui.WithCopyFunc(copyURL(l.Server)),
 		tui.WithCopyKeyFunc(copyKey()),
@@ -133,6 +115,39 @@ func (l *IssueList) Render() error {
 	)
 
 	return view.Paint(data)
+}
+
+func (l *IssueList) detailView(client *jira.Client, key string) tui.DetailView {
+	return tui.DetailView{
+		Title: key,
+		Load: func() (string, error) {
+			// Reloads can overlap; each worker needs its own stateful renderer.
+			renderer, err := MDRenderer()
+			if err != nil {
+				return "", fmt.Errorf("initialize issue renderer: %w", err)
+			}
+			iss, err := api.ProxyGetIssue(client, key, issue.NewNumCommentsFilter(l.Display.Comments))
+			if err != nil {
+				return "", fmt.Errorf("load issue %s: %w", key, err)
+			}
+			detail := Issue{
+				Server:  l.Server,
+				Data:    iss,
+				Options: IssueOption{NumComments: l.Display.Comments},
+			}
+			out, err := detail.RenderedOut(renderer)
+			if err != nil {
+				return "", fmt.Errorf("render issue %s: %w", key, err)
+			}
+			return out, nil
+		},
+		SubmitComment: func(body string) error {
+			if err := client.AddIssueComment(key, body, false); err != nil {
+				return fmt.Errorf("add comment to %s: %w", key, err)
+			}
+			return nil
+		},
+	}
 }
 
 // renderPlain renders the issue in plain view.

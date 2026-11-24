@@ -58,6 +58,25 @@ const (
 * [yellow]CTRL + k[default] to copy issue key to the system clipboard
 * [yellow]q / ESC / CTRL + c[default] to quit the app
 * [yellow]?[default] to view this help page`
+
+	issueTableHelpText = tableHelpText + `
+
+IN ISSUE DETAILS
+----------------
+* [yellow]c[default] to write a multiline comment
+* [yellow]CTRL + r / F5[default] to reload the ticket
+* [yellow]q / ESC[default] to return to the list
+
+IN THE COMMENT EDITOR
+---------------------
+* [yellow]ENTER[default] to insert a newline
+* [yellow]CTRL + s[default] or the Post button to submit
+* [yellow]SHIFT + ENTER[default] to submit if supported by your terminal
+* [yellow]TAB / SHIFT + TAB[default] to move between the editor and buttons
+* [yellow]ESC / CTRL + c[default] to cancel (confirms before discarding a draft)
+
+If SHIFT + ENTER is indistinguishable from ENTER, use CTRL + s or Post.
+Optional terminal mappings are documented in the README.`
 )
 
 // ValidIssueColumns returns valid columns for issue list.

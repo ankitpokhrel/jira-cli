@@ -162,6 +162,27 @@ The lists are displayed in an interactive UI by default.
 - Press `q` / `ESC` / `CTRL + c` to quit.
 - Press `?` to open the help window.
 
+#### Comment from ticket details
+
+In `jira issue list`, press `v` to open the selected ticket inside the terminal UI, then press `c` to write a comment.
+The ticket list's `c` shortcut still copies the issue URL. Standalone `jira issue view` and explorer views continue to use the configured pager.
+
+- In ticket details, use arrow keys or Page Up / Page Down to scroll, `CTRL + r` / `F5` to reload, and `q` / `ESC` to return to the same list position.
+- In the comment editor, `ENTER` inserts a newline; multiline paste is supported.
+- Press `SHIFT + ENTER` to post when your terminal sends a distinct supported key event. Otherwise use `CTRL + s` or the **Post** button. `TAB` / `SHIFT + TAB` moves between the editor and buttons.
+- Press `ESC`, `CTRL + c`, or **Cancel** to return to the ticket. A nonempty draft requires confirmation before it is discarded.
+- Comments use the same Markdown conversion and default visibility as `jira issue comment add` without `--internal`.
+- While posting, the draft is locked to prevent duplicate submission. A failed post retains the draft for an explicit retry. If posting succeeds but reloading fails, the UI reports that the comment was posted; do not repost it.
+
+Many terminals send the same bytes for `ENTER` and `SHIFT + ENTER`; the application cannot distinguish those keys in that case.
+You can optionally configure your terminal to send Ctrl-S (the literal byte `0x13`) for Shift+Enter without changing ordinary Enter:
+
+- **Ghostty:** add `keybind = shift+enter=text:\x13` to your [Ghostty configuration](https://ghostty.org/docs/config/keybind).
+- **iTerm2:** in **Settings > Profiles > Keys > Key Mappings**, add **Shift+Enter**, select **Send Hex Code**, and enter `0x13`. See [iTerm2 key mappings](https://iterm2.com/documentation-preferences-profiles-keys.html). Do not use **Send Text** with the printable characters `\x13`.
+- **macOS Terminal:** use `CTRL + s` or **Post**; Apple's documented keyboard settings do not establish a supported Shift+Enter-to-`0x13` mapping.
+
+These optional mappings apply to other programs in the same terminal profile too. JiraCLI does not change your terminal settings.
+
 ### Resources
 - [FAQs](https://github.com/ankitpokhrel/jira-cli/discussions/categories/faqs)
 - [Introduction and Motivation](https://medium.com/@ankitpokhrel/introducing-jira-cli-the-missing-command-line-tool-for-atlassian-jira-fe44982cc1de)

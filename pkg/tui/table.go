@@ -102,6 +102,9 @@ type Table struct {
 	refreshFunc  RefreshFunc
 	copyFunc     CopyFunc
 	copyKeyFunc  CopyKeyFunc
+
+	detailViewFunc DetailViewFunc
+	detail         *tableDetail
 }
 
 // TableOption is a functional option to wrap table properties.
@@ -186,6 +189,13 @@ func WithViewModeFunc(fn ViewModeFunc) TableOption {
 	}
 }
 
+// WithDetailViewFunc opts into an in-application detail view when the user presses 'v'.
+func WithDetailViewFunc(fn DetailViewFunc) TableOption {
+	return func(t *Table) {
+		t.detailViewFunc = fn
+	}
+}
+
 // WithMoveFunc sets a func that is triggered when an action button is pressed.
 func WithMoveFunc(fn MoveFunc) TableOption {
 	return func(t *Table) {
@@ -228,6 +238,11 @@ func (t *Table) Paint(data TableData) error {
 	}
 	t.data = data
 	t.render(data)
+	if t.detailViewFunc != nil {
+		t.screen.EnablePaste(true)
+		restoreCapture := t.captureComposerInterrupts()
+		defer restoreCapture()
+	}
 	return t.screen.Paint(t.painter)
 }
 
@@ -300,26 +315,23 @@ func (t *Table) initTable() {
 					r, c := t.view.GetSelection()
 					t.copyFunc(r, c, t.data)
 				case 'v':
+					if t.detailViewFunc != nil {
+						t.openDetail()
+						return nil
+					}
 					if t.viewModeFunc == nil {
 						break
 					}
 					r, c := t.view.GetSelection()
-
+					data := t.data
+					t.painter.ShowPage("secondary")
 					go func() {
-						func() {
-							t.painter.ShowPage("secondary")
-							defer t.painter.HidePage("secondary")
-
-							dataFn, renderFn := t.viewModeFunc(r, c, t.data)
-
-							out, err := renderFn(dataFn())
-							if err == nil {
-								t.screen.Suspend(func() { _ = PagerOut(out) })
-							}
-						}()
-
-						// Refresh the screen.
-						t.screen.Draw()
+						dataFn, renderFn := t.viewModeFunc(r, c, data)
+						out, err := renderFn(dataFn())
+						if err == nil {
+							t.screen.Suspend(func() { _ = PagerOut(out) })
+						}
+						t.screen.QueueUpdateDraw(func() { t.painter.HidePage("secondary") })
 					}()
 				case 'm':
 					if t.moveFunc == nil {

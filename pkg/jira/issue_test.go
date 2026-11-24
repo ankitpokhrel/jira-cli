@@ -1,6 +1,8 @@
 package jira
 
 import (
+	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
+	"github.com/ankitpokhrel/jira-cli/pkg/md"
 )
 
 const (
@@ -520,38 +523,61 @@ func TestGetLinkID(t *testing.T) {
 }
 
 func TestAddIssueComment(t *testing.T) {
-	var unexpectedStatusCode bool
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "POST", r.Method)
-		assert.Equal(t, "/rest/api/2/issue/TEST-1/comment", r.URL.Path)
-		assert.Equal(t, "application/json", r.Header.Get("Accept"))
-		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
-
-		actualBody := new(strings.Builder)
-		_, _ = io.Copy(actualBody, r.Body)
-
-		expectedBody := `{"body":"comment","properties":[{"key":"sd.public.comment","value":{"internal":false}}]}`
-
-		assert.Equal(t, expectedBody, actualBody.String())
-
-		if unexpectedStatusCode {
-			w.WriteHeader(400)
-		} else {
-			w.WriteHeader(201)
-		}
-	}))
-	defer server.Close()
-
-	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
-
-	err := client.AddIssueComment("TEST-1", "comment", false)
-	assert.NoError(t, err)
-
-	unexpectedStatusCode = true
-
-	err = client.AddIssueComment("TEST-1", "comment", false)
-	assert.Error(t, &ErrUnexpectedResponse{}, err)
+	for _, tc := range []struct {
+		name     string
+		body     string
+		internal bool
+		status   int
+	}{
+		{name: "plain", body: "comment", status: http.StatusCreated},
+		{name: "multiline", body: "First line\nSecond line\n\nThird paragraph", status: http.StatusCreated},
+		{name: "markdown", body: "# Heading\n\n**Bold**\n\n- first\n- second", status: http.StatusCreated},
+		{name: "internal", body: "Internal\n\ncomment", internal: true, status: http.StatusCreated},
+		{name: "bad request", body: "comment", status: http.StatusBadRequest},
+		{name: "forbidden", body: "comment", status: http.StatusForbidden},
+		{name: "server error", body: "comment", status: http.StatusInternalServerError},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodPost || r.URL.Path != "/rest/api/2/issue/TEST-1/comment" {
+					t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+				}
+				for _, header := range []string{"Accept", "Content-Type"} {
+					if got := r.Header.Get(header); got != "application/json" {
+						t.Errorf("%s = %q, want application/json", header, got)
+					}
+				}
+				var request issueCommentRequest
+				if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+					t.Errorf("decode comment: %v", err)
+				}
+				if want := md.ToJiraMD(tc.body); request.Body != want {
+					t.Errorf("body = %q, want converted Markdown %q", request.Body, want)
+				}
+				if len(request.Properties) != 1 || request.Properties[0].Key != "sd.public.comment" ||
+					request.Properties[0].Value.Internal != tc.internal {
+					t.Errorf("unexpected comment visibility: %+v", request.Properties)
+				}
+				w.WriteHeader(tc.status)
+			}))
+			defer server.Close()
+			client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+			err := client.AddIssueComment("TEST-1", tc.body, tc.internal)
+			if tc.status == http.StatusCreated {
+				if err != nil {
+					t.Fatalf("add comment: %v", err)
+				}
+				return
+			}
+			var responseErr *ErrUnexpectedResponse
+			if !errors.As(err, &responseErr) {
+				t.Fatalf("error = %v, want unexpected response", err)
+			}
+			if responseErr.StatusCode != tc.status {
+				t.Errorf("status = %d, want %d", responseErr.StatusCode, tc.status)
+			}
+		})
+	}
 }
 
 func TestAddIssueWorklog(t *testing.T) {
