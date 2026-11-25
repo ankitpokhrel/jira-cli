@@ -35,12 +35,15 @@ func (c *Client) GetIssue(key string, opts ...filter.Filter) (*Issue, error) {
 
 	iss.Fields.Description = ifaceToADF(iss.Fields.Description)
 
-	total := iss.Fields.Comment.Total
+	available := len(iss.Fields.Comment.Comments)
 	limit := filter.Collection(opts).GetInt(issue.KeyIssueNumComments)
-	if limit > total {
-		limit = total
+	if limit > available {
+		limit = available
 	}
-	for i := total - 1; i >= total-limit; i-- {
+	if limit < 0 {
+		limit = 0
+	}
+	for i := available - 1; i >= available-limit; i-- {
 		body := iss.Fields.Comment.Comments[i].Body
 		iss.Fields.Comment.Comments[i].Body = ifaceToADF(body)
 	}

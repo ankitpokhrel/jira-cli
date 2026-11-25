@@ -162,6 +162,57 @@ The lists are displayed in an interactive UI by default.
 - Press `q` / `ESC` / `CTRL + c` to quit.
 - Press `?` to open the help window.
 
+#### Open another ticket from details
+
+In the in-app ticket details opened with `v`, press `/` to answer **Which ticket would you like to view?**
+Enter a full key such as `ISSUE-123`, or a positive number to use the currently viewed ticket's project, then press `ENTER`.
+Keys are case-insensitive; surrounding spaces are ignored. Full keys can open tickets in another project or outside the current list.
+Ticket keys and numbers are supported, not URLs or full-text/JQL searches; leading zeros are rejected.
+
+The new ticket opens in the same TUI with the existing comment/thread settings. Its title, content, comment/reply actions, and reply targets switch together only after loading succeeds.
+A failed lookup leaves the current ticket intact and the prompt editable. `ESC` / `CTRL + c` cancels the prompt, including a pending lookup, without closing the detail view.
+Cancelled or superseded results cannot replace the active ticket. The underlying list selection and scroll position are preserved.
+`q` / `ESC` from the detail view still returns to that list; there is no ticket-history stack.
+
+`/` remains ordinary text while writing a comment or reply. Standalone `jira issue view` continues to use a pager and does not handle this shortcut.
+
+#### Experimental native comment threads (Jira Cloud)
+
+Native threaded comments are opt-in for standalone issue views and the in-app ticket details opened with `v` from an issue list:
+
+```sh
+jira issue list --comment-threads --comments 5
+jira issue view ISSUE-1 --comment-threads --comments 5
+```
+
+With `--comment-threads`, `--comments N` shows **N complete root threads and all their replies**, not N individual comments.
+Roots are newest-first; replies within each thread are oldest-first. `--comments 0` hides comments and skips fetching threads.
+Without the flag, the existing flat-comment behavior is unchanged. Plain/CSV issue-list tables are unaffected; `--raw` cannot be combined with `--comment-threads`.
+
+Thread display uses read-only native GraphQL private persisted operations, which may change without notice.
+Initially, only Jira Cloud with API-token Basic auth is verified and supported; Jira Server/local installations and other authentication types return a clear error.
+It uses the same configured credentials as other commands, without HAR files or browser cookies.
+If thread retrieval or relationship coverage fails, the command displays an error rather than guessing native parent/reply relationships or falling back to flat comments.
+The `c` comment composer still posts a **top-level comment**. In the in-app ticket details, `r` selects a thread for a native reply.
+
+#### Reply to a thread
+
+With `--comment-threads` and a positive `--comments` limit, press `r` in the ticket details opened with `v`.
+Choose one of the displayed root threads using the arrow keys and `ENTER`, then write your reply in the existing multiline editor.
+The picker shows the thread ID, author, timestamp, and a short preview; the reply editor identifies the selected thread and issue.
+`CTRL + s`, supported `SHIFT + ENTER`, or **Post** sends the reply. `TAB` still inserts text, `SHIFT + TAB` focuses Post, and `ESC` / `CTRL + c` cancels safely.
+Cancelling the picker returns to the same detail position. Standalone `jira issue view` still uses a pager and does not handle the `r` shortcut.
+
+Reply posting uses a separate experimental mutation only after you explicitly submit the draft. It never falls back to a new top-level comment.
+Initially, replies are limited to unrestricted threads in Software/Business projects; restricted, internal, service-management, or unknown contexts are rejected before writing.
+Reply drafts are converted to ADF, preserving line breaks, tabs, and common Markdown such as emphasis, links, lists, quotes, code blocks, and basic tables.
+Unsupported formatting, including HTML, images, and some complex nesting, is rejected without sending rather than silently discarded. Reply links must use HTTP, HTTPS, or mailto.
+A reply draft is limited to 256 KiB of Markdown source; Jira may impose a tighter limit.
+
+Successful posting requires Jira to return a new comment ID and a read-back to confirm its parent thread and visibility.
+If posting or confirmation has an uncertain outcome, the draft and target are retained: check the thread before retrying, because the reply may already exist.
+Replies are never retried automatically. A confirmed reply followed by a failed detail reload is reported as posted; do not repost it.
+
 #### Comment from ticket details
 
 In `jira issue list`, press `v` to open the selected ticket inside the terminal UI, then press `c` to write a comment.
@@ -169,7 +220,7 @@ The ticket list's `c` shortcut still copies the issue URL. Standalone `jira issu
 
 - In ticket details, use arrow keys or Page Up / Page Down to scroll, `CTRL + r` / `F5` to reload, and `q` / `ESC` to return to the same list position.
 - In the comment editor, `ENTER` inserts a newline; multiline paste is supported.
-- Press `SHIFT + ENTER` to post when your terminal sends a distinct supported key event. Otherwise use `CTRL + s` or the **Post** button. `TAB` / `SHIFT + TAB` moves between the editor and buttons.
+- Press `TAB` in the editor to insert a tab character. `SHIFT + TAB` moves focus backward; from the editor it focuses **Post**, and `ENTER` activates the focused button. `CTRL + s` posts directly.
 - Press `ESC`, `CTRL + c`, or **Cancel** to return to the ticket. A nonempty draft requires confirmation before it is discarded.
 - Comments use the same Markdown conversion and default visibility as `jira issue comment add` without `--internal`.
 - While posting, the draft is locked to prevent duplicate submission. A failed post retains the draft for an explicit retry. If posting succeeds but reloading fails, the UI reports that the comment was posted; do not repost it.

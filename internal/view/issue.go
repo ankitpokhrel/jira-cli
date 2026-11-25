@@ -20,8 +20,9 @@ import (
 const defaultSummaryLength = 73 // +1 to take ellipsis '…' into account.
 
 type fragment struct {
-	Body  string
-	Parse bool
+	Body   string
+	Parse  bool
+	Indent int
 }
 
 func newBlankFragment(n int) fragment {
@@ -36,13 +37,15 @@ func newBlankFragment(n int) fragment {
 }
 
 type issueComment struct {
-	meta string
-	body string
+	meta  string
+	body  string
+	depth int
 }
 
 // IssueOption is filtering options for an issue.
 type IssueOption struct {
-	NumComments uint
+	NumComments    uint
+	CommentThreads bool
 }
 
 // Issue is a list view for issues.
@@ -74,15 +77,16 @@ func (i Issue) RenderedOut(renderer *glamour.TermRenderer) (string, error) {
 	var res strings.Builder
 
 	for _, p := range i.fragments() {
+		out := p.Body
 		if p.Parse {
-			out, err := renderer.Render(p.Body)
+			var err error
+			out, err = renderer.Render(p.Body)
 			if err != nil {
 				return "", err
 			}
-			res.WriteString(out)
-		} else {
-			res.WriteString(p.Body)
 		}
+		// Indenting Markdown before rendering turns nested reply paragraphs into code blocks.
+		res.WriteString(indentComment(out, p.Indent))
 	}
 
 	return res.String(), nil
@@ -109,11 +113,11 @@ func (i Issue) String() string {
 		fmt.Fprintf(&s, "\n\n%s\n\n%s\n", i.separator("Linked Issues"), i.linkedIssues())
 	}
 	total := i.Data.Fields.Comment.Total
-	if total > 0 && i.Options.NumComments > 0 {
+	if (total > 0 || (i.Options.CommentThreads && len(i.Data.Fields.Comment.Comments) > 0)) && i.Options.NumComments > 0 {
 		sep := fmt.Sprintf("%d Comments", total)
 		fmt.Fprintf(&s, "\n\n%s", i.separator(sep))
 		for _, comment := range i.comments() {
-			fmt.Fprintf(&s, "\n\n%s\n\n%s\n", comment.meta, comment.body)
+			fmt.Fprintf(&s, "\n\n%s\n\n%s\n", indentComment(comment.meta, comment.depth), indentComment(comment.body, comment.depth))
 		}
 	}
 	s.WriteString(i.footer())
@@ -159,7 +163,7 @@ func (i Issue) fragments() []fragment {
 		)
 	}
 
-	if i.Data.Fields.Comment.Total > 0 && i.Options.NumComments > 0 {
+	if (i.Data.Fields.Comment.Total > 0 || (i.Options.CommentThreads && len(i.Data.Fields.Comment.Comments) > 0)) && i.Options.NumComments > 0 {
 		scraps = append(
 			scraps,
 			newBlankFragment(1),
@@ -169,9 +173,9 @@ func (i Issue) fragments() []fragment {
 		for _, comment := range i.comments() {
 			scraps = append(
 				scraps,
-				fragment{Body: comment.meta},
+				fragment{Body: comment.meta, Indent: comment.depth},
 				newBlankFragment(1),
-				fragment{Body: comment.body, Parse: true},
+				fragment{Body: comment.body, Parse: true, Indent: comment.depth},
 			)
 		}
 	}
@@ -372,14 +376,17 @@ func (i Issue) linkedIssues() string {
 }
 
 func (i Issue) comments() []issueComment {
-	total := i.Data.Fields.Comment.Total
+	if i.Options.CommentThreads {
+		return i.threadedComments()
+	}
+	total := min(max(i.Data.Fields.Comment.Total, 0), len(i.Data.Fields.Comment.Comments))
 	comments := make([]issueComment, 0, total)
 
 	if total == 0 {
 		return comments
 	}
 
-	limit := min(int(i.Options.NumComments), total)
+	limit := int(min(i.Options.NumComments, uint(total)))
 
 	for idx := total - 1; idx >= total-limit; idx-- {
 		c := i.Data.Fields.Comment.Comments[idx]
@@ -401,7 +408,7 @@ func (i Issue) comments() []issueComment {
 			coloredOut(authorName(), color.FgWhite, color.Bold),
 			coloredOut(cmdutil.FormatDateTimeHuman(c.Created, jira.RFC3339), color.FgWhite, color.Bold),
 		)
-		if idx == total-1 {
+		if idx == total-1 && total == i.Data.Fields.Comment.Total {
 			meta += fmt.Sprintf(" • %s", coloredOut("Latest comment", color.FgCyan, color.Bold))
 		}
 		comments = append(comments, issueComment{
@@ -416,8 +423,26 @@ func (i Issue) comments() []issueComment {
 func (i Issue) footer() string {
 	var out strings.Builder
 
-	nc := int(i.Options.NumComments)
-	if i.Data.Fields.Comment.Total > 0 && nc > 0 && nc < i.Data.Fields.Comment.Total {
+	if i.Options.CommentThreads {
+		if i.Display.Plain {
+			out.WriteString("\n")
+		}
+		if i.Options.NumComments == 0 {
+			// The API may skip loading the thread map when comments are disabled.
+			fmt.Fprintf(&out, "%s\n", gray("Showing 0 threads (--comments 0; thread total not loaded)"))
+		} else {
+			threads := selectCommentThreads(i.Data.Fields.Comment.Comments, i.Options.NumComments)
+			fmt.Fprintf(&out, "%s\n", gray(fmt.Sprintf("Showing %d of %d threads", threads.shown, threads.total)))
+			if threads.invalid > 0 {
+				fmt.Fprintf(&out, "%s\n", gray(fmt.Sprintf("%d unthreaded comments with invalid thread data", threads.invalid)))
+			}
+			if threads.shown < threads.total {
+				fmt.Fprintf(&out, "%s\n", gray("Use --comments <limit> with `jira issue view` to load more threads"))
+			}
+		}
+	}
+	nc := i.Options.NumComments
+	if !i.Options.CommentThreads && i.Data.Fields.Comment.Total > 0 && nc > 0 && nc < uint(i.Data.Fields.Comment.Total) {
 		if i.Display.Plain {
 			out.WriteString("\n")
 		}
@@ -440,7 +465,12 @@ func (i Issue) renderPlain(w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	out, err := r.Render(i.String())
+	var out string
+	if i.Options.CommentThreads {
+		out, err = i.RenderedOut(r)
+	} else {
+		out, err = r.Render(i.String())
+	}
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package view
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -15,16 +16,17 @@ import (
 
 // DisplayFormat is a issue display type.
 type DisplayFormat struct {
-	Plain        bool
-	Delimiter    string
-	CSV          bool
-	NoHeaders    bool
-	NoTruncate   bool
-	Columns      []string
-	FixedColumns uint
-	Comments     uint
-	TableStyle   tui.TableStyle
-	Timezone     string
+	Plain          bool
+	Delimiter      string
+	CSV            bool
+	NoHeaders      bool
+	NoTruncate     bool
+	Columns        []string
+	FixedColumns   uint
+	Comments       uint
+	CommentThreads bool
+	TableStyle     tui.TableStyle
+	Timezone       string
 }
 
 // IssueList is a list view for issues.
@@ -55,6 +57,7 @@ func (l *IssueList) Render() error {
 		return l.renderPlain(w, delimeter)
 	}
 
+	newRenderer := newMDRendererFactory()
 	data := l.data()
 	if l.FooterText == "" {
 		l.FooterText = fmt.Sprintf("Showing %d results for project %q", len(data)-1, l.Project)
@@ -66,7 +69,7 @@ func (l *IssueList) Render() error {
 		tui.WithTableHelpText(issueTableHelpText),
 		tui.WithSelectedFunc(navigate(l.Server)),
 		tui.WithDetailViewFunc(func(r, _ int, _ any) tui.DetailView {
-			return l.detailView(api.DefaultClient(false), data.Get(r, data.GetIndex(fieldKey)))
+			return l.detailView(api.DefaultClient(false), data.Get(r, data.GetIndex(fieldKey)), newRenderer)
 		}),
 		tui.WithCopyFunc(copyURL(l.Server)),
 		tui.WithCopyKeyFunc(copyKey()),
@@ -117,29 +120,42 @@ func (l *IssueList) Render() error {
 	return view.Paint(data)
 }
 
-func (l *IssueList) detailView(client *jira.Client, key string) tui.DetailView {
-	return tui.DetailView{
+func (l *IssueList) detailView(client *jira.Client, key string, newRenderer mdRendererFactory) tui.DetailView {
+	detail := tui.DetailView{
 		Title: key,
-		Load: func() (string, error) {
-			// Reloads can overlap; each worker needs its own stateful renderer.
-			renderer, err := MDRenderer()
+		OpenTicket: func(input string) (tui.DetailView, error) {
+			nextKey, err := normalizeNavigationKey(input, key)
 			if err != nil {
-				return "", fmt.Errorf("initialize issue renderer: %w", err)
+				return tui.DetailView{}, err
 			}
-			iss, err := api.ProxyGetIssue(client, key, issue.NewNumCommentsFilter(l.Display.Comments))
+			return l.detailView(client, nextKey, newRenderer), nil
+		},
+		Load: func() (tui.DetailContent, error) {
+			options := IssueOption{NumComments: l.Display.Comments, CommentThreads: l.Display.CommentThreads}
+			// Reloads can overlap; each worker needs its own stateful renderer.
+			renderer, err := newRenderer()
 			if err != nil {
-				return "", fmt.Errorf("load issue %s: %w", key, err)
+				return tui.DetailContent{}, fmt.Errorf("initialize issue renderer: %w", err)
+			}
+			getIssue := api.ProxyGetIssue
+			if options.CommentThreads {
+				getIssue = api.ProxyGetIssueWithCommentThreads
+			}
+			iss, err := getIssue(client, key, issue.NewNumCommentsFilter(options.NumComments))
+			if err != nil {
+				return tui.DetailContent{}, fmt.Errorf("load issue %s: %w", key, err)
 			}
 			detail := Issue{
 				Server:  l.Server,
 				Data:    iss,
-				Options: IssueOption{NumComments: l.Display.Comments},
+				Options: options,
 			}
 			out, err := detail.RenderedOut(renderer)
 			if err != nil {
-				return "", fmt.Errorf("render issue %s: %w", key, err)
+				return tui.DetailContent{}, fmt.Errorf("render issue %s: %w", key, err)
 			}
-			return out, nil
+			targets, unavailable := detail.replyTargets()
+			return tui.DetailContent{Text: out, ReplyTargets: targets, ReplyUnavailable: unavailable}, nil
 		},
 		SubmitComment: func(body string) error {
 			if err := client.AddIssueComment(key, body, false); err != nil {
@@ -148,6 +164,15 @@ func (l *IssueList) detailView(client *jira.Client, key string) tui.DetailView {
 			return nil
 		},
 	}
+	if l.Display.CommentThreads && l.Display.Comments > 0 {
+		detail.SubmitReply = func(rootID, body string) error {
+			if err := client.ReplyToIssueThread(context.Background(), key, rootID, body); err != nil {
+				return fmt.Errorf("reply to native thread on %s: %w", key, err)
+			}
+			return nil
+		}
+	}
+	return detail
 }
 
 // renderPlain renders the issue in plain view.

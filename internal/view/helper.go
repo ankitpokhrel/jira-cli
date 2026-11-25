@@ -12,9 +12,12 @@ import (
 
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/glamour/styles"
 	"github.com/fatih/color"
 	"github.com/mgutz/ansi"
+	"github.com/muesli/termenv"
 	"github.com/rivo/tview"
+	"golang.org/x/term"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/browser"
@@ -63,16 +66,24 @@ const (
 
 IN ISSUE DETAILS
 ----------------
-* [yellow]c[default] to write a multiline comment
+* [yellow]/[default] to enter another ticket key (or a number in the current project)
+* [yellow]c[default] to write a top-level multiline comment
+* [yellow]r[default] to choose a displayed native thread and reply
 * [yellow]CTRL + r / F5[default] to reload the ticket
 * [yellow]q / ESC[default] to return to the list
+
+Opt in with --comment-threads (experimental Jira Cloud, API-token Basic auth).
+--comments N then shows N complete root threads with all replies; 0 hides comments.
+Roots are newest-first, replies oldest-first. c creates top-level comments; r replies to a chosen thread.
+Replies initially support unrestricted Software/Business threads only.
 
 IN THE COMMENT EDITOR
 ---------------------
 * [yellow]ENTER[default] to insert a newline
 * [yellow]CTRL + s[default] or the Post button to submit
 * [yellow]SHIFT + ENTER[default] to submit if supported by your terminal
-* [yellow]TAB / SHIFT + TAB[default] to move between the editor and buttons
+* [yellow]TAB[default] to insert a tab character in the comment
+* [yellow]SHIFT + TAB[default] to focus Post (press ENTER to submit)
 * [yellow]ESC / CTRL + c[default] to cancel (confirms before discarding a draft)
 
 If SHIFT + ENTER is indistinguishable from ENTER, use CTRL + s or Post.
@@ -114,6 +125,28 @@ func MDRenderer() (*glamour.TermRenderer, error) {
 		glamour.WithEnvironmentConfig(),
 		glamour.WithWordWrap(wordWrap),
 	)
+}
+
+type mdRendererFactory func() (*glamour.TermRenderer, error)
+
+func newMDRendererFactory() mdRendererFactory {
+	style := os.Getenv("GLAMOUR_STYLE")
+	if style == "" || style == styles.AutoStyle {
+		style = styles.NoTTYStyle
+		if term.IsTerminal(int(os.Stdout.Fd())) {
+			style = styles.LightStyle
+			if termenv.HasDarkBackground() {
+				style = styles.DarkStyle
+			}
+		}
+	}
+	// Resolve auto before tcell owns stdin; loads must never query the terminal.
+	return func() (*glamour.TermRenderer, error) {
+		return glamour.NewTermRenderer(
+			glamour.WithStylePath(style),
+			glamour.WithWordWrap(wordWrap),
+		)
+	}
 }
 
 func formatDateTime(dt, format, tz string) string {

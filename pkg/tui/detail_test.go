@@ -161,6 +161,68 @@ func (h *detailHarness) open() {
 	})
 }
 
+func TestVOpensSelectedIssueWithoutPrompt(t *testing.T) {
+	opened := make(chan string, 2)
+	loaded := make(chan string, 2)
+	h := newDetailHarness(t, WithDetailViewFunc(func(row, _ int, data any) DetailView {
+		key := data.(TableData).Get(row, 0)
+		return DetailView{
+			Title: key,
+			Load: func() (DetailContent, error) {
+				loaded <- key
+				return DetailContent{Text: "selected body " + key}, nil
+			},
+			OpenTicket: func(input string) (DetailView, error) {
+				opened <- input
+				return DetailView{
+					Title: input,
+					Load: func() (DetailContent, error) {
+						return DetailContent{Text: "navigated body " + input}, nil
+					},
+				}, nil
+			},
+		}
+	}))
+	h.ui(func() { h.table.view.Select(35, 0) })
+	h.open()
+	if got := await(t, loaded); got != "TEST-35" {
+		t.Errorf("loaded %q, want selected TEST-35", got)
+	}
+	h.ui(func() {
+		d := h.table.detail
+		if d.view.Title != "TEST-35" || d.text.GetTitle() != "TEST-35" || d.text.GetText(false) != "selected body TEST-35" {
+			t.Error("v did not load the selected issue title and body")
+		}
+		if d.prompt != nil || h.table.painter.HasPage("ticket-prompt") || !d.text.HasFocus() {
+			t.Error("v opened an unsolicited ticket prompt instead of focusing details")
+		}
+	})
+	select {
+	case input := <-opened:
+		t.Fatalf("v unexpectedly called OpenTicket(%q)", input)
+	default:
+	}
+	h.typeText("/")
+	h.ui(func() {
+		if h.table.detail.prompt == nil || !h.table.painter.HasPage("ticket-prompt") {
+			t.Error("manual slash did not open the ticket prompt")
+		}
+	})
+	select {
+	case input := <-opened:
+		t.Fatalf("slash called OpenTicket(%q) before submission", input)
+	default:
+	}
+	h.typeText("SECOND-2")
+	h.key(tcell.KeyEnter, tcell.ModNone)
+	if got := await(t, opened); got != "SECOND-2" {
+		t.Errorf("OpenTicket input = %q, want SECOND-2", got)
+	}
+	h.wait("manual navigation loaded", func() bool {
+		return h.table.detail.prompt == nil && h.table.detail.text.GetText(false) == "navigated body SECOND-2"
+	})
+}
+
 func (h *detailHarness) screenText() string {
 	cells, width, _ := h.screen.GetContents()
 	var text strings.Builder
@@ -196,8 +258,10 @@ func TestDetailComposerSubmission(t *testing.T) {
 			requests := make(chan commentRequest, 10)
 			var loads atomic.Int32
 			h := newDetailHarness(t, detailOption(DetailView{
-				Title:         "TEST-1",
-				Load:          func() (string, error) { return fmt.Sprintf("details %d", loads.Add(1)), nil },
+				Title: "TEST-1",
+				Load: func() (DetailContent, error) {
+					return DetailContent{Text: fmt.Sprintf("details %d", loads.Add(1))}, nil
+				},
 				SubmitComment: commentCallback(requests),
 			}))
 			h.open()
@@ -206,7 +270,8 @@ func TestDetailComposerSubmission(t *testing.T) {
 			h.key(tcell.KeyEnter, tcell.ModNone)
 			h.key(tcell.KeyEnter, tcell.ModAlt)
 			h.typeText("cvqm?  ")
-			want := "  first\n\ncvqm?  "
+			h.key(tcell.KeyTab, tcell.ModNone)
+			want := "  first\n\ncvqm?  \t"
 			var composer *commentComposer
 			h.ui(func() {
 				composer = h.table.detail.composer
@@ -220,10 +285,10 @@ func TestDetailComposerSubmission(t *testing.T) {
 			case "ShiftEnter":
 				h.key(tcell.KeyEnter, tcell.ModShift)
 			case "Post button":
-				h.key(tcell.KeyTab, tcell.ModNone)
+				h.key(tcell.KeyBacktab, tcell.ModNone)
 				h.ui(func() {
 					if !composer.post.HasFocus() {
-						t.Error("Tab did not focus Post")
+						t.Error("Shift+Tab did not focus Post")
 					}
 				})
 				h.key(tcell.KeyEnter, tcell.ModNone)
@@ -270,7 +335,7 @@ func TestDetailComposerSubmission(t *testing.T) {
 func TestComposerPasteAndNavigation(t *testing.T) {
 	requests := make(chan commentRequest, 1)
 	h := newDetailHarness(t, detailOption(DetailView{
-		Title: "TEST-1", Load: func() (string, error) { return "details", nil }, SubmitComment: commentCallback(requests),
+		Title: "TEST-1", Load: func() (DetailContent, error) { return DetailContent{Text: "details"}, nil }, SubmitComment: commentCallback(requests),
 	}))
 	h.open()
 	h.typeText("c")
@@ -287,42 +352,57 @@ func TestComposerPasteAndNavigation(t *testing.T) {
 		if !strings.Contains(c.draft.GetLabel(), "TEST-1") {
 			t.Error("composer not labeled with target")
 		}
+		hint := c.status.GetText(false)
+		if strings.Contains(hint, "Tab: tab") || !strings.Contains(hint, "ShiftTab: focus buttons") {
+			t.Errorf("composer hint does not match the controls: %q", hint)
+		}
 	})
 	h.key(tcell.KeyTab, tcell.ModNone)
+	want += "\t"
+	h.ui(func() {
+		if !c.draft.HasFocus() || c.draft.GetText() != want {
+			t.Error("Tab did not insert a tab in the draft")
+		}
+	})
+	h.key(tcell.KeyBacktab, tcell.ModNone)
 	h.ui(func() {
 		if !c.post.HasFocus() {
-			t.Error("Post not focused")
-		}
-	})
-	h.key(tcell.KeyTab, tcell.ModNone)
-	h.ui(func() {
-		if !c.cancel.HasFocus() {
-			t.Error("Cancel not focused")
-		}
-	})
-	h.key(tcell.KeyTab, tcell.ModNone)
-	h.ui(func() {
-		if !c.draft.HasFocus() {
-			t.Error("Tab did not wrap to draft")
+			t.Error("Shift+Tab from the editor did not focus Post")
 		}
 	})
 	h.key(tcell.KeyBacktab, tcell.ModNone)
 	h.ui(func() {
 		if !c.cancel.HasFocus() {
-			t.Error("Backtab did not wrap to Cancel")
+			t.Error("Shift+Tab from Post did not focus Cancel")
+		}
+	})
+	h.key(tcell.KeyBacktab, tcell.ModNone)
+	h.ui(func() {
+		if !c.draft.HasFocus() {
+			t.Error("Shift+Tab from Cancel did not return to the editor")
 		}
 	})
 	select {
 	case <-requests:
-		t.Error("editing/paste/navigation unexpectedly posted")
+		t.Fatal("editing/paste/navigation unexpectedly posted")
 	default:
 	}
+	h.key(tcell.KeyBacktab, tcell.ModNone)
+	h.key(tcell.KeyEnter, tcell.ModNone)
+	request := await(t, requests)
+	if request.body != want {
+		t.Errorf("submitted body = %q, want tab-preserving draft %q", request.body, want)
+	}
+	request.result <- nil
+	h.wait("tabbed draft posted", func() bool {
+		return h.table.detail.composer == nil && strings.Contains(h.table.detail.status.GetText(false), "Comment posted.")
+	})
 }
 
 func TestComposerDiscardConfirmation(t *testing.T) {
 	requests := make(chan commentRequest, 1)
 	h := newDetailHarness(t, detailOption(DetailView{
-		Title: "TEST-1", Load: func() (string, error) { return "details", nil }, SubmitComment: commentCallback(requests),
+		Title: "TEST-1", Load: func() (DetailContent, error) { return DetailContent{Text: "details"}, nil }, SubmitComment: commentCallback(requests),
 	}))
 	h.open()
 	h.typeText("c")
@@ -331,6 +411,12 @@ func TestComposerDiscardConfirmation(t *testing.T) {
 	var c *commentComposer
 	h.ui(func() { c = h.table.detail.composer })
 	h.key(tcell.KeyBacktab, tcell.ModNone)
+	h.key(tcell.KeyBacktab, tcell.ModNone)
+	h.ui(func() {
+		if !c.cancel.HasFocus() {
+			t.Error("Shift+Tab did not move from Post to Cancel")
+		}
+	})
 	h.key(tcell.KeyEnter, tcell.ModNone)
 	h.ui(func() {
 		if name, _ := h.table.painter.GetFrontPage(); name != "discard" {
@@ -368,12 +454,13 @@ func TestComposerDiscardConfirmation(t *testing.T) {
 func TestComposerEmptyCancellation(t *testing.T) {
 	requests := make(chan commentRequest, 1)
 	h := newDetailHarness(t, detailOption(DetailView{
-		Title: "TEST-1", Load: func() (string, error) { return "details", nil }, SubmitComment: commentCallback(requests),
+		Title: "TEST-1", Load: func() (DetailContent, error) { return DetailContent{Text: "details"}, nil }, SubmitComment: commentCallback(requests),
 	}))
 	h.open()
 	for _, cancel := range []tcell.Key{tcell.KeyEsc, tcell.KeyEnter} {
 		h.typeText("c")
 		if cancel == tcell.KeyEnter {
+			h.key(tcell.KeyBacktab, tcell.ModNone)
 			h.key(tcell.KeyBacktab, tcell.ModNone)
 		}
 		h.key(cancel, tcell.ModNone)
@@ -393,7 +480,7 @@ func TestComposerEmptyCancellation(t *testing.T) {
 func TestComposerRejectsWhitespace(t *testing.T) {
 	requests := make(chan commentRequest, 1)
 	h := newDetailHarness(t, detailOption(DetailView{
-		Title: "TEST-1", Load: func() (string, error) { return "details", nil }, SubmitComment: commentCallback(requests),
+		Title: "TEST-1", Load: func() (DetailContent, error) { return DetailContent{Text: "details"}, nil }, SubmitComment: commentCallback(requests),
 	}))
 	h.open()
 	h.typeText("c")
@@ -416,7 +503,7 @@ func TestComposerRejectsWhitespace(t *testing.T) {
 func TestComposerFailureRetainsBodyForExplicitRetry(t *testing.T) {
 	requests := make(chan commentRequest, 2)
 	h := newDetailHarness(t, detailOption(DetailView{
-		Title: "TEST-1", Load: func() (string, error) { return "details", nil }, SubmitComment: commentCallback(requests),
+		Title: "TEST-1", Load: func() (DetailContent, error) { return DetailContent{Text: "details"}, nil }, SubmitComment: commentCallback(requests),
 	}))
 	h.open()
 	h.typeText("c")
@@ -437,7 +524,7 @@ func TestComposerFailureRetainsBodyForExplicitRetry(t *testing.T) {
 	default:
 	}
 	h.typeText("!")
-	h.key(tcell.KeyTab, tcell.ModNone)
+	h.key(tcell.KeyBacktab, tcell.ModNone)
 	h.key(tcell.KeyEnter, tcell.ModNone)
 	second := await(t, requests)
 	if second.body != first.body+"!" {
@@ -452,11 +539,11 @@ func TestPostSuccessReloadFailureDoesNotRestoreDraft(t *testing.T) {
 	var loads atomic.Int32
 	h := newDetailHarness(t, detailOption(DetailView{
 		Title: "TEST-1", SubmitComment: commentCallback(requests),
-		Load: func() (string, error) {
+		Load: func() (DetailContent, error) {
 			if loads.Add(1) == 2 {
-				return "", errors.New("refresh offline")
+				return DetailContent{}, errors.New("refresh offline")
 			}
-			return "fresh details", nil
+			return DetailContent{Text: "fresh details"}, nil
 		},
 	}))
 	h.open()
@@ -497,7 +584,7 @@ func TestPostSuccessReloadFailureDoesNotRestoreDraft(t *testing.T) {
 func TestDetailRenderingScrollingAndListState(t *testing.T) {
 	body := "[red]literal[-] [\"region\"] \x1b[31mRED\x1b[0m\n" + strings.Repeat("filler\n", 60) + "bottom"
 	h := newDetailHarness(t, detailOption(DetailView{
-		Title: "TEST-35 [blue]title", Load: func() (string, error) { return body, nil },
+		Title: "TEST-35 [blue]title", Load: func() (DetailContent, error) { return DetailContent{Text: body}, nil },
 		SubmitComment: func(string) error { return nil },
 	}))
 	h.ui(func() { h.table.view.Select(35, 0).SetOffset(30, 1) })
@@ -550,8 +637,9 @@ func TestDetailRenderingScrollingAndListState(t *testing.T) {
 }
 
 type detailResult struct {
-	body string
-	err  error
+	body    string
+	targets []ReplyTarget
+	err     error
 }
 
 func TestDetailLoadErrorRetryAndStaleCompletion(t *testing.T) {
@@ -561,11 +649,11 @@ func TestDetailLoadErrorRetryAndStaleCompletion(t *testing.T) {
 		boundRows = append(boundRows, row)
 		return DetailView{
 			Title: data.(TableData).Get(row, 0),
-			Load: func() (string, error) {
+			Load: func() (DetailContent, error) {
 				result := make(chan detailResult, 1)
 				requests <- result
 				r := <-result
-				return r.body, r.err
+				return DetailContent{Text: r.body, ReplyTargets: r.targets}, r.err
 			},
 		}
 	}))
@@ -580,13 +668,13 @@ func TestDetailLoadErrorRetryAndStaleCompletion(t *testing.T) {
 	h.key(tcell.KeyDown, tcell.ModNone)
 	h.typeText("v")
 	current := await(t, requests)
-	current <- detailResult{body: "new target"}
+	current <- detailResult{body: "new target", targets: []ReplyTarget{{ID: "new-root"}}}
 	h.wait("new target loaded", func() bool { return h.table.detail.text.GetText(false) == "new target" })
 	h.table.screen.QueueUpdate(func() {})
 	for len(h.frames) > 0 {
 		<-h.frames
 	}
-	old <- detailResult{body: "stale target"}
+	old <- detailResult{body: "stale target", targets: []ReplyTarget{{ID: "stale-root"}}}
 	await(t, h.frames)
 	h.ui(func() {
 		if h.table.detail.text.GetText(false) != "new target" || h.table.detail.view.Title != "TEST-2" {
@@ -594,6 +682,9 @@ func TestDetailLoadErrorRetryAndStaleCompletion(t *testing.T) {
 		}
 		if fmt.Sprint(boundRows) != "[1 2]" {
 			t.Errorf("targets bound at open: %v", boundRows)
+		}
+		if len(h.table.detail.replyTargets) != 1 || h.table.detail.replyTargets[0].ID != "new-root" {
+			t.Error("late completion overwrote reopened reply metadata")
 		}
 	})
 	h.key(tcell.KeyCtrlR, tcell.ModNone)
@@ -661,7 +752,7 @@ func TestDetailInvalidSelectionAndMissingCallbacks(t *testing.T) {
 
 func TestComposerCtrlCDraftAndConfirmation(t *testing.T) {
 	h := newDetailHarness(t, detailOption(DetailView{
-		Title: "TEST-1", Load: func() (string, error) { return "details", nil },
+		Title: "TEST-1", Load: func() (DetailContent, error) { return DetailContent{Text: "details"}, nil },
 		SubmitComment: func(string) error { t.Error("cancel posted a comment"); return nil },
 	}))
 	h.open()
@@ -703,7 +794,7 @@ func TestComposerCtrlCDraftAndConfirmation(t *testing.T) {
 func TestComposerCtrlCPendingPostAndFailureCancel(t *testing.T) {
 	requests := make(chan commentRequest, 2)
 	h := newDetailHarness(t, detailOption(DetailView{
-		Title: "TEST-1", Load: func() (string, error) { return "details", nil }, SubmitComment: commentCallback(requests),
+		Title: "TEST-1", Load: func() (DetailContent, error) { return DetailContent{Text: "details"}, nil }, SubmitComment: commentCallback(requests),
 	}))
 	h.open()
 	h.typeText("c")
@@ -748,7 +839,7 @@ func TestTableCtrlCOutsideComposerExits(t *testing.T) {
 			var opts []TableOption
 			if state != "generic list" {
 				opts = append(opts, detailOption(DetailView{
-					Load: func() (string, error) { return "details", nil }, SubmitComment: func(string) error { return nil },
+					Load: func() (DetailContent, error) { return DetailContent{Text: "details"}, nil }, SubmitComment: func(string) error { return nil },
 				}))
 			}
 			h := newDetailHarness(t, opts...)
@@ -785,7 +876,7 @@ func TestTableComposerCapturePreservesPriorCapture(t *testing.T) {
 	h := newDetailHarness(t,
 		func(table *Table) { table.screen.SetInputCapture(prior) },
 		detailOption(DetailView{
-			Load: func() (string, error) { return "details", nil }, SubmitComment: func(string) error { return nil },
+			Load: func() (DetailContent, error) { return DetailContent{Text: "details"}, nil }, SubmitComment: func(string) error { return nil },
 		}),
 	)
 	h.open()
@@ -817,7 +908,7 @@ func TestStatusGuidancePrecedesLiteralVerboseErrors(t *testing.T) {
 	loadError := "[red]LOAD\n" + strings.Repeat("load details\n", 10)
 	postError := "[blue]POST\n" + strings.Repeat("post details\n", 10)
 	h := newDetailHarness(t, detailOption(DetailView{
-		Title: "TEST-1", Load: func() (string, error) { return "", errors.New(loadError) },
+		Title: "TEST-1", Load: func() (DetailContent, error) { return DetailContent{}, errors.New(loadError) },
 		SubmitComment: func(string) error { return errors.New(postError) },
 	}))
 	h.ui(func() { h.screen.SetSize(40, 24) })
@@ -863,7 +954,9 @@ func TestTableDetailOptInPreservesLegacyPager(t *testing.T) {
 	if err != nil || string(content) != "TEST-1" {
 		t.Fatalf("external pager content = %q, error = %v", content, err)
 	}
-	h.ui(func() { detailOption(DetailView{Load: func() (string, error) { return "opted in", nil }})(h.table) })
+	h.ui(func() {
+		detailOption(DetailView{Load: func() (DetailContent, error) { return DetailContent{Text: "opted in"}, nil }})(h.table)
+	})
 	h.open()
 	h.ui(func() {
 		if h.table.detail.text.GetText(false) != "opted in" {

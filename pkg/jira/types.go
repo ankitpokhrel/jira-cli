@@ -67,6 +67,15 @@ type Issue struct {
 	Fields IssueFields `json:"fields"`
 }
 
+// IssueComment holds a comment and, when verified by the native thread adapter, its parent.
+type IssueComment struct {
+	ID       string `json:"id"`
+	Author   User   `json:"author"`
+	Body     any    `json:"body"`
+	Created  string `json:"created"`
+	ParentID string `json:"-"`
+}
+
 // IssueFields holds issue fields.
 type IssueFields struct {
 	Summary     string      `json:"summary"`
@@ -105,13 +114,8 @@ type IssueFields struct {
 		Name string `json:"name"`
 	} `json:"versions"`
 	Comment struct {
-		Comments []struct {
-			ID      string      `json:"id"`
-			Author  User        `json:"author"`
-			Body    interface{} `json:"body"` // string in v1/v2, adf.ADF in v3
-			Created string      `json:"created"`
-		} `json:"comments"`
-		Total int `json:"total"`
+		Comments []IssueComment `json:"comments"`
+		Total    int            `json:"total"`
 	} `json:"comment"`
 	Subtasks   []Issue
 	IssueLinks []struct {
