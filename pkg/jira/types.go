@@ -69,17 +69,20 @@ type Issue struct {
 
 // IssueComment holds a comment and, when verified by the native thread adapter, its parent.
 type IssueComment struct {
-	ID     string `json:"id"`
-	Author User   `json:"author"`
+	// ID is Jira's REST comment ID, which ParentID references.
+	ID string `json:"id"`
+	// Author identifies the Jira user who created the comment.
+	Author User `json:"author"`
 	// Body holds legacy Jira markup or an ADF value; v3 readers normalize bodies before rendering.
-	Body    any    `json:"body"`
+	Body any `json:"body"`
+	// Created is the timestamp returned by Jira for the comment.
 	Created string `json:"created"`
 	// ParentID is authoritative only after native thread verification; an empty
 	// value in a flat REST response does not prove that the comment is a root.
 	ParentID string `json:"-"`
 }
 
-// IssueFields holds issue fields.
+// IssueFields holds Jira issue fields. Parent IDs are trusted only after native thread verification.
 type IssueFields struct {
 	Summary     string      `json:"summary"`
 	Description interface{} `json:"description"` // string in v1/v2, adf.ADF in v3
@@ -117,6 +120,7 @@ type IssueFields struct {
 		Name string `json:"name"`
 	} `json:"versions"`
 	Comment struct {
+		// Comments are the flat issue comments; native reads populate parentage only after verification.
 		Comments []IssueComment `json:"comments"`
 		Total    int            `json:"total"`
 	} `json:"comment"`

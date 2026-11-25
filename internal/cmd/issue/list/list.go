@@ -85,7 +85,7 @@ $ jira issue list -s~Open -ax
 $ jira issue list -q"project IS NOT EMPTY"`
 )
 
-// NewCmdList is a list command.
+// NewCmdList creates the issue-list command with comment, thread, and raw-output flags.
 func NewCmdList() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "list [optional text to query]",
@@ -243,7 +243,7 @@ func outputRawJSON(issues []*jira.Issue) {
 	fmt.Println(string(data))
 }
 
-// SetFlags sets flags supported by a list command.
+// SetFlags adds shared issue filters and output options while retaining pre-registered comments and raw flags.
 func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().SortFlags = false
 

@@ -12,13 +12,21 @@ import (
 
 // ReplyTarget identifies a root thread offered by the detail loader.
 type ReplyTarget struct {
-	ID, Author, Created, Preview string
+	// ID is the root Jira comment ID passed to the reply handler.
+	ID string
+	// Author is shown with the root comment in the reply picker.
+	Author string
+	// Created is the root comment's timestamp shown in the picker.
+	Created string
+	// Preview is a plain-text excerpt shown beneath the thread label.
+	Preview string
 }
 
 // DetailContent is one atomic snapshot of details and available reply targets.
 type DetailContent struct {
 	// Text may contain ANSI styling; tview markup is treated as literal text.
-	Text         string
+	Text string
+	// ReplyTargets lists root threads offered to the native reply picker.
 	ReplyTargets []ReplyTarget
 	// ReplyUnavailable overrides ReplyTargets with a reason the picker cannot be used.
 	ReplyUnavailable string
@@ -26,6 +34,7 @@ type DetailContent struct {
 
 // DetailView binds a detail page and its actions to the selected item.
 type DetailView struct {
+	// Title is displayed in the detail page's border.
 	Title string
 	// Load may overlap earlier reloads; it must not mutate UI primitives.
 	Load func() (DetailContent, error)

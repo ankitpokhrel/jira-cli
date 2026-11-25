@@ -14,7 +14,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
-// DisplayFormat is a issue display type.
+// DisplayFormat controls issue-list output and the comment/thread data loaded for details.
 type DisplayFormat struct {
 	Plain        bool
 	Delimiter    string
@@ -41,7 +41,7 @@ type IssueList struct {
 	FooterText string
 }
 
-// Render renders the view.
+// Render writes CSV or plain output, or starts the interactive issue table with detail actions.
 func (l *IssueList) Render() error {
 	// Prioritize CSV format when explicitly requested
 	if l.Display.CSV {

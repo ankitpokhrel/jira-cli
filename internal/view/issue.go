@@ -47,7 +47,7 @@ type issueComment struct {
 	depth int
 }
 
-// IssueOption is filtering options for an issue.
+// IssueOption controls how an issue's comments and verified thread relationships are rendered.
 type IssueOption struct {
 	// NumComments limits flat comments or complete root threads; zero hides both.
 	NumComments uint
@@ -55,7 +55,7 @@ type IssueOption struct {
 	CommentThreads bool
 }
 
-// Issue is a list view for issues.
+// Issue describes the data and options used to render one Jira issue.
 type Issue struct {
 	Server  string
 	Data    *jira.Issue
@@ -79,7 +79,7 @@ func (i Issue) Render() error {
 	return tui.PagerOut(out)
 }
 
-// RenderedOut translates raw data to the format we want to display in.
+// RenderedOut renders each fragment as Markdown before indenting replies, preserving nested block formatting.
 func (i Issue) RenderedOut(renderer *glamour.TermRenderer) (string, error) {
 	var res strings.Builder
 

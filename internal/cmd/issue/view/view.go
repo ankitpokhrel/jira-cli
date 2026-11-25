@@ -49,7 +49,7 @@ $ jira issue view ISSUE-1 --raw`
 	messageFetchingData = "Fetching issue details..."
 )
 
-// NewCmdView is a view command.
+// NewCmdView creates the single-issue command and registers its raw, plain, comments, and thread options.
 func NewCmdView() *cobra.Command {
 	cmd := cobra.Command{
 		Use:     "view ISSUE-KEY",
