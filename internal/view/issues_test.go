@@ -201,6 +201,7 @@ Story,TEST-2,This is another test,Open,,Person A,Normal,,2020-12-13 14:05:20,202
 	assert.Equal(t, expected, b.String())
 }
 
+// TestIssueDetailCallbacks keeps Cloud and Server loads and posts bound to the selected ticket despite later list mutation.
 func TestIssueDetailCallbacks(t *testing.T) {
 	t.Setenv("GLAMOUR_STYLE", "notty")
 	newRenderer := newMDRendererFactory()
@@ -281,6 +282,7 @@ func TestIssueDetailCallbacks(t *testing.T) {
 	}
 }
 
+// TestIssueDetailCallbackErrors preserves wrapped HTTP status and ticket context while failed loads return no snapshot.
 func TestIssueDetailCallbackErrors(t *testing.T) {
 	t.Setenv("GLAMOUR_STYLE", "notty")
 	newRenderer := newMDRendererFactory()
@@ -318,6 +320,7 @@ func TestIssueDetailCallbackErrors(t *testing.T) {
 	}
 }
 
+// TestIssueDetailReplyCallbackAvailability permits native reply posting only when thread mode and a positive comment limit are enabled.
 func TestIssueDetailReplyCallbackAvailability(t *testing.T) {
 	t.Parallel()
 	newRenderer := newMDRendererFactory()
@@ -332,6 +335,7 @@ func TestIssueDetailReplyCallbackAvailability(t *testing.T) {
 		{name: "native zero", threads: true},
 		{name: "native", threads: true, limit: 1, enabled: true},
 	} {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			list := IssueList{Display: DisplayFormat{CommentThreads: tc.threads, Comments: tc.limit}}
@@ -343,6 +347,7 @@ func TestIssueDetailReplyCallbackAvailability(t *testing.T) {
 	}
 }
 
+// TestIssueDetailSubmitReply requires one native write to the captured issue and preserves renderer options for the subsequent reload.
 func TestIssueDetailSubmitReply(t *testing.T) {
 	t.Setenv("GLAMOUR_STYLE", "notty")
 	newRenderer := newMDRendererFactory()
@@ -370,10 +375,12 @@ func TestIssueDetailSubmitReply(t *testing.T) {
 	}
 }
 
+// TestIssueDetailReplyPreflightError forbids writes after failed preflight and keeps reply bodies and unvalidated root IDs out of errors.
 func TestIssueDetailReplyPreflightError(t *testing.T) {
 	t.Parallel()
 	newRenderer := newMDRendererFactory()
 	for _, root := range []string{"100", "unvalidated-root"} {
+		root := root
 		t.Run(root, func(t *testing.T) {
 			t.Parallel()
 			var writes atomic.Int64
@@ -405,6 +412,7 @@ func TestIssueDetailReplyPreflightError(t *testing.T) {
 	}
 }
 
+// TestIssueDetailRendererErrorClearsContent prevents renderer initialization failures from exposing a partial actionable snapshot.
 func TestIssueDetailRendererErrorClearsContent(t *testing.T) {
 	t.Setenv("GLAMOUR_STYLE", "missing-test-style")
 	newRenderer := newMDRendererFactory()
@@ -416,6 +424,7 @@ func TestIssueDetailRendererErrorClearsContent(t *testing.T) {
 	}
 }
 
+// TestIssueDetailThreadCallbacks derives text and reply targets from one fetch, fails closed, and skips thread I/O at zero limit.
 func TestIssueDetailThreadCallbacks(t *testing.T) {
 	t.Setenv("GLAMOUR_STYLE", "notty")
 	newRenderer := newMDRendererFactory()
@@ -464,6 +473,7 @@ func TestIssueDetailThreadCallbacks(t *testing.T) {
 	}
 }
 
+// assertZeroDetailContent rejects partial text or reply metadata escaping a failed load.
 func assertZeroDetailContent(t *testing.T, content tui.DetailContent) {
 	t.Helper()
 	if !reflect.DeepEqual(content, tui.DetailContent{}) {
@@ -471,6 +481,7 @@ func assertZeroDetailContent(t *testing.T, content tui.DetailContent) {
 	}
 }
 
+// assertReplyUnavailable requires both an empty target list and actionable guidance for disabled reply selection.
 func assertReplyUnavailable(t *testing.T, content tui.DetailContent, reason string) {
 	t.Helper()
 	if len(content.ReplyTargets) != 0 || !strings.Contains(content.ReplyUnavailable, reason) {
@@ -478,6 +489,7 @@ func assertReplyUnavailable(t *testing.T, content tui.DetailContent, reason stri
 	}
 }
 
+// assertReplyPostingGated ensures unsupported display modes cannot expose a native write callback.
 func assertReplyPostingGated(t *testing.T, detail tui.DetailView) {
 	t.Helper()
 	if detail.SubmitReply != nil {
@@ -485,6 +497,7 @@ func assertReplyPostingGated(t *testing.T, detail tui.DetailView) {
 	}
 }
 
+// assertThreadReplyTarget requires the selectable root metadata to match the rendered native comment and enabled backend.
 func assertThreadReplyTarget(t *testing.T, detail tui.DetailView, content tui.DetailContent) {
 	t.Helper()
 	if detail.SubmitReply == nil {
@@ -499,6 +512,7 @@ func assertThreadReplyTarget(t *testing.T, detail tui.DetailView, content tui.De
 	}
 }
 
+// threadDetailHandler supplies reconciled native and REST identities with countable fetches and controllable thread failure.
 func threadDetailHandler(t *testing.T, fail *atomic.Bool, requests *atomic.Int64) http.Handler {
 	t.Helper()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -546,6 +560,7 @@ func threadDetailHandler(t *testing.T, fail *atomic.Bool, requests *atomic.Int64
 	})
 }
 
+// threadReplyHandler rejects top-level fallback and verifies native issue, parent, body, and confirmation contracts.
 func threadReplyHandler(t *testing.T, wantBody string, writes *atomic.Int64) http.Handler {
 	t.Helper()
 	reads := threadDetailHandler(t, new(atomic.Bool), new(atomic.Int64))
@@ -604,6 +619,7 @@ func threadReplyHandler(t *testing.T, wantBody string, writes *atomic.Int64) htt
 	})
 }
 
+// threadDetailConnection marks the synthetic page complete so missing pagination cannot masquerade as a valid thread snapshot.
 func threadDetailConnection(node map[string]any) map[string]any {
 	return map[string]any{
 		"edges": []any{map[string]any{"cursor": "only-cursor", "node": node}},
@@ -613,6 +629,7 @@ func threadDetailConnection(node map[string]any) map[string]any {
 	}
 }
 
+// threadDetailBody keeps synthetic REST bodies valid ADF so rendering checks exercise the Cloud translation path.
 func threadDetailBody(text string) map[string]any {
 	return map[string]any{
 		"type": "doc", "version": 1,
@@ -620,6 +637,7 @@ func threadDetailBody(text string) map[string]any {
 	}
 }
 
+// issueDetailPayload distinguishes pre-post and refreshed bodies while preserving Cloud ADF and Server string formats.
 func issueDetailPayload(installation string, posted bool) map[string]any {
 	text := "Existing comment"
 	if posted {

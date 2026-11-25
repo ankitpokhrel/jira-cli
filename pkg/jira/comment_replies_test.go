@@ -39,12 +39,14 @@ type replyFixture struct {
 	post         func(http.ResponseWriter, *http.Request)
 }
 
+// testReplyResult provides the mutation envelope needed to distinguish confirmed success from rejected or ambiguous writes.
 func testReplyResult(success bool, id string) map[string]any {
 	return map[string]any{"data": map[string]any{"jira": map[string]any{"addComment": map[string]any{
 		"success": success, "errors": nil, "comment": map[string]any{"commentId": id},
 	}}}}
 }
 
+// newReplyFixture starts with one verified public root and matching reply confirmation so guards can fail independently.
 func newReplyFixture(t *testing.T) *replyFixture {
 	t.Helper()
 	threads := newThreadFixture(t)
@@ -61,6 +63,7 @@ func newReplyFixture(t *testing.T) *replyFixture {
 	}
 }
 
+// serve enforces TLS Basic auth and fresh metadata reads while counting every attempted reply write.
 func (f *replyFixture) serve(w http.ResponseWriter, r *http.Request) {
 	f.requests.Add(1)
 	if r.Method == http.MethodPost {
@@ -100,6 +103,7 @@ func (f *replyFixture) serve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// checkCommentRead requires expanded privacy properties on both preflight and confirmation reads.
 func (f *replyFixture) checkCommentRead(r *http.Request) {
 	f.t.Helper()
 	if r.Method != http.MethodGet || r.URL.Query().Get("expand") != "properties" {
@@ -107,6 +111,7 @@ func (f *replyFixture) checkCommentRead(r *http.Request) {
 	}
 }
 
+// checkPayload protects the persisted native-reply contract, including ADF structure and immutable parent connection identity.
 func (f *replyFixture) checkPayload(r *http.Request) {
 	f.t.Helper()
 	if r.URL.Path != threadAddRouteV1 || r.URL.Query().Get("operation") != threadAddQueryV1 || r.Header.Get("Content-Type") != "application/json" {
@@ -153,6 +158,7 @@ func (f *replyFixture) checkPayload(r *http.Request) {
 	}
 }
 
+// TestReplyToIssueThread requires fresh preflight, exactly one mutation, and verified parentage for supported project types.
 func TestReplyToIssueThread(t *testing.T) {
 	for _, projectType := range []string{"software", "business"} {
 		for _, parent := range []any{11, "11"} {
@@ -172,6 +178,7 @@ func TestReplyToIssueThread(t *testing.T) {
 	}
 }
 
+// TestReplyToIssueThreadRejectsBeforeHTTP prevents invalid input, unsupported auth, and insecure origins from reaching the network.
 func TestReplyToIssueThreadRejectsBeforeHTTP(t *testing.T) {
 	cases := []struct{ name, key, root, body string }{
 		{"empty", "TEST-1", "11", ""},
@@ -213,6 +220,7 @@ func TestReplyToIssueThreadRejectsBeforeHTTP(t *testing.T) {
 	}
 }
 
+// TestReplyToIssueThreadSourceBudget enforces the Markdown byte cap before parsing or HTTP while accepting the exact boundary.
 func TestReplyToIssueThreadSourceBudget(t *testing.T) {
 	if replySourceByteLimit >= threadResponseLimit {
 		t.Fatal("Markdown source budget must remain separate from the larger serialized payload cap")
@@ -245,6 +253,7 @@ func TestReplyToIssueThreadSourceBudget(t *testing.T) {
 	}
 }
 
+// TestReplyToIssueThreadPreflightGuards forbids writes until issue identity, native root status, and unambiguous public privacy are verified.
 func TestReplyToIssueThreadPreflightGuards(t *testing.T) {
 	cases := []struct {
 		name   string
@@ -310,10 +319,12 @@ func TestReplyToIssueThreadPreflightGuards(t *testing.T) {
 	}
 }
 
+// testReplyPrivacy isolates the service-desk privacy property so malformed or ambiguous values exercise fail-closed checks.
 func testReplyPrivacy(value any) []any {
 	return []any{map[string]any{"key": "sd.public.comment", "value": value}}
 }
 
+// TestReplyToIssueThreadPreflightHTTPFailures treats every failed preparation read as a known no-write outcome with redacted errors.
 func TestReplyToIssueThreadPreflightHTTPFailures(t *testing.T) {
 	for _, path := range []string{"/rest/api/3/issue/TEST-1", "/browse/TEST-1", threadRootsRouteV1, "/rest/api/3/issue/TEST-1/comment/11"} {
 		t.Run(path, func(t *testing.T) {
@@ -334,6 +345,7 @@ func TestReplyToIssueThreadPreflightHTTPFailures(t *testing.T) {
 	}
 }
 
+// TestReplyToIssueThreadFreshPrivacy prevents a previous successful reply from authorizing writes after root visibility changes.
 func TestReplyToIssueThreadFreshPrivacy(t *testing.T) {
 	f := newReplyFixture(t)
 	client := testThreadClient(t, f.serve)
@@ -346,6 +358,7 @@ func TestReplyToIssueThreadFreshPrivacy(t *testing.T) {
 	}
 }
 
+// TestReplyToIssueThreadMutationFailures distinguishes explicit rejection from unknown post outcomes without retries or response-content leaks.
 func TestReplyToIssueThreadMutationFailures(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -386,6 +399,7 @@ func TestReplyToIssueThreadMutationFailures(t *testing.T) {
 	}
 }
 
+// TestReplyToIssueThreadConfirmationFailures reports unverifiable parentage or privacy as unknown with the returned ID and no repost.
 func TestReplyToIssueThreadConfirmationFailures(t *testing.T) {
 	cases := []struct {
 		name   string
@@ -431,6 +445,7 @@ func TestReplyToIssueThreadConfirmationFailures(t *testing.T) {
 	}
 }
 
+// TestReplyToIssueThreadPostRedirect prevents redirect forwarding or replay once the native mutation has been dispatched.
 func TestReplyToIssueThreadPostRedirect(t *testing.T) {
 	var forwarded atomic.Int32
 	target := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { forwarded.Add(1) }))
@@ -445,6 +460,7 @@ func TestReplyToIssueThreadPostRedirect(t *testing.T) {
 	}
 }
 
+// TestReplyToIssueThreadCancellation preserves cancellation causes while distinguishing safe preflight aborts from uncertain dispatched writes.
 func TestReplyToIssueThreadCancellation(t *testing.T) {
 	t.Run("before HTTP", func(t *testing.T) {
 		f := newReplyFixture(t)
@@ -477,6 +493,7 @@ func TestReplyToIssueThreadCancellation(t *testing.T) {
 	})
 }
 
+// TestReplyToIssueThreadNetworkOutcome treats connection loss after dispatch as unknown and never automatically retries the mutation.
 func TestReplyToIssueThreadNetworkOutcome(t *testing.T) {
 	f := newReplyFixture(t)
 	f.post = func(w http.ResponseWriter, r *http.Request) {
@@ -493,6 +510,7 @@ func TestReplyToIssueThreadNetworkOutcome(t *testing.T) {
 	}
 }
 
+// TestReplyPostBudgetAndCause keeps budget exhaustion pre-dispatch and preserves wrapped transport causes without displaying private details.
 func TestReplyPostBudgetAndCause(t *testing.T) {
 	f := newReplyFixture(t)
 	client := testThreadClient(t, f.serve)
@@ -511,6 +529,7 @@ func TestReplyPostBudgetAndCause(t *testing.T) {
 	}
 }
 
+// TestReplyToIssueThreadNoReplayOrDebugDump forbids transport replay hooks and debug output that could expose reply payloads or credentials.
 func TestReplyToIssueThreadNoReplayOrDebugDump(t *testing.T) {
 	f := newReplyFixture(t)
 	client := testThreadClient(t, f.serve)
@@ -539,6 +558,7 @@ type replyCheckingTransport struct {
 	posts atomic.Int32
 }
 
+// RoundTrip detects replay-enabling bodies or idempotency headers before delegating the configured reply transport.
 func (r *replyCheckingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if req.Method == http.MethodPost {
 		r.posts.Add(1)

@@ -11,6 +11,7 @@ import (
 	"github.com/rivo/tview"
 )
 
+// replyTestContent provides distinct root metadata so picker order and captured selection are observable.
 func replyTestContent() DetailContent {
 	return DetailContent{
 		Text: "issue details",
@@ -21,6 +22,7 @@ func replyTestContent() DetailContent {
 	}
 }
 
+// replyTestView fails any top-level fallback so reply tests cannot silently pass through the wrong write action.
 func replyTestView(t *testing.T, content DetailContent, submit func(string, string) error) DetailView {
 	t.Helper()
 	return DetailView{
@@ -40,6 +42,7 @@ type replyRequest struct {
 	result chan error
 }
 
+// replyCallback exposes the bound root and body while allowing tests to hold and resolve an in-flight reply.
 func replyCallback(requests chan<- replyRequest) func(string, string) error {
 	return func(rootID, body string) error {
 		request := replyRequest{rootID: rootID, body: body, result: make(chan error, 1)}
@@ -48,6 +51,7 @@ func replyCallback(requests chan<- replyRequest) func(string, string) error {
 	}
 }
 
+// TestReplyPickerOptionsAndEscaping preserves root order while stripping terminal controls, escaping markup, and requiring explicit selection.
 func TestReplyPickerOptionsAndEscaping(t *testing.T) {
 	content := replyTestContent()
 	content.ReplyTargets[0] = ReplyTarget{
@@ -97,6 +101,7 @@ func TestReplyPickerOptionsAndEscaping(t *testing.T) {
 	})
 }
 
+// TestReplySingleRootRequiresExplicitSelection prevents even a sole root from bypassing the chooser or leaking selection keys into the draft.
 func TestReplySingleRootRequiresExplicitSelection(t *testing.T) {
 	content := replyTestContent()
 	content.ReplyTargets = content.ReplyTargets[:1]
@@ -133,6 +138,7 @@ func TestReplySingleRootRequiresExplicitSelection(t *testing.T) {
 	})
 }
 
+// TestReplyPickerCancelPreservesContext restores detail focus without changing list selection, offsets, or detail scroll.
 func TestReplyPickerCancelPreservesContext(t *testing.T) {
 	for _, cancel := range []tcell.Key{tcell.KeyEsc, tcell.KeyCtrlC} {
 		t.Run(tcell.KeyNames[cancel], func(t *testing.T) {
@@ -167,6 +173,7 @@ func TestReplyPickerCancelPreservesContext(t *testing.T) {
 	}
 }
 
+// TestReplyUnavailableSnapshots rejects failed, disabled, or ambiguous root snapshots with guidance rather than opening a stale picker.
 func TestReplyUnavailableSnapshots(t *testing.T) {
 	for _, tc := range []struct {
 		name    string
@@ -200,6 +207,7 @@ func TestReplyUnavailableSnapshots(t *testing.T) {
 	}
 }
 
+// TestReplyWithoutBackendIsPreviewOnly allows drafting but disables every post path when no native reply backend is available.
 func TestReplyWithoutBackendIsPreviewOnly(t *testing.T) {
 	h := newDetailHarness(t, detailOption(replyTestView(t, replyTestContent(), nil)))
 	h.open()
@@ -228,6 +236,7 @@ func TestReplyWithoutBackendIsPreviewOnly(t *testing.T) {
 	})
 }
 
+// TestReplySubmissionPathsAndImmutableBinding captures the selected root and callback before editing and permits exactly one whitespace-preserving post.
 func TestReplySubmissionPathsAndImmutableBinding(t *testing.T) {
 	for _, method := range []string{"CtrlS", "ShiftEnter", "Post button"} {
 		t.Run(method, func(t *testing.T) {
@@ -296,6 +305,7 @@ func TestReplySubmissionPathsAndImmutableBinding(t *testing.T) {
 	}
 }
 
+// TestReplyRejectsWhitespaceWithoutLosingTarget rejects empty Unicode-whitespace replies locally without losing the root or draft.
 func TestReplyRejectsWhitespaceWithoutLosingTarget(t *testing.T) {
 	requests := make(chan replyRequest, 1)
 	h := newDetailHarness(t, detailOption(replyTestView(t, replyTestContent(), replyCallback(requests))))
@@ -318,6 +328,7 @@ func TestReplyRejectsWhitespaceWithoutLosingTarget(t *testing.T) {
 	}
 }
 
+// TestReplyComposerEscapesTargetTitle renders issue and root identifiers literally so markup cannot obscure the write target.
 func TestReplyComposerEscapesTargetTitle(t *testing.T) {
 	content := replyTestContent()
 	content.ReplyTargets[0].ID = "root-[red]"
@@ -335,6 +346,7 @@ func TestReplyComposerEscapesTargetTitle(t *testing.T) {
 	})
 }
 
+// TestReplyFailureKeepsTargetAndRequiresExplicitRetry preserves the captured root and editable draft while warning about unknown outcomes without auto-retry.
 func TestReplyFailureKeepsTargetAndRequiresExplicitRetry(t *testing.T) {
 	requests := make(chan replyRequest, 2)
 	h := newDetailHarness(t, detailOption(replyTestView(t, replyTestContent(), replyCallback(requests))))
@@ -371,6 +383,7 @@ func TestReplyFailureKeepsTargetAndRequiresExplicitRetry(t *testing.T) {
 	h.wait("reply retry success", func() bool { return h.table.detail.composer == nil })
 }
 
+// TestReplySuccessWithReloadFailureNeverRestoresDraft retains confirmed-write status while clearing submitted drafts and invalidating stale targets.
 func TestReplySuccessWithReloadFailureNeverRestoresDraft(t *testing.T) {
 	requests := make(chan replyRequest, 2)
 	var loads atomic.Int32
@@ -420,6 +433,7 @@ type replyLoadResult struct {
 	err     error
 }
 
+// TestReplyLoadingInvalidatesPickerAndStaleMetadata invalidates old selections and ignores late completions so text and reply metadata stay atomic.
 func TestReplyLoadingInvalidatesPickerAndStaleMetadata(t *testing.T) {
 	requests := make(chan chan replyLoadResult, 4)
 	view := replyTestView(t, DetailContent{}, nil)
@@ -478,6 +492,7 @@ func TestReplyLoadingInvalidatesPickerAndStaleMetadata(t *testing.T) {
 	})
 }
 
+// TestReplyComposerExpiresWhenSnapshotReloads locks an expired selection against posting while preserving the unsent draft.
 func TestReplyComposerExpiresWhenSnapshotReloads(t *testing.T) {
 	requests := make(chan replyRequest, 1)
 	h := newDetailHarness(t, detailOption(replyTestView(t, replyTestContent(), replyCallback(requests))))
@@ -501,6 +516,7 @@ func TestReplyComposerExpiresWhenSnapshotReloads(t *testing.T) {
 	}
 }
 
+// TestReplySnapshotCopiesTargetMetadata prevents loader-owned slice mutations from changing an already loaded picker snapshot.
 func TestReplySnapshotCopiesTargetMetadata(t *testing.T) {
 	content := replyTestContent()
 	h := newDetailHarness(t, detailOption(replyTestView(t, content, nil)))
@@ -518,6 +534,7 @@ func TestReplySnapshotCopiesTargetMetadata(t *testing.T) {
 	})
 }
 
+// TestReplyDoesNotChangeTopLevelCommentAction keeps c routed to top-level comments after cancelling a reply selection.
 func TestReplyDoesNotChangeTopLevelCommentAction(t *testing.T) {
 	requests := make(chan commentRequest, 1)
 	view := replyTestView(t, replyTestContent(), func(string, string) error {

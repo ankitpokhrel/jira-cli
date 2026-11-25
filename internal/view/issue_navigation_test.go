@@ -16,6 +16,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
+// TestNormalizeNavigationKey protects canonical full keys and current-project numeric shorthand at input boundaries.
 func TestNormalizeNavigationKey(t *testing.T) {
 	t.Parallel()
 	for _, tc := range []struct {
@@ -31,6 +32,7 @@ func TestNormalizeNavigationKey(t *testing.T) {
 		{name: "uint64 full key", input: "A-18446744073709551615", want: "A-18446744073709551615"},
 		{name: "maximum key bytes", input: strings.Repeat("A", navigationInputLimit-2) + "-1", want: strings.Repeat("A", navigationInputLimit-2) + "-1"},
 	} {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			got, err := normalizeNavigationKey(tc.input, tc.current)
@@ -41,6 +43,7 @@ func TestNormalizeNavigationKey(t *testing.T) {
 	}
 }
 
+// TestNormalizeNavigationRejectsInvalidInput rejects ambiguous keys, URL injection, controls, and overflow without returning a target.
 func TestNormalizeNavigationRejectsInvalidInput(t *testing.T) {
 	t.Parallel()
 	inputs := []string{
@@ -60,6 +63,7 @@ func TestNormalizeNavigationRejectsInvalidInput(t *testing.T) {
 	}
 }
 
+// TestNavigationNumberNeedsValidCurrentProject prevents shorthand from inferring an invalid project or exceeding the full-key limit.
 func TestNavigationNumberNeedsValidCurrentProject(t *testing.T) {
 	t.Parallel()
 	for _, current := range []string{"", "invalid", "A-0", "A--1", "1A-1", "A-18446744073709551616", "A-1\n"} {
@@ -74,6 +78,7 @@ func TestNavigationNumberNeedsValidCurrentProject(t *testing.T) {
 	}
 }
 
+// TestIssueNavigationResolvesWithoutIO requires immutable descriptor construction without network access or list mutation.
 func TestIssueNavigationResolvesWithoutIO(t *testing.T) {
 	t.Parallel()
 	newRenderer := newMDRendererFactory()
@@ -108,6 +113,7 @@ type navigationRequest struct {
 	method, path, body string
 }
 
+// TestIssueNavigationRoutesLoadAndComments keeps loads and posts bound to each descriptor's ticket, including after failed lookups.
 func TestIssueNavigationRoutesLoadAndComments(t *testing.T) {
 	t.Setenv("GLAMOUR_STYLE", "notty")
 	newRenderer := newMDRendererFactory()
@@ -148,6 +154,7 @@ func TestIssueNavigationRoutesLoadAndComments(t *testing.T) {
 	takeNavigationRequest(t, requests, navigationRequest{method: http.MethodPost, path: "/rest/api/2/issue/A-1/comment", body: "Original ticket comment"})
 }
 
+// TestIssueNavigationInheritsCommentOptions preserves comment limits, native-mode eligibility, and reply routing across navigation.
 func TestIssueNavigationInheritsCommentOptions(t *testing.T) {
 	t.Setenv("GLAMOUR_STYLE", "notty")
 	newRenderer := newMDRendererFactory()
@@ -207,6 +214,7 @@ func TestIssueNavigationInheritsCommentOptions(t *testing.T) {
 	}
 }
 
+// assertNavigationOptions checks that rendered comments and reply eligibility agree with inherited display options.
 func assertNavigationOptions(t *testing.T, detail tui.DetailView, content tui.DetailContent, threads bool, limit uint) {
 	t.Helper()
 	if got, want := detail.SubmitReply != nil, threads && limit > 0; got != want {
@@ -228,6 +236,7 @@ func assertNavigationOptions(t *testing.T, detail tui.DetailView, content tui.De
 	}
 }
 
+// navigationFlatHandler records ticket-specific reads and writes while providing a deterministic missing-ticket response.
 func navigationFlatHandler(t *testing.T, requests chan<- navigationRequest) http.Handler {
 	t.Helper()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -256,10 +265,12 @@ func navigationFlatHandler(t *testing.T, requests chan<- navigationRequest) http
 	})
 }
 
+// navigationTestClient confines synthetic Basic credentials to the local TLS fixture.
 func navigationTestClient(server string) *jira.Client {
 	return jira.NewClient(jira.Config{Server: server, Login: "synthetic@example.invalid", APIToken: "synthetic-test-token"}, jira.WithInsecureTLS(true))
 }
 
+// openNavigation requires a usable resolver so later routing assertions cannot run against a zero descriptor.
 func openNavigation(t *testing.T, detail tui.DetailView, input string) tui.DetailView {
 	t.Helper()
 	if detail.OpenTicket == nil {
@@ -272,6 +283,7 @@ func openNavigation(t *testing.T, detail tui.DetailView, input string) tui.Detai
 	return next
 }
 
+// takeNavigationRequest verifies the completed callback used the expected method, ticket path, and body.
 func takeNavigationRequest(t *testing.T, requests <-chan navigationRequest, want navigationRequest) {
 	t.Helper()
 	select {
@@ -284,6 +296,7 @@ func takeNavigationRequest(t *testing.T, requests <-chan navigationRequest, want
 	}
 }
 
+// assertNoNavigationRequests detects eager I/O during descriptor resolution and unexpected follow-up requests.
 func assertNoNavigationRequests(t *testing.T, requests <-chan navigationRequest) {
 	t.Helper()
 	select {
@@ -293,6 +306,7 @@ func assertNoNavigationRequests(t *testing.T, requests <-chan navigationRequest)
 	}
 }
 
+// setNavigationCloud isolates Cloud-only navigation checks from persistent installation configuration.
 func setNavigationCloud(t *testing.T) {
 	t.Helper()
 	original := viper.Get("installation")

@@ -14,6 +14,7 @@ type ticketAction struct {
 	kind, ticket, target, body string
 }
 
+// navigationContent makes each ticket's text and reply root distinguishable so mixed snapshots cannot pass navigation checks.
 func navigationContent(ticket string) DetailContent {
 	return DetailContent{
 		Text:         "Ticket " + ticket + "\n" + strings.Repeat("details\n", 40) + "bottom " + ticket,
@@ -21,6 +22,7 @@ func navigationContent(ticket string) DetailContent {
 	}
 }
 
+// navigationView captures ticket identity in every callback so tests detect partial descriptor rebinding.
 func navigationView(ticket string, actions chan<- ticketAction) DetailView {
 	return DetailView{
 		Title: ticket,
@@ -40,6 +42,7 @@ func navigationView(ticket string, actions chan<- ticketAction) DetailView {
 	}
 }
 
+// assertTicket requires descriptor, visible content, reply metadata, and posted status to belong to one atomic ticket snapshot.
 func assertTicket(t *testing.T, h *detailHarness, ticket, posted string) {
 	t.Helper()
 	h.ui(func() {
@@ -67,6 +70,7 @@ func assertTicket(t *testing.T, h *detailHarness, ticket, posted string) {
 	})
 }
 
+// expectTicketAction checks the captured ticket and target as well as action kind to catch stale callback routing.
 func expectTicketAction(t *testing.T, actions <-chan ticketAction, want ticketAction) {
 	t.Helper()
 	if got := await(t, actions); got != want {
@@ -74,6 +78,7 @@ func expectTicketAction(t *testing.T, actions <-chan ticketAction, want ticketAc
 	}
 }
 
+// navigateTo waits for a committed descriptor rather than treating resolver completion as a successful ticket switch.
 func navigateTo(h *detailHarness, input, title string) {
 	h.t.Helper()
 	h.typeText("/")
@@ -86,6 +91,7 @@ type ticketContext struct {
 	row, col, offsetRow, offsetCol, textRow, textCol int
 }
 
+// currentTicketContext captures list and detail offsets on the UI goroutine for cancellation and failure comparisons.
 func currentTicketContext(h *detailHarness) ticketContext {
 	var context ticketContext
 	h.ui(func() {
@@ -96,6 +102,7 @@ func currentTicketContext(h *detailHarness) ticketContext {
 	return context
 }
 
+// assertPromptClosed rejects orphan prompt pages and requires focus to return to the active detail view.
 func assertPromptClosed(t *testing.T, h *detailHarness) {
 	t.Helper()
 	h.ui(func() {
@@ -105,12 +112,14 @@ func assertPromptClosed(t *testing.T, h *detailHarness) {
 	})
 }
 
+// drainTicketFrames removes prior draw notifications so the next wait observes a released stale worker's update.
 func drainTicketFrames(h *detailHarness) {
 	for len(h.frames) > 0 {
 		<-h.frames
 	}
 }
 
+// TestTicketPromptInputAndSinglePendingRequest keeps typing inert, locks duplicate submissions, and commits only after the new content loads.
 func TestTicketPromptInputAndSinglePendingRequest(t *testing.T) {
 	inputs := make(chan string, 2)
 	resolve := make(chan DetailView, 1)
@@ -173,6 +182,7 @@ func TestTicketPromptInputAndSinglePendingRequest(t *testing.T) {
 	assertPromptClosed(t, h)
 }
 
+// TestTicketSwitchRebindsWholeDescriptorAcrossTwoJumps moves all write callbacks and reply metadata together without replacing the original list context.
 func TestTicketSwitchRebindsWholeDescriptorAcrossTwoJumps(t *testing.T) {
 	actions := make(chan ticketAction, 20)
 	h := newDetailHarness(t, detailOption(navigationView("OLD", actions)))
@@ -231,6 +241,7 @@ func TestTicketSwitchRebindsWholeDescriptorAcrossTwoJumps(t *testing.T) {
 	})
 }
 
+// TestTicketNavigationErrorsKeepCurrentSnapshotAndInput leaves the active ticket, scroll, and editable prompt unchanged after resolution or load failure.
 func TestTicketNavigationErrorsKeepCurrentSnapshotAndInput(t *testing.T) {
 	for _, tc := range []struct {
 		name, input, want string
@@ -289,6 +300,7 @@ func TestTicketNavigationErrorsKeepCurrentSnapshotAndInput(t *testing.T) {
 	}
 }
 
+// TestTicketNavigationFailureRetainsAllActionBindings prevents a failed target render from rebinding comments, replies, or later navigation.
 func TestTicketNavigationFailureRetainsAllActionBindings(t *testing.T) {
 	actions := make(chan ticketAction, 10)
 	view := navigationView("OLD", actions)
@@ -329,6 +341,7 @@ func TestTicketNavigationFailureRetainsAllActionBindings(t *testing.T) {
 	assertTicket(t, h, "OLD", "Reply")
 }
 
+// TestTicketPromptCanEditAndRetryResolverAndRenderErrors preserves editable input through multiple failures until an explicitly retried load succeeds.
 func TestTicketPromptCanEditAndRetryResolverAndRenderErrors(t *testing.T) {
 	actions := make(chan ticketAction, 10)
 	inputs := make(chan string, 3)
@@ -368,6 +381,7 @@ func TestTicketPromptCanEditAndRetryResolverAndRenderErrors(t *testing.T) {
 	}
 }
 
+// TestTicketPromptCancellationKeepsContext makes Escape and CtrlC preserve the current ticket and ignore any late pending result.
 func TestTicketPromptCancellationKeepsContext(t *testing.T) {
 	for _, pending := range []bool{false, true} {
 		for _, key := range []tcell.Key{tcell.KeyEsc, tcell.KeyCtrlC} {
@@ -413,6 +427,7 @@ func TestTicketPromptCancellationKeepsContext(t *testing.T) {
 	}
 }
 
+// TestTicketCancelledRequestCannotOverwriteNextPrompt prevents an older cancelled navigation from overwriting a newer committed ticket.
 func TestTicketCancelledRequestCannotOverwriteNextPrompt(t *testing.T) {
 	actions := make(chan ticketAction, 10)
 	loads := make(chan chan DetailContent, 2)
@@ -446,6 +461,7 @@ func TestTicketCancelledRequestCannotOverwriteNextPrompt(t *testing.T) {
 	assertPromptClosed(t, h)
 }
 
+// TestTicketSwitchAndOldReloadOrdering keeps the new atomic snapshot authoritative regardless of when an old ticket reload completes.
 func TestTicketSwitchAndOldReloadOrdering(t *testing.T) {
 	for _, oldFirst := range []bool{false, true} {
 		name := "old reload finishes last"
@@ -499,6 +515,7 @@ func TestTicketSwitchAndOldReloadOrdering(t *testing.T) {
 	}
 }
 
+// TestTicketReloadOrCloseInvalidatesPendingNavigation prevents detached prompt workers from replacing reloaded or reopened detail state.
 func TestTicketReloadOrCloseInvalidatesPendingNavigation(t *testing.T) {
 	for _, operation := range []string{"reload", "close and reopen"} {
 		t.Run(operation, func(t *testing.T) {
@@ -540,6 +557,7 @@ func TestTicketReloadOrCloseInvalidatesPendingNavigation(t *testing.T) {
 	}
 }
 
+// TestTicketSlashIsLiteralInCommentAndReplyEditors prevents navigation from stealing editor input or competing with a picker or pending post.
 func TestTicketSlashIsLiteralInCommentAndReplyEditors(t *testing.T) {
 	for _, mode := range []string{"comment", "reply"} {
 		t.Run(mode, func(t *testing.T) {
@@ -593,6 +611,7 @@ func TestTicketSlashIsLiteralInCommentAndReplyEditors(t *testing.T) {
 	}
 }
 
+// TestTicketPromptRejectsMultilineAndOversizedInputWithoutTruncation preserves existing input and avoids resolution when a paste exceeds prompt constraints.
 func TestTicketPromptRejectsMultilineAndOversizedInputWithoutTruncation(t *testing.T) {
 	actions := make(chan ticketAction, 10)
 	h := newDetailHarness(t, detailOption(navigationView("OLD", actions)))
@@ -620,6 +639,7 @@ func TestTicketPromptRejectsMultilineAndOversizedInputWithoutTruncation(t *testi
 	}
 }
 
+// TestTicketPromptCtrlCPreservesPriorCaptureAndNormalExit consumes prompt cancellation but restores normal interrupt delegation afterward.
 func TestTicketPromptCtrlCPreservesPriorCaptureAndNormalExit(t *testing.T) {
 	var interrupts atomic.Int32
 	actions := make(chan ticketAction, 10)

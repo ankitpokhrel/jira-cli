@@ -9,6 +9,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
 )
 
+// TestToADF protects lossless supported Markdown structure, literal text, and formatting in serialized ADF documents.
 func TestToADF(t *testing.T) {
 	tests := []struct {
 		name, markdown, content string
@@ -178,6 +179,7 @@ func TestToADF(t *testing.T) {
 	}
 }
 
+// TestToADFUnsupported requires a nil document and content-redacted error rather than silently dropping unsupported Markdown.
 func TestToADFUnsupported(t *testing.T) {
 	tests := []struct{ name, markdown, format string }{
 		{"invalid UTF8", string([]byte{0xff}), "UTF-8"},
@@ -225,6 +227,7 @@ func TestToADFUnsupported(t *testing.T) {
 	}
 }
 
+// deepADFList exceeds the nesting budget to exercise bounded conversion of deeply nested list input.
 func deepADFList() string {
 	var input strings.Builder
 	for i := 0; i < 30; i++ {
@@ -233,6 +236,7 @@ func deepADFList() string {
 	return input.String()
 }
 
+// TestToADFLinkEscapes preserves labels and decodes Markdown escapes and entities exactly once in link attributes.
 func TestToADFLinkEscapes(t *testing.T) {
 	doc, err := ToADF(`[a\]b](https://example.invalid/a\(b\)?x=1&amp;y=2 "a\"b \&quot; \\")`)
 	if err != nil {
@@ -257,6 +261,7 @@ func TestToADFLinkEscapes(t *testing.T) {
 	}
 }
 
+// TestToADFAllowedLinks accepts supported absolute web and mail links without corrupting encoding or Unicode paths.
 func TestToADFAllowedLinks(t *testing.T) {
 	tests := []struct{ name, markdown, href string }{
 		{"https", "[label](https://example.invalid/route)", "https://example.invalid/route"},
@@ -294,6 +299,7 @@ func TestToADFAllowedLinks(t *testing.T) {
 	}
 }
 
+// TestToADFRejectedLinks fails closed on unsafe schemes, credentials, malformed URLs, and hidden controls without leaking input.
 func TestToADFRejectedLinks(t *testing.T) {
 	tests := []struct{ name, href string }{
 		{"javascript", "javascript:private"},
@@ -351,6 +357,7 @@ func TestToADFRejectedLinks(t *testing.T) {
 	}
 }
 
+// TestToADFListMetadata preserves real ordered-list starts without mistaking code or table text for list metadata.
 func TestToADFListMetadata(t *testing.T) {
 	tests := []struct {
 		name, markdown string
@@ -404,6 +411,7 @@ func TestToADFListMetadata(t *testing.T) {
 	}
 }
 
+// TestToADFMarkdownTranslator ensures generated ADF remains compatible with the existing Markdown display translator.
 func TestToADFMarkdownTranslator(t *testing.T) {
 	doc, err := ToADF("plain\n\n- item\n")
 	if err != nil {

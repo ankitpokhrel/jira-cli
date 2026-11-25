@@ -16,6 +16,7 @@ import (
 
 const factoryTestMarkdown = "# Heading\n\nA **bold** paragraph and a [link](https://example.invalid).\n\n- First\n- Second\n\n```go\nprintln(\"code\")\n```\n\n"
 
+// TestMDRendererFactoryBuiltinStyles requires captured styles and wrapping to survive later environment changes.
 func TestMDRendererFactoryBuiltinStyles(t *testing.T) {
 	for _, style := range []string{styles.DarkStyle, styles.LightStyle, styles.NoTTYStyle, styles.AsciiStyle, styles.DraculaStyle, styles.TokyoNightStyle, styles.PinkStyle} {
 		t.Run(style, func(t *testing.T) {
@@ -38,6 +39,7 @@ func TestMDRendererFactoryBuiltinStyles(t *testing.T) {
 	}
 }
 
+// TestMDRendererFactoryAutoWithoutTTY preserves non-TTY auto detection when the environment changes after capture.
 func TestMDRendererFactoryAutoWithoutTTY(t *testing.T) {
 	if term.IsTerminal(int(os.Stdout.Fd())) {
 		t.Skip("automatic TTY background selection is covered by the PTY tests")
@@ -67,6 +69,7 @@ func TestMDRendererFactoryAutoWithoutTTY(t *testing.T) {
 	}
 }
 
+// TestMDRendererFactoryCustomStyle ensures configured JSON styling is retained rather than reselected on each load.
 func TestMDRendererFactoryCustomStyle(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "style.json")
 	const style = `{"document":{"block_prefix":"CAPTURED-STYLE\n","block_suffix":"\nEND-CAPTURED"}}`
@@ -90,6 +93,7 @@ func TestMDRendererFactoryCustomStyle(t *testing.T) {
 	}
 }
 
+// TestMDRendererFactoryStyleErrors prevents later environment changes from masking captured style initialization failures.
 func TestMDRendererFactoryStyleErrors(t *testing.T) {
 	invalidJSON := filepath.Join(t.TempDir(), "invalid.json")
 	if err := os.WriteFile(invalidJSON, []byte("{invalid"), 0o600); err != nil {
@@ -112,6 +116,7 @@ func TestMDRendererFactoryStyleErrors(t *testing.T) {
 	}
 }
 
+// TestMDRendererFactoryFreshConcurrentRenderers requires isolated mutable renderers with identical captured styling under concurrent loads.
 func TestMDRendererFactoryFreshConcurrentRenderers(t *testing.T) {
 	t.Setenv("GLAMOUR_STYLE", styles.DarkStyle)
 	factory := newMDRendererFactory()
@@ -147,6 +152,7 @@ func TestMDRendererFactoryFreshConcurrentRenderers(t *testing.T) {
 	}
 }
 
+// TestIssueDetailRendererFactorySurvivesNavigationAndReload keeps renderer creation lazy while reusing captured options across ticket changes.
 func TestIssueDetailRendererFactorySurvivesNavigationAndReload(t *testing.T) {
 	t.Setenv("GLAMOUR_STYLE", styles.DarkStyle)
 	factory := newMDRendererFactory()
@@ -178,6 +184,7 @@ func TestIssueDetailRendererFactorySurvivesNavigationAndReload(t *testing.T) {
 	}
 }
 
+// renderFactoryMarkdown makes renderer construction and rendering failures fatal before output comparisons.
 func renderFactoryMarkdown(t *testing.T, factory mdRendererFactory, markdown string) string {
 	t.Helper()
 	renderer, err := factory()
@@ -191,6 +198,7 @@ func renderFactoryMarkdown(t *testing.T, factory mdRendererFactory, markdown str
 	return out
 }
 
+// loadFactoryDetail requires a nonempty rendered snapshot so a silently skipped load cannot pass factory checks.
 func loadFactoryDetail(t *testing.T, load func() (tui.DetailContent, error)) {
 	t.Helper()
 	content, err := load()

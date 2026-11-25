@@ -183,7 +183,7 @@ func (c *Client) newThreadReader() (*threadReader, error) {
 type threadRequestError struct{ cause error }
 
 // Error redacts transport details that may contain credentials or private queries.
-func (e threadRequestError) Error() string { return "HTTP request failed" }
+func (threadRequestError) Error() string { return "HTTP request failed" }
 
 // Unwrap preserves cancellation and transport error matching despite redaction.
 func (e threadRequestError) Unwrap() error { return e.cause }

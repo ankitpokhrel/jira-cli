@@ -12,6 +12,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/internal/query"
 )
 
+// issueCommand uses the real issue command tree so flag checks include shared command wiring.
 func issueCommand(t *testing.T, name string) *cobra.Command {
 	t.Helper()
 	cmd, _, err := issuecmd.NewCmdIssue().Find([]string{name})
@@ -21,6 +22,7 @@ func issueCommand(t *testing.T, name string) *cobra.Command {
 	return cmd
 }
 
+// TestCommentThreadFlags keeps native threads opt-in with explicit authentication, ordering, and whole-thread limit guidance.
 func TestCommentThreadFlags(t *testing.T) {
 	for _, name := range []string{"list", "view"} {
 		t.Run(name, func(t *testing.T) {
@@ -54,6 +56,7 @@ func TestCommentThreadFlags(t *testing.T) {
 	}
 }
 
+// TestCommentThreadFlagGroups rejects raw threaded output while preserving supported flat and hidden-comment combinations.
 func TestCommentThreadFlagGroups(t *testing.T) {
 	for _, name := range []string{"list", "view"} {
 		t.Run(name, func(t *testing.T) {
@@ -88,6 +91,7 @@ func TestCommentThreadFlagGroups(t *testing.T) {
 	}
 }
 
+// TestCommentThreadsUnsupportedCommands prevents epic and sprint lists from inheriting unsupported thread flags or exclusivity rules.
 func TestCommentThreadsUnsupportedCommands(t *testing.T) {
 	for _, root := range []*cobra.Command{epic.NewCmdEpic(), sprint.NewCmdSprint()} {
 		t.Run(root.Name(), func(t *testing.T) {
@@ -115,6 +119,7 @@ func TestCommentThreadsUnsupportedCommands(t *testing.T) {
 	}
 }
 
+// TestCommentThreadsDoNotChangeListQuery ensures detail presentation options cannot alter issue search criteria.
 func TestCommentThreadsDoNotChangeListQuery(t *testing.T) {
 	var flatQuery string
 	for _, threads := range []bool{false, true} {

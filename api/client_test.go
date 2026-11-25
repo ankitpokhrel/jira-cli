@@ -17,6 +17,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter/issue"
 )
 
+// setInstallation restores global installation state so proxy cases cannot leak configuration.
 func setInstallation(t *testing.T, installation string) {
 	t.Helper()
 	previous := viper.Get("installation")
@@ -24,6 +25,7 @@ func setInstallation(t *testing.T, installation string) {
 	t.Cleanup(func() { viper.Set("installation", previous) })
 }
 
+// TestProxyGetIssueWithCommentThreadsRejectsLocal ensures Cloud-only mode fails before using a client, even with comments hidden.
 func TestProxyGetIssueWithCommentThreadsRejectsLocal(t *testing.T) {
 	setInstallation(t, jira.InstallationTypeLocal)
 	iss, err := ProxyGetIssueWithCommentThreads(nil, "ISSUE-1", issue.NewNumCommentsFilter(0))
@@ -32,6 +34,7 @@ func TestProxyGetIssueWithCommentThreadsRejectsLocal(t *testing.T) {
 	}
 }
 
+// TestProxyGetIssueWithCommentThreadsZeroComments protects the base-only fetch without normalizing or replacing embedded comments.
 func TestProxyGetIssueWithCommentThreadsZeroComments(t *testing.T) {
 	setInstallation(t, jira.InstallationTypeCloud)
 	var requests atomic.Int32
@@ -68,6 +71,7 @@ func TestProxyGetIssueWithCommentThreadsZeroComments(t *testing.T) {
 	}
 }
 
+// TestProxyGetIssueWithCommentThreadsErrors requires contextual wrapped failures instead of a misleading flat-comment fallback.
 func TestProxyGetIssueWithCommentThreadsErrors(t *testing.T) {
 	setInstallation(t, jira.InstallationTypeCloud)
 	for _, failure := range []string{"base issue", "comment threads"} {
@@ -108,6 +112,7 @@ func TestProxyGetIssueWithCommentThreadsErrors(t *testing.T) {
 	}
 }
 
+// TestProxyGetIssueWithCommentThreadsRejectsHTTPBeforeFetch prevents any insecure request, regardless of the comment limit.
 func TestProxyGetIssueWithCommentThreadsRejectsHTTPBeforeFetch(t *testing.T) {
 	setInstallation(t, jira.InstallationTypeCloud)
 	var requests atomic.Int32
@@ -131,6 +136,7 @@ func TestProxyGetIssueWithCommentThreadsRejectsHTTPBeforeFetch(t *testing.T) {
 	}
 }
 
+// TestProxyGetIssueWithCommentThreadsDoesNotFollowInitialRedirect keeps even the base issue fetch from forwarding thread-mode requests.
 func TestProxyGetIssueWithCommentThreadsDoesNotFollowInitialRedirect(t *testing.T) {
 	setInstallation(t, jira.InstallationTypeCloud)
 	var destinationRequests atomic.Int32
@@ -164,6 +170,7 @@ func TestProxyGetIssueWithCommentThreadsDoesNotFollowInitialRedirect(t *testing.
 	}
 }
 
+// TestProxyGetIssueWithCommentThreadsCompleteCollection requires reconciled parentage and normalized bodies without truncating fetched threads.
 func TestProxyGetIssueWithCommentThreadsCompleteCollection(t *testing.T) {
 	setInstallation(t, jira.InstallationTypeCloud)
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -237,6 +244,7 @@ func TestProxyGetIssueWithCommentThreadsCompleteCollection(t *testing.T) {
 	}
 }
 
+// TestProxyGetIssueFlatUnchanged protects single-request flat loading and installation-specific body normalization from thread-mode changes.
 func TestProxyGetIssueFlatUnchanged(t *testing.T) {
 	for _, installation := range []string{jira.InstallationTypeCloud, jira.InstallationTypeLocal} {
 		t.Run(installation, func(t *testing.T) {

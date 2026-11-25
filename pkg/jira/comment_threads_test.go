@@ -22,6 +22,7 @@ import (
 
 const testThreadIssueID = "ari:cloud:jira:test-cloud:issue/7"
 
+// testThreadConnection keeps edge cursors and coverage metadata consistent so pagination faults can be introduced deliberately.
 func testThreadConnection(previous, next bool, nodes ...*threadNode) *threadConnection {
 	conn := &threadConnection{
 		Edges:    make([]threadEdge, 0, len(nodes)),
@@ -37,10 +38,12 @@ func testThreadConnection(previous, next bool, nodes ...*threadNode) *threadConn
 	return conn
 }
 
+// testThreadComment gives native nodes distinct global and REST identities to exercise identity reconciliation.
 func testThreadComment(id string) *threadNode {
 	return &threadNode{ID: "global/" + id, CommentID: id}
 }
 
+// testThreadBody supplies valid REST body and creation metadata independently of native parentage.
 func testThreadBody(id string) IssueComment {
 	return IssueComment{
 		ID: id, Author: User{AccountID: "synthetic"}, Created: "2000-01-01T00:00:00.000+0000",
@@ -63,6 +66,7 @@ type threadFixture struct {
 	restCalls   atomic.Int32
 }
 
+// newThreadFixture separates root, reply, and REST page boundaries so complete coverage requires reconciling all three streams.
 func newThreadFixture(t *testing.T) *threadFixture {
 	t.Helper()
 	root, other := testThreadComment("r1"), testThreadComment("r2")
@@ -98,6 +102,7 @@ func newThreadFixture(t *testing.T) *threadFixture {
 	return f
 }
 
+// serve requires authenticated read-only requests and valid REST offsets before returning synthetic thread data.
 func (f *threadFixture) serve(w http.ResponseWriter, r *http.Request) {
 	if f.intercept != nil && f.intercept(w, r) {
 		return
@@ -137,6 +142,7 @@ func (f *threadFixture) serve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// serveGraphQL validates persisted-query variables and live issue or parent identities on every native page request.
 func (f *threadFixture) serveGraphQL(w http.ResponseWriter, r *http.Request) {
 	if !strings.Contains(r.Header.Get("Accept"), "application/graphql-response+json") {
 		f.t.Error("missing GraphQL Accept")
@@ -182,6 +188,7 @@ func (f *threadFixture) serveGraphQL(w http.ResponseWriter, r *http.Request) {
 	f.writeJSON(w, map[string]any{"data": map[string]any{"node": node}})
 }
 
+// writeJSON reports fixture encoding failures so malformed responses cannot silently invalidate adapter assertions.
 func (f *threadFixture) writeJSON(w http.ResponseWriter, value any) {
 	f.t.Helper()
 	w.Header().Set("Content-Type", "application/json")
@@ -190,6 +197,7 @@ func (f *threadFixture) writeJSON(w http.ResponseWriter, value any) {
 	}
 }
 
+// testThreadClient binds synthetic credentials to a cleanup-managed TLS server instead of external Jira state.
 func testThreadClient(t *testing.T, handler http.HandlerFunc) *Client {
 	t.Helper()
 	server := httptest.NewTLSServer(handler)
@@ -197,6 +205,7 @@ func testThreadClient(t *testing.T, handler http.HandlerFunc) *Client {
 	return NewClient(Config{Server: server.URL, Login: "test-login", APIToken: "test-token"}, WithInsecureTLS(true))
 }
 
+// TestGetIssueCommentThreadsPagination exhausts all page streams and reconciles native parents with REST bodies without changing flat JSON.
 func TestGetIssueCommentThreadsPagination(t *testing.T) {
 	f := newThreadFixture(t)
 	client := testThreadClient(t, f.serve)
@@ -234,11 +243,13 @@ type threadCountingTransport struct {
 	calls atomic.Int32
 }
 
+// RoundTrip counts configured-transport usage so pagination checks detect bypasses or redundant bootstrap requests.
 func (r *threadCountingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	r.calls.Add(1)
 	return r.base.RoundTrip(req)
 }
 
+// TestGetIssueCommentThreadsEmpty distinguishes a verified empty collection from a nil failure result.
 func TestGetIssueCommentThreadsEmpty(t *testing.T) {
 	f := newThreadFixture(t)
 	f.roots = map[string]*threadConnection{"": testThreadConnection(false, false)}
@@ -250,6 +261,7 @@ func TestGetIssueCommentThreadsEmpty(t *testing.T) {
 	}
 }
 
+// TestGetIssueCommentThreadsRejectsIncompleteData fails closed on identity conflicts, pagination gaps, malformed bodies, and unequal coverage.
 func TestGetIssueCommentThreadsRejectsIncompleteData(t *testing.T) {
 	cases := []struct {
 		name   string
@@ -326,6 +338,7 @@ func TestGetIssueCommentThreadsRejectsIncompleteData(t *testing.T) {
 	}
 }
 
+// TestGetIssueCommentThreadsResponseErrors rejects HTTP, JSON, and partial GraphQL failures without exposing provider response contents.
 func TestGetIssueCommentThreadsResponseErrors(t *testing.T) {
 	for _, path := range []string{"/browse/TEST-1", "/rest/api/3/issue/TEST-1", threadRootsRouteV1, threadRepliesRouteV1, "/rest/api/3/issue/TEST-1/comment"} {
 		t.Run(path, func(t *testing.T) {
@@ -360,6 +373,7 @@ func TestGetIssueCommentThreadsResponseErrors(t *testing.T) {
 	}
 }
 
+// TestGetIssueCommentThreadsAuthenticationAndOrigin restricts native reads to configured Basic credentials and safe HTTPS origins and keys.
 func TestGetIssueCommentThreadsAuthenticationAndOrigin(t *testing.T) {
 	for _, auth := range []AuthType{AuthTypeBearer, AuthTypeMTLS, AuthTypeCFAccess, "unknown"} {
 		t.Run(string(auth), func(t *testing.T) {
@@ -392,6 +406,7 @@ func TestGetIssueCommentThreadsAuthenticationAndOrigin(t *testing.T) {
 	}
 }
 
+// testThreadEntryPoints applies transport-safety checks to every public thread-read path, including hidden comments.
 func testThreadEntryPoints() map[string]func(*Client, context.Context) error {
 	return map[string]func(*Client, context.Context) error{
 		"comments": func(c *Client, ctx context.Context) error {
@@ -409,6 +424,7 @@ func testThreadEntryPoints() map[string]func(*Client, context.Context) error {
 	}
 }
 
+// TestGetIssueCommentThreadsNoRedirects prevents base-fetch redirects from forwarding requests or credentials to any target.
 func TestGetIssueCommentThreadsNoRedirects(t *testing.T) {
 	var forwarded, authForwarded atomic.Int32
 	targetHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -448,6 +464,7 @@ func TestGetIssueCommentThreadsNoRedirects(t *testing.T) {
 	}
 }
 
+// TestGetIssueCommentThreadsContext preserves caller cancellation, deadlines, and configured timeout causes across read entry points.
 func TestGetIssueCommentThreadsContext(t *testing.T) {
 	for name, read := range testThreadEntryPoints() {
 		t.Run(name, func(t *testing.T) {
@@ -477,6 +494,7 @@ func TestGetIssueCommentThreadsContext(t *testing.T) {
 	}
 }
 
+// TestGetIssueCommentThreadsCaps bounds response bytes, total requests, and native records to prevent unbounded adapter work.
 func TestGetIssueCommentThreadsCaps(t *testing.T) {
 	t.Run("response", func(t *testing.T) {
 		client := testThreadClient(t, func(w http.ResponseWriter, r *http.Request) {
@@ -515,6 +533,7 @@ func TestGetIssueCommentThreadsCaps(t *testing.T) {
 	})
 }
 
+// TestGetIssueCommentThreadsNoDebugDump prevents private adapter queries and credentials from reaching debug stdout.
 func TestGetIssueCommentThreadsNoDebugDump(t *testing.T) {
 	f := newThreadFixture(t)
 	client := testThreadClient(t, f.serve)
@@ -535,6 +554,7 @@ func TestGetIssueCommentThreadsNoDebugDump(t *testing.T) {
 	}
 }
 
+// TestGetIssuePartialCommentPage preserves flat totals and normalization without indexing beyond a partial embedded page.
 func TestGetIssuePartialCommentPage(t *testing.T) {
 	for _, count := range []int{0, 2} {
 		t.Run(strconv.Itoa(count), func(t *testing.T) {
@@ -563,6 +583,7 @@ func TestGetIssuePartialCommentPage(t *testing.T) {
 	}
 }
 
+// TestGetIssueWithCommentThreads reuses bootstrap identity for complete threads and leaves embedded comments unchanged when disabled.
 func TestGetIssueWithCommentThreads(t *testing.T) {
 	for _, includeComments := range []bool{false, true} {
 		t.Run(strconv.FormatBool(includeComments), func(t *testing.T) {
@@ -604,6 +625,7 @@ func TestGetIssueWithCommentThreads(t *testing.T) {
 	}
 }
 
+// TestThreadReadRejectsHTTPBeforeRequests forbids insecure origin access even when only the base issue is requested.
 func TestThreadReadRejectsHTTPBeforeRequests(t *testing.T) {
 	var requests atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -624,6 +646,7 @@ func TestThreadReadRejectsHTTPBeforeRequests(t *testing.T) {
 	}
 }
 
+// TestGetIssueWithCommentThreadsValidatesBeforeRequests rejects unsupported auth, missing credentials, and unsafe keys before network I/O.
 func TestGetIssueWithCommentThreadsValidatesBeforeRequests(t *testing.T) {
 	for _, includeComments := range []bool{false, true} {
 		for _, invalid := range []string{"auth", "credentials", "key"} {
@@ -647,6 +670,7 @@ func TestGetIssueWithCommentThreadsValidatesBeforeRequests(t *testing.T) {
 	}
 }
 
+// TestThreadReadBaseIssueErrors stops every read path at an invalid base response with redacted context and no retries.
 func TestThreadReadBaseIssueErrors(t *testing.T) {
 	cases := []struct {
 		name, body, want string
@@ -683,6 +707,7 @@ func TestThreadReadBaseIssueErrors(t *testing.T) {
 	}
 }
 
+// TestThreadReadBaseIssueCancellation requires in-flight cancellation to reach the initial fetch and retain its matchable cause.
 func TestThreadReadBaseIssueCancellation(t *testing.T) {
 	for name, read := range testThreadEntryPoints() {
 		t.Run(name, func(t *testing.T) {
@@ -705,6 +730,7 @@ func TestThreadReadBaseIssueCancellation(t *testing.T) {
 	}
 }
 
+// TestGetIssueWithCommentThreadsWholeOperationTimeout requires one shared deadline across the base fetch and subsequent bootstrap work.
 func TestGetIssueWithCommentThreadsWholeOperationTimeout(t *testing.T) {
 	const timeout = 100 * time.Millisecond
 	const delay = 60 * time.Millisecond
@@ -723,6 +749,7 @@ func TestGetIssueWithCommentThreadsWholeOperationTimeout(t *testing.T) {
 	}
 }
 
+// TestThreadRequestErrorRedactsCause hides sensitive transport text while preserving errors.Is cancellation matching.
 func TestThreadRequestErrorRedactsCause(t *testing.T) {
 	cause := fmt.Errorf("PRIVATE_SENTINEL: %w", context.Canceled)
 	err := fmt.Errorf("request: %w", threadRequestError{cause: cause})

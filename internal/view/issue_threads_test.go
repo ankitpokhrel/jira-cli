@@ -17,6 +17,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/md"
 )
 
+// TestSelectCommentThreads limits whole newest-root threads while retaining every descendant in chronological depth-first order.
 func TestSelectCommentThreads(t *testing.T) {
 	t.Parallel()
 	comments := []jira.IssueComment{
@@ -40,6 +41,7 @@ func TestSelectCommentThreads(t *testing.T) {
 		{name: "two roots", limit: 2, ids: []string{"a", "early", "nested", "late", "b"}, depth: []int{0, 1, 2, 1, 0}, shown: 2},
 		{name: "uint maximum", limit: ^uint(0), ids: []string{"a", "early", "nested", "late", "b", "older", "newest-reply"}, depth: []int{0, 1, 2, 1, 0, 0, 1}, shown: 3},
 	} {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			got := selectCommentThreads(comments, tc.limit)
@@ -59,6 +61,7 @@ func TestSelectCommentThreads(t *testing.T) {
 	}
 }
 
+// TestCommentThreadOrderingIsRepeatable requires deterministic ID tie-breaking without mutating shuffled source comments.
 func TestCommentThreadOrderingIsRepeatable(t *testing.T) {
 	t.Parallel()
 	comments := []jira.IssueComment{
@@ -86,6 +89,7 @@ func TestCommentThreadOrderingIsRepeatable(t *testing.T) {
 	}
 }
 
+// TestInvalidCommentThreadsRemainVisible exposes malformed graph entries with warnings instead of dropping them or inventing parentage.
 func TestInvalidCommentThreadsRemainVisible(t *testing.T) {
 	t.Parallel()
 	for _, tc := range []struct {
@@ -101,6 +105,7 @@ func TestInvalidCommentThreadsRemainVisible(t *testing.T) {
 		{name: "cycle", comments: []jira.IssueComment{{ID: "a", ParentID: "b"}, {ID: "b", ParentID: "a"}}, want: "cyclic parent chain"},
 		{name: "invalid ancestor", comments: []jira.IssueComment{{ID: "child", ParentID: "orphan"}, {ID: "orphan", ParentID: "absent"}}, want: "unresolved parent chain"},
 	} {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			comments := append([]jira.IssueComment{threadTestComment("root", "", "2026-01-01T01:00:00Z", "Valid root")}, tc.comments...)
@@ -132,6 +137,7 @@ func TestInvalidCommentThreadsRemainVisible(t *testing.T) {
 	}
 }
 
+// TestCommentThreadRendering preserves wiki and ADF formatting by applying nesting indentation only after Markdown rendering.
 func TestCommentThreadRendering(t *testing.T) {
 	t.Parallel()
 	wiki := "First *bold* paragraph\n\nSecond paragraph\n\n* One\n* Two\n\n{code:go}\nfmt.Println(\"test\")\n{code}"
@@ -153,6 +159,7 @@ func TestCommentThreadRendering(t *testing.T) {
 		t.Errorf("String output lacks nested body/metadata indentation: %q", issue.String())
 	}
 	for _, style := range []string{"notty", "dark"} {
+		style := style
 		t.Run(style, func(t *testing.T) {
 			t.Parallel()
 			renderer, err := glamour.NewTermRenderer(glamour.WithStandardStyle(style), glamour.WithWordWrap(wordWrap))
@@ -187,6 +194,7 @@ func TestCommentThreadRendering(t *testing.T) {
 	}
 }
 
+// TestCommentThreadPlainRendering keeps plain output on the shared fragment path so reply formatting cannot diverge.
 func TestCommentThreadPlainRendering(t *testing.T) {
 	t.Parallel()
 	issue := newThreadTestIssue([]jira.IssueComment{
@@ -210,6 +218,7 @@ func TestCommentThreadPlainRendering(t *testing.T) {
 	}
 }
 
+// TestCommentThreadLatestAndFooter separates root limits from latest-comment claims and avoids invented totals or chronology.
 func TestCommentThreadLatestAndFooter(t *testing.T) {
 	t.Parallel()
 	comments := []jira.IssueComment{
@@ -242,6 +251,7 @@ func TestCommentThreadLatestAndFooter(t *testing.T) {
 	}
 }
 
+// TestCommentThreadRichADF protects rich reply marks, lists, and multiline code from being flattened or misindented.
 func TestCommentThreadRichADF(t *testing.T) {
 	t.Parallel()
 	const source = `{"version":1,"type":"doc","content":[
@@ -277,6 +287,7 @@ func TestCommentThreadRichADF(t *testing.T) {
 	}
 }
 
+// TestCommentThreadMalformedBodies requires visible fallback labels for missing or unsupported bodies rather than silent omission.
 func TestCommentThreadMalformedBodies(t *testing.T) {
 	t.Parallel()
 	for _, body := range []any{nil, (*adf.ADF)(nil), 42, map[string]any{"unexpected": "body"}} {
@@ -288,6 +299,7 @@ func TestCommentThreadMalformedBodies(t *testing.T) {
 	}
 }
 
+// TestCommentThreadDeepChain retains deep descendants and true depth metadata while bounding visual indentation.
 func TestCommentThreadDeepChain(t *testing.T) {
 	t.Parallel()
 	const length = 1000
@@ -309,6 +321,7 @@ func TestCommentThreadDeepChain(t *testing.T) {
 	}
 }
 
+// TestFlatCommentTotalAndUintBounds prevents partial-page indexing, misleading latest markers, and unsigned-limit overflow in flat mode.
 func TestFlatCommentTotalAndUintBounds(t *testing.T) {
 	t.Parallel()
 	issue := newThreadTestIssue([]jira.IssueComment{threadTestComment("root", "", "2026-01-01T01:00:00Z", "Flat body")}, ^uint(0))
@@ -326,6 +339,7 @@ func TestFlatCommentTotalAndUintBounds(t *testing.T) {
 	}
 }
 
+// TestReplyTargetsSelection restricts the picker to displayed native roots and explains unavailable modes or empty selections.
 func TestReplyTargetsSelection(t *testing.T) {
 	t.Parallel()
 	comments := []jira.IssueComment{
@@ -350,6 +364,7 @@ func TestReplyTargetsSelection(t *testing.T) {
 		{name: "two", comments: comments, threads: true, limit: 2, ids: []string{"a", "b"}},
 		{name: "all", comments: comments, threads: true, limit: ^uint(0), ids: []string{"a", "b", "old"}},
 	} {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			issue := newThreadTestIssue(tc.comments, tc.limit)
@@ -373,6 +388,7 @@ func TestReplyTargetsSelection(t *testing.T) {
 	}
 }
 
+// TestReplyTargetsRejectInvalidGraphs excludes orphaned, cyclic, and ambiguous entries without hiding independent valid roots.
 func TestReplyTargetsRejectInvalidGraphs(t *testing.T) {
 	t.Parallel()
 	invalid := []jira.IssueComment{
@@ -400,6 +416,7 @@ func TestReplyTargetsRejectInvalidGraphs(t *testing.T) {
 	}
 }
 
+// TestReplyTargetsMetadataAndPreview preserves root identity, author fallback, date formatting, and whitespace-normalized translated previews.
 func TestReplyTargetsMetadataAndPreview(t *testing.T) {
 	t.Parallel()
 	doc := &adf.ADF{
@@ -416,6 +433,7 @@ func TestReplyTargetsMetadataAndPreview(t *testing.T) {
 		{name: "account fallback", author: jira.User{Name: "account-name"}, body: doc, preview: "ADF first paragraph"},
 		{name: "empty", body: " \n\t ", preview: ""},
 	} {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			comment := threadTestComment("root", "", "2026-01-01T01:00:00.000+0000", tc.body)
@@ -436,6 +454,7 @@ func TestReplyTargetsMetadataAndPreview(t *testing.T) {
 	}
 }
 
+// TestReplyTargetPreviewUTF8 bounds previews by runes so truncation never splits multibyte characters.
 func TestReplyTargetPreviewUTF8(t *testing.T) {
 	t.Parallel()
 	const limit = 100
@@ -454,10 +473,12 @@ func TestReplyTargetPreviewUTF8(t *testing.T) {
 	}
 }
 
+// threadTestComment supplies stable author metadata while allowing graph, timestamp, and body edge cases to vary.
 func threadTestComment(id, parent, created string, body any) jira.IssueComment {
 	return jira.IssueComment{ID: id, ParentID: parent, Created: created, Body: body, Author: jira.User{DisplayName: "Tester"}}
 }
 
+// newThreadTestIssue aligns the loaded total with synthetic comments and enables whole-thread selection for rendering checks.
 func newThreadTestIssue(comments []jira.IssueComment, limit uint) Issue {
 	data := &jira.Issue{Key: "TEST-1"}
 	data.Fields.Comment.Comments = comments

@@ -21,6 +21,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
+// TestIssueListRenderPTY guards against TTY OSC background-query regressions during detail loading, navigation, and refresh.
 func TestIssueListRenderPTY(t *testing.T) {
 	if runtime.GOOS != "darwin" && runtime.GOOS != "linux" {
 		t.Skip("PTY harness requires Darwin or Linux controlling-terminal ioctls")

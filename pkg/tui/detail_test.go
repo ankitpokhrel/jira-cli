@@ -23,6 +23,7 @@ type detailHarness struct {
 	err    error
 }
 
+// newDetailHarness runs a real event loop on a simulation screen with bounded startup and cleanup synchronization.
 func newDetailHarness(t *testing.T, opts ...TableOption) *detailHarness {
 	t.Helper()
 	h := &detailHarness{t: t, table: NewTable(opts...), screen: tcell.NewSimulationScreen("UTF-8"), frames: make(chan struct{}, 1), done: make(chan struct{})}
@@ -53,6 +54,7 @@ func newDetailHarness(t *testing.T, opts ...TableOption) *detailHarness {
 	return h
 }
 
+// await bounds asynchronous checks so missing callbacks fail instead of hanging the suite.
 func await[T any](t *testing.T, ch <-chan T) T {
 	t.Helper()
 	select {
@@ -65,11 +67,13 @@ func await[T any](t *testing.T, ch <-chan T) T {
 	}
 }
 
+// ui serializes assertions and mutations with the application event loop to avoid test-induced races.
 func (h *detailHarness) ui(fn func()) {
 	h.t.Helper()
 	h.table.screen.QueueUpdateDraw(fn)
 }
 
+// wait evaluates conditions on the UI goroutine and bounds frame-driven waits for asynchronous transitions.
 func (h *detailHarness) wait(description string, condition func() bool) {
 	h.t.Helper()
 	timer := time.NewTimer(5 * time.Second)
@@ -88,6 +92,7 @@ func (h *detailHarness) wait(description string, condition func() bool) {
 	}
 }
 
+// events waits for an input-queue barrier so assertions cannot overtake pending keys or paste events.
 func (h *detailHarness) events(events ...tcell.Event) {
 	h.t.Helper()
 	// A sentinel in the same event queue is a barrier, unlike QueueUpdate,
@@ -121,11 +126,13 @@ func (h *detailHarness) events(events ...tcell.Event) {
 	h.table.screen.QueueUpdate(func() { h.table.screen.SetInputCapture(previous) })
 }
 
+// key preserves modifier information while waiting for the synthetic keystroke to be handled.
 func (h *detailHarness) key(key tcell.Key, modifiers tcell.ModMask) {
 	h.t.Helper()
 	h.events(tcell.NewEventKey(key, 0, modifiers))
 }
 
+// typeText sends Unicode rune events through normal input capture rather than bypassing shortcut handling.
 func (h *detailHarness) typeText(text string) {
 	h.t.Helper()
 	events := make([]tcell.Event, 0, len(text))
@@ -135,6 +142,7 @@ func (h *detailHarness) typeText(text string) {
 	h.events(events...)
 }
 
+// paste brackets real key events so multiline and tab input exercises paste handling rather than editor shortcuts.
 func (h *detailHarness) paste(text string) {
 	h.t.Helper()
 	events := make([]tcell.Event, 0, len(text)+2)
@@ -153,6 +161,7 @@ func (h *detailHarness) paste(text string) {
 	h.events(events...)
 }
 
+// open waits past the initial loading state so detail assertions observe the completed snapshot or error.
 func (h *detailHarness) open() {
 	h.t.Helper()
 	h.typeText("v")
@@ -161,6 +170,7 @@ func (h *detailHarness) open() {
 	})
 }
 
+// TestVOpensSelectedIssueWithoutPrompt keeps v bound to the selected issue and reserves ticket resolution for explicit slash submission.
 func TestVOpensSelectedIssueWithoutPrompt(t *testing.T) {
 	opened := make(chan string, 2)
 	loaded := make(chan string, 2)
@@ -223,6 +233,7 @@ func TestVOpensSelectedIssueWithoutPrompt(t *testing.T) {
 	})
 }
 
+// screenText exposes rendered cells so escaping and clipping checks inspect visible output rather than widget buffers alone.
 func (h *detailHarness) screenText() string {
 	cells, width, _ := h.screen.GetContents()
 	var text strings.Builder
@@ -235,6 +246,7 @@ func (h *detailHarness) screenText() string {
 	return text.String()
 }
 
+// detailOption fixes the descriptor independently of list selection for focused detail-state checks.
 func detailOption(view DetailView) TableOption {
 	return WithDetailViewFunc(func(int, int, any) DetailView { return view })
 }
@@ -244,6 +256,7 @@ type commentRequest struct {
 	result chan error
 }
 
+// commentCallback lets tests hold a post in flight and release a chosen outcome without timing assumptions.
 func commentCallback(requests chan<- commentRequest) func(string) error {
 	return func(body string) error {
 		request := commentRequest{body: body, result: make(chan error, 1)}
@@ -252,6 +265,7 @@ func commentCallback(requests chan<- commentRequest) func(string) error {
 	}
 }
 
+// TestDetailComposerSubmission requires every submit control to preserve whitespace, issue one post, and lock the draft until completion.
 func TestDetailComposerSubmission(t *testing.T) {
 	for _, method := range []string{"CtrlS", "ShiftEnter", "Post button"} {
 		t.Run(method, func(t *testing.T) {
@@ -332,6 +346,7 @@ func TestDetailComposerSubmission(t *testing.T) {
 	}
 }
 
+// TestComposerPasteAndNavigation keeps shortcuts literal inside drafts and preserves tabs and newlines across editor and button focus changes.
 func TestComposerPasteAndNavigation(t *testing.T) {
 	requests := make(chan commentRequest, 1)
 	h := newDetailHarness(t, detailOption(DetailView{
@@ -399,6 +414,7 @@ func TestComposerPasteAndNavigation(t *testing.T) {
 	})
 }
 
+// TestComposerDiscardConfirmation defaults to retaining nonempty drafts and requires explicit discard without posting.
 func TestComposerDiscardConfirmation(t *testing.T) {
 	requests := make(chan commentRequest, 1)
 	h := newDetailHarness(t, detailOption(DetailView{
@@ -451,6 +467,7 @@ func TestComposerDiscardConfirmation(t *testing.T) {
 	}
 }
 
+// TestComposerEmptyCancellation permits empty drafts to close directly without a discard dialog or write callback.
 func TestComposerEmptyCancellation(t *testing.T) {
 	requests := make(chan commentRequest, 1)
 	h := newDetailHarness(t, detailOption(DetailView{
@@ -477,6 +494,7 @@ func TestComposerEmptyCancellation(t *testing.T) {
 	}
 }
 
+// TestComposerRejectsWhitespace rejects Unicode-whitespace-only posts locally while retaining the original editable draft.
 func TestComposerRejectsWhitespace(t *testing.T) {
 	requests := make(chan commentRequest, 1)
 	h := newDetailHarness(t, detailOption(DetailView{
@@ -500,6 +518,7 @@ func TestComposerRejectsWhitespace(t *testing.T) {
 	}
 }
 
+// TestComposerFailureRetainsBodyForExplicitRetry restores editing after failure without automatically resending a potentially posted comment.
 func TestComposerFailureRetainsBodyForExplicitRetry(t *testing.T) {
 	requests := make(chan commentRequest, 2)
 	h := newDetailHarness(t, detailOption(DetailView{
@@ -534,6 +553,7 @@ func TestComposerFailureRetainsBodyForExplicitRetry(t *testing.T) {
 	h.wait("explicit retry success", func() bool { return h.table.detail.composer == nil })
 }
 
+// TestPostSuccessReloadFailureDoesNotRestoreDraft separates confirmed writes from failed refreshes so reloads never resurrect or repost drafts.
 func TestPostSuccessReloadFailureDoesNotRestoreDraft(t *testing.T) {
 	requests := make(chan commentRequest, 2)
 	var loads atomic.Int32
@@ -581,6 +601,7 @@ func TestPostSuccessReloadFailureDoesNotRestoreDraft(t *testing.T) {
 	}
 }
 
+// TestDetailRenderingScrollingAndListState preserves literal markup, ANSI styling, and scrolling while back navigation restores the list context.
 func TestDetailRenderingScrollingAndListState(t *testing.T) {
 	body := "[red]literal[-] [\"region\"] \x1b[31mRED\x1b[0m\n" + strings.Repeat("filler\n", 60) + "bottom"
 	h := newDetailHarness(t, detailOption(DetailView{
@@ -642,6 +663,7 @@ type detailResult struct {
 	err     error
 }
 
+// TestDetailLoadErrorRetryAndStaleCompletion prevents late loads or errors from overwriting reopened details or newer text and reply metadata.
 func TestDetailLoadErrorRetryAndStaleCompletion(t *testing.T) {
 	requests := make(chan chan detailResult, 10)
 	var boundRows []int
@@ -705,6 +727,7 @@ func TestDetailLoadErrorRetryAndStaleCompletion(t *testing.T) {
 	})
 }
 
+// TestDetailInvalidSelectionAndMissingCallbacks prevents invalid table cells from invoking loaders and handles absent callbacks without unsafe actions.
 func TestDetailInvalidSelectionAndMissingCallbacks(t *testing.T) {
 	var called bool
 	h := newDetailHarness(t, WithDetailViewFunc(func(int, int, any) DetailView { called = true; return DetailView{} }))
@@ -750,6 +773,7 @@ func TestDetailInvalidSelectionAndMissingCallbacks(t *testing.T) {
 	})
 }
 
+// TestComposerCtrlCDraftAndConfirmation protects nonempty drafts from interrupt-driven discard or application exit.
 func TestComposerCtrlCDraftAndConfirmation(t *testing.T) {
 	h := newDetailHarness(t, detailOption(DetailView{
 		Title: "TEST-1", Load: func() (DetailContent, error) { return DetailContent{Text: "details"}, nil },
@@ -791,6 +815,7 @@ func TestComposerCtrlCDraftAndConfirmation(t *testing.T) {
 	})
 }
 
+// TestComposerCtrlCPendingPostAndFailureCancel keeps in-flight writes uninterrupted and requires explicit discard after a failed post.
 func TestComposerCtrlCPendingPostAndFailureCancel(t *testing.T) {
 	requests := make(chan commentRequest, 2)
 	h := newDetailHarness(t, detailOption(DetailView{
@@ -833,6 +858,7 @@ func TestComposerCtrlCPendingPostAndFailureCancel(t *testing.T) {
 	}
 }
 
+// TestTableCtrlCOutsideComposerExits preserves normal application exit and input-capture cleanup outside protected composer states.
 func TestTableCtrlCOutsideComposerExits(t *testing.T) {
 	for _, state := range []string{"generic list", "opted-in list", "detail", "empty composer closed"} {
 		t.Run(state, func(t *testing.T) {
@@ -859,6 +885,7 @@ func TestTableCtrlCOutsideComposerExits(t *testing.T) {
 	}
 }
 
+// TestTableComposerCapturePreservesPriorCapture shields composer interrupts while delegating other keys and restoring the original capture on exit.
 func TestTableComposerCapturePreservesPriorCapture(t *testing.T) {
 	var interrupts atomic.Int32
 	prior := func(ev *tcell.EventKey) *tcell.EventKey {
@@ -904,6 +931,7 @@ func TestTableComposerCapturePreservesPriorCapture(t *testing.T) {
 	}
 }
 
+// TestStatusGuidancePrecedesLiteralVerboseErrors keeps retry and cancellation guidance visible before long errors without interpreting error markup.
 func TestStatusGuidancePrecedesLiteralVerboseErrors(t *testing.T) {
 	loadError := "[red]LOAD\n" + strings.Repeat("load details\n", 10)
 	postError := "[blue]POST\n" + strings.Repeat("post details\n", 10)
@@ -933,6 +961,7 @@ func TestStatusGuidancePrecedesLiteralVerboseErrors(t *testing.T) {
 	})
 }
 
+// TestTableDetailOptInPreservesLegacyPager retains external-pager behavior unless an in-process detail callback explicitly takes precedence.
 func TestTableDetailOptInPreservesLegacyPager(t *testing.T) {
 	tee, err := exec.LookPath("tee")
 	if err != nil {
