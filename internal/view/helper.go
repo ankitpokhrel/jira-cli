@@ -1,3 +1,4 @@
+// Package view adapts Jira responses for terminal, plain-text, and CSV output.
 package view
 
 import (
@@ -12,9 +13,12 @@ import (
 
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/glamour/styles"
 	"github.com/fatih/color"
 	"github.com/mgutz/ansi"
+	"github.com/muesli/termenv"
 	"github.com/rivo/tview"
+	"golang.org/x/term"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmdutil"
 	"github.com/ankitpokhrel/jira-cli/pkg/browser"
@@ -58,6 +62,33 @@ const (
 * [yellow]CTRL + k[default] to copy issue key to the system clipboard
 * [yellow]q / ESC / CTRL + c[default] to quit the app
 * [yellow]?[default] to view this help page`
+
+	issueTableHelpText = tableHelpText + `
+
+IN ISSUE DETAILS
+----------------
+* [yellow]/[default] to enter another ticket key (or a number in the current project)
+* [yellow]c[default] to write a top-level multiline comment
+* [yellow]r[default] to choose a displayed native thread and reply
+* [yellow]CTRL + r / F5[default] to reload the ticket
+* [yellow]q / ESC[default] to return to the list
+
+Opt in with --comment-threads (experimental Jira Cloud, API-token Basic auth).
+--comments N then shows N complete root threads with all replies; 0 hides comments.
+Roots are newest-first, replies oldest-first. c creates top-level comments; r replies to a chosen thread.
+Replies initially support unrestricted Software/Business threads only.
+
+IN THE COMMENT EDITOR
+---------------------
+* [yellow]ENTER[default] to insert a newline
+* [yellow]CTRL + s[default] or the Post button to submit
+* [yellow]SHIFT + ENTER[default] to submit if supported by your terminal
+* [yellow]TAB[default] to insert a tab character in the comment
+* [yellow]SHIFT + TAB[default] to focus Post (press ENTER to submit)
+* [yellow]ESC / CTRL + c[default] to cancel (confirms before discarding a draft)
+
+If SHIFT + ENTER is indistinguishable from ENTER, use CTRL + s or Post.
+Optional terminal mappings are documented in the README.`
 )
 
 // ValidIssueColumns returns valid columns for issue list.
@@ -97,6 +128,33 @@ func MDRenderer() (*glamour.TermRenderer, error) {
 	)
 }
 
+// mdRendererFactory gives overlapping detail loads independent stateful renderers.
+type mdRendererFactory func() (*glamour.TermRenderer, error)
+
+// newMDRendererFactory freezes terminal-dependent style selection before tcell
+// takes stdin, so background loads cannot consume navigation or composer input.
+func newMDRendererFactory() mdRendererFactory {
+	style := os.Getenv("GLAMOUR_STYLE")
+	if style == "" || style == styles.AutoStyle {
+		style = styles.NoTTYStyle
+		if term.IsTerminal(int(os.Stdout.Fd())) {
+			style = styles.LightStyle
+			if termenv.HasDarkBackground() {
+				style = styles.DarkStyle
+			}
+		}
+	}
+	// Resolve auto before tcell owns stdin; loads must never query the terminal.
+	return func() (*glamour.TermRenderer, error) {
+		return glamour.NewTermRenderer(
+			glamour.WithStylePath(style),
+			glamour.WithWordWrap(wordWrap),
+		)
+	}
+}
+
+// formatDateTime preserves the source on invalid dates or timezones; an empty
+// timezone keeps the parsed offset instead of assuming the machine's local zone.
 func formatDateTime(dt, format, tz string) string {
 	t, err := time.Parse(format, dt)
 	if err != nil {
@@ -112,11 +170,14 @@ func formatDateTime(dt, format, tz string) string {
 	return t.In(loc).Format("2006-01-02 15:04:05")
 }
 
+// prepareTitle escapes trimmed Jira text so bracketed content cannot become tview styling.
 func prepareTitle(text string) string {
 	text = strings.TrimSpace(text)
 	return tview.Escape(text)
 }
 
+// issueKeyFromTuiData supports both table and preview callbacks; unknown payloads
+// return an empty key rather than assuming a table layout.
 func issueKeyFromTuiData(r int, d any) string {
 	var path string
 
@@ -130,28 +191,38 @@ func issueKeyFromTuiData(r int, d any) string {
 	return path
 }
 
+// jiraURLFromTuiData builds a browser-facing URL rather than a REST endpoint,
+// sharing key extraction between table and preview actions.
 func jiraURLFromTuiData(server string, r int, d any) string {
 	return cmdutil.GenerateServerBrowseURL(server, issueKeyFromTuiData(r, d))
 }
 
+// navigate captures the server but resolves the selected issue at invocation;
+// browser failures are best-effort because the selection callback has no error channel.
 func navigate(server string) tui.SelectedFunc {
 	return func(r, _ int, d any) {
 		_ = browser.Browse(jiraURLFromTuiData(server, r, d))
 	}
 }
 
+// copyURL shares browser URL generation with navigation; clipboard failures do
+// not interrupt the TUI because the callback cannot return an error.
 func copyURL(server string) tui.CopyFunc {
 	return func(r, _ int, d any) {
 		_ = clipboard.WriteAll(jiraURLFromTuiData(server, r, d))
 	}
 }
 
+// copyKey copies the selected issue's identity without its server URL; clipboard
+// errors are best-effort, as with the URL-copy callback.
 func copyKey() tui.CopyKeyFunc {
 	return func(r, _ int, d any) {
 		_ = clipboard.WriteAll(issueKeyFromTuiData(r, d))
 	}
 }
 
+// renderPlain removes tview escapes without quoting delimiter-bearing cells.
+// Only a tabwriter flush error is returned; individual write errors are not propagated.
 func renderPlain(w io.Writer, data tui.TableData, delimiter string) error {
 	for _, items := range data {
 		n := len(items)
@@ -170,6 +241,8 @@ func renderPlain(w io.Writer, data tui.TableData, delimiter string) error {
 	return nil
 }
 
+// renderCSV delegates quoting to encoding/csv and checks buffered errors after
+// flushing, so a failed final write is not reported as successful export.
 func renderCSV(w io.Writer, data tui.TableData) error {
 	csvwrt := csv.NewWriter(w)
 
@@ -186,6 +259,8 @@ func renderCSV(w io.Writer, data tui.TableData) error {
 	return nil
 }
 
+// unescape reverses tview's bracket escapes for plain output without stripping
+// the literal bracketed text originally supplied by Jira.
 func unescape(s string) string {
 	pattern := regexp.MustCompile(`(\[[a-zA-Z0-9_,;: \-\."#]+\[*)\[\]`)
 	return pattern.ReplaceAllString(s, "$1]")
@@ -201,6 +276,7 @@ func xterm256() bool {
 	return strings.Contains(term, "-256color")
 }
 
+// gray falls back to bright black when TERM does not advertise a 256-color palette.
 func gray(msg string) string {
 	if xterm256() {
 		return gray256(msg)
@@ -212,6 +288,8 @@ func gray256(msg string) string {
 	return fmt.Sprintf("\x1b[38;5;242m%s\x1b[m", msg)
 }
 
+// shortenAndPad uses byte-based widths for legacy table alignment; truncation
+// reserves one byte position for the ellipsis, not a Unicode display-cell width.
 func shortenAndPad(msg string, limit int) string {
 	if limit > 1 && len(msg) > limit {
 		return msg[0:limit-1] + "…"
@@ -219,6 +297,8 @@ func shortenAndPad(msg string, limit int) string {
 	return pad(msg, limit)
 }
 
+// pad applies a minimum byte length without truncation or interpreting ANSI codes;
+// callers needing terminal-cell widths must account for those separately.
 func pad(msg string, limit int) string {
 	var out strings.Builder
 	out.WriteString(msg)

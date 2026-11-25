@@ -35,12 +35,15 @@ func (c *Client) GetIssue(key string, opts ...filter.Filter) (*Issue, error) {
 
 	iss.Fields.Description = ifaceToADF(iss.Fields.Description)
 
-	total := iss.Fields.Comment.Total
+	available := len(iss.Fields.Comment.Comments)
 	limit := filter.Collection(opts).GetInt(issue.KeyIssueNumComments)
-	if limit > total {
-		limit = total
+	if limit > available {
+		limit = available
 	}
-	for i := total - 1; i >= total-limit; i-- {
+	if limit < 0 {
+		limit = 0
+	}
+	for i := available - 1; i >= available-limit; i-- {
 		body := iss.Fields.Comment.Comments[i].Body
 		iss.Fields.Comment.Comments[i].Body = ifaceToADF(body)
 	}
@@ -52,6 +55,8 @@ func (c *Client) GetIssueV2(key string, _ ...filter.Filter) (*Issue, error) {
 	return c.getIssue(key, apiVersion2)
 }
 
+// getIssue decodes version-specific JSON without normalizing rich-text fields;
+// v3 callers must convert the description and any comments they intend to render.
 func (c *Client) getIssue(key, ver string) (*Issue, error) {
 	rawOut, err := c.getIssueRaw(key, ver)
 	if err != nil {
@@ -76,6 +81,8 @@ func (c *Client) GetIssueV2Raw(key string) (string, error) {
 	return c.getIssueRaw(key, apiVersion2)
 }
 
+// getIssueRaw accepts only a successful issue response and leaves its JSON intact
+// for raw output or version-specific decoding; unknown versions use v3.
 func (c *Client) getIssueRaw(key, ver string) (string, error) {
 	path := fmt.Sprintf("/issue/%s", key)
 
@@ -121,6 +128,8 @@ func (c *Client) AssignIssueV2(key, assignee string) error {
 	return c.assignIssue(key, assignee, apiVersion2)
 }
 
+// assignIssue translates none/default sentinels and switches between Server user
+// names and Cloud account IDs; only HTTP 204 confirms the assignment.
 func (c *Client) assignIssue(key, assignee, ver string) error {
 	path := fmt.Sprintf("/issue/%s/assignee", key)
 
@@ -209,6 +218,8 @@ func (c *Client) GetIssueLinkTypes() ([]*IssueLinkType, error) {
 	return out.IssueLinkTypes, nil
 }
 
+// linkRequest keeps inward and outward keys distinct because swapping them
+// reverses the meaning of directional link types.
 type linkRequest struct {
 	InwardIssue struct {
 		Key string `json:"key"`
@@ -296,14 +307,21 @@ func (c *Client) GetLinkID(inwardIssue, outwardIssue string) (string, error) {
 	return "", fmt.Errorf("no link found between provided issues")
 }
 
+// issueCommentPropertyValue expresses Service Management privacy explicitly:
+// Internal false denotes a public comment rather than an omitted privacy choice.
 type issueCommentPropertyValue struct {
 	Internal bool `json:"internal"`
 }
 
+// issueCommentProperty associates privacy metadata with its Jira property key,
+// independently of the comment body sent to the v2 endpoint.
 type issueCommentProperty struct {
 	Key   string                    `json:"key"`
 	Value issueCommentPropertyValue `json:"value"`
 }
+
+// issueCommentRequest uses v2 Jira markup and explicit privacy properties for a
+// top-level comment; native replies use a separate GraphQL mutation.
 type issueCommentRequest struct {
 	Body       string                 `json:"body"`
 	Properties []issueCommentProperty `json:"properties"`
@@ -335,6 +353,8 @@ func (c *Client) AddIssueComment(key, comment string, internal bool) error {
 	return nil
 }
 
+// issueWorklogRequest leaves Started absent to let Jira choose the current time;
+// Comment is already converted to Jira markup before encoding.
 type issueWorklogRequest struct {
 	Started   string `json:"started,omitempty"`
 	TimeSpent string `json:"timeSpent"`
@@ -403,6 +423,8 @@ func (c *Client) GetField() ([]*Field, error) {
 	return out, err
 }
 
+// ifaceToADF normalizes generic JSON values through the ADF decoder, returning
+// nil for absent or undecodable input. It does not validate document structure.
 func ifaceToADF(v interface{}) *adf.ADF {
 	if v == nil {
 		return nil
@@ -421,6 +443,8 @@ func ifaceToADF(v interface{}) *adf.ADF {
 	return doc
 }
 
+// remotelinkRequest identifies an external resource by URL and display title,
+// unlike linkRequest, whose endpoints are both Jira issue keys.
 type remotelinkRequest struct {
 	RemoteObject struct {
 		URL   string `json:"url"`
@@ -470,6 +494,8 @@ func (c *Client) WatchIssueV2(key, watcher string) error {
 	return c.watchIssue(key, watcher, apiVersion2)
 }
 
+// watchIssue sends the watcher as a JSON string, not an object, to the selected
+// API version; only HTTP 204 confirms that Jira accepted the change.
 func (c *Client) watchIssue(key, watcher, ver string) error {
 	path := fmt.Sprintf("/issue/%s/watchers", key)
 

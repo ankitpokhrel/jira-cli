@@ -1,6 +1,7 @@
 package view
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -13,7 +14,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
-// DisplayFormat is a issue display type.
+// DisplayFormat controls issue-list output and the comment/thread data loaded for details.
 type DisplayFormat struct {
 	Plain        bool
 	Delimiter    string
@@ -22,9 +23,12 @@ type DisplayFormat struct {
 	NoTruncate   bool
 	Columns      []string
 	FixedColumns uint
-	Comments     uint
-	TableStyle   tui.TableStyle
-	Timezone     string
+	// Comments controls detail loads, not the number of rows in the issue list.
+	Comments uint
+	// CommentThreads counts Comments in root threads and enables native reply actions.
+	CommentThreads bool
+	TableStyle     tui.TableStyle
+	Timezone       string
 }
 
 // IssueList is a list view for issues.
@@ -37,7 +41,7 @@ type IssueList struct {
 	FooterText string
 }
 
-// Render renders the view.
+// Render writes CSV or plain output, or starts the interactive issue table with detail actions.
 func (l *IssueList) Render() error {
 	// Prioritize CSV format when explicitly requested
 	if l.Display.CSV {
@@ -55,11 +59,7 @@ func (l *IssueList) Render() error {
 		return l.renderPlain(w, delimeter)
 	}
 
-	renderer, err := MDRenderer()
-	if err != nil {
-		return err
-	}
-
+	newRenderer := newMDRendererFactory()
 	data := l.data()
 	if l.FooterText == "" {
 		l.FooterText = fmt.Sprintf("Showing %d results for project %q", len(data)-1, l.Project)
@@ -68,23 +68,10 @@ func (l *IssueList) Render() error {
 	view := tui.NewTable(
 		tui.WithTableStyle(l.Display.TableStyle),
 		tui.WithTableFooterText(l.FooterText),
-		tui.WithTableHelpText(tableHelpText),
+		tui.WithTableHelpText(issueTableHelpText),
 		tui.WithSelectedFunc(navigate(l.Server)),
-		tui.WithViewModeFunc(func(r, c int, _ any) (func() any, func(any) (string, error)) {
-			dataFn := func() any {
-				ci := data.GetIndex(fieldKey)
-				iss, _ := api.ProxyGetIssue(api.DefaultClient(false), data.Get(r, ci), issue.NewNumCommentsFilter(l.Display.Comments))
-				return iss
-			}
-			renderFn := func(i any) (string, error) {
-				iss := Issue{
-					Server:  l.Server,
-					Data:    i.(*jira.Issue),
-					Options: IssueOption{NumComments: l.Display.Comments},
-				}
-				return iss.RenderedOut(renderer)
-			}
-			return dataFn, renderFn
+		tui.WithDetailViewFunc(func(r, _ int, _ any) tui.DetailView {
+			return l.detailView(api.DefaultClient(false), data.Get(r, data.GetIndex(fieldKey)), newRenderer)
 		}),
 		tui.WithCopyFunc(copyURL(l.Server)),
 		tui.WithCopyKeyFunc(copyKey()),
@@ -135,6 +122,63 @@ func (l *IssueList) Render() error {
 	return view.Paint(data)
 }
 
+// detailView captures one issue key for loading and writes, independent of later
+// list selections. Resolving another descriptor performs no I/O or active-view mutation.
+func (l *IssueList) detailView(client *jira.Client, key string, newRenderer mdRendererFactory) tui.DetailView {
+	detail := tui.DetailView{
+		Title: key,
+		OpenTicket: func(input string) (tui.DetailView, error) {
+			nextKey, err := normalizeNavigationKey(input, key)
+			if err != nil {
+				return tui.DetailView{}, err
+			}
+			return l.detailView(client, nextKey, newRenderer), nil
+		},
+		Load: func() (tui.DetailContent, error) {
+			options := IssueOption{NumComments: l.Display.Comments, CommentThreads: l.Display.CommentThreads}
+			// Reloads can overlap; each worker needs its own stateful renderer.
+			renderer, err := newRenderer()
+			if err != nil {
+				return tui.DetailContent{}, fmt.Errorf("initialize issue renderer: %w", err)
+			}
+			getIssue := api.ProxyGetIssue
+			if options.CommentThreads {
+				getIssue = api.ProxyGetIssueWithCommentThreads
+			}
+			iss, err := getIssue(client, key, issue.NewNumCommentsFilter(options.NumComments))
+			if err != nil {
+				return tui.DetailContent{}, fmt.Errorf("load issue %s: %w", key, err)
+			}
+			detail := Issue{
+				Server:  l.Server,
+				Data:    iss,
+				Options: options,
+			}
+			out, err := detail.RenderedOut(renderer)
+			if err != nil {
+				return tui.DetailContent{}, fmt.Errorf("render issue %s: %w", key, err)
+			}
+			targets, unavailable := detail.replyTargets()
+			return tui.DetailContent{Text: out, ReplyTargets: targets, ReplyUnavailable: unavailable}, nil
+		},
+		SubmitComment: func(body string) error {
+			if err := client.AddIssueComment(key, body, false); err != nil {
+				return fmt.Errorf("add comment to %s: %w", key, err)
+			}
+			return nil
+		},
+	}
+	if l.Display.CommentThreads && l.Display.Comments > 0 {
+		detail.SubmitReply = func(rootID, body string) error {
+			if err := client.ReplyToIssueThread(context.Background(), key, rootID, body); err != nil {
+				return fmt.Errorf("reply to native thread on %s: %w", key, err)
+			}
+			return nil
+		}
+	}
+	return detail
+}
+
 // renderPlain renders the issue in plain view.
 func (l *IssueList) renderPlain(w io.Writer, delimeter string) error {
 	return renderPlain(w, l.data(), delimeter)
@@ -145,6 +189,8 @@ func (l *IssueList) renderCSV(w io.Writer) error {
 	return renderCSV(w, l.data())
 }
 
+// validColumnsMap provides the canonical uppercase names used to discard unknown
+// column requests before constructing rows.
 func (*IssueList) validColumnsMap() map[string]struct{} {
 	columns := ValidIssueColumns()
 	out := make(map[string]struct{}, len(columns))
@@ -156,6 +202,8 @@ func (*IssueList) validColumnsMap() map[string]struct{} {
 	return out
 }
 
+// header preserves requested column order while ensuring KEY remains available
+// for row actions; only default truncated plain output uses the short column set.
 func (l *IssueList) header() []string {
 	if len(l.Display.Columns) == 0 {
 		validColumns := ValidIssueColumns()
@@ -190,6 +238,8 @@ func (l *IssueList) header() []string {
 	return headers
 }
 
+// data always retains the header row for TUI column lookup; header suppression
+// applies only to plain-text and CSV output.
 func (l *IssueList) data() tui.TableData {
 	var data tui.TableData
 
@@ -204,6 +254,8 @@ func (l *IssueList) data() tui.TableData {
 	return data
 }
 
+// assignColumns expects validated column names in display order; summaries are
+// escaped for tview and dates use the requested timezone before output rendering.
 func (l *IssueList) assignColumns(columns []string, issue *jira.Issue) []string {
 	var bucket []string
 

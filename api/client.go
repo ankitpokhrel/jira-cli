@@ -1,6 +1,10 @@
+// Package api resolves CLI configuration and selects Jira API versions for the
+// configured installation.
 package api
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	"github.com/spf13/viper"
@@ -8,6 +12,7 @@ import (
 
 	"github.com/ankitpokhrel/jira-cli/pkg/jira"
 	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter"
+	"github.com/ankitpokhrel/jira-cli/pkg/jira/filter/issue"
 	"github.com/ankitpokhrel/jira-cli/pkg/netrc"
 )
 
@@ -58,6 +63,8 @@ func Client(config jira.Config) *jira.Client {
 	return jiraClient
 }
 
+// GetAPIToken prefers the explicit token, then configured credentials, netrc, and
+// the system keyring. Missing or unreadable fallback stores yield an empty token.
 func GetAPIToken(config jira.Config) string {
 	if config.APIToken != "" {
 		return config.APIToken
@@ -129,6 +136,20 @@ func ProxyGetIssue(c *jira.Client, key string, opts ...filter.Filter) (*jira.Iss
 	}
 
 	return iss, err
+}
+
+// ProxyGetIssueWithCommentThreads fetches issue details and experimental native Cloud comment threads.
+func ProxyGetIssueWithCommentThreads(c *jira.Client, key string, opts ...filter.Filter) (*jira.Issue, error) {
+	if viper.GetString("installation") == jira.InstallationTypeLocal {
+		return nil, fmt.Errorf("experimental comment threads require Jira Cloud with API-token Basic auth; Server/local installations are unsupported")
+	}
+
+	includeComments := filter.Collection(opts).Get(issue.KeyIssueNumComments) != uint(0)
+	iss, err := c.GetIssueWithCommentThreads(context.Background(), key, includeComments)
+	if err != nil {
+		return nil, fmt.Errorf("get issue %s with experimental comment threads: %w", key, err)
+	}
+	return iss, nil
 }
 
 // ProxySearch uses either a v2 or v3 version of the Jira GET /search endpoint

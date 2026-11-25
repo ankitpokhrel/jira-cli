@@ -102,6 +102,9 @@ type Table struct {
 	refreshFunc  RefreshFunc
 	copyFunc     CopyFunc
 	copyKeyFunc  CopyKeyFunc
+
+	detailViewFunc DetailViewFunc
+	detail         *tableDetail
 }
 
 // TableOption is a functional option to wrap table properties.
@@ -186,6 +189,13 @@ func WithViewModeFunc(fn ViewModeFunc) TableOption {
 	}
 }
 
+// WithDetailViewFunc opts into an in-application detail view when the user presses 'v'.
+func WithDetailViewFunc(fn DetailViewFunc) TableOption {
+	return func(t *Table) {
+		t.detailViewFunc = fn
+	}
+}
+
 // WithMoveFunc sets a func that is triggered when an action button is pressed.
 func WithMoveFunc(fn MoveFunc) TableOption {
 	return func(t *Table) {
@@ -228,9 +238,16 @@ func (t *Table) Paint(data TableData) error {
 	}
 	t.data = data
 	t.render(data)
+	if t.detailViewFunc != nil {
+		t.screen.EnablePaste(true)
+		restoreCapture := t.captureComposerInterrupts()
+		defer restoreCapture()
+	}
 	return t.screen.Paint(t.painter)
 }
 
+// render expects a header in row zero and binds selection callbacks to the same
+// data snapshot used to populate the cells.
 func (t *Table) render(data TableData) {
 	if t.selectedFunc != nil {
 		t.view.SetSelectedFunc(func(r, c int) {
@@ -241,6 +258,7 @@ func (t *Table) render(data TableData) {
 	renderTableCell(t, data)
 }
 
+// initFooter enables wrapping so status text remains readable on narrow terminals.
 func (t *Table) initFooter() {
 	t.footer.
 		SetWordWrap(true).
@@ -248,6 +266,7 @@ func (t *Table) initFooter() {
 		SetTextColor(tcell.ColorDefault)
 }
 
+// initHelp keeps dismissal local to the help overlay so Esc does not exit the table.
 func (t *Table) initHelp() {
 	t.help.
 		SetInfo(t.helpText).
@@ -262,6 +281,9 @@ func (t *Table) initHelp() {
 	})
 }
 
+// initTable routes row actions and fixes the header; an in-app detail handler
+// takes precedence over the legacy external-pager callback when both are set.
+//
 //nolint:gocyclo
 func (t *Table) initTable() {
 	t.view.SetSelectable(true, false).
@@ -300,26 +322,23 @@ func (t *Table) initTable() {
 					r, c := t.view.GetSelection()
 					t.copyFunc(r, c, t.data)
 				case 'v':
+					if t.detailViewFunc != nil {
+						t.openDetail()
+						return nil
+					}
 					if t.viewModeFunc == nil {
 						break
 					}
 					r, c := t.view.GetSelection()
-
+					data := t.data
+					t.painter.ShowPage("secondary")
 					go func() {
-						func() {
-							t.painter.ShowPage("secondary")
-							defer t.painter.HidePage("secondary")
-
-							dataFn, renderFn := t.viewModeFunc(r, c, t.data)
-
-							out, err := renderFn(dataFn())
-							if err == nil {
-								t.screen.Suspend(func() { _ = PagerOut(out) })
-							}
-						}()
-
-						// Refresh the screen.
-						t.screen.Draw()
+						dataFn, renderFn := t.viewModeFunc(r, c, data)
+						out, err := renderFn(dataFn())
+						if err == nil {
+							t.screen.Suspend(func() { _ = PagerOut(out) })
+						}
+						t.screen.QueueUpdateDraw(func() { t.painter.HidePage("secondary") })
 					}()
 				case 'm':
 					if t.moveFunc == nil {
@@ -388,6 +407,8 @@ func (t *Table) initTable() {
 	t.view.SetFixed(1, int(t.colFixed))
 }
 
+// renderTableHeader reserves row zero for nonselectable labels so row actions
+// cannot treat column names as an issue.
 func renderTableHeader(t *Table, data []string) {
 	style := tcell.StyleDefault.Bold(true)
 
@@ -404,6 +425,8 @@ func renderTableHeader(t *Table, data []string) {
 	}
 }
 
+// renderTableCell expects header-shaped rows and skips row zero, preserving the
+// header's nonselectable styling while bounding displayed cell widths.
 func renderTableCell(t *Table, data TableData) {
 	rows, cols := len(data), len(data[0])
 

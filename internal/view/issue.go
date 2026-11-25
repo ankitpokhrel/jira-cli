@@ -19,11 +19,16 @@ import (
 
 const defaultSummaryLength = 73 // +1 to take ellipsis '…' into account.
 
+// fragment defers reply indentation until after Markdown rendering so nested
+// prose is not reinterpreted as a code block.
 type fragment struct {
-	Body  string
-	Parse bool
+	Body   string
+	Parse  bool
+	Indent int
 }
 
+// newBlankFragment keeps separator newlines outside Markdown parsing, which could
+// otherwise collapse the spacing between rendered issue sections.
 func newBlankFragment(n int) fragment {
 	var buf strings.Builder
 	for range n {
@@ -35,17 +40,22 @@ func newBlankFragment(n int) fragment {
 	}
 }
 
+// issueComment keeps metadata and Markdown separate while sharing their reply depth.
 type issueComment struct {
-	meta string
-	body string
+	meta  string
+	body  string
+	depth int
 }
 
-// IssueOption is filtering options for an issue.
+// IssueOption controls how an issue's comments and verified thread relationships are rendered.
 type IssueOption struct {
+	// NumComments limits flat comments or complete root threads; zero hides both.
 	NumComments uint
+	// CommentThreads requires verified native parentage in the loaded comments.
+	CommentThreads bool
 }
 
-// Issue is a list view for issues.
+// Issue describes the data and options used to render one Jira issue.
 type Issue struct {
 	Server  string
 	Data    *jira.Issue
@@ -69,25 +79,28 @@ func (i Issue) Render() error {
 	return tui.PagerOut(out)
 }
 
-// RenderedOut translates raw data to the format we want to display in.
+// RenderedOut renders each fragment as Markdown before indenting replies, preserving nested block formatting.
 func (i Issue) RenderedOut(renderer *glamour.TermRenderer) (string, error) {
 	var res strings.Builder
 
 	for _, p := range i.fragments() {
+		out := p.Body
 		if p.Parse {
-			out, err := renderer.Render(p.Body)
+			var err error
+			out, err = renderer.Render(p.Body)
 			if err != nil {
 				return "", err
 			}
-			res.WriteString(out)
-		} else {
-			res.WriteString(p.Body)
 		}
+		// Indenting Markdown before rendering turns nested reply paragraphs into code blocks.
+		res.WriteString(indentComment(out, p.Indent))
 	}
 
 	return res.String(), nil
 }
 
+// String assembles unrendered issue Markdown; threaded bodies need RenderedOut
+// when rendered so their indentation cannot change Markdown block semantics.
 func (i Issue) String() string {
 	var s strings.Builder
 
@@ -109,11 +122,11 @@ func (i Issue) String() string {
 		fmt.Fprintf(&s, "\n\n%s\n\n%s\n", i.separator("Linked Issues"), i.linkedIssues())
 	}
 	total := i.Data.Fields.Comment.Total
-	if total > 0 && i.Options.NumComments > 0 {
+	if (total > 0 || (i.Options.CommentThreads && len(i.Data.Fields.Comment.Comments) > 0)) && i.Options.NumComments > 0 {
 		sep := fmt.Sprintf("%d Comments", total)
 		fmt.Fprintf(&s, "\n\n%s", i.separator(sep))
 		for _, comment := range i.comments() {
-			fmt.Fprintf(&s, "\n\n%s\n\n%s\n", comment.meta, comment.body)
+			fmt.Fprintf(&s, "\n\n%s\n\n%s\n", indentComment(comment.meta, comment.depth), indentComment(comment.body, comment.depth))
 		}
 	}
 	s.WriteString(i.footer())
@@ -121,6 +134,8 @@ func (i Issue) String() string {
 	return s.String()
 }
 
+// fragments separates Markdown from preformatted metadata, carrying reply depth
+// alongside each piece for indentation after rendering.
 func (i Issue) fragments() []fragment {
 	scraps := []fragment{
 		{Body: i.header(), Parse: true},
@@ -159,7 +174,7 @@ func (i Issue) fragments() []fragment {
 		)
 	}
 
-	if i.Data.Fields.Comment.Total > 0 && i.Options.NumComments > 0 {
+	if (i.Data.Fields.Comment.Total > 0 || (i.Options.CommentThreads && len(i.Data.Fields.Comment.Comments) > 0)) && i.Options.NumComments > 0 {
 		scraps = append(
 			scraps,
 			newBlankFragment(1),
@@ -169,9 +184,9 @@ func (i Issue) fragments() []fragment {
 		for _, comment := range i.comments() {
 			scraps = append(
 				scraps,
-				fragment{Body: comment.meta},
+				fragment{Body: comment.meta, Indent: comment.depth},
 				newBlankFragment(1),
-				fragment{Body: comment.body, Parse: true},
+				fragment{Body: comment.body, Parse: true, Indent: comment.depth},
 			)
 		}
 	}
@@ -179,6 +194,8 @@ func (i Issue) fragments() []fragment {
 	return append(scraps, newBlankFragment(1), fragment{Body: i.footer()}, newBlankFragment(2))
 }
 
+// separator uses ASCII in plain mode and styled Unicode in terminal output;
+// an empty label produces a continuous rule without padding.
 func (i Issue) separator(msg string) string {
 	pad := func(m string) string {
 		if m != "" {
@@ -198,6 +215,8 @@ func (i Issue) separator(msg string) string {
 	return gray(fmt.Sprintf("%s%s%s", sep, pad(msg), sep))
 }
 
+// header builds the Markdown summary with explicit fallbacks for absent metadata
+// and distinguishes the current watcher from the remaining watch count.
 func (i Issue) header() string {
 	as := i.Data.Fields.Assignee.Name
 	if as == "" {
@@ -239,6 +258,8 @@ func (i Issue) header() string {
 	)
 }
 
+// description normalizes the reader's ADF or legacy string representation to
+// Markdown; a missing description contributes no section to the issue view.
 func (i Issue) description() string {
 	if i.Data.Fields.Description == nil {
 		return ""
@@ -256,6 +277,8 @@ func (i Issue) description() string {
 	return desc
 }
 
+// subtasks aligns preformatted rows using the loaded collection's widest fields,
+// capping only summaries so issue keys and status labels remain intact.
 func (i Issue) subtasks() string {
 	if len(i.Data.Fields.Subtasks) == 0 {
 		return ""
@@ -299,6 +322,8 @@ func (i Issue) subtasks() string {
 	return subtasks.String()
 }
 
+// linkedIssues groups rows by directional relationship, sorting group labels to
+// match Jira's UI and skipping links that contain neither endpoint.
 func (i Issue) linkedIssues() string {
 	if len(i.Data.Fields.IssueLinks) == 0 {
 		return ""
@@ -371,15 +396,20 @@ func (i Issue) linkedIssues() string {
 	return linked.String()
 }
 
+// comments preserves flat-mode limits against the loaded slice, reserving the
+// latest marker for complete collections; thread mode selects whole root threads.
 func (i Issue) comments() []issueComment {
-	total := i.Data.Fields.Comment.Total
+	if i.Options.CommentThreads {
+		return i.threadedComments()
+	}
+	total := min(max(i.Data.Fields.Comment.Total, 0), len(i.Data.Fields.Comment.Comments))
 	comments := make([]issueComment, 0, total)
 
 	if total == 0 {
 		return comments
 	}
 
-	limit := min(int(i.Options.NumComments), total)
+	limit := int(min(i.Options.NumComments, uint(total)))
 
 	for idx := total - 1; idx >= total-limit; idx-- {
 		c := i.Data.Fields.Comment.Comments[idx]
@@ -401,7 +431,7 @@ func (i Issue) comments() []issueComment {
 			coloredOut(authorName(), color.FgWhite, color.Bold),
 			coloredOut(cmdutil.FormatDateTimeHuman(c.Created, jira.RFC3339), color.FgWhite, color.Bold),
 		)
-		if idx == total-1 {
+		if idx == total-1 && total == i.Data.Fields.Comment.Total {
 			meta += fmt.Sprintf(" • %s", coloredOut("Latest comment", color.FgCyan, color.Bold))
 		}
 		comments = append(comments, issueComment{
@@ -413,11 +443,31 @@ func (i Issue) comments() []issueComment {
 	return comments
 }
 
+// footer distinguishes root-thread totals from flat comment counts and avoids
+// claiming a thread total when comment loading was explicitly disabled.
 func (i Issue) footer() string {
 	var out strings.Builder
 
-	nc := int(i.Options.NumComments)
-	if i.Data.Fields.Comment.Total > 0 && nc > 0 && nc < i.Data.Fields.Comment.Total {
+	if i.Options.CommentThreads {
+		if i.Display.Plain {
+			out.WriteString("\n")
+		}
+		if i.Options.NumComments == 0 {
+			// The API may skip loading the thread map when comments are disabled.
+			fmt.Fprintf(&out, "%s\n", gray("Showing 0 threads (--comments 0; thread total not loaded)"))
+		} else {
+			threads := selectCommentThreads(i.Data.Fields.Comment.Comments, i.Options.NumComments)
+			fmt.Fprintf(&out, "%s\n", gray(fmt.Sprintf("Showing %d of %d threads", threads.shown, threads.total)))
+			if threads.invalid > 0 {
+				fmt.Fprintf(&out, "%s\n", gray(fmt.Sprintf("%d unthreaded comments with invalid thread data", threads.invalid)))
+			}
+			if threads.shown < threads.total {
+				fmt.Fprintf(&out, "%s\n", gray("Use --comments <limit> with `jira issue view` to load more threads"))
+			}
+		}
+	}
+	nc := i.Options.NumComments
+	if !i.Options.CommentThreads && i.Data.Fields.Comment.Total > 0 && nc > 0 && nc < uint(i.Data.Fields.Comment.Total) {
 		if i.Display.Plain {
 			out.WriteString("\n")
 		}
@@ -440,7 +490,12 @@ func (i Issue) renderPlain(w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	out, err := r.Render(i.String())
+	var out string
+	if i.Options.CommentThreads {
+		out, err = i.RenderedOut(r)
+	} else {
+		out, err = r.Render(i.String())
+	}
 	if err != nil {
 		return err
 	}

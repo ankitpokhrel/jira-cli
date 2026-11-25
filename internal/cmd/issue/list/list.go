@@ -1,3 +1,4 @@
+// Package list implements issue listing and reusable list flags for related commands.
 package list
 
 import (
@@ -28,7 +29,22 @@ as entering a search query into the Jira UI's search box.
 
 Issues are displayed in an interactive list view by default. You can use a --plain flag
 to display output in a plain text mode. A --no-headers flag will hide the table headers
-in plain view. A --no-truncate flag will display all available fields in plain mode.`
+in plain view. A --no-truncate flag will display all available fields in plain mode.
+
+In the in-app details opened with v, press / to view another ticket by key, or enter
+a number for the current ticket's project. Esc/CtrlC cancels the prompt. Switching
+tickets preserves the underlying list; q/Esc from details still returns to that list.
+
+Experimental --comment-threads reads native threads in in-app issue details on Jira
+Cloud using API-token Basic auth. Server/local installations and other authentication
+types are unsupported. --comments counts whole root threads with all replies in this
+mode; 0 hides comments. Roots are newest-first, replies oldest-first. Default flat
+comments and plain/CSV tables are unchanged. Read-only thread queries use private
+GraphQL persisted operations, which may change; failures are reported rather than
+guessing reply relationships. Uses configured credentials, not HAR files or browser
+cookies. In in-app details, c posts a top-level comment and r chooses a thread for a
+reply. Replies use a separate mutation after explicit Post and support unrestricted
+Software/Business threads only.`
 
 	examples = `$ jira issue list
 
@@ -53,6 +69,9 @@ $ jira issue list --plain --no-truncate
 # List issues in a plain table view using custom delimiter (default is "\t")
 $ jira issue list --plain --delimiter "|"
 
+# Show 5 complete native comment threads in issue details (experimental Jira Cloud, API-token Basic auth)
+$ jira issue list --comment-threads --comments 5
+
 # List issues as raw JSON data
 $ jira issue list --raw
 
@@ -66,9 +85,9 @@ $ jira issue list -s~Open -ax
 $ jira issue list -q"project IS NOT EMPTY"`
 )
 
-// NewCmdList is a list command.
+// NewCmdList creates the issue-list command with comment, thread, and raw-output flags.
 func NewCmdList() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "list [optional text to query]",
 		Short:   "List lists issues in a project",
 		Long:    helpText,
@@ -77,6 +96,11 @@ func NewCmdList() *cobra.Command {
 		Args:    cobra.RangeArgs(0, 1),
 		Run:     List,
 	}
+	cmd.Flags().Uint("comments", 1, "Show N comments in issue details, or N whole root threads with all replies with --comment-threads (0 hides comments)")
+	cmd.Flags().Bool("comment-threads", false, "Read native comment threads in issue details (experimental Jira Cloud only; API-token Basic auth)")
+	cmd.Flags().Bool("raw", false, "Print raw JSON output")
+	cmd.MarkFlagsMutuallyExclusive("raw", "comment-threads")
+	return cmd
 }
 
 // List displays a list view.
@@ -84,6 +108,8 @@ func List(cmd *cobra.Command, args []string) {
 	loadList(cmd, args)
 }
 
+// loadList rebuilds the query and view on refresh, preserving explicit comment
+// limits (including zero) over configuration defaults. Command errors terminate via cmdutil.
 func loadList(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
@@ -170,6 +196,12 @@ func loadList(cmd *cobra.Command, args []string) {
 		comments = max(numComments, 1)
 	}
 
+	var commentThreads bool
+	if cmd.Flags().Lookup("comment-threads") != nil {
+		commentThreads, err = cmd.Flags().GetBool("comment-threads")
+		cmdutil.ExitIfError(err)
+	}
+
 	v := view.IssueList{
 		Project: project,
 		Server:  server,
@@ -178,13 +210,14 @@ func loadList(cmd *cobra.Command, args []string) {
 			loadList(cmd, args)
 		},
 		Display: view.DisplayFormat{
-			Plain:        plain,
-			Delimiter:    delimiter,
-			CSV:          csv,
-			NoHeaders:    noHeaders,
-			NoTruncate:   noTruncate,
-			FixedColumns: fixedColumns,
-			Comments:     comments,
+			Plain:          plain,
+			Delimiter:      delimiter,
+			CSV:            csv,
+			NoHeaders:      noHeaders,
+			NoTruncate:     noTruncate,
+			FixedColumns:   fixedColumns,
+			Comments:       comments,
+			CommentThreads: commentThreads,
 			Columns: func() []string {
 				if columns != "" {
 					return strings.Split(columns, ",")
@@ -199,6 +232,8 @@ func loadList(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(v.Render())
 }
 
+// outputRawJSON bypasses view formatting and reports encoding failures without
+// printing a partial JSON document.
 func outputRawJSON(issues []*jira.Issue) {
 	data, err := json.MarshalIndent(issues, "", "  ")
 	if err != nil {
@@ -208,7 +243,7 @@ func outputRawJSON(issues []*jira.Issue) {
 	fmt.Println(string(data))
 }
 
-// SetFlags sets flags supported by a list command.
+// SetFlags adds shared issue filters and output options while retaining pre-registered comments and raw flags.
 func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().SortFlags = false
 
@@ -243,8 +278,12 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
 	cmd.Flags().String("delimiter", "\t", "Custom delimiter for columns in plain mode. Works only with --plain")
-	cmd.Flags().Uint("comments", 1, "Show N comments when viewing the issue")
-	cmd.Flags().Bool("raw", false, "Print raw JSON output")
+	if cmd.Flags().Lookup("comments") == nil {
+		cmd.Flags().Uint("comments", 1, "Show N comments when viewing the issue")
+	}
+	if cmd.Flags().Lookup("raw") == nil {
+		cmd.Flags().Bool("raw", false, "Print raw JSON output")
+	}
 	cmd.Flags().Bool("csv", false, "Print output in CSV format")
 
 	if cmd.HasParent() && cmd.Parent().Name() != "sprint" {

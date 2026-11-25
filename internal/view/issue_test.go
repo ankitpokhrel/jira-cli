@@ -52,13 +52,8 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 				Name string `json:"name"`
 			}{{Name: "BE"}, {Name: "FE"}},
 			Comment: struct {
-				Comments []struct {
-					ID      string      `json:"id"`
-					Author  jira.User   `json:"author"`
-					Body    interface{} `json:"body"`
-					Created string      `json:"created"`
-				} `json:"comments"`
-				Total int `json:"total"`
+				Comments []jira.IssueComment `json:"comments"`
+				Total    int                 `json:"total"`
 			}{Total: 0},
 			Watches: struct {
 				IsWatching bool `json:"isWatching"`
@@ -117,20 +112,10 @@ func TestIssueDetailsWithV2Description(t *testing.T) {
 				Name string `json:"name"`
 			}{{Name: "BE"}, {Name: "FE"}},
 			Comment: struct {
-				Comments []struct {
-					ID      string      `json:"id"`
-					Author  jira.User   `json:"author"`
-					Body    interface{} `json:"body"`
-					Created string      `json:"created"`
-				} `json:"comments"`
-				Total int `json:"total"`
+				Comments []jira.IssueComment `json:"comments"`
+				Total    int                 `json:"total"`
 			}{
-				Comments: []struct {
-					ID      string      `json:"id"`
-					Author  jira.User   `json:"author"`
-					Body    interface{} `json:"body"`
-					Created string      `json:"created"`
-				}{
+				Comments: []jira.IssueComment{
 					{ID: "10033", Author: jira.User{Name: "Person A"}, Body: "Test comment A", Created: "2021-11-22T23:44:13.782+0100"},
 					{ID: "10034", Author: jira.User{Name: "Person B"}, Body: "Test comment B", Created: "2021-11-23T23:44:13.782+0100"},
 					{ID: "10035", Author: jira.User{Name: "Person C"}, Body: "Test comment C", Created: "2021-11-24T23:44:13.782+0100"},
