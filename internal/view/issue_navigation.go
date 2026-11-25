@@ -17,6 +17,8 @@ var (
 	errNavigationProject    = errors.New("cannot infer the current project; enter a full issue key like ABC-123")
 )
 
+// normalizeNavigationKey accepts a full key or borrows the current key's project
+// for a bare number; control characters are rejected before trimming whitespace.
 func normalizeNavigationKey(input, currentKey string) (string, error) {
 	if len(input) > navigationInputLimit || strings.IndexFunc(input, unicode.IsControl) >= 0 {
 		return "", errNavigationInput
@@ -35,6 +37,8 @@ func normalizeNavigationKey(input, currentKey string) (string, error) {
 	return strings.ToUpper(key), nil
 }
 
+// validNavigationKey bounds both the key length and numeric range, rejecting
+// leading zeros and overflow rather than passing ambiguous keys to Jira.
 func validNavigationKey(key string) bool {
 	if len(key) > navigationInputLimit || !navigationKeyPattern.MatchString(key) {
 		return false

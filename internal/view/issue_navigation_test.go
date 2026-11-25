@@ -32,6 +32,7 @@ func TestNormalizeNavigationKey(t *testing.T) {
 		{name: "maximum key bytes", input: strings.Repeat("A", navigationInputLimit-2) + "-1", want: strings.Repeat("A", navigationInputLimit-2) + "-1"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := normalizeNavigationKey(tc.input, tc.current)
 			if err != nil || got != tc.want {
 				t.Errorf("normalized key = %q, error %v; want %q", got, err, tc.want)

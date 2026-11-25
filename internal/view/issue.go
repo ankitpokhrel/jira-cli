@@ -19,6 +19,8 @@ import (
 
 const defaultSummaryLength = 73 // +1 to take ellipsis '…' into account.
 
+// fragment defers reply indentation until after Markdown rendering so nested
+// prose is not reinterpreted as a code block.
 type fragment struct {
 	Body   string
 	Parse  bool
@@ -36,6 +38,7 @@ func newBlankFragment(n int) fragment {
 	}
 }
 
+// issueComment keeps metadata and Markdown separate while sharing their reply depth.
 type issueComment struct {
 	meta  string
 	body  string
@@ -92,6 +95,8 @@ func (i Issue) RenderedOut(renderer *glamour.TermRenderer) (string, error) {
 	return res.String(), nil
 }
 
+// String assembles unrendered issue Markdown; threaded bodies need RenderedOut
+// when rendered so their indentation cannot change Markdown block semantics.
 func (i Issue) String() string {
 	var s strings.Builder
 
@@ -125,6 +130,8 @@ func (i Issue) String() string {
 	return s.String()
 }
 
+// fragments separates Markdown from preformatted metadata, carrying reply depth
+// alongside each piece for indentation after rendering.
 func (i Issue) fragments() []fragment {
 	scraps := []fragment{
 		{Body: i.header(), Parse: true},
@@ -375,6 +382,8 @@ func (i Issue) linkedIssues() string {
 	return linked.String()
 }
 
+// comments preserves flat-mode limits against the loaded slice, reserving the
+// latest marker for complete collections; thread mode selects whole root threads.
 func (i Issue) comments() []issueComment {
 	if i.Options.CommentThreads {
 		return i.threadedComments()
@@ -420,6 +429,8 @@ func (i Issue) comments() []issueComment {
 	return comments
 }
 
+// footer distinguishes root-thread totals from flat comment counts and avoids
+// claiming a thread total when comment loading was explicitly disabled.
 func (i Issue) footer() string {
 	var out strings.Builder
 

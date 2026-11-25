@@ -127,8 +127,11 @@ func MDRenderer() (*glamour.TermRenderer, error) {
 	)
 }
 
+// mdRendererFactory gives overlapping detail loads independent stateful renderers.
 type mdRendererFactory func() (*glamour.TermRenderer, error)
 
+// newMDRendererFactory freezes terminal-dependent style selection before tcell
+// takes stdin, so background loads cannot consume navigation or composer input.
 func newMDRendererFactory() mdRendererFactory {
 	style := os.Getenv("GLAMOUR_STYLE")
 	if style == "" || style == styles.AutoStyle {

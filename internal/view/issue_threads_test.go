@@ -41,6 +41,7 @@ func TestSelectCommentThreads(t *testing.T) {
 		{name: "uint maximum", limit: ^uint(0), ids: []string{"a", "early", "nested", "late", "b", "older", "newest-reply"}, depth: []int{0, 1, 2, 1, 0, 0, 1}, shown: 3},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got := selectCommentThreads(comments, tc.limit)
 			if got.total != 3 || got.shown != tc.shown || got.invalid != 0 {
 				t.Fatalf("counts = total %d, shown %d, invalid %d", got.total, got.shown, got.invalid)
@@ -101,6 +102,7 @@ func TestInvalidCommentThreadsRemainVisible(t *testing.T) {
 		{name: "invalid ancestor", comments: []jira.IssueComment{{ID: "child", ParentID: "orphan"}, {ID: "orphan", ParentID: "absent"}}, want: "unresolved parent chain"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			comments := append([]jira.IssueComment{threadTestComment("root", "", "2026-01-01T01:00:00Z", "Valid root")}, tc.comments...)
 			issue := newThreadTestIssue(comments, 1)
 			got := selectCommentThreads(comments, 1)
@@ -152,6 +154,7 @@ func TestCommentThreadRendering(t *testing.T) {
 	}
 	for _, style := range []string{"notty", "dark"} {
 		t.Run(style, func(t *testing.T) {
+			t.Parallel()
 			renderer, err := glamour.NewTermRenderer(glamour.WithStandardStyle(style), glamour.WithWordWrap(wordWrap))
 			if err != nil {
 				t.Fatal(err)
@@ -348,6 +351,7 @@ func TestReplyTargetsSelection(t *testing.T) {
 		{name: "all", comments: comments, threads: true, limit: ^uint(0), ids: []string{"a", "b", "old"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			issue := newThreadTestIssue(tc.comments, tc.limit)
 			issue.Options.CommentThreads = tc.threads
 			targets, unavailable := issue.replyTargets()
@@ -413,6 +417,7 @@ func TestReplyTargetsMetadataAndPreview(t *testing.T) {
 		{name: "empty", body: " \n\t ", preview: ""},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			comment := threadTestComment("root", "", "2026-01-01T01:00:00.000+0000", tc.body)
 			comment.Author = tc.author
 			issue := newThreadTestIssue([]jira.IssueComment{comment}, 1)

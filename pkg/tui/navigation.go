@@ -16,6 +16,8 @@ const (
 	ticketUnavailable   = "Ticket navigation unavailable; no request sent."
 )
 
+// ticketPrompt owns a single navigation attempt; cancellation and request IDs
+// prevent abandoned asynchronous results from replacing the active ticket.
 type ticketPrompt struct {
 	input     *tview.InputField
 	status    *tview.TextView
@@ -24,6 +26,8 @@ type ticketPrompt struct {
 	cancel    chan struct{}
 }
 
+// openTicketPrompt keeps navigation exclusive with draft editing and thread
+// selection, preserving the current detail page while another ticket is resolved.
 func (d *tableDetail) openTicketPrompt() {
 	if d.table.detail != d || d.prompt != nil || d.composer != nil || d.picker != nil {
 		return
@@ -72,6 +76,8 @@ func (d *tableDetail) openTicketPrompt() {
 	d.table.screen.SetFocus(p.input)
 }
 
+// closeTicketPrompt invalidates pending navigation without closing the details
+// or changing the underlying list's selection and scroll position.
 func (d *tableDetail) closeTicketPrompt() {
 	if d.prompt == nil {
 		return
@@ -82,6 +88,9 @@ func (d *tableDetail) closeTicketPrompt() {
 	d.table.screen.SetFocus(d.text)
 }
 
+// submitTicketPrompt loads a complete candidate before atomically swapping the
+// descriptor, title, text, and reply targets on the UI loop. Failed, cancelled,
+// or superseded attempts leave the active ticket and its write callbacks intact.
 func (d *tableDetail) submitTicketPrompt() {
 	p := d.prompt
 	if p == nil || p.pending {

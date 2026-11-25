@@ -59,10 +59,14 @@ func ToADF(markdown string) (*adf.ADF, error) {
 	return &adf.ADF{Version: 1, DocType: "doc", Content: content}, nil
 }
 
+// parseADFMarkdown uses the same extensions for content and metadata probes so
+// loss-detection tags are checked against the structure that will be converted.
 func parseADFMarkdown(input string) *bf.Node {
 	return bf.New(bf.WithExtensions(bf.CommonExtensions | bf.Footnotes)).Parse([]byte(input))
 }
 
+// adfListOrders recovers list starts omitted from the AST without altering content,
+// and rejects nesting, footnotes, or table loss that would change the posted draft.
 func adfListOrders(input string, root *bf.Node) (map[*bf.Node]int, error) {
 	var lists []*bf.Node
 	var hasTables bool
@@ -137,6 +141,8 @@ func adfListOrders(input string, root *bf.Node) (map[*bf.Node]int, error) {
 	return orders, nil
 }
 
+// adfCheckTableRows detects cells silently dropped by BlackFriday by requiring
+// end-of-row tags to survive a separate parse of the source.
 func adfCheckTableRows(input string) error {
 	// BlackFriday discards excess cells. A tag in the final cell must survive.
 	count := 0
@@ -173,6 +179,8 @@ func adfCheckTableRows(input string) error {
 	return nil
 }
 
+// adfTagLine keeps a probe tag inside the final table cell rather than appending
+// it after an unescaped closing pipe, where the parser could discard it.
 func adfTagLine(line, tag string) string {
 	end := len(strings.TrimRight(line, " \t"))
 	if end > 0 && line[end-1] == '|' {
@@ -187,6 +195,8 @@ func adfTagLine(line, tag string) string {
 	return line[:end] + " " + tag + line[end:]
 }
 
+// adfTaggedOrder reads the current item's start marker without borrowing a nested
+// list's marker, rejecting starts that cannot fit Jira's supported integer range.
 func adfTaggedOrder(item *bf.Node) (int, error) {
 	var tag []string
 	item.Walk(func(n *bf.Node, entering bool) bf.WalkStatus {
@@ -213,6 +223,8 @@ func adfTaggedOrder(item *bf.Node) (int, error) {
 	return int(order), nil
 }
 
+// adfBlocks enforces depth and parent-child constraints rather than emitting
+// nested content that Jira's ADF schema cannot faithfully represent.
 func adfBlocks(parent *bf.Node, orders map[*bf.Node]int, depth int) ([]*adf.Node, error) {
 	content := make([]*adf.Node, 0)
 	for n := parent.FirstChild; n != nil; n = n.Next {
@@ -238,6 +250,8 @@ func adfBlocks(parent *bf.Node, orders map[*bf.Node]int, depth int) ([]*adf.Node
 	return content, nil
 }
 
+// adfBlock converts supported block forms and rejects attributes or constructs
+// that would otherwise be silently dropped from the reply.
 func adfBlock(n *bf.Node, orders map[*bf.Node]int, depth int) (*adf.Node, error) {
 	node := &adf.Node{}
 	var err error
@@ -298,6 +312,8 @@ func adfBlock(n *bf.Node, orders map[*bf.Node]int, depth int) (*adf.Node, error)
 	return node, nil
 }
 
+// adfContainer preserves recovered list starts and supplies paragraph children
+// required by ADF for empty quotes and list items beginning with other blocks.
 func adfContainer(n *bf.Node, orders map[*bf.Node]int, depth int) (*adf.Node, error) {
 	node := &adf.Node{}
 	switch n.Type {
@@ -329,6 +345,8 @@ func adfContainer(n *bf.Node, orders map[*bf.Node]int, depth int) (*adf.Node, er
 	return node, nil
 }
 
+// adfInlines preserves explicit line breaks and inherited marks, rejecting
+// lossy inline constructs and sentinel-tagged syntax instead of flattening them.
 func adfInlines(parent *bf.Node, marks []adf.MarkNode, depth int) ([]*adf.Node, error) {
 	if depth >= maxADFDepth {
 		return nil, fmt.Errorf("markdown to ADF: %s exceeds supported nesting depth", parent.Type)
@@ -382,6 +400,8 @@ func adfInlines(parent *bf.Node, marks []adf.MarkNode, depth int) ([]*adf.Node, 
 	return content, nil
 }
 
+// adfMark maps supported emphasis and links, validating destinations before they
+// can enter ADF and rejecting footnote or reference metadata that cannot survive.
 func adfMark(n *bf.Node) (adf.MarkNode, error) {
 	mark := adf.MarkNode{}
 	switch n.Type {
@@ -417,6 +437,8 @@ func adfMark(n *bf.Node) (adf.MarkNode, error) {
 	return mark, nil
 }
 
+// validateADFLink permits explicit HTTP, HTTPS, and mailto destinations only,
+// inspecting decoded bytes for hidden controls without rewriting the posted URI.
 func validateADFLink(href string) error {
 	// Inspect decoded bytes without rewriting the destination sent to Jira.
 	decoded, err := url.PathUnescape(href)
@@ -458,6 +480,8 @@ func validateADFLink(href string) error {
 	return nil
 }
 
+// adfText represents embedded newlines as hard breaks and clones marks so
+// sibling text nodes do not share mutable formatting slices.
 func adfText(text string, marks []adf.MarkNode) []*adf.Node {
 	var content []*adf.Node
 	for i, line := range strings.Split(text, "\n") {
@@ -471,6 +495,8 @@ func adfText(text string, marks []adf.MarkNode) []*adf.Node {
 	return content
 }
 
+// adfCodeText keeps code whitespace literal rather than introducing ADF hard
+// breaks, which belong to prose and would alter code content.
 func adfCodeText(text string, marks []adf.MarkNode) []*adf.Node {
 	if text == "" {
 		return nil
@@ -478,10 +504,14 @@ func adfCodeText(text string, marks []adf.MarkNode) []*adf.Node {
 	return []*adf.Node{{NodeType: adf.ChildNodeText, NodeValue: adf.NodeValue{Text: text, Marks: slices.Clone(marks)}}}
 }
 
+// adfRestoreCode removes loss-detection sentinels while preserving the original
+// reference delimiters and trailing backslashes inside literal code.
 func adfRestoreCode(text string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(text, "\x00ref\x00", ""), "\x00end\x00", "")
 }
 
+// adfUnescape decodes recognized entities without changing unrelated text that
+// the Markdown parser has already interpreted.
 func adfUnescape(text string) string {
 	return adfEntity.ReplaceAllStringFunc(text, html.UnescapeString)
 }

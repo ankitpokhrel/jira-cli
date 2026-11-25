@@ -15,12 +15,16 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
+// threadComment references a source comment without copying its body; invalid
+// parent chains carry a warning instead of being presented as native roots.
 type threadComment struct {
 	index   int
 	depth   int
 	warning string
 }
 
+// commentThreadSelection counts limits in root threads, while keeping malformed
+// entries visible separately from the verified thread totals.
 type commentThreadSelection struct {
 	comments []threadComment
 	total    int
@@ -28,6 +32,8 @@ type commentThreadSelection struct {
 	invalid  int
 }
 
+// selectCommentThreads limits newest-first roots, retaining every descendant in
+// oldest-first sibling order; malformed chains remain visible outside valid threads.
 func selectCommentThreads(comments []jira.IssueComment, limit uint) commentThreadSelection {
 	parents, warnings := commentParents(comments)
 	resolveParentWarnings(parents, warnings)
@@ -88,6 +94,8 @@ func selectCommentThreads(comments []jira.IssueComment, limit uint) commentThrea
 	return selection
 }
 
+// commentParents resolves unique IDs to source indices, using -1 for no parent
+// and warnings where missing or duplicate identities make linkage unsafe.
 func commentParents(comments []jira.IssueComment) ([]int, []string) {
 	indices := make(map[string]int, len(comments))
 	counts := make(map[string]int, len(comments))
@@ -117,6 +125,8 @@ func commentParents(comments []jira.IssueComment) ([]int, []string) {
 	return parents, warnings
 }
 
+// resolveParentWarnings marks cycles and descendants of broken chains without
+// recursion, keeping untrusted parent depth from exhausting the call stack.
 func resolveParentWarnings(parents []int, warnings []string) {
 	const (
 		unvisited = iota
@@ -155,6 +165,8 @@ func resolveParentWarnings(parents []int, warnings []string) {
 	}
 }
 
+// commentTimestamp accepts Jira's numeric-offset format and RFC3339 timestamps
+// so ordering is based on instants rather than their serialized spelling.
 func commentTimestamp(created string) (time.Time, error) {
 	stamp, err := time.Parse(jira.RFC3339, created)
 	if err == nil {
@@ -163,6 +175,8 @@ func commentTimestamp(created string) (time.Time, error) {
 	return time.Parse(time.RFC3339Nano, created)
 }
 
+// threadedComments renders verified hierarchy and visible data warnings, claiming
+// a latest comment only when every loaded creation timestamp is parseable.
 func (i Issue) threadedComments() []issueComment {
 	comments := i.Data.Fields.Comment.Comments
 	selection := selectCommentThreads(comments, i.Options.NumComments)
@@ -214,6 +228,8 @@ func (i Issue) threadedComments() []issueComment {
 	return out
 }
 
+// threadedCommentBody normalizes ADF and legacy Jira markup to Markdown, using
+// explicit placeholders rather than hiding absent or unsupported bodies.
 func threadedCommentBody(body any) string {
 	switch value := body.(type) {
 	case *adf.ADF:
@@ -230,6 +246,8 @@ func threadedCommentBody(body any) string {
 	return "[Comment body unavailable]"
 }
 
+// replyTargets offers only displayed, valid native roots; descendants and
+// malformed chains cannot become mutation targets through the detail picker.
 func (i Issue) replyTargets() ([]tui.ReplyTarget, string) {
 	if !i.Options.CommentThreads {
 		return nil, "Enable --comment-threads to choose a native thread"
@@ -262,6 +280,8 @@ func (i Issue) replyTargets() ([]tui.ReplyTarget, string) {
 	return targets, ""
 }
 
+// commentReplyPreview collapses whitespace and truncates by runes so a picker's
+// one-line summary cannot split a UTF-8 character.
 func commentReplyPreview(body string) string {
 	const previewRunes = 100
 	preview := []rune(strings.Join(strings.Fields(body), " "))
@@ -273,6 +293,8 @@ func commentReplyPreview(body string) string {
 
 const maxCommentIndentDepth = 12
 
+// indentComment caps visual nesting without changing the recorded reply depth,
+// keeping deeply nested input readable and leaving blank separator lines bare.
 func indentComment(body string, depth int) string {
 	if depth <= 0 {
 		return body

@@ -65,6 +65,8 @@ func (c *Client) GetIssueWithCommentThreads(ctx context.Context, key string, inc
 	return issue, nil
 }
 
+// getIssueWithCommentThreads keeps base details and optional thread retrieval
+// within one bounded HTTPS session, replacing embedded comments only on success.
 func (c *Client) getIssueWithCommentThreads(ctx context.Context, key string, includeComments bool) (*Issue, error) {
 	if !threadIssueKey.MatchString(key) {
 		return nil, errors.New("invalid issue key")
@@ -119,6 +121,8 @@ func (c *Client) getIssueWithCommentThreads(ctx context.Context, key string, inc
 	return issue, nil
 }
 
+// commentThreads requires all native and REST pages with matching identities
+// before assigning ParentID; partial coverage cannot distinguish a root from a reply.
 func (r *threadReader) commentThreads(ctx context.Context, issueID, key string) ([]IssueComment, error) {
 	parents, err := r.parents(ctx, issueID, key)
 	if err != nil {
@@ -141,12 +145,16 @@ func (r *threadReader) commentThreads(ctx context.Context, issueID, key string) 
 	return comments, nil
 }
 
+// threadReader shares one request budget across bootstrap, pagination, and reply
+// confirmation while keeping credentials confined to the configured HTTPS origin.
 type threadReader struct {
 	client               *http.Client
 	origin, login, token string
 	requests             int
 }
 
+// newThreadReader rejects unsupported authentication and non-origin URLs before
+// I/O, and disables redirects so configured credentials cannot follow a new target.
 func (c *Client) newThreadReader() (*threadReader, error) {
 	if c.authType != nil && c.authType.String() != string(AuthTypeBasic) {
 		return nil, errors.New("only Basic API-token authentication is supported")
@@ -174,18 +182,28 @@ func (c *Client) newThreadReader() (*threadReader, error) {
 // proxy credentials, or arbitrary transport error text to the terminal.
 type threadRequestError struct{ cause error }
 
+// Error redacts transport details that may contain credentials or private queries.
 func (e threadRequestError) Error() string { return "HTTP request failed" }
+
+// Unwrap preserves cancellation and transport error matching despite redaction.
 func (e threadRequestError) Unwrap() error { return e.cause }
 
+// threadHTTPError exposes only the status, not a potentially private response body.
 type threadHTTPError struct{ status int }
 
+// Error reports the status without including response content.
 func (e threadHTTPError) Error() string { return fmt.Sprintf("unexpected HTTP status %d", e.status) }
 
+// get shares bounded transport handling between JSON endpoints and the HTML
+// bootstrap page; read-only callers do not need the mutation-attempt indicator.
 func (r *threadReader) get(ctx context.Context, path string, page bool) ([]byte, error) {
 	body, _, err := r.request(ctx, http.MethodGet, path, nil, page)
 	return body, err
 }
 
+// request bounds requests and response sizes, returning whether transport was
+// attempted so mutation callers can distinguish rejection from uncertain outcomes.
+// POST bodies are not replayable, even by the HTTP transport.
 func (r *threadReader) request(ctx context.Context, method, path string, payload []byte, page bool) ([]byte, bool, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, false, fmt.Errorf("before request: %w", err)
@@ -226,6 +244,7 @@ func (r *threadReader) request(ctx context.Context, method, path string, payload
 	return body, true, nil
 }
 
+// threadDecode redacts JSON decoding details that may include private Jira values.
 func threadDecode(body []byte, out any) error {
 	if err := json.Unmarshal(body, out); err != nil {
 		// JSON type errors may contain private response values.
@@ -234,6 +253,8 @@ func threadDecode(body []byte, out any) error {
 	return nil
 }
 
+// bootstrap combines validated Cloud metadata with the REST issue ID to build
+// the native issue identity, rejecting missing or conflicting tenant metadata.
 func (r *threadReader) bootstrap(ctx context.Context, key, issueID string) (string, error) {
 	body, err := r.get(ctx, "/browse/"+key, true)
 	if err != nil {
@@ -278,11 +299,14 @@ func (r *threadReader) bootstrap(ctx context.Context, key, issueID string) (stri
 	return "ari:cloud:jira:" + cloudID + ":issue/" + issueID, nil
 }
 
+// threadEdge retains both cursor and identity for pagination consistency checks.
 type threadEdge struct {
 	Cursor string      `json:"cursor"`
 	Node   *threadNode `json:"node"`
 }
 
+// threadPageInfo uses pointer flags to distinguish omitted coverage metadata
+// from an explicit end of pagination.
 type threadPageInfo struct {
 	HasNextPage     *bool  `json:"hasNextPage"`
 	HasPreviousPage *bool  `json:"hasPreviousPage"`
@@ -290,11 +314,15 @@ type threadPageInfo struct {
 	EndCursor       string `json:"endCursor"`
 }
 
+// threadConnection keeps records and coverage metadata together; neither may
+// be omitted even for an empty native collection.
 type threadConnection struct {
 	Edges    []threadEdge    `json:"edges"`
 	PageInfo *threadPageInfo `json:"pageInfo"`
 }
 
+// threadNode bridges native GraphQL identities and REST comment IDs, retaining
+// both reply connections and child aliases so their linkage can be cross-checked.
 type threadNode struct {
 	ID                string            `json:"id"`
 	Key               string            `json:"key"`
@@ -304,6 +332,8 @@ type threadNode struct {
 	ChildComments     *threadConnection `json:"childComments"`
 }
 
+// threadVariablesV1 keeps feature-provider inputs aligned with the versioned
+// persisted operations instead of relying on changing server-side defaults.
 func threadVariablesV1(id string) map[string]any {
 	return map[string]any{
 		"id": id, "issueViewSlackSyncInfoEnabled": true, "shouldFetchAgentAttribution": false,
@@ -311,6 +341,8 @@ func threadVariablesV1(id string) map[string]any {
 	}
 }
 
+// query accepts only a complete GraphQL result for the requested native identity;
+// partial data with errors cannot establish trustworthy parentage.
 func (r *threadReader) query(ctx context.Context, route, operation string, variables map[string]any) (*threadNode, error) {
 	encoded, err := json.Marshal(variables)
 	if err != nil {
@@ -339,11 +371,15 @@ func (r *threadReader) query(ctx context.Context, route, operation string, varia
 	return response.Data.Node, nil
 }
 
+// threadPagination tracks forward progress and every seen cursor to reject
+// repeated pages or cycles instead of accepting an incomplete collection.
 type threadPagination struct {
 	after string
 	seen  map[string]bool
 }
 
+// advance requires explicit coverage from the first page onward and consistent,
+// unique cursors before permitting another request.
 func (p *threadPagination) advance(conn *threadConnection) (bool, error) {
 	if conn == nil || conn.Edges == nil || conn.PageInfo == nil || conn.PageInfo.HasNextPage == nil || conn.PageInfo.HasPreviousPage == nil {
 		return false, errors.New("missing connection or pagination metadata")
@@ -376,11 +412,15 @@ func (p *threadPagination) advance(conn *threadConnection) (bool, error) {
 	return *info.HasNextPage, nil
 }
 
+// threadLink maps a REST comment to its verified parent and native mutation
+// identity; an empty parentID denotes a root, not an unknown relationship.
 type threadLink struct {
 	parentID string
 	nodeID   string
 }
 
+// parents exhausts native root and reply pages, enforcing uniqueness across both
+// REST and GraphQL IDs so duplicates or cycles cannot masquerade as parentage.
 func (r *threadReader) parents(ctx context.Context, issueID, key string) (map[string]threadLink, error) {
 	parents := make(map[string]threadLink)
 	globalIDs := make(map[string]bool)
@@ -439,6 +479,8 @@ func (r *threadReader) parents(ctx context.Context, issueID, key string) (map[st
 	}
 }
 
+// replies exhausts a root's reply connection and checks child aliases against
+// verified replies; aliases alone are not sufficient evidence of membership.
 func (r *threadReader) replies(ctx context.Context, root *threadNode, add func(*threadNode, string) error) error {
 	conn := root.RepliesPaginated
 	children := make(map[string]string)
@@ -475,12 +517,16 @@ func (r *threadReader) replies(ctx context.Context, root *threadNode, add func(*
 	return nil
 }
 
+// threadRESTPage distinguishes missing offsets and totals from valid zero values
+// so an absent page cannot be mistaken for an empty comment collection.
 type threadRESTPage struct {
 	StartAt  *int           `json:"startAt"`
 	Total    *int           `json:"total"`
 	Comments []IssueComment `json:"comments"`
 }
 
+// validate requires contiguous progress and a stable bounded total, rejecting
+// collection changes rather than returning an apparently complete partial page set.
 func (p threadRESTPage) validate(offset, total int) error {
 	if p.StartAt == nil || *p.StartAt != offset || p.Total == nil || *p.Total < 0 || *p.Total > threadRecordLimit || p.Comments == nil {
 		return errors.New("invalid REST pagination metadata or record limit exceeded")
@@ -494,6 +540,8 @@ func (p threadRESTPage) validate(offset, total int) error {
 	return nil
 }
 
+// comments loads every REST page with unique IDs and valid ADF bodies, leaving
+// native ParentID assignment to the subsequent full-coverage reconciliation.
 func (r *threadReader) comments(ctx context.Context, key string) ([]IssueComment, error) {
 	comments := make([]IssueComment, 0)
 	seen := make(map[string]bool)

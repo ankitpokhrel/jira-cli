@@ -35,6 +35,8 @@ type DetailView struct {
 // Returned callbacks must capture the target; they run asynchronously.
 type DetailViewFunc func(row, col int, data any) DetailView
 
+// tableDetail holds UI-loop-owned state; loadID invalidates stale loads and
+// reply selections when a reload or ticket switch supersedes their snapshot.
 type tableDetail struct {
 	table    *Table
 	view     DetailView
@@ -59,6 +61,9 @@ const (
 	replySelectionExpired   = "Thread selection expired; cancel and choose a thread again. No request sent."
 )
 
+// captureComposerInterrupts intercepts CtrlC before tview's application-level
+// exit handling, allowing prompts to cancel and nonempty drafts to be protected.
+// The returned callback restores the previous capture when the table exits.
 func (t *Table) captureComposerInterrupts() func() {
 	previous := t.screen.GetInputCapture()
 	t.screen.SetInputCapture(func(ev *tcell.EventKey) *tcell.EventKey {
@@ -87,6 +92,8 @@ func (t *Table) captureComposerInterrupts() func() {
 	return func() { t.screen.SetInputCapture(previous) }
 }
 
+// openDetail captures the selected ticket before workers start, so later table
+// selection changes cannot redirect detail loads or comment submissions.
 func (t *Table) openDetail() {
 	r, c := t.view.GetSelection()
 	if t.detailViewFunc == nil || len(t.data) == 0 || len(t.data[0]) == 0 ||
@@ -108,6 +115,8 @@ func (t *Table) openDetail() {
 	d.load()
 }
 
+// captureDetailInput consumes detail actions while passing scrolling keys through;
+// the slash shortcut is active only with detail text focus, not in an editor.
 func (d *tableDetail) captureDetailInput(ev *tcell.EventKey) *tcell.EventKey {
 	switch {
 	case ev.Key() == tcell.KeyEsc || ev.Key() == tcell.KeyRune && ev.Rune() == 'q':
@@ -126,6 +135,8 @@ func (d *tableDetail) captureDetailInput(ev *tcell.EventKey) *tcell.EventKey {
 	return nil
 }
 
+// close abandons pending navigation and returns focus to the existing list
+// instead of rebuilding it or changing its selection.
 func (d *tableDetail) close() {
 	d.closeTicketPrompt()
 	d.table.detail = nil
@@ -133,6 +144,8 @@ func (d *tableDetail) close() {
 	d.table.screen.SetFocus(d.table.view)
 }
 
+// load expires reply selections immediately and applies only the latest worker's
+// result on the UI loop. A reload failure preserves any confirmed-post notice.
 func (d *tableDetail) load() {
 	d.closeTicketPrompt()
 	d.loadID++
@@ -180,6 +193,8 @@ func (d *tableDetail) load() {
 	}()
 }
 
+// replySnapshot copies and validates the loaded targets so the picker cannot
+// share a mutable slice or offer ambiguous, blank, or control-bearing IDs.
 func replySnapshot(content DetailContent) ([]ReplyTarget, string) {
 	if content.ReplyUnavailable != "" {
 		return nil, content.ReplyUnavailable
@@ -203,6 +218,8 @@ func replySnapshot(content DetailContent) ([]ReplyTarget, string) {
 	return targets, ""
 }
 
+// plainReplyText strips terminal styling and invisible controls before untrusted
+// comment metadata is used in single-line picker labels or composer titles.
 func plainReplyText(text string) string {
 	text = strings.Map(func(r rune) rune {
 		if unicode.IsControl(r) || unicode.Is(unicode.Cf, r) {
@@ -213,6 +230,8 @@ func plainReplyText(text string) string {
 	return strings.Join(strings.Fields(text), " ")
 }
 
+// openReplyPicker binds choices to the current load generation so a stale picker
+// cannot open a reply composer after a reload or ticket switch.
 func (d *tableDetail) openReplyPicker() {
 	if d.picker != nil || d.composer != nil || d.prompt != nil {
 		return
@@ -262,12 +281,15 @@ func (d *tableDetail) openReplyPicker() {
 	d.table.screen.SetFocus(picker)
 }
 
+// closeReplyPicker returns to the existing detail text without resetting scroll.
 func (d *tableDetail) closeReplyPicker() {
 	d.picker = nil
 	d.table.painter.RemovePage("reply-picker")
 	d.table.screen.SetFocus(d.text)
 }
 
+// openReplyComposer captures the chosen root in the submit callback; an absent
+// reply handler stays unavailable rather than falling back to a top-level comment.
 func (d *tableDetail) openReplyComposer(rootID string) {
 	callback := d.view.SubmitReply
 	var submit func(string) error
@@ -277,6 +299,8 @@ func (d *tableDetail) openReplyComposer(rootID string) {
 	d.showComposer(rootID, submit)
 }
 
+// openComposer uses the captured top-level comment handler independently of
+// thread selection, keeping the c action distinct from a native reply.
 func (d *tableDetail) openComposer() {
 	if d.picker != nil || d.composer != nil || d.prompt != nil {
 		return
@@ -288,6 +312,8 @@ func (d *tableDetail) openComposer() {
 	d.showComposer("", d.view.SubmitComment)
 }
 
+// showComposer binds a draft to its submit callback and load generation while
+// leaving Enter and Tab available for multiline text instead of form submission.
 func (d *tableDetail) showComposer(replyID string, submit func(string) error) {
 	if d.picker != nil || d.composer != nil || d.prompt != nil {
 		return
@@ -344,6 +370,8 @@ func (d *tableDetail) showComposer(replyID string, submit func(string) error) {
 	d.table.screen.SetFocus(c.draft)
 }
 
+// cancelComposer requires confirmation before discarding nonempty text and
+// refuses cancellation during a write so its outcome cannot be hidden.
 func (d *tableDetail) cancelComposer() {
 	c := d.composer
 	if c == nil || c.posting {
@@ -367,12 +395,17 @@ func (d *tableDetail) cancelComposer() {
 	d.table.screen.SetFocus(confirm)
 }
 
+// closeComposer drops the editor only after successful posting or explicit
+// discard, returning focus without replacing the detail text.
 func (d *tableDetail) closeComposer() {
 	d.table.painter.RemovePage("composer")
 	d.composer = nil
 	d.table.screen.SetFocus(d.text)
 }
 
+// submit locks the draft during one write and clears it only when the callback
+// confirms success. Errors retain text and target; a later reload failure must
+// not turn a confirmed post into an invitation to submit it again.
 func (d *tableDetail) submit() {
 	c := d.composer
 	if c == nil || c.posting {
@@ -426,6 +459,8 @@ func (d *tableDetail) submit() {
 	}()
 }
 
+// commentComposer retains the target and load generation with the draft, while
+// posting guards both keyboard editing and paste against duplicate submissions.
 type commentComposer struct {
 	*tview.Flex
 	draft   *tview.TextArea
@@ -439,6 +474,8 @@ type commentComposer struct {
 	loadID  uint64
 }
 
+// PasteHandler blocks pasted text while posting because the pinned tview
+// TextArea's disabled state alone does not prevent paste from changing the draft.
 func (c *commentComposer) PasteHandler() func(string, func(tview.Primitive)) {
 	return func(text string, setFocus func(tview.Primitive)) {
 		// The pinned tview TextArea accepts paste even when disabled.

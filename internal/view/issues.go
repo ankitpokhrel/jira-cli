@@ -120,6 +120,8 @@ func (l *IssueList) Render() error {
 	return view.Paint(data)
 }
 
+// detailView captures one issue key for loading and writes, independent of later
+// list selections. Resolving another descriptor performs no I/O or active-view mutation.
 func (l *IssueList) detailView(client *jira.Client, key string, newRenderer mdRendererFactory) tui.DetailView {
 	detail := tui.DetailView{
 		Title: key,

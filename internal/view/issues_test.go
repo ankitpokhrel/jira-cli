@@ -333,6 +333,7 @@ func TestIssueDetailReplyCallbackAvailability(t *testing.T) {
 		{name: "native", threads: true, limit: 1, enabled: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			list := IssueList{Display: DisplayFormat{CommentThreads: tc.threads, Comments: tc.limit}}
 			detail := list.detailView(nil, "TEST-2", newRenderer)
 			if got := detail.SubmitReply != nil; got != tc.enabled {
@@ -374,6 +375,7 @@ func TestIssueDetailReplyPreflightError(t *testing.T) {
 	newRenderer := newMDRendererFactory()
 	for _, root := range []string{"100", "unvalidated-root"} {
 		t.Run(root, func(t *testing.T) {
+			t.Parallel()
 			var writes atomic.Int64
 			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.Method != http.MethodGet {

@@ -34,6 +34,8 @@ func (c *Client) ReplyToIssueThread(ctx context.Context, key, rootCommentID, bod
 	return nil
 }
 
+// replyToIssueThread validates the draft and freshly checks target privacy before
+// one mutation; success requires read-back confirmation, not just an accepted POST.
 func (c *Client) replyToIssueThread(ctx context.Context, key, rootCommentID, body string) error {
 	if !threadIssueKey.MatchString(key) || !validReplyID(rootCommentID) {
 		return errors.New("invalid issue key or root comment ID")
@@ -101,11 +103,15 @@ func (c *Client) replyToIssueThread(ctx context.Context, key, rootCommentID, bod
 	return nil
 }
 
+// validReplyID accepts only canonical positive decimal IDs, excluding aliases
+// such as leading-zero forms that could undermine identity comparisons.
 func validReplyID(id string) bool {
 	number, err := strconv.ParseUint(id, 10, 64)
 	return err == nil && number > 0 && strconv.FormatUint(number, 10) == id
 }
 
+// replyTarget revalidates issue identity, supported project type, native root
+// membership, and unrestricted visibility before any write is permitted.
 func (r *threadReader) replyTarget(ctx context.Context, key, rootID string) (string, string, error) {
 	body, err := r.get(ctx, baseURLv3+"/issue/"+key+"?fields=project", false)
 	if err != nil {
@@ -155,6 +161,8 @@ func (r *threadReader) replyTarget(ctx context.Context, key, rootID string) (str
 	return issueID, root.nodeID, nil
 }
 
+// replyComment retains raw linkage and visibility values so unexpected shapes
+// cannot be mistaken for an unrestricted comment or a verified parent.
 type replyComment struct {
 	ID         string          `json:"id"`
 	ParentID   json.RawMessage `json:"parentId"`
@@ -165,6 +173,8 @@ type replyComment struct {
 	} `json:"properties"`
 }
 
+// replyComment fetches privacy properties as well as linkage and verifies the
+// response identity, both for preflight checks and post-mutation confirmation.
 func (r *threadReader) replyComment(ctx context.Context, key, id string) (*replyComment, error) {
 	body, err := r.get(ctx, baseURLv3+"/issue/"+key+"/comment/"+id+"?expand=properties", false)
 	if err != nil {
@@ -180,6 +190,8 @@ func (r *threadReader) replyComment(ctx context.Context, key, id string) (*reply
 	return &comment, nil
 }
 
+// unrestricted fails closed on restricted or unknown visibility and missing
+// privacy metadata, preventing a reply from silently changing the audience.
 func (c *replyComment) unrestricted() error {
 	if len(c.Visibility) != 0 && !bytes.Equal(bytes.TrimSpace(c.Visibility), []byte("null")) {
 		return errors.New("restricted or unknown comment visibility is unsupported for native replies")
@@ -203,6 +215,8 @@ func (c *replyComment) unrestricted() error {
 	return nil
 }
 
+// publicCommentProperty accepts only an explicit internal:false object, rejecting
+// extra or duplicate fields instead of guessing at unfamiliar privacy metadata.
 func publicCommentProperty(raw json.RawMessage) bool {
 	decoder := json.NewDecoder(bytes.NewReader(raw))
 	open, err := decoder.Token()
@@ -221,6 +235,8 @@ func publicCommentProperty(raw json.RawMessage) bool {
 	return err == nil && closingToken == json.Delim('}')
 }
 
+// postReply attempts the mutation once; failures after dispatch are uncertain
+// unless an authentication or authorization rejection proves no reply was accepted.
 func (r *threadReader) postReply(ctx context.Context, payload []byte) (string, error) {
 	query := url.Values{"operation": {threadAddQueryV1}}
 	body, attempted, err := r.request(ctx, http.MethodPost, threadAddRouteV1+"?"+query.Encode(), payload, false)
@@ -234,6 +250,8 @@ func (r *threadReader) postReply(ctx context.Context, payload []byte) (string, e
 	return decodeReplyResult(body)
 }
 
+// decodeReplyResult requires consistent success metadata and a new comment ID;
+// partial or contradictory results retain uncertainty rather than invite a retry.
 func decodeReplyResult(body []byte) (string, error) {
 	var response struct {
 		Errors []json.RawMessage `json:"errors"`
@@ -273,6 +291,8 @@ func decodeReplyResult(body []byte) (string, error) {
 	return id, nil
 }
 
+// confirmReply verifies the created comment's parent and visibility by REST
+// read-back before callers may treat the mutation as confirmed and clear a draft.
 func (r *threadReader) confirmReply(ctx context.Context, key, rootID, id string) error {
 	comment, err := r.replyComment(ctx, key, id)
 	if err != nil {
@@ -290,6 +310,8 @@ func (r *threadReader) confirmReply(ctx context.Context, key, rootID, id string)
 	return comment.unrestricted()
 }
 
+// decodeReplyJSON rejects duplicate keys before decoding because ordinary JSON
+// unmarshalling could let a later value hide privacy or mutation failure metadata.
 func decodeReplyJSON(body []byte, out any) error {
 	// Duplicate keys must not hide a restriction, parent, or failed mutation.
 	decoder := json.NewDecoder(bytes.NewReader(body))
@@ -300,6 +322,8 @@ func decodeReplyJSON(body []byte, out any) error {
 	return threadDecode(body, out)
 }
 
+// uniqueReplyJSON walks nested objects with a separate key set for each scope,
+// detecting ambiguity before any metadata is trusted for a write decision.
 func uniqueReplyJSON(decoder *json.Decoder) error {
 	token, err := decoder.Token()
 	if err != nil {
@@ -330,6 +354,8 @@ func uniqueReplyJSON(decoder *json.Decoder) error {
 	return err
 }
 
+// unknownReply preserves the uncertainty sentinel and underlying cause, adding
+// a returned comment ID when available so users can check Jira before retrying.
 func unknownReply(id string, cause error) error {
 	if id != "" {
 		return fmt.Errorf("%w (returned comment %s): %w", ErrReplyOutcomeUnknown, id, cause)
