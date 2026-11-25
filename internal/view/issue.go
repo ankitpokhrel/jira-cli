@@ -27,6 +27,8 @@ type fragment struct {
 	Indent int
 }
 
+// newBlankFragment keeps separator newlines outside Markdown parsing, which could
+// otherwise collapse the spacing between rendered issue sections.
 func newBlankFragment(n int) fragment {
 	var buf strings.Builder
 	for range n {
@@ -47,7 +49,9 @@ type issueComment struct {
 
 // IssueOption is filtering options for an issue.
 type IssueOption struct {
-	NumComments    uint
+	// NumComments limits flat comments or complete root threads; zero hides both.
+	NumComments uint
+	// CommentThreads requires verified native parentage in the loaded comments.
 	CommentThreads bool
 }
 
@@ -190,6 +194,8 @@ func (i Issue) fragments() []fragment {
 	return append(scraps, newBlankFragment(1), fragment{Body: i.footer()}, newBlankFragment(2))
 }
 
+// separator uses ASCII in plain mode and styled Unicode in terminal output;
+// an empty label produces a continuous rule without padding.
 func (i Issue) separator(msg string) string {
 	pad := func(m string) string {
 		if m != "" {
@@ -209,6 +215,8 @@ func (i Issue) separator(msg string) string {
 	return gray(fmt.Sprintf("%s%s%s", sep, pad(msg), sep))
 }
 
+// header builds the Markdown summary with explicit fallbacks for absent metadata
+// and distinguishes the current watcher from the remaining watch count.
 func (i Issue) header() string {
 	as := i.Data.Fields.Assignee.Name
 	if as == "" {
@@ -250,6 +258,8 @@ func (i Issue) header() string {
 	)
 }
 
+// description normalizes the reader's ADF or legacy string representation to
+// Markdown; a missing description contributes no section to the issue view.
 func (i Issue) description() string {
 	if i.Data.Fields.Description == nil {
 		return ""
@@ -267,6 +277,8 @@ func (i Issue) description() string {
 	return desc
 }
 
+// subtasks aligns preformatted rows using the loaded collection's widest fields,
+// capping only summaries so issue keys and status labels remain intact.
 func (i Issue) subtasks() string {
 	if len(i.Data.Fields.Subtasks) == 0 {
 		return ""
@@ -310,6 +322,8 @@ func (i Issue) subtasks() string {
 	return subtasks.String()
 }
 
+// linkedIssues groups rows by directional relationship, sorting group labels to
+// match Jira's UI and skipping links that contain neither endpoint.
 func (i Issue) linkedIssues() string {
 	if len(i.Data.Fields.IssueLinks) == 0 {
 		return ""

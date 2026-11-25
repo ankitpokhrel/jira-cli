@@ -16,14 +16,16 @@ import (
 
 // DisplayFormat is a issue display type.
 type DisplayFormat struct {
-	Plain          bool
-	Delimiter      string
-	CSV            bool
-	NoHeaders      bool
-	NoTruncate     bool
-	Columns        []string
-	FixedColumns   uint
-	Comments       uint
+	Plain        bool
+	Delimiter    string
+	CSV          bool
+	NoHeaders    bool
+	NoTruncate   bool
+	Columns      []string
+	FixedColumns uint
+	// Comments controls detail loads, not the number of rows in the issue list.
+	Comments uint
+	// CommentThreads counts Comments in root threads and enables native reply actions.
 	CommentThreads bool
 	TableStyle     tui.TableStyle
 	Timezone       string
@@ -187,6 +189,8 @@ func (l *IssueList) renderCSV(w io.Writer) error {
 	return renderCSV(w, l.data())
 }
 
+// validColumnsMap provides the canonical uppercase names used to discard unknown
+// column requests before constructing rows.
 func (*IssueList) validColumnsMap() map[string]struct{} {
 	columns := ValidIssueColumns()
 	out := make(map[string]struct{}, len(columns))
@@ -198,6 +202,8 @@ func (*IssueList) validColumnsMap() map[string]struct{} {
 	return out
 }
 
+// header preserves requested column order while ensuring KEY remains available
+// for row actions; only default truncated plain output uses the short column set.
 func (l *IssueList) header() []string {
 	if len(l.Display.Columns) == 0 {
 		validColumns := ValidIssueColumns()
@@ -232,6 +238,8 @@ func (l *IssueList) header() []string {
 	return headers
 }
 
+// data always retains the header row for TUI column lookup; header suppression
+// applies only to plain-text and CSV output.
 func (l *IssueList) data() tui.TableData {
 	var data tui.TableData
 
@@ -246,6 +254,8 @@ func (l *IssueList) data() tui.TableData {
 	return data
 }
 
+// assignColumns expects validated column names in display order; summaries are
+// escaped for tview and dates use the requested timezone before output rendering.
 func (l *IssueList) assignColumns(columns []string, issue *jira.Issue) []string {
 	var bucket []string
 

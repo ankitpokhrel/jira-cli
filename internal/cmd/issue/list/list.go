@@ -1,3 +1,4 @@
+// Package list implements issue listing and reusable list flags for related commands.
 package list
 
 import (
@@ -107,6 +108,8 @@ func List(cmd *cobra.Command, args []string) {
 	loadList(cmd, args)
 }
 
+// loadList rebuilds the query and view on refresh, preserving explicit comment
+// limits (including zero) over configuration defaults. Command errors terminate via cmdutil.
 func loadList(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 	project := viper.GetString("project.key")
@@ -229,6 +232,8 @@ func loadList(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(v.Render())
 }
 
+// outputRawJSON bypasses view formatting and reports encoding failures without
+// printing a partial JSON document.
 func outputRawJSON(issues []*jira.Issue) {
 	data, err := json.MarshalIndent(issues, "", "  ")
 	if err != nil {

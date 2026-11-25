@@ -17,18 +17,26 @@ type ReplyTarget struct {
 
 // DetailContent is one atomic snapshot of details and available reply targets.
 type DetailContent struct {
-	Text             string
-	ReplyTargets     []ReplyTarget
+	// Text may contain ANSI styling; tview markup is treated as literal text.
+	Text         string
+	ReplyTargets []ReplyTarget
+	// ReplyUnavailable overrides ReplyTargets with a reason the picker cannot be used.
 	ReplyUnavailable string
 }
 
 // DetailView binds a detail page and its actions to the selected item.
 type DetailView struct {
-	Title         string
-	Load          func() (DetailContent, error)
+	Title string
+	// Load may overlap earlier reloads; it must not mutate UI primitives.
+	Load func() (DetailContent, error)
+	// SubmitComment posts a top-level comment; nil disables composition.
 	SubmitComment func(string) error
-	SubmitReply   func(rootID, body string) error
-	OpenTicket    func(input string) (DetailView, error)
+	// SubmitReply must return nil only after confirmation, since success clears
+	// the draft. A nil callback disables posting rather than creating a flat comment.
+	SubmitReply func(rootID, body string) error
+	// OpenTicket resolves input without changing the active page; the candidate's
+	// Load must succeed before the UI switches to its content and write callbacks.
+	OpenTicket func(input string) (DetailView, error)
 }
 
 // DetailViewFunc is called on the UI loop when the user opens a table item.

@@ -1,3 +1,5 @@
+// Package api resolves CLI configuration and selects Jira API versions for the
+// configured installation.
 package api
 
 import (
@@ -61,6 +63,8 @@ func Client(config jira.Config) *jira.Client {
 	return jiraClient
 }
 
+// GetAPIToken prefers the explicit token, then configured credentials, netrc, and
+// the system keyring. Missing or unreadable fallback stores yield an empty token.
 func GetAPIToken(config jira.Config) string {
 	if config.APIToken != "" {
 		return config.APIToken

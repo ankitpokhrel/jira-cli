@@ -1,3 +1,4 @@
+// Package view implements the issue view command with raw and formatted output.
 package view
 
 import (
@@ -72,6 +73,8 @@ func NewCmdView() *cobra.Command {
 	return &cmd
 }
 
+// view selects raw output before any rich-text rendering or thread loading;
+// Cobra must already have validated that an issue argument is present.
 func view(cmd *cobra.Command, args []string) {
 	raw, err := cmd.Flags().GetBool(flagRaw)
 	cmdutil.ExitIfError(err)
@@ -83,6 +86,8 @@ func view(cmd *cobra.Command, args []string) {
 	viewPretty(cmd, args)
 }
 
+// viewRaw expands project-relative keys but leaves the API response body intact,
+// avoiding the conversions used by formatted issue output.
 func viewRaw(cmd *cobra.Command, args []string) {
 	debug, err := cmd.Flags().GetBool(flagDebug)
 	cmdutil.ExitIfError(err)
@@ -101,6 +106,8 @@ func viewRaw(cmd *cobra.Command, args []string) {
 	fmt.Println(apiResp)
 }
 
+// viewPretty honors explicit zero-comment requests and opts into native thread
+// loading only when requested, leaving flat reads on the installation-aware proxy.
 func viewPretty(cmd *cobra.Command, args []string) {
 	debug, err := cmd.Flags().GetBool(flagDebug)
 	cmdutil.ExitIfError(err)

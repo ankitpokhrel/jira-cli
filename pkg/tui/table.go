@@ -246,6 +246,8 @@ func (t *Table) Paint(data TableData) error {
 	return t.screen.Paint(t.painter)
 }
 
+// render expects a header in row zero and binds selection callbacks to the same
+// data snapshot used to populate the cells.
 func (t *Table) render(data TableData) {
 	if t.selectedFunc != nil {
 		t.view.SetSelectedFunc(func(r, c int) {
@@ -256,6 +258,7 @@ func (t *Table) render(data TableData) {
 	renderTableCell(t, data)
 }
 
+// initFooter enables wrapping so status text remains readable on narrow terminals.
 func (t *Table) initFooter() {
 	t.footer.
 		SetWordWrap(true).
@@ -263,6 +266,7 @@ func (t *Table) initFooter() {
 		SetTextColor(tcell.ColorDefault)
 }
 
+// initHelp keeps dismissal local to the help overlay so Esc does not exit the table.
 func (t *Table) initHelp() {
 	t.help.
 		SetInfo(t.helpText).
@@ -277,6 +281,9 @@ func (t *Table) initHelp() {
 	})
 }
 
+// initTable routes row actions and fixes the header; an in-app detail handler
+// takes precedence over the legacy external-pager callback when both are set.
+//
 //nolint:gocyclo
 func (t *Table) initTable() {
 	t.view.SetSelectable(true, false).
@@ -400,6 +407,8 @@ func (t *Table) initTable() {
 	t.view.SetFixed(1, int(t.colFixed))
 }
 
+// renderTableHeader reserves row zero for nonselectable labels so row actions
+// cannot treat column names as an issue.
 func renderTableHeader(t *Table, data []string) {
 	style := tcell.StyleDefault.Bold(true)
 
@@ -416,6 +425,8 @@ func renderTableHeader(t *Table, data []string) {
 	}
 }
 
+// renderTableCell expects header-shaped rows and skips row zero, preserving the
+// header's nonselectable styling while bounding displayed cell widths.
 func renderTableCell(t *Table, data TableData) {
 	rows, cols := len(data), len(data[0])
 

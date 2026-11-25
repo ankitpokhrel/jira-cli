@@ -69,10 +69,13 @@ type Issue struct {
 
 // IssueComment holds a comment and, when verified by the native thread adapter, its parent.
 type IssueComment struct {
-	ID       string `json:"id"`
-	Author   User   `json:"author"`
-	Body     any    `json:"body"`
-	Created  string `json:"created"`
+	ID     string `json:"id"`
+	Author User   `json:"author"`
+	// Body holds legacy Jira markup or an ADF value; v3 readers normalize bodies before rendering.
+	Body    any    `json:"body"`
+	Created string `json:"created"`
+	// ParentID is authoritative only after native thread verification; an empty
+	// value in a flat REST response does not prove that the comment is a root.
 	ParentID string `json:"-"`
 }
 
