@@ -2,12 +2,12 @@ package view
 
 import (
 	"context"
-	_ "embed"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -21,9 +21,6 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/tui"
 )
 
-//go:embed issues_pty_driver.py
-var issueListPTYDriver string
-
 func TestIssueListRenderPTY(t *testing.T) {
 	if runtime.GOOS != "darwin" && runtime.GOOS != "linux" {
 		t.Skip("PTY harness requires Darwin or Linux controlling-terminal ioctls")
@@ -36,9 +33,14 @@ func TestIssueListRenderPTY(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	_, sourceFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate the PTY driver")
+	}
+	driver := filepath.Join(filepath.Dir(sourceFile), "issues_pty_driver.py")
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, python, "-c", issueListPTYDriver, "--", binary,
+	cmd := exec.CommandContext(ctx, python, driver, "--", binary,
 		"-test.run=^TestIssueListRenderPTYHelper$", "-test.count=1", "-test.timeout=30s")
 	out, err := cmd.CombinedOutput()
 	if err != nil {

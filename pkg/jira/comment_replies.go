@@ -217,8 +217,8 @@ func publicCommentProperty(raw json.RawMessage) bool {
 	if err := decoder.Decode(&internal); err != nil || internal == nil || *internal {
 		return false
 	}
-	close, err := decoder.Token()
-	return err == nil && close == json.Delim('}')
+	closingToken, err := decoder.Token()
+	return err == nil && closingToken == json.Delim('}')
 }
 
 func (r *threadReader) postReply(ctx context.Context, payload []byte) (string, error) {

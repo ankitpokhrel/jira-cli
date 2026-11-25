@@ -205,7 +205,7 @@ func TestReplyToIssueThreadRejectsBeforeHTTP(t *testing.T) {
 		}
 	}
 	var requests atomic.Int32
-	plain := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { requests.Add(1) }))
+	plain := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { requests.Add(1) }))
 	defer plain.Close()
 	client := NewClient(Config{Server: plain.URL, Login: "test-login", APIToken: "test-token"})
 	if err := client.ReplyToIssueThread(context.Background(), "TEST-1", testReplyRoot, testReplyMarkdown); err == nil || requests.Load() != 0 {
@@ -374,7 +374,7 @@ func TestReplyToIssueThreadMutationFailures(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			f := newReplyFixture(t)
-			f.post = func(w http.ResponseWriter, r *http.Request) {
+			f.post = func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(tc.status)
 				_, _ = io.WriteString(w, tc.body)
 			}
@@ -433,7 +433,7 @@ func TestReplyToIssueThreadConfirmationFailures(t *testing.T) {
 
 func TestReplyToIssueThreadPostRedirect(t *testing.T) {
 	var forwarded atomic.Int32
-	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { forwarded.Add(1) }))
+	target := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { forwarded.Add(1) }))
 	defer target.Close()
 	f := newReplyFixture(t)
 	f.post = func(w http.ResponseWriter, r *http.Request) {
@@ -459,7 +459,7 @@ func TestReplyToIssueThreadCancellation(t *testing.T) {
 		f := newReplyFixture(t)
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		f.post = func(w http.ResponseWriter, r *http.Request) { cancel(); <-r.Context().Done() }
+		f.post = func(_ http.ResponseWriter, r *http.Request) { cancel(); <-r.Context().Done() }
 		err := testThreadClient(t, f.serve).ReplyToIssueThread(ctx, "TEST-1", testReplyRoot, testReplyMarkdown)
 		if !errors.Is(err, context.Canceled) || !errors.Is(err, ErrReplyOutcomeUnknown) || f.posts.Load() != 1 {
 			t.Fatalf("post-dispatch cancellation lost cause, uncertainty, or retried: %v", err)
@@ -467,7 +467,7 @@ func TestReplyToIssueThreadCancellation(t *testing.T) {
 	})
 	t.Run("after dispatch timeout", func(t *testing.T) {
 		f := newReplyFixture(t)
-		f.post = func(w http.ResponseWriter, r *http.Request) { <-r.Context().Done() }
+		f.post = func(_ http.ResponseWriter, r *http.Request) { <-r.Context().Done() }
 		client := testThreadClient(t, f.serve)
 		client.timeout = time.Second / 2
 		err := client.ReplyToIssueThread(context.Background(), "TEST-1", testReplyRoot, testReplyMarkdown)
