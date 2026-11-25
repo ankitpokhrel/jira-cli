@@ -14,6 +14,7 @@ import (
 	"github.com/ankitpokhrel/jira-cli/pkg/md"
 )
 
+// These identifiers select a versioned Jira UI mutation, not a public GraphQL API.
 const (
 	threadAddRouteV1 = "/gateway/api/graphql/pq/f5fb37d86837b6f99ab87528af1b0f2454e8a7d5c1b17ec1571aa8c47c48b3f9"
 	threadAddQueryV1 = "useSaveCommentRelayAddCommentMutation"

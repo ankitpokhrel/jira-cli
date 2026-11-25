@@ -21,6 +21,7 @@ import (
 // BlackFriday silently truncates at nesting 16; reject before reaching it.
 const maxADFDepth = 16
 
+// These patterns preserve Markdown constructs Blackfriday omits or normalizes so conversion can reject unsupported syntax rather than silently changing it.
 var (
 	adfReference     = regexp.MustCompile(`(?m)^([ \t>]*(?:(?:[-+*]|[0-9]+\.)[ \t]+)?\[[^\]\r\n]+\]):`)
 	adfOrdered       = regexp.MustCompile(`(?m)^([ \t>]*(?:[-+*][ \t]+)?)([0-9]+)\.([ \t]+)([^\n]*)`)

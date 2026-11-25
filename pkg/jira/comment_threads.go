@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	// These UI-internal persisted operations are versioned together. They are not
-	// the public GraphQL schema and may stop working when Jira changes its UI.
+	// These UI-internal operations are versioned together, not a public GraphQL
+	// schema; traversal limits below bound response size and request duration.
 	threadRootsRouteV1   = "/gateway/api/graphql/pq/e7440492f5fce0c34a11de0fab72b7389a9e73932eac35b1c9cff9b79c3c9894"
 	threadRepliesRouteV1 = "/gateway/api/graphql/pq/9fb5324cd9a9667b60957bc4f961d754452096fb9ecf43bb6fca81007452f8bc"
 	threadRootsQueryV1   = "CommentsViewRelayAdapter_RefetchQuery"
@@ -36,6 +36,7 @@ const (
 	threadTargetWindow   = 5
 )
 
+// These validators reject malformed Jira identifiers before building requests or parent relationships.
 var (
 	threadIssueKey = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_]*-[0-9]+$`)
 	threadCloudID  = regexp.MustCompile(`^[A-Za-z0-9-]{1,128}$`)

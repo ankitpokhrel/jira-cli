@@ -8,8 +8,10 @@ import (
 	"unicode"
 )
 
+// navigationInputLimit bounds bytes checked before regex matching and numeric conversion.
 const navigationInputLimit = 256
 
+// These patterns reject malformed or ambiguous ticket identifiers before issue loading.
 var (
 	navigationKeyPattern    = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_]*-[1-9][0-9]*$`)
 	navigationNumberPattern = regexp.MustCompile(`^[1-9][0-9]*$`)

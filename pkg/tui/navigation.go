@@ -9,6 +9,7 @@ import (
 	"github.com/rivo/tview"
 )
 
+// These prompt strings and the input limit keep ticket navigation explicit and bounded before resolution.
 const (
 	ticketPromptCaption = "Which ticket would you like to view?"
 	ticketPromptKeys    = "Enter: view ticket · Esc/CtrlC: cancel"
